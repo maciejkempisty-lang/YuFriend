@@ -1,0 +1,16 @@
+Golden retriever — pixel art direction v1
+Generated: 2026-11-10
+Method: built-in image_gen tool
+Input reference: golden-retriever-base-v1.png
+Requested background: transparent
+Purpose: visual direction sample, not an animation sheet.
+
+Use case: style-transfer.
+Asset type: pixel-art golden retriever concept sprite for a Godot virtual-pet game.
+Input image: edit target used only as a reference for the golden retriever's species, golden color, friendly identity and neutral right-facing standing pose.
+Primary request: Reimagine this dog as a TRUE LOW-RESOLUTION PIXEL-ART SPRITE with bold, clearly visible square pixels. Create an intentionally simple 64-by-64 logical pixel canvas design shown at a large clean integer nearest-neighbor enlargement for comparison. The look should be carefully hand-placed small pixel clusters, not a detailed painting run through a pixelation filter.
+Subject: one friendly golden retriever, compact golden body, recognizable drooping ears, lighter muzzle and chest, dark tiny eyes and nose, medium short muzzle, four distinct legs and a gently feathered tail. Neutral standing pose, body in side profile facing RIGHT, head only slightly turned toward camera. Preserve a clear golden retriever silhouette at tiny scale.
+Pixel art rules: limited cohesive palette of at most 8 opaque colors plus transparent, warm dark-brown 1-logical-pixel outline, gold base, golden shadow, cream accents. Flat contiguous pixel clusters; minimal highlights. Consistent square pixel grid everywhere. Crisp stepped contours, no anti-aliasing, no smooth vector contours, no gradients, no blur, no glow, no dithering, no tiny brush texture. Simplify anatomy and fur into large readable clusters. Keep cute dog proportions without a huge baby head.
+Composition: square canvas, dog occupies roughly 48 to 52 logical pixels in width, with comfortable transparent margins on all sides. Exactly one full-body dog and one pose. No cropping. All four paws distinct.
+Background: actual transparency, not a checkerboard image. No shadow, scene, props, labels, text, collar, clothing, watermark, palette swatches or sprite sheet.
+This is a pixel-art visual direction sample, not an animation sheet.

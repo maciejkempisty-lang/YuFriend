@@ -1,0 +1,18 @@
+YuFriend puppy based on the user's dog — pixel art v1
+Generated: 2026-11-10
+Method: built-in image_gen tool
+Primary reference: user-provided puppy photograph (original kept in user's Photos library)
+Secondary style reference: golden-retriever-pixel-v1.png
+Requested background: transparent
+Purpose: puppy age-stage visual reference and static sprite concept, not an animation sheet.
+
+Use case: stylized-concept.
+Asset type: low-resolution pixel-art puppy character concept for a Godot virtual-pet game, with transparent background.
+Input image 1: PRIMARY identity and age reference, a real photograph of the user's golden retriever as a puppy. Base the puppy on this individual dog.
+Input image 2: secondary pixel-art direction reference only. Replace the adult proportions and standing pose with puppy proportions and the seated pose in the photograph. Simplify further and use genuinely flat pixel colors rather than gradients.
+Primary request: a single very young golden retriever puppy sitting in a shy attentive pose, mostly front-facing with only a slight three-quarter turn, full body visible. Match the puppy's visible traits: light wheat-golden coat, darker brown floppy ears lying beside the face, a little tousled tuft on the head, dark round eyes, small BLACK nose, short soft muzzle, cream paw tips and slightly lighter chest. Expression gentle and curious, closed mouth, no big grin.
+Puppy anatomy: compact rounded body, short legs, noticeably puppy-sized head and large little paws, two front paws placed naturally, hind legs tucked beside the body, a small tail visible beside the haunches. Avoid an adult body, extreme chibi proportions, a teddy bear, fox or cat. No extra limbs.
+Pixel art style: build a deliberate 64-by-64 logical pixel-canvas sprite concept shown enlarged with crisp nearest-neighbor square pixels. Consistent pixel size and clearly stepped edges. Restrained palette of 8 to 10 SOLID opaque colors plus transparent. One-logical-pixel warm dark-brown outline, wheat-gold base, golden shadow, light cream details, black nose and dark eyes. Large coherent pixel clusters, minimal silhouette tuft details, flat fills. No gradients, no blur, no antialiasing, no painterly shading, no dithering, no photographic texture, no tiny fur strokes. This should look like a hand-designed small pixel-art game puppy.
+Composition: square canvas, exactly one puppy and one sitting pose, centered with generous transparent margins. Both ears and every visible paw fully inside the canvas.
+Background: actual transparent alpha, no checkerboard pattern, room, floor, shadow, text, labels, collar, costume, props, palette swatches, watermark or sprite sheet.
+Create only the puppy age stage. This is a visual direction sample rather than a finished animation sheet.

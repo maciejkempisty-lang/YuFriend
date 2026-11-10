@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "frame_size": [512, 512],
+  "anchor": [256, 430],
+  "display_height": 245,
+  "animations": {
+    "idle": {
+      "sheet": "res://assets/sprites/puppy/simple/idle.png",
+      "columns": 3,
+      "count": 6,
+      "fps": 3
+    },
+    "walk": {
+      "sheet": "res://assets/sprites/puppy/simple/walk.png",
+      "columns": 4,
+      "count": 8,
+      "fps": 10
+    }
+  }
+}

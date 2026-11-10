@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "pet": {
+    "pet_id": "1794268800-12345",
+    "pet_name": "Biszkopt",
+    "life_stage": "puppy",
+    "skin": "simple",
+    "personality_seed": 12345,
+    "traits": {
+      "curiosity": 0.4,
+      "patience": 0.7,
+      "sociability": 0.6,
+      "sensitivity": 0.5
+    },
+    "favorite_reward": "treat",
+    "needs": {
+      "fullness": 78.0,
+      "energy": 76.0,
+      "hygiene": 85.0,
+      "play": 58.0,
+      "contact": 65.0
+    },
+    "skills": {
+      "come": {"mastery": 0.0, "attempts": 0, "successes": 0},
+      "sit": {"mastery": 0.0, "attempts": 0, "successes": 0},
+      "paw": {"mastery": 0.0, "attempts": 0, "successes": 0}
+    },
+    "bond": 12.0,
+    "fatigue": 0.0,
+    "resting": false,
+    "last_seen_at": 1794268800.0,
+    "journal": [
+      {
+        "key": "welcome",
+        "title": "Pierwszy dzień razem",
+        "detail": "Zaczyna się Wasza wspólna historia.",
+        "at": 1794268800.0
+      }
+    ],
+    "milestones": ["welcome"]
+  }
+}

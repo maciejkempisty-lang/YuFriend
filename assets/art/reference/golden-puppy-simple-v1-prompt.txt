@@ -1,0 +1,19 @@
+YuFriend puppy based on the user's dog — simple 2D v1
+Generated: 2026-11-10
+Method: built-in image_gen tool
+Primary reference: user-provided puppy photograph (original kept in user's Photos library)
+Secondary style reference: golden-retriever-simple-v2.png
+Requested background: transparent
+Purpose: puppy age-stage visual reference and static sprite concept, not an animation sheet.
+
+Use case: stylized-concept.
+Asset type: very simple flat 2D puppy character concept for a virtual-pet Godot game, on transparent background.
+Input image 1: PRIMARY identity and puppy-age reference, a real photograph of the user's own golden retriever puppy. Preserve recognizable visible characteristics from THIS puppy.
+Input image 2: secondary STYLE reference only, the earlier simplified cartoon dog. Do not inherit its adult proportions, standing pose, generic face, or orange saturation.
+Primary request: create the puppy stage of the user's dog in a substantially simplified, easy-to-animate cartoon design. One puppy sitting down, full body, facing mostly forward with a very gentle three-quarter turn, matching the shy attentive feeling and seated pose of the photo.
+Identity cues from photo: light wheat/honey golden coat, slightly darker warm brown floppy ears that sit down beside the face, small tousled tuft at the top of the head, dark round attentive eyes, distinct small BLACK nose, short soft muzzle, pale cream paw tips and a slightly lighter muzzle/chest. The puppy has a gentle curious closed-mouth expression, not an exaggerated broad cartoon grin. Preserve the darker ears and pale paws without inventing large white socks, patches, markings or accessories.
+Age cues: clearly a young puppy with a small compact softly rounded body, short legs, slightly oversized paws, and a proportionally larger head than an adult; avoid adult long legs and long torso, avoid extreme chibi or teddy-bear anatomy. Anatomically coherent seated dog with both front paws visible and hind legs tucked naturally. Tail can be a small simple shape beside the body.
+Style: use 6 or 7 flat solid colors maximum, smooth rounded shapes, one consistent warm dark-brown outline, simple dot/oval eyes with at most a tiny highlight. A small three-point top tuft and at most two broad silhouette fur notches preserve the photo's tousled look. Keep every other area simple. No detailed fur, no hair strokes, no gradients, no complex shading, no painted texture, no realistic wet-fur rendering. The coat should read as light wheat gold, not bright saturated orange.
+Composition: square canvas, one full puppy and one pose, centered with comfortable transparent padding at least 12 percent on every side. Readable at about 128 pixels wide.
+Background: genuine transparent alpha. No room, floor, wall, shadow, photographic scene, text, labels, watermark, border, collar, costume, or props.
+This is a puppy visual reference and static sprite concept; do not create a sprite sheet or multiple age stages.

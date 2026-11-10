@@ -1,0 +1,16 @@
+Golden retriever — simplified flat variant v2
+Generated: 2026-11-10
+Method: built-in image_gen tool
+Input reference: golden-retriever-base-v1.png
+Requested background: transparent
+Purpose: visual direction sample, not an animation sheet.
+
+Use case: style-transfer.
+Asset type: simplified flat 2D virtual-pet game character, transparent PNG.
+Input image: edit target and reference for the golden retriever's species, golden color, friendly identity, and standing right-facing pose.
+Primary request: REDESIGN the attached dog into a substantially simpler, more minimal game sprite. The previous image is far too detailed. Preserve a recognizably golden retriever dog, but rebuild its silhouette and markings using a very small number of large smooth rounded shapes.
+Style: simple flat cartoon, like a clean small casual-game pet asset. Use only 5 or 6 flat colors total. One consistent warm dark-brown outline, solid honey-gold body, a single flat lighter muzzle/chest patch, a darker flat shape for the far legs and floppy ears. Two tiny dark oval eyes, a simple nose, one short smile line. Absolutely no gradients, glossy rendering, layered fur tufts, individual hairs, fur strokes, tiny shading patches, detailed toes, complex chest feathers, or ornamental details.
+Shape design: compact gently rounded body, friendly moderately sized head and muzzle, plain floppy ears, four clearly separated simple rounded legs with plain paws, one smooth gently curved fluffy tail with at most one broad tip notch. Keep the animal unmistakably a golden retriever, not a fox, cat, spitz or teddy bear. Neutral relaxed standing pose, body side-on facing RIGHT, head very slightly turned toward the viewer.
+Composition: exactly one dog, one pose, whole body visible, center the silhouette on a square canvas with at least 12 percent transparent padding on every side. Similar camera and framing to the reference, adjusted to provide comfortable margins. Designed to remain immediately readable at 128 to 256 pixels wide.
+Background: genuine transparency, clean alpha edges, no ground shadow.
+No text, watermarks, labels, props, collar, clothing, scene, checkerboard or decorative effects.

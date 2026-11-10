@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PetSkin" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/pet/pet_skin.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/reference/golden-puppy-simple-side-v1.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/reference/golden-puppy-simple-v1.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+animation_pack_path = "res://data/animations/puppy_simple.res"
+standing = ExtResource("2")
+sitting = ExtResource("3")

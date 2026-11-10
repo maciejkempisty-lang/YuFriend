@@ -1,0 +1,14 @@
+YuFriend — golden retriever base v1
+Generated: 2026-11-10
+Method: built-in image_gen tool (not CLI/API fallback)
+Requested background: transparent
+Purpose: visual reference and temporary static sprite; animation frames are separate work.
+
++Use case: stylized-concept.
+Asset type: a single 2D golden retriever character base sprite and visual reference for a Godot virtual-pet game.
+Primary request: create a simple, appealing, easy-to-animate golden retriever, full body, standing in a relaxed neutral pose.
+Scene/backdrop: genuinely transparent background with an alpha channel. No background scene, ground, ground shadow or backdrop color.
+Subject: one young golden retriever, clearly recognizable as the breed: warm golden coat, a slightly lighter cream muzzle and chest, soft floppy ears, a gently feathered tail carried naturally rather than curled, a friendly medium-length muzzle, dark expressive eyes and a black nose. Natural four-legged dog anatomy, slightly rounded stylized proportions, no extreme oversized baby head.
+Style/medium: clean 2D cartoon game illustration, smooth warm-brown outlines, mostly flat colors with only two or three simple cel-shaded tones. Large readable shapes, a few intentional fur tufts. Charming and calm. No fur texture or complex lighting.
+Composition/framing: square canvas, ideally 1024 by 1024. Orthographic side view facing RIGHT so it can be mirrored consistently in the game. A subtly camera-turned head is acceptable only if the body stays side-on. Show the entire dog, all four distinct legs, all paws, ears and tail without cropping. Paws sit on a consistent baseline, far legs are slightly darker and separated from near legs. Tail extends comfortably behind the body. Center the silhouette with generous transparent padding around the tail, nose, head and feet. Relaxed closed mouth, attentive neutral expression. Exactly one character, exactly one pose.
+Constraints: suitable as a starting reference and temporary static sprite, clear silhouette when reduced to around 256 pixels wide, consistent anatomy and clean alpha edges. No text, labels, logos, border, watermark, props, collar, clothes, decorative effects, contact sheet or sprite sheet. Do not paint a checkerboard pattern.

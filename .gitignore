@@ -1,0 +1,10 @@
+.godot/
+build/
+exports/
+test-results/
+.DS_Store
+._*
+.env
+.env.*
+!.env.example
+*.tmp
