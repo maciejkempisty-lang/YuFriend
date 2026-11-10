@@ -1,6 +1,15 @@
 # YuFriend
 
-Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Pionowy interfejs, jeden pokój, trwały temperament i nauka trzech komend. Działa lokalnie, bez konta, internetu i klucza API.
+Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Jeden pokój, trwały temperament i nauka trzech komend. Działa lokalnie, bez konta, internetu i klucza API.
+
+Interfejs skupia się na piesku i pokoju: kompaktowe wskaźniki potrzeb, stała nawigacja **Dom / Trening / Album** i akcje dostępne bez przewijania całego ekranu. W szerokim oknie sterowanie przenosi się do bocznego panelu. Pokój, ikony i typografia tworzą wspólną paletę kremu, szałwii i zieleni.
+
+<p>
+  <img src="docs/images/interfejs-dom.png" width="260" alt="YuFriend — pokój i opieka nad pieskiem">
+  <img src="docs/images/interfejs-trening.png" width="260" alt="YuFriend — trening i okno nagrody">
+</p>
+
+Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
 
 ## Dokumentacja
 
@@ -16,12 +25,12 @@ Projekt sprawdzono w Godot **4.7.2**, renderer **Compatibility**, na macOS. Otw�
 
 ## Co można zrobić
 
-- Kliknij podłogę, aby pies podszedł w wybrane miejsce. Sam również czasem spaceruje.
-- W **Opiece** nakarm, pogłaszcz, pobaw się, wyczesz lub połóż pieska do odpoczynku.
-- W **Treningu** wybierz „Siad”, użyj „Pokaż gest”, zaczekaj na wykonanie i wybierz nagrodę, gdy pojawi się odliczanie. Nagroda zwiększa opanowanie komendy i więź. „Poproś samodzielnie” sprawdza, czy pies już pamięta.
+- Dotknij pieska, aby go pogłaskać, miski — aby nakarmić, legowiska — aby włączyć lub zakończyć odpoczynek, a piłki — aby się pobawić. Dotknięcie wolnej podłogi wskazuje cel spaceru.
+- W zakładce **Dom** te same czynności oraz czesanie są dostępne jako podpisane ikony.
+- W **Treningu** wybierz „Siad”, użyj „Pokaż gest”, zaczekaj na wykonanie i wybierz nagrodę, gdy pojawi się odliczanie. Nagrody zastępują przyciski rozpoczęcia ćwiczenia. „Samodzielnie” sprawdza, czy pies już pamięta.
 - Po osiągnięciu **25% siadu** odblokuje się „Podaj łapę”. „Przyjdź” jest dostępne od początku. Zmęczenie, głód i odpoczynek wpływają na gotowość do ćwiczeń.
-- Przycisk **Wpisz komendę** rozpoznaje kilka polskich zwrotów, np. „usiądź” i „daj łapę”. To lokalny słownik komend.
-- W **Profilu** zmienisz imię i przełączysz prostą ilustrację / pixel art. **Wspomnienia** pokazują zdarzenia, które faktycznie zaszły w grze.
+- Ikona **klawiatury** w treningu pozwala wpisać polski zwrot, np. „usiądź” i „daj łapę”. To lokalny słownik komend.
+- Ikona **ustawień** obok imienia otwiera profil. Zmienisz tam imię i przełączysz prostą ilustrację / pixel art. **Album** pokazuje zdarzenia, które faktycznie zaszły w grze.
 
 Ciekawość wpływa na spontaniczne spacery, cierpliwość na czas reakcji i nagrody, towarzyskość na potrzebę kontaktu, a wrażliwość na rozproszenie podczas zmęczenia. Każdy pies ma zapisaną preferowaną nagrodę. Temperament pozostaje ten sam po ponownym uruchomieniu.
 
@@ -58,7 +67,7 @@ Nie uruchamiaj równolegle dwóch zwykłych instancji na tym samym zapisie. Do p
 
 ## Sprawdzenie projektu
 
-Weryfikacja 10 listopada 2026: **87 sprawdzeń zakończonych powodzeniem** — 44 logiki i zapisu, 26 importu i animacji oraz 17 przepływu przez interfejs. Zrzuty ekranu obejrzano także wizualnie, w tym profil, trening i układ na wąskim ekranie.
+Weryfikacja 10 listopada 2026: **98 sprawdzeń zakończonych powodzeniem** — 44 logiki i zapisu, 26 importu i animacji oraz 28 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi i układy ekranu. Zrzuty obejrzano także wizualnie.
 
 Przy pierwszym otwarciu lub po dodaniu PNG poczekaj, aż Godot zaimportuje zasoby. Import można wykonać także bez okna:
 
@@ -74,7 +83,7 @@ Testy uruchamiane z katalogu projektu:
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 ```
 
-Ostatni test otwiera okno, sprawdza przepływ opieki i treningu oraz zapisuje zrzuty do `test-results/`. Obejmuje szerokości 360, 390 i 540 punktów. To test pulpitu; obsługa dotyku i cykl życia na fizycznym telefonie wymagają osobnego sprawdzenia po eksporcie.
+Ostatni test otwiera okno i zapisuje zrzuty do `test-results/`. Obejmuje układy 360 × 800, 390 × 844 i 540 × 960 oraz rzeczywiste skalowanie okien 320 × 640 i 1100 × 720. To test pulpitu; obsługa dotyku i cykl życia na fizycznym telefonie wymagają osobnego sprawdzenia po eksporcie.
 
 ## Kolejne etapy
 

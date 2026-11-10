@@ -1,11 +1,12 @@
 extends Control
 
-const INK := Color("394a40")
-const MUTED := Color("687661")
-const GREEN := Color("68856d")
-const CREAM := Color("fffaf0")
+const INK := Color("24483d")
+const MUTED := Color("6b7663")
+const GREEN := Color("315d49")
+const CREAM := Color("fff9ed")
 const NEED_LABELS := {"fullness": "Sytość", "energy": "Energia", "hygiene": "Czystość", "play": "Zabawa", "contact": "Bliskość"}
 const REWARD_LABELS := {"treat": "Smakołyk", "praise": "Pochwała", "play": "Zabawa"}
+const NEED_ICONS := {"fullness": "bowl", "energy": "moon", "hygiene": "brush", "play": "ball", "contact": "heart"}
 var session := GameSession.new()
 var room := RoomView.new()
 var needs_ui: Dictionary = {}
@@ -38,44 +39,24 @@ var text_dialog: AcceptDialog
 var command_edit: LineEdit
 var save_path_override: String = ""
 var journal_signature: String = ""
+var header: HBoxContainer
+var needs_row: HBoxContainer
+var sheet: PanelContainer
+var navigation: PanelContainer
+var bubble: PanelContainer
+var training_actions: HBoxContainer
+var rewards_row: HBoxContainer
+var training_stage: VBoxContainer
+var care_title: Label
+var suggestion_title: Label
+var suggestion_detail: Label
+var album_count: Label
+var bold_font: FontVariation
+var layout_wide: bool = false
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
-	var app_theme := Theme.new()
-	app_theme.default_font_size = 18
-	app_theme.set_color("font_color", "Label", INK)
-	app_theme.set_color("font_color", "Button", INK)
-	# Dialogs inherit the same light palette as the room and action panels.
-	app_theme.set_stylebox("panel", "AcceptDialog", _style(CREAM, 14, 14))
-	var window_border := _style(GREEN, 14, 8)
-	window_border.content_margin_top = 32
-	window_border.expand_margin_top = 32
-	window_border.expand_margin_left = 5
-	window_border.expand_margin_right = 5
-	window_border.expand_margin_bottom = 5
-	app_theme.set_stylebox("embedded_border", "Window", window_border)
-	app_theme.set_stylebox("embedded_unfocused_border", "Window", window_border)
-	app_theme.set_color("title_color", "Window", CREAM)
-	for type in ["Button", "OptionButton"]:
-		app_theme.set_stylebox("normal", type, _style(Color("f2ecdf"), 10, 10))
-		app_theme.set_stylebox("hover", type, _style(Color("e8e3d4"), 10, 10))
-		app_theme.set_stylebox("pressed", type, _style(GREEN, 10, 10))
-		app_theme.set_color("font_color", type, INK)
-		app_theme.set_color("font_hover_color", type, INK)
-		app_theme.set_color("font_pressed_color", type, CREAM)
-	app_theme.set_stylebox("normal", "LineEdit", _style(Color("f2ecdf"), 10, 10))
-	app_theme.set_color("font_color", "LineEdit", INK)
-	app_theme.set_color("font_placeholder_color", "LineEdit", MUTED)
-	app_theme.set_color("caret_color", "LineEdit", INK)
-	var focus_style := _style(Color.TRANSPARENT, 10, 10)
-	focus_style.set_border_width_all(2)
-	focus_style.border_color = GREEN
-	app_theme.set_stylebox("focus", "LineEdit", focus_style)
-	app_theme.set_stylebox("panel", "PopupMenu", _style(CREAM, 10, 8))
-	app_theme.set_stylebox("hover", "PopupMenu", _style(GREEN, 8, 8))
-	app_theme.set_color("font_color", "PopupMenu", INK)
-	app_theme.set_color("font_hover_color", "PopupMenu", CREAM)
-	theme = app_theme
+	_build_theme()
 	_build_ui()
 	resized.connect(_fit_room)
 	_fit_room()
@@ -89,11 +70,59 @@ func _ready() -> void:
 	room.performance_finished.connect(session.performance_finished)
 	session.save_status.connect(func(_ok: bool): _refresh())
 	room.floor_tapped.connect(session.move_to)
+	room.care_requested.connect(_care_action)
 	var path := "user://pet.json"
 	if OS.get_cmdline_user_args().has("--qa"): path = "user://qa-ui/pet.json"
 	if not save_path_override.is_empty(): path = save_path_override
 	session.start(path)
 	_refresh()
+
+func _build_theme() -> void:
+	var app_theme := Theme.new()
+	var regular := FontVariation.new()
+	regular.base_font = preload("res://assets/fonts/Nunito.ttf")
+	var weight_axis := TextServerManager.get_primary_interface().name_to_tag("wght")
+	regular.variation_opentype = {weight_axis: 600.0}
+	bold_font = FontVariation.new()
+	bold_font.base_font = regular.base_font
+	bold_font.variation_opentype = {weight_axis: 800.0}
+	app_theme.default_font = regular
+	app_theme.default_font_size = 16
+	app_theme.set_color("font_color", "Label", INK)
+	app_theme.set_stylebox("panel", "AcceptDialog", _style(CREAM, 18, 18))
+	var window_border := _style(GREEN, 18, 8)
+	window_border.content_margin_top = 34
+	window_border.expand_margin_top = 34
+	window_border.expand_margin_left = 5
+	window_border.expand_margin_right = 5
+	window_border.expand_margin_bottom = 5
+	app_theme.set_stylebox("embedded_border", "Window", window_border)
+	app_theme.set_stylebox("embedded_unfocused_border", "Window", window_border)
+	app_theme.set_color("title_color", "Window", CREAM)
+	for type in ["Button", "OptionButton"]:
+		app_theme.set_stylebox("normal", type, _style(Color("efeeda"), 12, 10))
+		app_theme.set_stylebox("hover", type, _style(Color("e1e7d2"), 12, 10))
+		app_theme.set_stylebox("pressed", type, _style(GREEN, 12, 10))
+		app_theme.set_color("font_color", type, INK)
+		app_theme.set_color("font_hover_color", type, INK)
+		app_theme.set_color("font_pressed_color", type, CREAM)
+	var focus := _style(Color.TRANSPARENT, 12, 0)
+	focus.set_border_width_all(2)
+	focus.border_color = Color("879d69")
+	app_theme.set_stylebox("focus", "Button", focus)
+	app_theme.set_stylebox("focus", "OptionButton", focus)
+	app_theme.set_stylebox("normal", "LineEdit", _style(Color("f0efdf"), 12, 10))
+	app_theme.set_stylebox("focus", "LineEdit", focus)
+	app_theme.set_color("font_color", "LineEdit", INK)
+	app_theme.set_color("font_placeholder_color", "LineEdit", MUTED)
+	app_theme.set_color("caret_color", "LineEdit", INK)
+	app_theme.set_stylebox("panel", "PopupMenu", _style(CREAM, 12, 8))
+	app_theme.set_stylebox("hover", "PopupMenu", _style(GREEN, 8, 8))
+	app_theme.set_color("font_color", "PopupMenu", INK)
+	app_theme.set_color("font_hover_color", "PopupMenu", CREAM)
+	app_theme.set_stylebox("panel", "TooltipPanel", _style(INK, 10, 8))
+	app_theme.set_color("font_color", "TooltipLabel", CREAM)
+	theme = app_theme
 
 func _style(color: Color, radius: int = 14, padding: int = 12) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -105,199 +134,268 @@ func _style(color: Color, radius: int = 14, padding: int = 12) -> StyleBoxFlat:
 	style.content_margin_bottom = padding
 	return style
 
-func _label(text: String, font_size: int = 18, color: Color = INK) -> Label:
+func _label(text: String, font_size: int = 16, color: Color = INK, bold: bool = false) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if bold: label.add_theme_font_override("font", bold_font)
 	return label
 
 func _button(text: String, callback: Callable, primary: bool = false) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size = Vector2(0, 43)
+	button.custom_minimum_size = Vector2(0, 44)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	button.add_theme_font_size_override("font_size", 17)
-	button.add_theme_stylebox_override("normal", _style(GREEN if primary else Color("f2ecdf"), 12, 8))
-	button.add_theme_stylebox_override("hover", _style(Color("7d977d") if primary else Color("e8e3d4"), 12, 8))
-	button.add_theme_stylebox_override("pressed", _style(Color("58745e"), 12, 8))
-	button.add_theme_stylebox_override("disabled", _style(Color("edeae1"), 12, 8))
+	button.add_theme_font_size_override("font_size", 15)
+	button.add_theme_font_override("font", bold_font)
+	button.add_theme_stylebox_override("normal", _style(GREEN if primary else Color("eeeede"), 14, 10))
+	button.add_theme_stylebox_override("hover", _style(Color("43715a") if primary else Color("e1e7d2"), 14, 10))
+	button.add_theme_stylebox_override("pressed", _style(Color("234936"), 14, 10))
+	button.add_theme_stylebox_override("disabled", _style(Color("edece1"), 14, 10))
 	button.add_theme_color_override("font_color", CREAM if primary else INK)
 	button.add_theme_color_override("font_hover_color", CREAM if primary else INK)
 	button.add_theme_color_override("font_pressed_color", CREAM)
-	button.add_theme_color_override("font_disabled_color", Color("9c9e91"))
+	button.add_theme_color_override("font_disabled_color", Color("999d8d"))
 	button.pressed.connect(callback)
 	return button
 
-func _bar(color: Color, height: int = 7) -> ProgressBar:
+func _icon_button(icon: String, hint: String, callback: Callable) -> Button:
+	var button := _button("", callback)
+	button.icon = GameIcons.texture(icon)
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", 22)
+	button.tooltip_text = hint
+	button.accessibility_name = hint
+	button.custom_minimum_size = Vector2(44, 44)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	return button
+
+func _action(icon: String, caption: String, color: Color, callback: Callable) -> IconActionButton:
+	var button := IconActionButton.new()
+	button.icon_name = icon
+	button.caption = caption
+	button.accent = color
+	button.pressed.connect(callback)
+	return button
+
+func _bar(color: Color, height: int = 6) -> ProgressBar:
 	var progress := ProgressBar.new()
 	progress.show_percentage = false
 	progress.custom_minimum_size.y = height
-	progress.add_theme_stylebox_override("background", _style(Color("e6e3d8"), height, 0))
+	progress.add_theme_stylebox_override("background", _style(Color("e7e8d8"), height, 0))
 	progress.add_theme_stylebox_override("fill", _style(color, height, 0))
 	return progress
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
-	background.color = Color("f6f2e9")
+	background.color = Color("f3efdf")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
-	var scroll := ScrollContainer.new()
-	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
-	var margins := MarginContainer.new()
-	margins.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for side in ["left", "right", "top", "bottom"]:
-		margins.add_theme_constant_override("margin_" + side, 20)
-	scroll.add_child(margins)
-	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 12)
-	margins.add_child(content)
-	var header := HBoxContainer.new()
-	content.add_child(header)
+	add_child(room)
+	header = HBoxContainer.new()
+	header.add_theme_constant_override("separation", 12)
+	add_child(header)
 	var identity := VBoxContainer.new()
 	identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	identity.add_theme_constant_override("separation", 0)
+	identity.add_theme_constant_override("separation", -2)
 	header.add_child(identity)
-	identity.add_child(_label("YuFriend  ·  WASZ MAŁY DOM", 13, GREEN))
-	name_label = _label("Biszkopt", 32)
+	identity.add_child(_label("yufriend.", 17, GREEN, true))
+	name_label = _label("Biszkopt", 34, INK, true)
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.clip_text = true
 	identity.add_child(name_label)
-	bond_label = _label("Szczeniak · Poznajecie się", 14, MUTED)
+	bond_label = _label("Szczeniak · Poznajecie się", 13, MUTED)
 	identity.add_child(bond_label)
-	var profile_button := _button("Profil", _show_profile)
-	profile_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	profile_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	profile_button.custom_minimum_size.x = 78
-	header.add_child(profile_button)
-	var needs_row := HBoxContainer.new()
-	needs_row.add_theme_constant_override("separation", 10)
-	content.add_child(needs_row)
+	var profile := _icon_button("settings", "Profil pieska", _show_profile)
+	profile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header.add_child(profile)
+	needs_row = HBoxContainer.new()
+	needs_row.add_theme_constant_override("separation", 8)
+	add_child(needs_row)
 	for key in PetState.NEED_KEYS:
-		var column := VBoxContainer.new()
-		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		column.add_theme_constant_override("separation", 5)
-		needs_row.add_child(column)
-		column.add_child(_label(NEED_LABELS[key], 13, MUTED))
-		var bar := _bar(GREEN)
-		column.add_child(bar)
-		var value := _label("80", 14)
-		column.add_child(value)
-		needs_ui[key] = {"bar": bar, "value": value}
-	content.add_child(room)
-	var bubble := PanelContainer.new()
-	bubble.add_theme_stylebox_override("panel", _style(Color("ece9dd"), 15, 12))
-	bubble.custom_minimum_size.y = 58
-	content.add_child(bubble)
-	message_label = _label("Witaj w Waszym małym domu.", 16)
+		var need := NeedIndicator.new()
+		need.caption = NEED_LABELS[key]
+		need.icon_name = NEED_ICONS[key]
+		needs_row.add_child(need)
+		needs_ui[key] = need
+	bubble = PanelContainer.new()
+	var bubble_style := _style(Color("fff9edee"), 17, 10)
+	bubble_style.content_margin_top = 6
+	bubble_style.content_margin_bottom = 6
+	bubble_style.shadow_color = Color(0.25, 0.30, 0.17, 0.06)
+	bubble_style.shadow_size = 10
+	bubble.add_theme_stylebox_override("panel", bubble_style)
+	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bubble)
+	message_label = _label("Witaj w Waszym małym domu.", 14)
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	message_label.max_lines_visible = 2
+	message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	bubble.add_child(message_label)
-	var navigation := HBoxContainer.new()
-	navigation.add_theme_constant_override("separation", 7)
-	content.add_child(navigation)
-	for key in ["care", "training", "journal"]:
-		var button := _button({"care": "Opieka", "training": "Trening", "journal": "Wspomnienia"}[key], _select_tab.bind(key))
-		button.add_theme_font_size_override("font_size", 16)
-		navigation.add_child(button)
-		tab_buttons[key] = button
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", _style(CREAM, 20, 15))
-	panel.custom_minimum_size.y = 250
-	content.add_child(panel)
+	sheet = PanelContainer.new()
+	var sheet_style := _style(CREAM, 26, 18)
+	sheet_style.shadow_color = Color(0.25, 0.30, 0.17, 0.07)
+	sheet_style.shadow_size = 16
+	sheet_style.shadow_offset = Vector2(0, -3)
+	sheet.add_theme_stylebox_override("panel", sheet_style)
+	add_child(sheet)
 	panels.care = _build_care()
 	panels.training = _build_training()
 	panels.journal = _build_journal()
 	for key in panels:
-		panel.add_child(panels[key])
-	footer_label = _label("Wasz postęp zapisuje się automatycznie", 12, MUTED)
+		sheet.add_child(panels[key])
+		panels[key].visible = key == selected_tab
+	navigation = PanelContainer.new()
+	navigation.add_theme_stylebox_override("panel", _style(CREAM, 23, 3))
+	add_child(navigation)
+	var nav_row := HBoxContainer.new()
+	navigation.add_child(nav_row)
+	for key in ["care", "training", "journal"]:
+		var button := _action({"care": "home", "training": "spark", "journal": "book"}[key], {"care": "Dom", "training": "Trening", "journal": "Album"}[key], Color.TRANSPARENT, _select_tab.bind(key))
+		button.navigation = true
+		button.selected = key == selected_tab
+		nav_row.add_child(button)
+		tab_buttons[key] = button
+	footer_label = _label("", 12, Color("a2553b"))
 	footer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	footer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	content.add_child(footer_label)
+	footer_label.hide()
+	add_child(footer_label)
 	_build_dialogs()
-	_select_tab("care")
 
 func _build_care() -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 10)
-	box.add_child(grid)
-	var labels := {"feed": "Jedzenie", "pet": "Głaskanie", "play": "Zabawa", "clean": "Czesanie", "rest": "Odpoczynek", "train": "Poćwiczmy"}
-	for key in ["feed", "pet", "play", "clean", "rest", "train"]:
-		var button := _button(labels[key], _care_action.bind(key), key == "train")
-		button.custom_minimum_size.y = 53
-		grid.add_child(button)
+	var heading := HBoxContainer.new()
+	box.add_child(heading)
+	care_title = _label("Wasza chwila", 19, INK, true)
+	care_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(care_title)
+	heading.add_child(_label("MAŁE RYTUAŁY", 10, MUTED, true))
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 3)
+	box.add_child(actions)
+	var labels := {"feed": "Jedzenie", "pet": "Głaskanie", "play": "Zabawa", "clean": "Czesanie", "rest": "Drzemka"}
+	var icons := {"feed": "bowl", "pet": "heart", "play": "ball", "clean": "brush", "rest": "moon"}
+	var colors := {"feed": Color("f6ddb0"), "pet": Color("f3d7c8"), "play": Color("e2e9bd"), "clean": Color("d5e6dc"), "rest": Color("e0def0")}
+	for key in ["feed", "pet", "play", "clean", "rest"]:
+		var button := _action(icons[key], labels[key], colors[key], _care_action.bind(key))
+		actions.add_child(button)
 		care_buttons[key] = button
-	var tip := _label("Małe rytuały, wielka przyjaźń.\nDotknij podłogi, a piesek podejdzie bliżej.", 14, MUTED)
-	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(tip)
+	var suggestion := _button("", _care_action.bind("train"), true)
+	suggestion.custom_minimum_size.y = 58
+	box.add_child(suggestion)
+	care_buttons.train = suggestion
+	suggestion.accessibility_name = "Poćwiczmy razem"
+	var content := HBoxContainer.new()
+	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.offset_left = 14
+	content.offset_right = -14
+	content.add_theme_constant_override("separation", 12)
+	suggestion.add_child(content)
+	var icon := TextureRect.new()
+	icon.texture = GameIcons.texture("spark", Color("e9d69c"))
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size.x = 28
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(icon)
+	var titles := VBoxContainer.new()
+	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	titles.add_theme_constant_override("separation", 0)
+	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.add_child(titles)
+	suggestion_title = _label("Nauczmy się czegoś", 16, CREAM, true)
+	titles.add_child(suggestion_title)
+	suggestion_detail = _label("Mały gest. Pierwszy wspólny sukces.", 11, Color("cfddbf"))
+	titles.add_child(suggestion_detail)
+	var arrow := _label("→", 24, Color("e9d69c"))
+	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	content.add_child(arrow)
 	return box
 
 func _build_training() -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 9)
+	box.add_theme_constant_override("separation", 8)
+	var heading := HBoxContainer.new()
+	box.add_child(heading)
+	var title := _label("Wspólne ćwiczenia", 19, INK, true)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(title)
+	var text_button := _icon_button("keyboard", "Wpisz komendę", _show_command)
+	text_button.custom_minimum_size = Vector2(36, 30)
+	text_button.add_theme_stylebox_override("normal", _style(Color.TRANSPARENT, 8, 4))
+	heading.add_child(text_button)
 	var choices := HBoxContainer.new()
 	choices.add_theme_constant_override("separation", 6)
 	box.add_child(choices)
 	for key in PetState.TRICK_KEYS:
 		var button := _button(TrainingSystem.LABELS[key], _choose_trick.bind(key))
-		button.add_theme_font_size_override("font_size", 15)
+		button.add_theme_font_size_override("font_size", 14)
 		choices.add_child(button)
 		trick_buttons[key] = button
-	mastery_label = _label("Poznaje pierwszą komendę", 14, MUTED)
-	box.add_child(mastery_label)
-	mastery_bar = _bar(GREEN, 6)
-	box.add_child(mastery_bar)
-	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	box.add_child(actions)
-	guided_button = _button("Pokaż gest", _train.bind(true), true)
-	command_button = _button("Poproś samodzielnie", _train.bind(false))
-	command_button.add_theme_font_size_override("font_size", 15)
-	actions.add_child(guided_button)
-	actions.add_child(command_button)
-	training_hint = _label("Pokaż gest, poczekaj na wykonanie i nagródź.", 14)
+	var progress := VBoxContainer.new()
+	progress.add_theme_constant_override("separation", 4)
+	box.add_child(progress)
+	mastery_label = _label("Poznaje pierwszą komendę", 13, MUTED)
+	progress.add_child(mastery_label)
+	mastery_bar = _bar(Color("91a871"), 5)
+	progress.add_child(mastery_bar)
+	training_stage = VBoxContainer.new()
+	training_stage.add_theme_constant_override("separation", 6)
+	box.add_child(training_stage)
+	training_hint = _label("Pokaż gest, poczekaj i nagródź.", 14)
 	training_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(training_hint)
-	reward_bar = _bar(Color("bd9864"), 7)
-	box.add_child(reward_bar)
-	var rewards := HBoxContainer.new()
-	rewards.add_theme_constant_override("separation", 6)
-	box.add_child(rewards)
+	training_hint.max_lines_visible = 2
+	training_stage.add_child(training_hint)
+	reward_bar = _bar(Color("daab59"), 6)
+	training_stage.add_child(reward_bar)
+	training_actions = HBoxContainer.new()
+	training_actions.add_theme_constant_override("separation", 8)
+	training_stage.add_child(training_actions)
+	guided_button = _button("Pokaż gest", _train.bind(true), true)
+	command_button = _button("Samodzielnie", _train.bind(false))
+	training_actions.add_child(guided_button)
+	training_actions.add_child(command_button)
+	rewards_row = HBoxContainer.new()
+	rewards_row.add_theme_constant_override("separation", 8)
+	training_stage.add_child(rewards_row)
 	for key in TrainingSystem.REWARDS:
-		var button := _button(REWARD_LABELS[key], _reward.bind(key))
-		button.add_theme_font_size_override("font_size", 15)
-		rewards.add_child(button)
+		var button := _button(REWARD_LABELS[key], _reward.bind(key), key == "treat")
+		button.add_theme_font_size_override("font_size", 13)
+		rewards_row.add_child(button)
 		reward_buttons[key] = button
-	var bottom := HBoxContainer.new()
-	box.add_child(bottom)
 	training_footer = _label("", 12, MUTED)
-	training_footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom.add_child(training_footer)
-	var text_button := _button("Wpisz komendę", _show_command)
-	text_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	text_button.add_theme_font_size_override("font_size", 12)
-	text_button.custom_minimum_size.y = 30
-	bottom.add_child(text_button)
+	box.add_child(training_footer)
 	return box
 
-func _build_journal() -> ScrollContainer:
+func _build_journal() -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	var heading := HBoxContainer.new()
+	box.add_child(heading)
+	var title := _label("Wasza mała historia", 20, INK, true)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(title)
+	album_count = _label("", 12, MUTED)
+	heading.add_child(album_count)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size.y = 225
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
 	journal_list = VBoxContainer.new()
 	journal_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	journal_list.add_theme_constant_override("separation", 13)
+	journal_list.add_theme_constant_override("separation", 10)
 	scroll.add_child(journal_list)
-	return scroll
+	return box
 
 func _build_dialogs() -> void:
 	var shade := ColorRect.new()
@@ -357,13 +455,46 @@ func _select_tab(key: String) -> void:
 	selected_tab = key
 	for tab in panels:
 		panels[tab].visible = tab == key
-		var button: Button = tab_buttons[tab]
-		button.add_theme_stylebox_override("normal", _style(GREEN if tab == key else Color("eae6db"), 12, 8))
-		button.add_theme_color_override("font_color", CREAM if tab == key else INK)
+		tab_buttons[tab].selected = tab == key
+	_fit_room()
 	_refresh()
 
+func _place(control: Control, rect: Rect2) -> void:
+	control.position = rect.position
+	control.size = rect.size
+
 func _fit_room() -> void:
-	room.custom_minimum_size.y = clampf(size.x * 0.62, 245, 310)
+	if sheet == null: return
+	layout_wide = size.x >= 760 and size.x > size.y * 1.2
+	var rail := clampf(size.x * 0.38, 350, 420) if layout_wide else size.x
+	var scene_width := size.x - rail if layout_wide else size.x
+	var inset := 24.0 if size.x >= 390 else 16.0
+	var scene_inset := maxf(inset, (scene_width - 540) / 2)
+	var panel_height := 214.0 if selected_tab == "care" else 270.0
+	if selected_tab == "journal": panel_height = 284.0
+	var panel_x := scene_width + 12 if layout_wide else 12.0
+	var panel_width := rail - 24
+	var nav_y := size.y - 86
+	var warning_space := 44.0 if footer_label.visible else 0.0
+	var panel_top := nav_y - panel_height - 12 - warning_space
+	var rail_top := maxf(24, (size.y - panel_height - 266 - warning_space) / 2)
+	if layout_wide:
+		panel_top = rail_top + 182
+		nav_y = panel_top + panel_height + 12 + warning_space
+	_place(room, Rect2(0, 0, scene_width, size.y if layout_wide else panel_top + 36))
+	if layout_wide:
+		_place(header, Rect2(panel_x + 12, rail_top, panel_width - 24, 82))
+		_place(needs_row, Rect2(panel_x + 8, rail_top + 96, panel_width - 16, 62))
+	else:
+		_place(header, Rect2(scene_inset, 20, scene_width - scene_inset * 2, 82))
+		_place(needs_row, Rect2(scene_inset - 4, 116, scene_width - scene_inset * 2 + 8, 62))
+	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
+	_place(navigation, Rect2(panel_x, nav_y, panel_width, 72))
+	var bubble_width := minf(scene_width - 48, 410)
+	var bubble_y := size.y - 94 if layout_wide else panel_top - 64
+	_place(bubble, Rect2((scene_width - bubble_width) / 2, bubble_y, bubble_width, 54))
+	_place(footer_label, Rect2(panel_x + 10, nav_y - 42, panel_width - 20, 40))
+	room.update_placement()
 
 func _choose_trick(key: String) -> void:
 	if session.training.phase != "idle": return
@@ -409,58 +540,87 @@ func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
 	name_label.text = pet.pet_name
-	bond_label.text = "Szczeniak · Więź %d%%" % roundi(pet.bond)
+	bond_label.text = "Szczeniak  ·  %s" % ("Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"))
+	bond_label.tooltip_text = "Wasza więź: %d%%" % roundi(pet.bond)
 	message_label.text = session.last_message
-	for key in needs_ui:
-		needs_ui[key].bar.value = float(pet.needs[key])
-		needs_ui[key].value.text = "%d" % roundi(float(pet.needs[key]))
+	for key in needs_ui: needs_ui[key].value = float(pet.needs[key])
 	if applied_skin != pet.skin:
 		applied_skin = pet.skin
 		room.animator.set_skin(load("res://data/skins/puppy_%s.tres" % pet.skin))
 	for key in care_buttons:
 		care_buttons[key].disabled = not session.writable or (key != "train" and (session.busy() or float(session.cooldowns.get(key, 0)) > 0 or (pet.resting and key != "rest")))
-	care_buttons.rest.text = "Obudź delikatnie" if pet.resting else "Odpoczynek"
+		care_buttons[key].queue_redraw()
+	care_buttons.rest.caption = "Obudź" if pet.resting else "Drzemka"
+	care_buttons.rest.icon_name = "sun" if pet.resting else "moon"
+	care_title.text = "Czas na spokojny sen" if pet.resting else "Wasza chwila"
+	suggestion_title.text = "Poćwiczmy razem"
+	suggestion_detail.text = "%s · opanowanie %d%%" % [TrainingSystem.LABELS[selected_trick], roundi(pet.skills[selected_trick].mastery)]
 	var mastery: float = pet.skills[selected_trick].mastery
 	var level := "Poznaje gest" if mastery < 25 else ("Ćwiczy z Tobą" if mastery < 75 else "Coraz pewniej")
-	mastery_label.text = "%s · %s · %d%%" % [TrainingSystem.LABELS[selected_trick], level, roundi(mastery)]
+	mastery_label.text = "%s   ·   %d%% opanowania" % [level, roundi(mastery)]
 	mastery_bar.value = mastery
 	var reason := session.training.readiness(pet, selected_trick)
 	guided_button.disabled = not session.writable or session.busy() or not reason.is_empty()
 	command_button.disabled = guided_button.disabled
 	for key in trick_buttons:
 		trick_buttons[key].disabled = session.training.phase != "idle"
-		trick_buttons[key].add_theme_stylebox_override("normal", _style(Color("dce7d7") if key == selected_trick else Color("f2ecdf"), 10, 8))
+		trick_buttons[key].add_theme_stylebox_override("normal", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
+		trick_buttons[key].add_theme_stylebox_override("disabled", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
+		trick_buttons[key].add_theme_color_override("font_disabled_color", INK if key == selected_trick else Color("9b9e8c"))
 	var rewarding := session.training.phase == "reward"
+	var attempting := session.training.phase == "attempt"
+	training_actions.visible = not rewarding and not attempting
+	rewards_row.visible = rewarding or attempting
+	reward_bar.visible = rewarding or attempting
 	reward_bar.value = maxf(0, session.training.time_left / session.training.reward_duration * 100) if rewarding else 0
 	for key in reward_buttons: reward_buttons[key].disabled = not rewarding or not session.writable
-	if rewarding: training_hint.text = "Teraz! Wybierz nagrodę — %.1f s" % session.training.time_left
-	elif session.training.phase == "attempt": training_hint.text = "Piesek próbuje. Poczekaj na dobry moment…"
+	if rewarding: training_hint.text = "Świetnie! Nagroda teraz — %.1f s" % session.training.time_left
+	elif attempting: training_hint.text = "Patrz na pieska… zaraz czas na nagrodę."
 	elif not reason.is_empty(): training_hint.text = reason
-	else: training_hint.text = "Pokaż gest, poczekaj na wykonanie i nagródź."
-	training_footer.text = "Skupienie %d%%" % roundi(100 - pet.fatigue)
-	if not session.writable:
-		footer_label.text = "Zapis wymaga odzyskania. Dotychczasowe pliki zachowano."
-	elif not session.save_ok:
-		footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce na urządzeniu."
-	else:
-		footer_label.text = "Wasz postęp zapisuje się automatycznie"
+	else: training_hint.text = "Pokaż gest. Poczekaj na wykonanie. Nagrodź."
+	training_hint.add_theme_color_override("font_color", Color("8a5f24") if rewarding else INK)
+	training_footer.text = "Skupienie %d%%  ·  Krótkie ćwiczenia, dużo radości" % roundi(100 - pet.fatigue)
+	var had_warning := footer_label.visible
+	footer_label.visible = not session.writable or not session.save_ok
+	if had_warning != footer_label.visible: _fit_room()
+	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
+	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
 	var signature := str(pet.journal.size()) + (str(pet.journal[0].key) if not pet.journal.is_empty() else "")
 	if journal_signature != signature:
 		journal_signature = signature
 		journal_count = pet.journal.size()
+		var plural := "chwile" if journal_count % 10 in [2, 3, 4] and journal_count % 100 not in [12, 13, 14] else "chwil"
+		album_count.text = "%d %s" % [journal_count, "chwila" if journal_count == 1 else plural]
 		for child in journal_list.get_children():
 			journal_list.remove_child(child)
 			child.queue_free()
+		if pet.journal.is_empty():
+			var empty := _label("Pierwsze głaskanie, wspólna miska, udany siad. Tu zostaną Wasze małe wielkie chwile.", 15, MUTED)
+			empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			journal_list.add_child(empty)
 		for entry in pet.journal:
-			var item := VBoxContainer.new()
-			item.add_theme_constant_override("separation", 3)
+			var item := HBoxContainer.new()
+			item.add_theme_constant_override("separation", 12)
 			journal_list.add_child(item)
+			var mark := TextureRect.new()
+			mark.texture = GameIcons.texture("paw", Color("9ca97b"))
+			mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			mark.custom_minimum_size = Vector2(25, 25)
+			mark.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+			item.add_child(mark)
+			var words := VBoxContainer.new()
+			words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			words.add_theme_constant_override("separation", 2)
+			item.add_child(words)
 			var date := Time.get_datetime_dict_from_unix_time(int(entry.at) + int(Time.get_time_zone_from_system().bias) * 60)
-			item.add_child(_label("%02d.%02d · %02d:%02d" % [date.day, date.month, date.hour, date.minute], 12, MUTED))
-			item.add_child(_label(entry.title, 18))
-			var detail := _label(entry.detail, 14, MUTED)
+			words.add_child(_label("%02d.%02d · %02d:%02d" % [date.day, date.month, date.hour, date.minute], 11, MUTED))
+			var title := _label(entry.title, 16, INK, true)
+			title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			words.add_child(title)
+			var detail := _label(entry.detail, 13, MUTED)
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			item.add_child(detail)
+			words.add_child(detail)
 
 func _notification(what: int) -> void:
 	if not is_instance_valid(session) or not session.active: return

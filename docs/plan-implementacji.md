@@ -10,6 +10,8 @@ Projekt przyjmuje grę 2D na telefon w orientacji pionowej, sterowanie dotykiem 
 
 10 listopada 2026 powstał lokalny prototyp w Godot 4.7.2: pionowy interfejs, rysowany pokój, poruszanie psa, pięć potrzeb, opieka, losowany i zapisywany temperament, trzy komendy z nagrodą, dziennik, profil i przełączanie ilustracji/pixel art. Zapis jest wersjonowany, z walidacją, kopią i ograniczonym przeliczaniem nieobecności. Polecenia tekstowe działają przez lokalny słownik.
 
+Interfejs został następnie przebudowany: pokój zajmuje większą część ekranu, nawigacja obejmuje Dom / Trening / Album, opieka działa także przez dotknięcie psa i przedmiotów, a szerokie okno otrzymało panel boczny. Aktualny opis obsługi znajduje się w [opisie projektu](opis-projektu.md#ekrany-i-sterowanie).
+
 Animator obsługuje nazwy 22 klipów, przejścia między pozycjami i rzeczywisty czas dostarczonych klatek. Importer przyjmuje częściowe zestawy PNG i arkuszy. Właściwe klatki przygotowuje użytkownik; teraz widoczne są referencje z prostymi ruchami całego obrazka. Nauka i przesuwanie czekają na odpowiednią fazę animacji.
 
 Sprawdzono logikę, zapis, integrację sprite’ów i interfejs w działającym oknie macOS. Eksport na telefon, dźwięki, dopasowanie miski do pyska, pełny balans oraz integracja AI pozostają do wykonania. Etapy i szacunki poniżej opisują docelowy zakres, nie deklarację jego ukończenia. [Uruchomienie i aktualna struktura](../README.md) · [Podpinanie sprite’ów](integracja-spriteow.md).

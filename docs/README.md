@@ -4,6 +4,8 @@ YuFriend to gra o opiece nad szczeniakiem golden retrievera, budowaniu więzi i 
 
 Pierwsza wersja działa lokalnie na Macu. Ma potrzeby, temperament, trening, wspomnienia i zapis. Użytkownik przygotowuje klatki animacji; obecnie pies korzysta z ilustracji zastępczych. AI, dorastanie i wydanie na telefon należą do dalszego zakresu.
 
+Aktualizacja interfejsu: większy pokój z interaktywnym psem i przedmiotami, okrągłe wskaźniki potrzeb, stała nawigacja **Dom / Trening / Album**, kontekstowe nagrody oraz panel boczny w szerokim oknie. Sterowanie opisuje [opis projektu](opis-projektu.md#ekrany-i-sterowanie), a zakres weryfikacji — [uruchomienie i testy](uruchomienie-i-testy.md#testy-automatyczne).
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

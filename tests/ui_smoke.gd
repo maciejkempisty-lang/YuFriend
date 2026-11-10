@@ -32,6 +32,10 @@ func _run() -> void:
 	await process_frame
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
 	await capture("01-care.png")
+	var contact: float = game.pet.needs.contact
+	await click_at(app.room.pet_position() - Vector2(0, 75))
+	check(game.pet.needs.contact > contact and game.last_message.begins_with("Przymyka"), "clicking the puppy pets it exactly once through the room")
+	step_game(2.2)
 	var hunger: float = game.pet.needs.fullness
 	app.care_buttons.feed.pressed.emit()
 	check(float(game.pet.needs.fullness) > hunger, "feeding button changes needs")
@@ -50,6 +54,7 @@ func _run() -> void:
 	step_game(1.3)
 	check(game.training.phase == "reward" and not app.reward_buttons.praise.disabled, "reward controls activate at correct moment")
 	await capture("02-training-reward.png")
+	check(visible_above_navigation(app.reward_buttons.praise), "reward buttons fit above navigation without scrolling")
 	app.reward_buttons.praise.pressed.emit()
 	check(float(game.pet.skills.sit.mastery) > 0, "reward button commits learning")
 	var learned: float = game.pet.skills.sit.mastery
@@ -69,11 +74,18 @@ func _run() -> void:
 	await capture("04-pixel.png")
 	var reloaded := SaveSystem.new(directory + "/pet.json").load_pet()
 	check(reloaded.pet.pet_name == "Fado" and reloaded.pet.skin == "pixel" and reloaded.pet.skills.sit.mastery == learned, "reload keeps name, skin and learned command")
-	game.act("rest")
+	await touch_at(app.room.bed_rect().get_center())
+	check(game.pet.resting, "touching the bed starts rest through scene input")
 	var energy: float = game.pet.needs.energy
 	step_game(5)
 	check(game.pet.resting and game.pet.needs.energy > energy, "rest button restores energy")
 	game.act("rest")
+	await click_at(app.room.bowl_rect().get_center())
+	check(game.activity == "feed" and game.last_message.begins_with("Mała porcja"), "clicking the bowl feeds once through scene input")
+	step_game(3.2)
+	await touch_at(app.room.ball_center())
+	check(game.activity == "play", "touching the ball starts play through scene input")
+	step_game(2.2)
 	game.change_skin("simple")
 	app._show_profile()
 	await capture("05-profile.png")
@@ -94,12 +106,62 @@ func _run() -> void:
 	var overflowing := []
 	_find_overflow(app, overflowing)
 	check(overflowing.is_empty(), "narrow controls stay inside viewport: " + str(overflowing))
+	check(visible_above_navigation(app.care_buttons.train), "narrow care actions fit above navigation")
+	app._select_tab("training")
+	await capture("09-narrow-training.png")
+	check(visible_above_navigation(app.guided_button), "narrow training actions fit above navigation")
+	# Exercise the actual stretch configuration, without changing the base viewport.
+	root.size = Vector2i(1100, 720)
+	root.content_scale_size = Vector2i(390, 844)
+	app._select_tab("care")
+	await capture("10-landscape.png")
+	check(app.layout_wide and app.room.size.x <= app.sheet.position.x, "wide window places controls beside the room")
+	check(visible_above_navigation(app.care_buttons.train), "wide action panel stays usable")
+	root.size = Vector2i(320, 640)
+	root.content_scale_size = Vector2i(390, 844)
+	app._select_tab("training")
+	await capture("11-short-training.png")
+	overflowing.clear()
+	_find_overflow(app, overflowing)
+	check(overflowing.is_empty() and visible_above_navigation(app.guided_button), "small training viewport keeps actions within bounds: " + str(overflowing))
+	# Save warnings must not cover the last action in the panel.
+	game.save_ok = false
+	app._refresh()
+	await process_frame
+	check(app.footer_label.visible and app.sheet.get_rect().end.y <= app.footer_label.position.y, "save warning has its own space below actions")
 	game.active = false
 	app.queue_free()
 	await process_frame
 	_cleanup()
 	print("UI RESULTS: %d passed, %d failed" % [passed, failed])
 	quit(1 if failed else 0)
+
+func click_at(point: Vector2) -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.position = point
+	root.push_input(motion, true)
+	var event := InputEventMouseButton.new()
+	event.position = point
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = true
+	root.push_input(event, true)
+	event = event.duplicate()
+	event.pressed = false
+	root.push_input(event, true)
+	await process_frame
+
+func touch_at(point: Vector2) -> void:
+	var event := InputEventScreenTouch.new()
+	event.position = point
+	event.pressed = true
+	root.push_input(event, true)
+	event = event.duplicate()
+	event.pressed = false
+	root.push_input(event, true)
+	await process_frame
+
+func visible_above_navigation(control: Control) -> bool:
+	return control.is_visible_in_tree() and control.get_global_rect().end.y <= app.navigation.position.y and control.get_global_rect().position.y >= 0
 
 func capture(name: String) -> void:
 	await process_frame
@@ -125,7 +187,7 @@ func step_game(seconds: float) -> void:
 func _find_overflow(node: Node, result: Array) -> void:
 	if node is Control and node.is_visible_in_tree():
 		var rect: Rect2 = node.get_global_rect()
-		if rect.end.x > root.size.x + 2 and not node is ScrollContainer:
+		if rect.end.x > app.size.x + 2 and not node is ScrollContainer:
 			result.append(str(node.name) + ":" + str(rect.end.x))
 	for child in node.get_children():
 		if not child is Window: _find_overflow(child, result)

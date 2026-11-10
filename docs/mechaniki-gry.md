@@ -24,6 +24,8 @@ Podczas nieobecności symulowane jest najwyżej 8 godzin. Zasady czasu i wznowie
 
 Efekty opieki są naliczane przy zaakceptowaniu działania. Zwykła czynność blokuje kolejną przez 2 sekundy, a jej osobny czas ponownego użycia biegnie od rozpoczęcia. Obecny czas opieki jest stały; pełne dopasowanie do ruchów pyska i przedmiotów nastąpi przy integracji sprite’ów.
 
+Ikony w zakładce Dom i dotknięcia psa, miski, piłki lub legowiska wywołują te same działania sesji. Korzystają z tych samych blokad i czasów ponownego użycia.
+
 | Działanie | Klucz | Efekt | Ponowne użycie |
 |---|---|---|---:|
 | Jedzenie | `feed` | Sytość +22 | 10 s |
@@ -57,7 +59,7 @@ Trening wymaga obudzonego psa, energii co najmniej 25, sytości co najmniej 25 i
 
 | Komenda | Identyfikator | Prezentacja udanej próby |
 |---|---|---|
-| Przyjdź | `come` | Chód do miejsca odpowiadającego 62% szerokości pokoju |
+| Przyjdź | `come` | Chód do logicznego celu `0,62`; widok mapuje go na pokój z marginesem na sylwetkę psa |
 | Siad | `sit` | Przejście do siadu |
 | Podaj łapę | `paw` | Przejście do siadu, jeśli potrzebne, i `give_paw` |
 

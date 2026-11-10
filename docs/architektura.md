@@ -6,7 +6,9 @@
 
 [project.godot](../project.godot) uruchamia [Main.tscn](../scenes/Main.tscn). Scena zawiera główny `Control` ze skryptem [main.gd](../scripts/ui/main.gd). Interfejs, pokój, dialogi i obiekt sesji powstają w GDScripcie podczas uruchomienia; nie są osobnymi scenami do edycji w drzewie `Main.tscn`.
 
-Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpitu ma domyślnie 430 × 930. Skalowanie jest ustawione na `canvas_items`. Nie ma autoloadów, bazy danych, backendu ani dodatkowego frameworka aplikacji.
+Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpitu ma domyślnie 430 × 930. Skalowanie to `canvas_items` z aspektem `expand`. Nie ma autoloadów, bazy danych, backendu ani dodatkowego frameworka aplikacji.
+
+`Main._fit_room()` układa pokój, nagłówek, wskaźniki potrzeb, aktywny panel i nawigację. Cały ekran nie przewija się; przewijany jest album. Szeroki układ przenosi sterowanie obok pokoju. `GameIcons` współdzieli własne ikony, `IconActionButton` rysuje akcje i nawigację, a `NeedIndicator` pokazuje poziomy potrzeb. Font Nunito jest dołączony wraz z licencją w `assets/fonts/`.
 
 ```mermaid
 flowchart TD
@@ -64,10 +66,11 @@ Połączenia są tworzone w `Main._ready()`.
 | `destination_requested(ratio)` | `RoomView.move_to()` ustawia poziomy cel ruchu |
 | `performance_requested(clip, trial_id)` | `RoomView.play_performance()` rozpoczyna prezentację konkretnej próby |
 | `RoomView.floor_tapped(ratio)` | `GameSession.move_to()` sprawdza możliwość ruchu |
+| `RoomView.care_requested(action)` | Akcja opieki po dotknięciu psa, miski, piłki lub legowiska; nadal podlega regułom `GameSession.act()` |
 | `destination_reached` | Kończy zwykłe chodzenie w sesji |
 | `performance_finished(trial_id)` | Zgłasza ukończenie prezentacji próby do sesji |
 
-Współrzędna `ratio` to część szerokości pokoju, a nie piksele. Zakres ruchu wynosi 0,23–0,77, a prędkość 0,24 szerokości pokoju na sekundę. Ruch zaczyna się dopiero wtedy, gdy animator przejdzie do `walk`.
+Współrzędna `ratio` to logiczny cel ruchu w zakresie 0,23–0,77, a jej prędkość zmiany wynosi 0,24 na sekundę. Widok mapuje ją na dostępną szerokość z marginesem na ciało psa. Skala prezentacji i wysokość łap dopasowują się do miejsca nad komunikatem. Ruch zaczyna się dopiero wtedy, gdy animator przejdzie do `walk`.
 
 ## Synchronizacja treningu
 

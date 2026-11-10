@@ -11,7 +11,9 @@ Możesz przygotowywać klipy po kolei. Gra użyje dostarczonych klatek, a dla br
 
 W każdym folderze jest `manifest.example.json`. Skopiuj go jako `manifest.json`, wpisz rzeczywiste nazwy obrazów i pozostaw tylko klipy, których pliki już masz. Przykład ma dwa przyszłe arkusze `idle.png` i `walk.png`; nie są jeszcze dostarczone.
 
-W obrębie jednego pakietu wszystkie klatki mają wspólny rozmiar i punkt podparcia. Startowe ustawienie ilustracji to **512 × 512**, punkt **(256, 430)**. Przykład pixel art używa **64 × 64**, punktu **(32, 54)** i wysokości wyświetlania 256, czyli skali 4× w przestrzeni sceny. Inna siatka wymaga zmiany tych wartości w manifeście. Skalowanie całego okna przez system może dodatkowo zmienić fizyczny rozmiar pikseli.
+W obrębie jednego pakietu wszystkie klatki mają wspólny rozmiar i punkt podparcia. Startowe ustawienie ilustracji to **512 × 512**, punkt **(256, 430)**. Przykład pixel art używa **64 × 64**, punktu **(32, 54)** i wysokości wyświetlania 256, czyli bazowej skali 4× w animatorze. Inna siatka wymaga zmiany tych wartości w manifeście.
+
+`RoomView` dodatkowo skaluje całego animatora, dopasowując psa do miejsca nad komunikatem, a `canvas_items` z aspektem `expand` dopasowuje widok do okna. Sama wartość `display_height` nie gwarantuje więc całkowitego mnożnika na ekranie. Filtr `nearest` pozostaje włączony dla pixel art, ale równe piksele trzeba ocenić na docelowym urządzeniu. Nowe klatki warto obejrzeć w Domu i Treningu, ponieważ wysokość pokoju jest w tych zakładkach różna.
 
 PNG powinny mieć przezroczyste tło i identyczne marginesy. Pies jest skierowany w prawo; odbicie w lewo wykonuje gra. Chód rysujemy w miejscu, bez przesuwania płótna.
 
@@ -65,7 +67,7 @@ Pętle i klipy jednorazowe wynikają z nazw w briefie. Importer ustawia je autom
 
 1. Dodaj PNG i `manifest.json`. Otwórz projekt w Godocie i poczekaj na import obrazów, albo wykonaj pierwsze polecenie poniżej.
 2. Uruchom importer dla wybranego stylu. Jeśli pakiet już był wygenerowany, dopisz `--replace`, aby go przebudować z aktualnego manifestu.
-3. Uruchom grę ponownie i w **Profilu** wybierz właściwy styl.
+3. Uruchom grę ponownie, otwórz **Profil** ikoną ustawień obok imienia i wybierz właściwy styl.
 
 Polecenia z katalogu projektu:
 

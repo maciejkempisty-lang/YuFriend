@@ -40,9 +40,9 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 |---|---|---:|
 | [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia i słownik komend | 44 poprawne sprawdzenia |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, rozmiary, kolejność klatek, zasób `.res`, przejścia i ukończenie prezentacji | 26 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening przez interfejs, zapis, wznowienie, dialogi oraz szerokości ekranu | 17 poprawnych sprawdzeń |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, dialogi i układy ekranu | 28 poprawnych sprawdzeń |
 
-Wynik **87/87** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil i wąski układ.
+Wynik **98/98** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil oraz układy pionowy i poziomy.
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_runner.gd
@@ -50,7 +50,7 @@ Wynik **87/87** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 ```
 
-Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 oraz 360 × 800. Steruje sygnałami przycisków i kontrolowanym upływem czasu; fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
+Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640 i 1100 × 720. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku oraz kontrolowanym upływem czasu. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
 
 Testy używają własnych tymczasowych danych i sprzątają je po normalnym zakończeniu. Nie nadpisują `user://pet.json` ani ręcznego zapisu `--qa`. Katalog `test-results/` jest pomijany przez Git i skaner zasobów Godota.
 
@@ -68,7 +68,7 @@ Uruchom grę z `--qa`. Wykonaj poniższe czynności również po większej zmian
 | Nagródź przed wykonaniem, po czasie i dwa razy | Żadna z tych dodatkowych prób nie przyznaje postępu |
 | Wpisz „usiądź”, a następnie nierozpoznawany zwrot | Pierwszy uruchamia samodzielną próbę, drugi daje wyjaśnienie |
 | Zamknij grę i uruchom ten sam tryb ponownie | Imię, cechy, wygląd, umiejętności i wspomnienia są zachowane |
-| Zmniejsz okno i otwórz wszystkie zakładki | Tekst i akcje pozostają dostępne, ewentualnie po przewinięciu |
+| Zmniejsz okno i otwórz wszystkie zakładki | Akcje i nawigacja pozostają dostępne; przewija się tylko album |
 
 Jakość rzeczywistych sprite’ów oceniamy osobno: stabilne łapy, zgodne pozycje na styku klipów, czyste pętle, właściwy kierunek i brak zmiany skali. Test importera nie zastępuje oglądania animacji.
 
@@ -79,7 +79,7 @@ Jakość rzeczywistych sprite’ów oceniamy osobno: stabilne łapy, zgodne pozy
 | Tempo potrzeb lub odpoczynku | `NeedsSystem`; zaktualizuj mechaniki i sprawdź testy logiki |
 | Efekt opieki i czas ponownego użycia | `GameSession.act()`; sprawdź reguły oraz przepływ UI |
 | Szansa wykonania i nagrody | `TrainingSystem`; sprawdź wczesne, podwójne i wygasłe nagrody |
-| Układ, napisy i dialogi | `scripts/ui/main.gd`; sprawdź podgląd na trzech szerokościach |
+| Układ, napisy i dialogi | `scripts/ui/main.gd`; sprawdź układy pionowe i szeroki panel boczny |
 | Wygląd pokoju i ruch | `RoomView`; sprawdź cel, kierunek i przejście z siadu do chodu |
 | Nowy klip | `PetAnimator.CLIPS`, ewentualnie graf przejść, manifest i sytuacja uruchamiająca klip |
 | Nowa komenda lub potrzeba | Model, odpowiedni system, sesja, UI i migracja istniejącego zapisu |

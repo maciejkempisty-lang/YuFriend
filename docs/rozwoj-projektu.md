@@ -6,6 +6,8 @@
 
 Podstawowa pętla opieki, nauki i zapisu działa w lokalnym prototypie. Najbliższym krokiem jest zastąpienie referencji właściwymi klatkami szczeniaka i ocena gry w kilku krótkich sesjach. Wygląd 2D i pixel art są dostępne do porównania; wybór głównego stylu pozostaje otwarty.
 
+Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze. Nadal potrzebne są test na telefonie, ocena czytelności pixel art przy rzeczywistym skalowaniu oraz dopasowanie oprawy pokoju do ostatecznych sprite’ów. Przed rozszerzaniem liczby klipów warto sprawdzić pierwsze `idle`, `walk` i `sit_down` w tym układzie.
+
 ## Kolejność prac
 
 | Priorytet | Zakres | Warunek ukończenia |

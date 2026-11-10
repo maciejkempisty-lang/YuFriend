@@ -23,7 +23,7 @@ Naprowadzanie pozwala bezpiecznie rozpocząć naukę nieznanej komendy. Samodzie
 | Obszar | Obecne zachowanie |
 |---|---|
 | Postać | Jeden szczeniak, domyślnie Biszkopt; imię można zmienić |
-| Pokój | Jedna scena, podłoga, okno, legowisko, miska i proste efekty |
+| Pokój | Jedna scena z oknem, rośliną, dywanem oraz dotykowymi przedmiotami: legowiskiem, miską i piłką |
 | Ruch | Chodzenie w lewo i prawo do wskazanego miejsca; okazjonalne samodzielne spacery |
 | Potrzeby | Sytość, energia, czystość, zabawa i bliskość |
 | Opieka | Jedzenie, głaskanie, zabawa, czesanie, odpoczynek i budzenie |
@@ -34,21 +34,27 @@ Naprowadzanie pozwala bezpiecznie rozpocząć naukę nieznanej komendy. Samodzie
 | Wygląd | Przełączanie prostej ilustracji i pixel art; obsługa częściowych zestawów animacji |
 | Dane | Lokalny zapis JSON, poprzednia poprawna kopia, przeliczanie nieobecności |
 
-Prototyp sprawdzono na macOS. Interfejs ma układ pionowy z myślą o telefonie; wydanie i testy na fizycznym urządzeniu mobilnym są jeszcze przed nami.
+Prototyp sprawdzono na macOS. Interfejs ma układ pionowy z myślą o telefonie oraz układ z panelem bocznym dla szerokiego okna. Wydanie i testy na fizycznym urządzeniu mobilnym są jeszcze przed nami.
 
 ## Ekrany i sterowanie
 
-Główny ekran zawiera imię, poziom więzi, pięć wskaźników potrzeb, pokój i komunikat opisujący bieżącą sytuację. Dotknięcie lub kliknięcie pokoju wskazuje poziomy cel ruchu. Przy mniejszym oknie zawartość można przewijać.
+Głównym elementem ekranu jest pies w pokoju. Nad nim widać imię, opis relacji i pięć okrągłych wskaźników potrzeb. Poniżej znajdują się komunikat, panel bieżącej zakładki i stała nawigacja **Dom / Trening / Album**. Akcje mieszczą się bez przewijania całego ekranu; przewijana jest lista wspomnień w albumie. W szerokim oknie informacje o psie i sterowanie tworzą panel obok pokoju.
+
+Wskaźniki pokazują poziom zaspokojenia potrzeb; poniżej 30% zmieniają kolor. Dokładna wartość jest dostępna w podpowiedzi po najechaniu i w nazwie dostępności kontrolki. Opis więzi zmienia się z „Poznajecie się” przez „Coraz bliżej” na „Najlepsi przyjaciele”.
 
 | Miejsce | Działanie gracza |
 |---|---|
-| Opieka | Uruchamia rytuały, odpoczynek lub przechodzi do treningu |
-| Trening | Wybiera komendę, sposób próby i nagrodę; widzi opanowanie i skupienie |
-| Wspomnienia | Czyta faktycznie zapisane wydarzenia, od najnowszego |
-| Profil | Zmienia imię i styl grafiki, sprawdza cechy i ulubioną nagrodę |
-| Wpisz komendę | Wpisuje rozpoznawany zwrot, który uruchamia samodzielną próbę |
+| Dom | Podpisane ikony: jedzenie, głaskanie, zabawa, czesanie, drzemka; przycisk przejścia do treningu |
+| Trening | Wybór komendy, „Pokaż gest” lub „Samodzielnie”; po rozpoczęciu próby w tym samym miejscu pojawiają się nagrody, dostępne po wykonaniu sztuczki |
+| Album | Faktycznie zapisane wydarzenia z datą, od najnowszego |
+| Ustawienia obok imienia | Profil: zmiana imienia i stylu grafiki, cechy i ulubiona nagroda |
+| Ikona klawiatury w treningu | Wpisanie rozpoznawanego zwrotu, który uruchamia samodzielną próbę |
+
+Pokój również jest interaktywny: dotknięcie pieska oznacza głaskanie, miski — karmienie, piłki — zabawę, a legowiska — odpoczynek lub budzenie. Dotknięcie wolnej podłogi wskazuje cel spaceru. Są to pojedyncze dotknięcia; głaskanie przesuwaniem palca i rzucanie piłki gestem pozostają dalszym pomysłem.
 
 Po rozpoczęciu czynności część przycisków jest czasowo zablokowana. Komunikat wskazuje, czy trzeba poczekać, odpocząć, nakarmić psa albo nauczyć go podstaw siadu.
+
+Zapis odbywa się automatycznie. Ostrzeżenie o nieudanym zapisie lub problemie z odczytem ma własne miejsce nad nawigacją, aby nie zasłaniać akcji.
 
 ## Co oznacza obecny wygląd psa
 
