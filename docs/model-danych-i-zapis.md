@@ -4,7 +4,7 @@
 
 ## Format danych
 
-Stan jednego psa jest przechowywany jako JSON o `schema_version: 1`. Plik zawiera dwa główne pola: numer schematu oraz obiekt `pet`. Kompletny syntetyczny przykład znajduje się w [zapis-v1.json](przyklady/zapis-v1.json); nie jest kopią danych gracza.
+Stan jednego psa jest przechowywany jako JSON o `schema_version: 2`. Plik zawiera dwa główne pola: numer schematu oraz obiekt `pet`. Kompletny syntetyczny przykład znajduje się w [zapis-v2.json](przyklady/zapis-v2.json); nie jest kopią danych gracza. Poprzedni format pokazuje [zapis-v1.json](przyklady/zapis-v1.json).
 
 Źródłem formatu jest [PetState.to_dict() i from_dict()](../scripts/model/pet_state.gd). Wersję i obsługę plików określa [SaveSystem](../scripts/systems/save_system.gd).
 
@@ -24,6 +24,11 @@ Stan jednego psa jest przechowywany jako JSON o `schema_version: 1`. Plik zawier
 | `last_seen_at` | Nieujemny czas Unix w sekundach, używany do przeliczenia nieobecności |
 | `journal` | Tablica do 40 wydarzeń: `key`, `title`, `detail`, `at` |
 | `milestones` | Tablica do 200 identyfikatorów zdarzeń, które już wystąpiły |
+| `history` | Tablica do 14 dziennych koszyków: `day`, liczniki `events` i liczniki pór dnia `parts` |
+| `habits` | Tablica identyfikatorów nawyków z katalogu `PetState.HABIT_KEYS` |
+| `reflected_day` | Nieujemny numer ostatniego dnia przetworzonego przez osobowość |
+
+`day` to numer dnia w czasie lokalnym. W koszyku zapisywane są tylko znane klucze zdarzeń i pór; liczniki muszą być nieujemne. Nieznany nawyk powoduje odrzucenie stanu. Znaczenie pól opisuje [osobowość i nawyki](osobowosc.md).
 
 Opanowanie `mastery` ma zakres 0–100. Liczniki prób muszą być nieujemne; odczyt konwertuje je do liczb całkowitych i ogranicza do miliona. `successes` rośnie po zaakceptowanej nagrodzie. Nie ma oddzielnego licznika poprawnych wykonań bez nagrody ani podziału liczników na naprowadzanie i samodzielność.
 
@@ -33,13 +38,17 @@ Wpis dziennika używa znaczników czasu Unix. `key`, `title` i `detail` mają li
 
 Odczyt wymaga poprawnego obiektu JSON i wszystkich pól wymaganych przez `from_dict()`. Nieprawidłowe typy, nieznane identyfikatory stylu lub etapu oraz wartości nieskończone i `NaN` powodują odrzucenie stanu. Prawidłowe liczby potrzeb, cech, więzi, zmęczenia i opanowania są ograniczane do odpowiednich zakresów.
 
-Limit pliku wynosi **1 MiB**. Każda wartość `schema_version` inna niż `1`, również brak tego pola w obiekcie JSON, daje status `unsupported`. Nie ma jeszcze migracji starszych formatów. Przed zmianą struktury trzeba zaprojektować migrację i dopiero wtedy zwiększyć numer wersji.
+Limit pliku wynosi **1 MiB**. Gra czyta wersje `1` i `2`. Każda inna wartość `schema_version`, również brak tego pola w obiekcie JSON, daje status `unsupported`.
+
+Zapis w wersji 1 jest uzupełniany przez `SaveSystem.migrate()` o pustą historię, pustą listę nawyków i `reflected_day: 0`; pozostałe pola nie są zmieniane. Oryginał jest kopiowany do pliku tymczasowego, sprawdzany i zatwierdzany jako `pet.json.v1`. Dotyczy to także odzyskiwania wersji 1 z `.bak`; późniejsze rotacje kopii nie usuwają `.v1`. Istniejąca kopia musi być poprawnym zapisem tej wersji i tego samego psa.
+
+Jeśli zabezpieczenie oryginału się nie powiedzie, `load_pet()` zwraca `migration_failed` z wczytanym psem i `writable: false`. Również bezpośrednie `save_pet()` odmawia zastąpienia starszego zapisu bez poprawnej kopii. Po udanym zabezpieczeniu najbliższy zapis tworzy wersję 2. Kolejna zmiana struktury wymaga dopisania następnego kroku w `migrate()` i testu odczytu starszego psa.
 
 Akceptacja wartości `young`, `adult` i `senior` przez walidator nie uruchamia dorastania ani innych grafik. Zmiana wieku wymaga osobnego rozszerzenia logiki i wyboru zasobów.
 
 ## Co jest trwałe
 
-Zapis obejmuje imię, tożsamość, wygląd, cechy, potrzeby, relację, komendy, odpoczynek, wspomnienia i czas. Ziarno służy do pierwotnego losowania; podczas odczytu cechy są pobierane z pliku.
+Zapis obejmuje imię, tożsamość, wygląd, cechy, potrzeby, relację, komendy, odpoczynek, wspomnienia, historię zdarzeń, nawyki i czas. Ziarno służy do pierwotnego losowania; podczas odczytu cechy są pobierane z pliku.
 
 Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka interfejsu, czasy ponownego użycia i rozpoczęta próba treningowa są tymczasowe. Po restarcie pies zaczyna w środkowej części pokoju. Wczytany odpoczynek odtwarza pozycję snu; niezakończony trening nie daje oczekującej nagrody.
 
@@ -60,8 +69,9 @@ Standardowy katalog projektu na macOS to `~/Library/Application Support/Godot/ap
 1. Stan przechodzi walidację przez `PetState.from_dict()`.
 2. Nowy JSON trafia do `pet.json.tmp`; plik jest opróżniany do systemu plików, zamykany i ponownie odczytywany przez walidator.
 3. Jeśli obecny główny plik ma nieobsługiwany schemat, zapis zostaje przerwany.
-4. Jeśli obecny główny plik jest poprawny, jest kopiowany do `pet.json.bak.tmp`, a następnie zatwierdzany jako `pet.json.bak`.
-5. Plik tymczasowy zastępuje główny przez zmianę nazwy w tym samym katalogu.
+4. Przed zastąpieniem pliku lub rotacją kopii starszy poprawny zapis z pliku głównego lub `.bak` musi mieć zabezpieczony oryginał `.v1`.
+5. Jeśli obecny główny plik jest poprawny, jest kopiowany do `pet.json.bak.tmp`, a następnie zatwierdzany jako `pet.json.bak`.
+6. Plik tymczasowy zastępuje główny przez zmianę nazwy w tym samym katalogu.
 
 Kopia zawiera **poprzedni poprawny zapis**. Pierwsze zapisanie nowego psa tworzy główny plik; kopia pojawia się przy kolejnym zapisie. Uszkodzony główny plik nie jest kopiowany na poprawną kopię odzyskiwania.
 
@@ -74,10 +84,11 @@ Niepowodzenie zwraca `false` i ustawia `SaveSystem.last_error`. Interfejs pokazu
 | Poprawny | Dowolna | `loaded`, wczytany pies, zapis włączony |
 | Nieobsługiwany schemat | Dowolna | `unsupported`, zapis zablokowany; bez cofania do kopii |
 | Brak lub błędny | Poprawna | `recovered`, pies z kopii, zapis włączony |
+| Wersja 1 w wybranym źródle, błąd zabezpieczenia oryginału | Dowolna | `migration_failed`, wczytany pies, zapis zablokowany |
 | Brak | Brak | `new`, nowy pies, zapis włączony |
 | Pozostałe przypadki | Niepoprawna lub brak | `invalid`, zapis zablokowany |
 
-W trybie zablokowanym interfejs otrzymuje tymczasowy stan nowego psa do wyświetlenia; nie jest on zapisywany na dotychczasowe pliki. Komunikat informuje o problemie, a działania zmieniające stan są blokowane. Udane odzyskanie z kopii pozwala natomiast sesji zapisać odzyskany stan jako nowy główny plik już przy starcie.
+Przy błędnym lub nieobsługiwanym zapisie interfejs otrzymuje tymczasowy stan nowego psa do wyświetlenia; przy błędzie zabezpieczenia migracji pokazuje poprawnie odczytanego psa. Żaden z tych stanów nie jest zapisywany na dotychczasowe pliki. Komunikat informuje o problemie, a działania zmieniające stan są blokowane. Udane odzyskanie z kopii pozwala natomiast sesji zapisać odzyskany stan jako nowy główny plik już przy starcie.
 
 Przy ręcznym diagnozowaniu zamknij grę i zachowaj kopię całego katalogu danych. Sprawdź JSON i numer wersji w kopiach plików. Nie zmieniaj samego numeru schematu, żeby wymusić odczyt innego formatu; potrzebna jest zgodna wersja gry lub jawna migracja. Prototyp nie ma jeszcze osobnego ekranu importu i odzyskiwania danych.
 

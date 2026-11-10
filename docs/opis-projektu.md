@@ -28,7 +28,7 @@ Naprowadzanie pozwala bezpiecznie rozpocząć naukę nieznanej komendy. Samodzie
 | Potrzeby | Sytość, energia, czystość, zabawa i bliskość |
 | Opieka | Jedzenie, głaskanie, zabawa, czesanie, odpoczynek i budzenie |
 | Trening | Przyjdź, siad, podaj łapę; pomoc gestem i samodzielna próba |
-| Charakter | Cztery trwałe cechy i ulubiona nagroda, losowane przy tworzeniu psa |
+| Charakter | Cztery cechy losowane przy tworzeniu psa, niewielki dryf po aktywnych dniach, nabywane nawyki i stała ulubiona nagroda |
 | Relacja | Więź oraz dziennik pierwszych zdarzeń i osiągnięć |
 | Polecenia tekstowe | Zamknięty słownik polskich zwrotów, działający lokalnie |
 | Wygląd | Przełączanie prostej ilustracji i pixel art; obsługa częściowych zestawów animacji |
@@ -47,7 +47,7 @@ Wskaźniki pokazują poziom zaspokojenia potrzeb; poniżej 30% zmieniają kolor.
 | Dom | Podpisane ikony: jedzenie, głaskanie, zabawa, czesanie, drzemka; przycisk przejścia do treningu |
 | Trening | Wybór komendy, „Pokaż gest” lub „Samodzielnie”; po rozpoczęciu próby w tym samym miejscu pojawiają się nagrody, dostępne po wykonaniu sztuczki |
 | Album | Faktycznie zapisane wydarzenia z datą, od najnowszego |
-| Ustawienia obok imienia | Profil: zmiana imienia i stylu grafiki, cechy i ulubiona nagroda |
+| Ustawienia obok imienia | Profil: zmiana imienia i stylu grafiki, cechy, nawyki i ulubiona nagroda |
 | Ikona klawiatury w treningu | Wpisanie rozpoznawanego zwrotu, który uruchamia samodzielną próbę |
 
 Pokój również jest interaktywny: dotknięcie pieska oznacza głaskanie, miski — karmienie, piłki — zabawę, a legowiska — odpoczynek lub budzenie. Dotknięcie wolnej podłogi wskazuje cel spaceru. Są to pojedyncze dotknięcia; głaskanie przesuwaniem palca i rzucanie piłki gestem pozostają dalszym pomysłem.

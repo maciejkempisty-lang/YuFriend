@@ -38,11 +38,11 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 
 | Skrypt | Zakres | Ostatni odnotowany wynik |
 |---|---|---:|
-| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia i słownik komend | 44 poprawne sprawdzenia |
+| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 80 poprawnych sprawdzeń |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, rozmiary, kolejność klatek, zasób `.res`, przejścia i ukończenie prezentacji | 26 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, dialogi i układy ekranu | 28 poprawnych sprawdzeń |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 32 poprawne sprawdzenia |
 
-Wynik **98/98** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil oraz układy pionowy i poziomy.
+Wynik **138/138** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału.
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_runner.gd

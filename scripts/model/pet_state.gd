@@ -4,6 +4,13 @@ extends RefCounted
 const NEED_KEYS := ["fullness", "energy", "hygiene", "play", "contact"]
 const TRICK_KEYS := ["come", "sit", "paw"]
 const TRAIT_KEYS := ["curiosity", "patience", "sociability", "sensitivity"]
+const EVENT_KEYS := ["visit", "feed", "pet", "play", "clean", "rest", "train_guided", "train_free",
+	"train_tired", "reward_treat", "reward_praise", "reward_play", "reward_missed", "miss"]
+const PART_KEYS := ["morning", "afternoon", "evening", "night"]
+const HABIT_KEYS := ["time_morning", "time_afternoon", "time_evening", "time_night", "cuddler", "playful", "student"]
+const MAX_HISTORY_DAYS := 14
+const MAX_MILESTONES := 200
+const MAX_EVENT_COUNT := 100000
 var pet_id: String = ""
 var pet_name: String = "Biszkopt"
 var life_stage: String = "puppy"
@@ -19,6 +26,10 @@ var resting: bool = false
 var last_seen_at: float = 0.0
 var journal: Array = []
 var milestones: Array = []
+# Dzienne koszyki zdarzeń (najstarszy pierwszy), nawyki i ostatni przetworzony dzień.
+var history: Array = []
+var habits: Array = []
+var reflected_day: int = 0
 
 static func create(seed_value: int = 0, now: float = -1.0) -> PetState:
 	var pet := PetState.new()
@@ -38,6 +49,15 @@ static func create(seed_value: int = 0, now: float = -1.0) -> PetState:
 	pet.remember("welcome", "Pierwszy dzień razem", "Zaczyna się Wasza wspólna historia.", pet.last_seen_at)
 	return pet
 
+# Cechy „urodzeniowe” wynikają z ziarna; dryf jest ograniczany względem nich.
+static func base_traits(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var result := {}
+	for key in TRAIT_KEYS:
+		result[key] = rng.randf_range(0.25, 0.85)
+	return result
+
 func remember(key: String, title: String, detail: String, now: float = -1.0) -> bool:
 	if milestones.has(key):
 		return false
@@ -54,7 +74,8 @@ func to_dict() -> Dictionary:
 		"favorite_reward": favorite_reward, "needs": needs.duplicate(true),
 		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
 		"resting": resting, "last_seen_at": last_seen_at,
-		"journal": journal.duplicate(true), "milestones": milestones.duplicate()}
+		"journal": journal.duplicate(true), "milestones": milestones.duplicate(),
+		"history": history.duplicate(true), "habits": habits.duplicate(), "reflected_day": reflected_day}
 
 static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
@@ -96,7 +117,7 @@ static func from_dict(data: Dictionary) -> PetState:
 				return null
 	if not data.get("journal") is Array or not data.get("milestones") is Array:
 		return null
-	if data.journal.size() > 40 or data.milestones.size() > 200:
+	if data.journal.size() > 40 or data.milestones.size() > MAX_MILESTONES:
 		return null
 	for entry in data.journal:
 		if not entry is Dictionary or not valid_number(entry.get("at")):
@@ -107,7 +128,32 @@ static func from_dict(data: Dictionary) -> PetState:
 	for key in data.milestones:
 		if not key is String or key.length() > 100:
 			return null
+	if not data.get("history") is Array or not data.get("habits") is Array or not valid_number(data.get("reflected_day")):
+		return null
+	if data.history.size() > MAX_HISTORY_DAYS or data.habits.size() > HABIT_KEYS.size() or data.reflected_day < 0:
+		return null
+	for id in data.habits:
+		if not id is String or not HABIT_KEYS.has(id):
+			return null
+	var clean_history: Array = []
+	for bucket in data.history:
+		if not bucket is Dictionary or not valid_number(bucket.get("day")) or bucket.day < 0:
+			return null
+		var clean := {"day": int(bucket.day), "events": {}, "parts": {}}
+		for group in [["events", EVENT_KEYS], ["parts", PART_KEYS]]:
+			var counts: Variant = bucket.get(group[0])
+			if not counts is Dictionary:
+				return null
+			for key in group[1]:
+				if not counts.has(key): continue
+				if not valid_number(counts[key]) or counts[key] < 0:
+					return null
+				clean[group[0]][key] = mini(int(counts[key]), MAX_EVENT_COUNT)
+		clean_history.append(clean)
 	var pet := PetState.new()
+	pet.history = clean_history
+	pet.habits = data.habits.duplicate()
+	pet.reflected_day = int(data.reflected_day)
 	pet.pet_id = data.pet_id
 	pet.pet_name = data.pet_name
 	pet.life_stage = data.life_stage

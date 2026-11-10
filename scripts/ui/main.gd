@@ -518,7 +518,12 @@ func _show_profile() -> void:
 	profile_traits.text = "Ciekawość %d%% · Cierpliwość %d%%\nTowarzyskość %d%% · Wrażliwość %d%%\nUlubiona nagroda: %s" % [
 		roundi(float(session.pet.traits.curiosity) * 100), roundi(float(session.pet.traits.patience) * 100),
 		roundi(float(session.pet.traits.sociability) * 100), roundi(float(session.pet.traits.sensitivity) * 100), REWARD_LABELS[session.pet.favorite_reward].to_lower()]
-	profile_dialog.popup_centered(Vector2i(336, 340))
+	# Nawyki w krótkich wierszach po dwa, żeby okno nie rosło na szerokość.
+	var habits := PersonalitySystem.habit_labels(session.pet)
+	profile_traits.text += "\nNawyki: " + ("jeszcze się kształtują" if habits.is_empty() else "")
+	for index in habits.size():
+		profile_traits.text += ("\n" if index % 2 == 0 else " · ") + habits[index]
+	profile_dialog.popup_centered(Vector2i(336, 340 + 22 * (1 + ceili(habits.size() / 2.0))))
 	name_edit.grab_focus()
 
 func _show_command() -> void:

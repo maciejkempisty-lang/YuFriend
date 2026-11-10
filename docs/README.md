@@ -13,6 +13,7 @@ Aktualizacja interfejsu: większy pokój z interaktywnym psem i przedmiotami, ok
 | [Opis projektu](opis-projektu.md) | Cel gry, zakres prototypu, ekrany i sposób rozgrywki |
 | [Architektura](architektura.md) | Moduły, przepływ zdarzeń i połączenie logiki z animacjami |
 | [Mechaniki gry](mechaniki-gry.md) | Potrzeby, temperament, trening, nagrody i aktualne parametry balansu |
+| [Osobowość i nawyki](osobowosc.md) | Dziennik zdarzeń, dryf cech, nawyki i miejsce na AI |
 | [Model danych i zapis](model-danych-i-zapis.md) | Format JSON, walidacja, kopie, odzyskiwanie i upływ czasu |
 | [Uruchomienie i testy](uruchomienie-i-testy.md) | Praca z projektem, oddzielny zapis testowy, testy i diagnoza problemów |
 | [Rozwój projektu](rozwoj-projektu.md) | Priorytety, kryteria ukończenia, decyzje otwarte i planowane AI |

@@ -1,0 +1,62 @@
+{
+  "schema_version": 2,
+  "pet": {
+    "pet_id": "1794268800-12345",
+    "pet_name": "Biszkopt",
+    "life_stage": "puppy",
+    "skin": "pixel",
+    "personality_seed": 12345,
+    "traits": {
+      "curiosity": 0.42,
+      "patience": 0.72,
+      "sociability": 0.64,
+      "sensitivity": 0.49
+    },
+    "favorite_reward": "treat",
+    "needs": {
+      "fullness": 78.0,
+      "energy": 76.0,
+      "hygiene": 85.0,
+      "play": 58.0,
+      "contact": 65.0
+    },
+    "skills": {
+      "come": {"mastery": 0.0, "attempts": 0, "successes": 0},
+      "sit": {"mastery": 20.0, "attempts": 3, "successes": 2},
+      "paw": {"mastery": 0.0, "attempts": 0, "successes": 0}
+    },
+    "bond": 17.0,
+    "fatigue": 0.0,
+    "resting": false,
+    "last_seen_at": 1794441600.0,
+    "journal": [
+      {
+        "key": "habit_cuddler",
+        "title": "Przytulas",
+        "detail": "Często go głaszczesz, więc sam zaczął przychodzić po pieszczoty.",
+        "at": 1794441600.0
+      },
+      {
+        "key": "welcome",
+        "title": "Pierwszy dzień razem",
+        "detail": "Zaczyna się Wasza wspólna historia.",
+        "at": 1794268800.0
+      }
+    ],
+    "milestones": ["welcome", "habit_cuddler"],
+    "history": [
+      {
+        "day": 20767,
+        "events": {"visit": 1, "feed": 1, "pet": 5, "play": 2, "train_guided": 2, "reward_treat": 2},
+        "parts": {"evening": 13}
+      },
+      {
+        "day": 20768,
+        "events": {"visit": 2, "feed": 2, "pet": 4, "train_guided": 1, "reward_missed": 1},
+        "parts": {"morning": 3, "evening": 6}
+      }
+    ],
+    "habits": ["cuddler"],
+    "reflected_day": 20768
+  }
+}

@@ -86,8 +86,19 @@ func _run() -> void:
 	await touch_at(app.room.ball_center())
 	check(game.activity == "play", "touching the ball starts play through scene input")
 	step_game(2.2)
+	check(game.pet.history.size() == 1 and int(game.pet.history[0].events.get("feed", 0)) >= 2 and int(game.pet.history[0].events.get("reward_praise", 0)) == 1, "session records care and rewards in the event history")
+	game.pet.habits = ["time_evening", "cuddler", "playful", "student"]
+	game.pet.needs.contact = 40.0
+	game.pet.needs.play = 95.0
+	game.pet.fatigue = 90.0
+	game._spontaneous(0.0)
+	check(game.activity == "habit" and game.last_message.contains("czeka na głaskanie"), "a habit shows up as spontaneous behaviour")
+	check(game.act("pet") and game.activity == "pet", "player can answer a habit invitation immediately")
+	step_game(2.2)
+	game.pet.fatigue = 0.0
 	game.change_skin("simple")
 	app._show_profile()
+	check(app.profile_traits.text.contains("Przytulas"), "profile lists habits")
 	await capture("05-profile.png")
 	check(app.profile_dialog.size.y <= root.size.y - 40 and app.profile_dialog.get_ok_button().get_global_rect().end.y <= app.profile_dialog.size.y, "profile dialog and save button fit on screen")
 	app.profile_dialog.hide()

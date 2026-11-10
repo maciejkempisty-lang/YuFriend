@@ -40,7 +40,7 @@ Sesja odmawia czynności, gdy trwa trening, ruch lub inna aktywność. Śpiąceg
 
 ## Temperament i zachowania samodzielne
 
-Przy tworzeniu psa każda cecha jest losowana w zakresie 0,25–0,85 na podstawie zapisanego ziarna. Wczytanie korzysta z zapisanych wartości, zamiast losować je ponownie.
+Przy tworzeniu psa każda cecha jest losowana w zakresie 0,25–0,85 na podstawie zapisanego ziarna. Wczytanie korzysta z zapisanych wartości, zamiast losować je ponownie. Cechy powoli zmieniają się pod wpływem opieki, a powtarzane wzorce stają się nawykami; reguły opisuje [osobowość i nawyki](osobowosc.md).
 
 | Cecha | Wpływ |
 |---|---|
@@ -51,7 +51,7 @@ Przy tworzeniu psa każda cecha jest losowana w zakresie 0,25–0,85 na podstawi
 
 Osobno losowana jest ulubiona nagroda: `treat`, `praise` albo `play`. Preferencja nie zmienia się w obecnej wersji.
 
-Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies rozpoczyna odpoczynek. W przeciwnym razie może wybrać spacer zależnie od ciekawości. Te decyzje nie przerywają opieki ani treningu.
+Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies rozpoczyna odpoczynek. W przeciwnym razie może pokazać zachowanie wynikające z nawyku albo wybrać spacer zależnie od ciekawości. Te decyzje nie przerywają opieki ani treningu.
 
 ## Warunki rozpoczęcia treningu
 

@@ -1,6 +1,6 @@
 # YuFriend
 
-Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Jeden pokój, trwały temperament i nauka trzech komend. Działa lokalnie, bez konta, internetu i klucza API.
+Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Jeden pokój, temperament kształtowany przez wspólne rytuały i nauka trzech komend. Działa lokalnie, bez konta, internetu i klucza API.
 
 Interfejs skupia się na piesku i pokoju: kompaktowe wskaźniki potrzeb, stała nawigacja **Dom / Trening / Album** i akcje dostępne bez przewijania całego ekranu. W szerokim oknie sterowanie przenosi się do bocznego panelu. Pokój, ikony i typografia tworzą wspólną paletę kremu, szałwii i zieleni.
 
@@ -32,7 +32,7 @@ Projekt sprawdzono w Godot **4.7.2**, renderer **Compatibility**, na macOS. Otw�
 - Ikona **klawiatury** w treningu pozwala wpisać polski zwrot, np. „usiądź” i „daj łapę”. To lokalny słownik komend.
 - Ikona **ustawień** obok imienia otwiera profil. Zmienisz tam imię i przełączysz prostą ilustrację / pixel art. **Album** pokazuje zdarzenia, które faktycznie zaszły w grze.
 
-Ciekawość wpływa na spontaniczne spacery, cierpliwość na czas reakcji i nagrody, towarzyskość na potrzebę kontaktu, a wrażliwość na rozproszenie podczas zmęczenia. Każdy pies ma zapisaną preferowaną nagrodę. Temperament pozostaje ten sam po ponownym uruchomieniu.
+Ciekawość wpływa na spontaniczne spacery, cierpliwość na czas reakcji i nagrody, towarzyskość na potrzebę kontaktu, a wrażliwość na rozproszenie podczas zmęczenia. Zdarzenia z ukończonych dni powodują niewielki dryf cech i powstawanie nawyków, widocznych w Profilu i zachowaniu psa. Powrót po nieobecności nie usuwa nawyków. Dane są zachowywane po ponownym uruchomieniu; preferowana nagroda pozostaje stała. Reguły i ograniczenia opisuje [osobowość i nawyki](docs/osobowosc.md).
 
 ## Grafika i sprite’y
 
@@ -47,6 +47,8 @@ Gotowa obsługa `AnimatedSprite2D` obejmuje 22 nazwy klipów, przejścia między
 ## Zapis
 
 Stan trafia do `user://pet.json`, a poprzedni poprawny zapis do `user://pet.json.bak`. Na macOS standardowy katalog Godota dla tego projektu to `~/Library/Application Support/Godot/app_userdata/YuFriend/`. Można go otworzyć przez **Projekt → Otwórz folder danych użytkownika** w edytorze.
+
+Format zapisu ma wersję 2. Odczyt wersji 1 zachowuje psa i postęp, uzupełnia nowe pola osobowości i zabezpiecza oryginał w `pet.json.v1`. Dotyczy to również odzyskiwania ze starszej kopii `.bak`. Nieudane zabezpieczenie pliku blokuje migrację i nadpisanie starego zapisu.
 
 Zapis następuje po istotnych działaniach, okresowo i przy zamykaniu/wstrzymaniu. Uszkodzony główny plik jest odzyskiwany z poprawnej kopii. Nierozpoznanej nowszej wersji ani dwóch uszkodzonych plików gra nie nadpisuje: pokazuje komunikat i blokuje dalsze zmiany. Nieobecność jest liczona maksymalnie jako 8 godzin, potrzeby mają łagodną dolną granicę, a wyuczone komendy pozostają zachowane.
 
@@ -67,7 +69,7 @@ Nie uruchamiaj równolegle dwóch zwykłych instancji na tym samym zapisie. Do p
 
 ## Sprawdzenie projektu
 
-Weryfikacja 10 listopada 2026: **98 sprawdzeń zakończonych powodzeniem** — 44 logiki i zapisu, 26 importu i animacji oraz 28 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi i układy ekranu. Zrzuty obejrzano także wizualnie.
+Weryfikacja 10 listopada 2026: **138 sprawdzeń zakończonych powodzeniem** — 80 logiki, osobowości i zapisu, 26 importu i animacji oraz 32 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi, układy ekranu, nawyki po nieobecności i ochronę oryginału podczas migracji. Zrzuty obejrzano także wizualnie.
 
 Przy pierwszym otwarciu lub po dodaniu PNG poczekaj, aż Godot zaimportuje zasoby. Import można wykonać także bez okna:
 

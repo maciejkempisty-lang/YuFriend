@@ -17,6 +17,7 @@ flowchart TD
     Session --> State["PetState — trwałe dane psa"]
     Session --> Needs["NeedsSystem — potrzeby i czas"]
     Session --> Training["TrainingSystem — próby i nagrody"]
+    Session --> Personality["PersonalitySystem — historia, dryf i nawyki"]
     Session --> Save["SaveSystem — zapis i odzyskiwanie"]
     Main --> Commands["LocalCommands — rozpoznawanie zwrotów"]
     Room --> Animator["PetAnimator — pozycje i klipy"]
@@ -33,6 +34,7 @@ flowchart TD
 | [GameSession](../scripts/systems/game_session.gd) | Łączy systemy; przyjmuje działania gracza, blokuje nakładające się czynności, steruje zegarami i zapisem |
 | [NeedsSystem](../scripts/systems/needs_system.gd) | Zmiany potrzeb i zmęczenia w czasie oraz jednorazowe efekty działań |
 | [TrainingSystem](../scripts/systems/training_system.gd) | Warunki rozpoczęcia, wynik próby, czas nagrody i naliczanie postępu |
+| [PersonalitySystem](../scripts/systems/personality_system.gd) | Dziennik zdarzeń, dryf cech, nawyki i sprawdzanie propozycji zmian osobowości |
 | [SaveSystem](../scripts/systems/save_system.gd) | Odczyt, walidowany zapis do pliku tymczasowego i odzyskiwanie kopii |
 | [LocalCommands](../scripts/services/local_commands.gd) | Normalizuje wpisany tekst i zwraca identyfikator istniejącej komendy |
 | [RoomView](../scripts/ui/room_view.gd) | Rysuje pokój, obsługuje wejście, przesuwa psa i przekazuje zakończenie ruchu |
