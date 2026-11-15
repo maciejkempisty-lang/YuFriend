@@ -128,6 +128,8 @@ Dwa ostatnie testy otwierają okno i zapisują zrzuty do `test-results/`. Obejmu
 
 Dodano natywny widget: mały z najpilniejszą potrzebą, średni z pięcioma potrzebami i nastrojem oraz prostokątny na ekran blokady. Pokazuje psa z bieżącego zapisu, uwzględnia sen i upływ czasu. Eksport z widgetem: `sh tools/export_ios.sh`. [Instrukcja dodania, synchronizacja i zakres testów](docs/widget-ios.md).
 
+W ustawieniach gry na iPhonie można włączyć **Przypomnienia od pieska**: najwyżej dwa dziennie, w godzinach 09:00–21:00, na podstawie prognozy potrzeb. Powrót do gry anuluje oczekujące komunikaty. Domyślnie wyłączone; wymagają zgody systemowej. [Reguły, trwałość limitu i weryfikacja](docs/powiadomienia-ios.md).
+
 ## Kolejne etapy
 
 1. Test użyteczności i balansu kilku krótkich sesji; eksport oraz sprawdzenie na telefonie.

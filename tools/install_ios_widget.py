@@ -84,6 +84,8 @@ def install(project: Path, godot: str, app_group: str | None = None):
     for filename, filetype in {
         "Shared/PetSnapshot.swift": "sourcecode.swift",
         "App/PetWidgetBridge.swift": "sourcecode.swift",
+        "App/PetReminderPlan.swift": "sourcecode.swift",
+        "App/PetReminderController.swift": "sourcecode.swift",
         "Widget/PetWidget.swift": "sourcecode.swift",
         "Resources/puppy-idle.png": "image.png",
         "Resources/puppy-sleep.png": "image.png",
@@ -98,7 +100,7 @@ def install(project: Path, godot: str, app_group: str | None = None):
         return add(target + ":" + filename, {"isa": "PBXBuildFile", "fileRef": files[filename]})
 
     app_sources = next(objects[phase] for phase in app["buildPhases"] if objects[phase]["isa"] == "PBXSourcesBuildPhase")
-    for filename in ("Shared/PetSnapshot.swift", "App/PetWidgetBridge.swift"):
+    for filename in ("Shared/PetSnapshot.swift", "App/PetWidgetBridge.swift", "App/PetReminderPlan.swift", "App/PetReminderController.swift"):
         append_unique(app_sources["files"], build_file(filename, "app"))
 
     def phase(name, kind, content):

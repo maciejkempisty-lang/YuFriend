@@ -12,6 +12,10 @@ var music := BackgroundMusic.new()
 var music_toggle: CheckButton
 var effects := SoundEffects.new()
 var effects_toggle: CheckButton
+var reminders := LocalReminders.new()
+var reminders_toggle: CheckButton
+var reminders_status: Label
+var reminder_poll := 0.0
 var room := RoomView.new()
 var needs_ui: Dictionary = {}
 var care_buttons: Dictionary = {}
@@ -134,6 +138,10 @@ func _ready() -> void:
 	session.away_report_ready.connect(_show_reunion)
 	room.sound_requested.connect(effects.play_effect)
 	session.start(path)
+	reminders.start(path)
+	reminders_toggle.set_pressed_no_signal(reminders.enabled)
+	reminders_toggle.disabled = not reminders.supported
+	reminders_status.text = reminders.status_text()
 	_refresh()
 	_show_feedback(session.last_message)
 
@@ -279,7 +287,7 @@ func _build_ui() -> void:
 	identity.add_child(bond_label)
 	bond_bar = _bar(Color("779565"), 6)
 	identity.add_child(bond_bar)
-	var settings := _icon_button("settings", "Ustawienia dźwięku", _show_settings)
+	var settings := _icon_button("settings", "Ustawienia", _show_settings)
 	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	header_row.add_child(settings)
 	bubble = PanelContainer.new()
@@ -570,6 +578,17 @@ func _build_dialogs() -> void:
 	effects_toggle.custom_minimum_size.y = 44
 	effects_toggle.toggled.connect(effects.set_enabled)
 	settings_box.add_child(effects_toggle)
+	reminders_toggle = CheckButton.new()
+	reminders_toggle.text = "Przypomnienia od pieska"
+	reminders_toggle.custom_minimum_size.y = 44
+	reminders_toggle.toggled.connect(func(value: bool):
+		reminders.set_enabled(value)
+		reminders_toggle.set_pressed_no_signal(reminders.enabled)
+		reminders_status.text = reminders.status_text())
+	settings_box.add_child(reminders_toggle)
+	reminders_status = _label("", 12, MUTED)
+	reminders_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	settings_box.add_child(reminders_status)
 	settings_box.add_child(_label("Zmiany zapisują się od razu.", 12, MUTED))
 	reunion_dialog = AcceptDialog.new()
 	reunion_dialog.title = "Znów razem"
@@ -824,8 +843,9 @@ func _show_profile() -> void:
 	profile_dialog.get_ok_button().grab_focus()
 
 func _show_settings() -> void:
+	reminders_status.text = reminders.status_text()
 	settings_dialog.popup()
-	_position_dialog(settings_dialog, Vector2i(330, 230))
+	_position_dialog(settings_dialog, Vector2i(330, 360))
 
 func _show_reunion() -> void:
 	var report: Dictionary = session.pet.life.away_report
@@ -1034,6 +1054,10 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 	_position_feedback()
 
 func _process(delta: float) -> void:
+	reminder_poll -= delta
+	if settings_dialog.visible and reminder_poll <= 0:
+		reminder_poll = 0.5
+		reminders_status.text = reminders.status_text()
 	_update_attention()
 	_refresh_companion(delta)
 	bubble_left = maxf(0, bubble_left - delta)

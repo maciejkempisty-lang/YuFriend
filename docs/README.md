@@ -24,6 +24,7 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 | [Dźwięk](../assets/audio/sfx/README.md) | Muzyka, efekty ElevenLabs, źródła i obróbka |
 | [Test iOS](test-ios.md) | Instalacja i aktualizacje na fizycznym iPhonie |
 | [Widget iOS](widget-ios.md) | Rozmiary widgetu, stan psa, App Groups, eksport i testy |
+| [Powiadomienia iOS](powiadomienia-ios.md) | Dobrowolne przypomnienia, cisza nocna, limit dzienny i testy |
 | [Pierwotny plan implementacji](plan-implementacji.md) | Szersza koncepcja oraz początkowe szacunki zakresu i czasu pracy |
 
 ## Od czego zacząć

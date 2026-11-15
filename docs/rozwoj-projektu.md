@@ -15,9 +15,9 @@ Główny wyróżnik: pies ma własne życie i pamięć, a gracz stopniowo go poz
 1. **Etap 1 — zaimplementowany:** dwa lub trzy odkrywane dziwactwa, pięć nastrojów dnia, tekstowe relacje „Kiedy Cię nie było” oraz różne powitania. [Reguły i ograniczenia](osobowosc.md#własne-życie--etap-1-15-listopada-2026). Relacje korzystają z obecnych animacji; nie dodano jeszcze graficznych śladów w pokoju.
 2. **Etap 2 — zaimplementowany:** cztery rodzaje zaproszeń, pamięć przyjęcia, odłożenia i braku odpowiedzi, wpływ reakcji na kolejne propozycje oraz sekcja „Wasz rytm”. Działają rzut piłki przeciągnięciem, lina i kubki ze smakołykiem. [Reguły zabaw](mechaniki-gry.md#zabawy-dotykiem). Preferencje miejsca snu i smaku pozostają do rozbudowy; obecnie kształtuje się zainteresowanie wspólnymi aktywnościami.
 3. **Nowe sceny i grafika:** krótki spacer za drzwiami, węszenie, spotkania i znaleziska; kąpiel po spacerze, brud, otrząsanie i chlapanie. Potem miska z wodą, różne smakołyki, sekwencje sztuczek i zdjęcia do Albumu z udostępnianiem.
-4. **Integracje mobilne:** [widget iPhone’a](widget-ios.md) ma implementację natywną, współdzielenie stanu i powtarzalny eksport. Lokalnych powiadomień jeszcze nie dodano. Kontrola widgetu na fizycznym telefonie pozostaje osobnym krokiem weryfikacji.
+4. **Integracje mobilne:** [widget iPhone’a](widget-ios.md) ma implementację natywną, współdzielenie stanu i powtarzalny eksport; użytkownik potwierdził imię i potrzeby Glorii na ekranie początkowym. Dodano [dobrowolne lokalne przypomnienia](powiadomienia-ios.md), których dostarczenie wymaga jeszcze próby na telefonie.
 
-Powiadomienia: planowanie progów potrzeb lokalnie przy wyjściu, głos dopasowany do charakteru, maksymalnie dwa dziennie, cisza nocna i ulubiona pora wynikająca z nawyków. Tematem mogą być odkrycia i drobne zdarzenia. Bez zawstydzania za nieobecność, choroby ani śmierci psa.
+Powiadomienia mają już planowanie progów potrzeb lokalnie przy wyjściu, pierwszą osobę, maksymalnie dwa dziennie i ciszę nocną. Dalsze pomysły: głos dopasowany do charakteru, ulubiona pora wynikająca z nawyków, odkrycia i drobne zdarzenia. Bez zawstydzania za nieobecność, choroby ani śmierci psa.
 
 Widget iOS: mały pokazuje pozę i najpilniejszą potrzebę, średni dodatkowo pięć potrzeb, nastrój i propozycje opieki, a prostokątny widget blokady imię i najpilniejszą potrzebę. Widok WidgetKit czyta niewielki stan ze znacznikiem czasu z App Group i przelicza wartości zgodnie z grą. Widgetu nie renderuje Godot. [Eksport, testy i ograniczenia](widget-ios.md). Wariant Android pozostaje do zaprojektowania.
 
@@ -95,4 +95,4 @@ Przed implementacją trzeba ustalić, co wyzwala zmianę etapu: wspólnie spędz
 | Zakres AI i limit kosztów | Przed przygotowaniem backendu i dostępu do dostawcy |
 | Zasady dorastania | Przed zamówieniem kolejnych etapów grafiki i zmianą danych |
 
-Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie. Gesty zabawy i dźwięk są już wdrożone. Wibracje, nowe zasady treningu i powiadomienia pozostają do wykonania. Ich kolejność warto potwierdzić po krótkich sesjach z testerami.
+Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie. Gesty zabawy, dźwięk i lokalne przypomnienia iOS są już wdrożone. Wibracje i nowe zasady treningu pozostają do wykonania. Ich kolejność warto potwierdzić po krótkich sesjach z testerami.

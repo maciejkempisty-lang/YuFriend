@@ -76,10 +76,20 @@ Po zgodzie użytkownika zabezpieczono wyłącznie `Documents/pet.json` w `export
 
 1525 sprawdzeń modelu Swift obejmuje 252 porównania prognozy z rzeczywistym `NeedsSystem` Godota. Cztery dodatkowe testy natywnego mostu na symulatorze sprawdziły aktualizacje pliku, uszkodzony zapis i późny zapis po wejściu w tło. Obejrzano natywne widoki mały, średni i śpiącego psa z długim imieniem. Pełny eksport gry nie zlinkował się dla symulatora arm64 z powodu architektury biblioteki Godota, dlatego podgląd uruchamiano niezależnie od silnika.
 
-System iOS odmówił zewnętrznego odczytu `pet-widget.json` z głównego katalogu App Group przez `devicectl` (polityka kontenera, błąd 11007). Testy na fizycznym telefonie nie potwierdzają jeszcze zawartości tego pliku ani rzeczywistego wyglądu widgetu po ręcznym dodaniu do ekranu początkowego.
+System iOS odmówił zewnętrznego odczytu `pet-widget.json` z głównego katalogu App Group przez `devicectl` (polityka kontenera, błąd 11007). Później, 15 listopada 2026, użytkownik ręcznie potwierdził poprawne imię Glorii i potrzeby po dodaniu widgetu, wykonaniu opieki i powrocie na ekran początkowy. Nie jest to odczyt grupowego pliku przez narzędzia ani sprawdzenie wszystkich rozmiarów widgetu.
 
 ## Aktualizacja 0.1.0 (9) — zegar ścienny
 
 15 listopada 2026 zbudowano, podpisano, zainstalowano i uruchomiono build 9 na iPhonie 15 Pro Max „MagicPhone”. Aktualizacja zachowuje bundle ID, zespół i rozszerzenie WidgetKit (również build 9). Zegar obok portretu pieska pokazuje lokalny czas systemowy trzema wskazówkami. Zrzut z urządzenia potwierdził jego widoczność; testy interfejsu na komputerze zakończyły się wynikiem **238/238**.
 
 Kopie wyłącznie `Documents/pet.json` przed i po instalacji znajdują się w `exports/iphone-backups/2026-11-15-before-v9/` i `exports/iphone-backups/2026-11-15-after-v9/`. Porównanie potwierdziło zachowanie Glorii, identyfikatora, ziarna osobowości, cech, umiejętności, osiągnięć, więzi i formatu zapisu 4. Eksport, log kompilacji, potwierdzenia instalacji i uruchomienia, odczyt wersji, wyniki porównania oraz zrzut `iphone-clock.png` zapisano w `exports/ios-clock-v9/`. Pakiet gry w aplikacji jest identyczny ze sprawdzonym eksportem zawierającym skrypt zegara. Nie zmieniano systemowej godziny telefonu w ramach tej kontroli.
+
+## Aktualizacja 0.1.0 (10) — lokalne przypomnienia
+
+15 listopada 2026 zbudowano, podpisano, zainstalowano i uruchomiono aktualizację z [dobrowolnymi przypomnieniami głosem psa](powiadomienia-ios.md). Użytkownik potwierdził włączenie opcji w grze i zgodę iOS. Natywny status z telefonu potwierdził `enabled: true`, `status: on`, `pending: 0`; nie jest to dowód doręczenia komunikatu. Domyślne wyłączenie przed zgodą również potwierdzono odczytem (`off`, zero oczekujących).
+
+Kopie zapisu przed i po instalacji: `exports/iphone-backups/2026-11-15-before-v10/` oraz `exports/iphone-backups/2026-11-15-after-v10/`. Porównano istniejące pola identyfikatora, imienia, `personality_seed`, cech, umiejętności, osiągnięć i więzi; są zachowane, a format pozostał w wersji 4. Suma pakietu gry w aplikacji odpowiada eksportowi. Potwierdzenia i `state-verification.json` znajdują się w `exports/ios-reminders-v10/`, obok statusów przypomnień i kopii ich licznika.
+
+Nowy zakres ma **403** sprawdzenia, istniejąca gra **649**, widget **1525**. Powtórzenie instalatora nie tworzy dodatkowych targetów, kopii źródeł ani wywołania startowego. Kontrola podpisu aplikacji i rozszerzenia przeszła. Kompilacja najpierw zatrzymała się z powodu braku miejsca na SSD; nieudany cache tej próby usunięto, a udany build powstał w `/tmp/yufriend-reminders-v10-build/`. Log sukcesu zachowano jako `exports/ios-reminders-v10/build-success.log`. Ostrzeżenia pełnego eksportu dotyczą generowanych przez Godota nagłówków i pustych opisów uprawnień kamery, mikrofonu i zdjęć; natywne źródła przypomnień przechodzą kontrolę typów z ostrzeżeniami jako błędami.
+
+Pozostaje ręczna próba rzeczywistego doręczenia, otwarcia gry z komunikatu oraz zachowania przy Trybie skupienia. Nie skracano produkcyjnego minimum 30 minut ani nie zmieniano potrzeb Glorii w pliku, żeby wywołać alarm testowy.

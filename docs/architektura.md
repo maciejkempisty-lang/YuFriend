@@ -1,5 +1,7 @@
 # Architektura YuFriend
 
+Integracje iOS są przechowywane w `native/ios/` i dodawane do eksportu przez `tools/install_ios_widget.py`. Most czyta zapis gry i publikuje [stan widgetu](widget-ios.md); kontroler [lokalnych przypomnień](powiadomienia-ios.md) korzysta z tej samej prognozy potrzeb. Preferencje, odpowiedź dla UI i trwały limit przypomnień mają osobne pliki, bez zmiany schematu ani zapisywania `pet.json` przez Swift.
+
 [Mapa dokumentacji](README.md)
 
 ## Punkt wejścia i organizacja

@@ -32,7 +32,7 @@ Godzina rzeczywistego odświeżenia zależy od iOS; widget nie jest stale dział
 sh tools/export_ios.sh
 ```
 
-Wynik: `exports/ios-widget-v8/YuFriend.xcodeproj`. Opcjonalny pierwszy argument wybiera inny katalog. Skrypt `tools/install_ios_widget.py` dodaje rozszerzenie, zależność, osadzanie `.appex`, App Groups dla obu targetów, obrazy i punkt startowy mostu. Powtórne uruchomienie aktualizuje źródła bez powielania targetów ani wywołania startowego.
+Wynik bieżącego eksportu: `exports/ios-reminders-v10/YuFriend.xcodeproj`. Opcjonalny pierwszy argument wybiera inny katalog. Skrypt `tools/install_ios_widget.py` dodaje rozszerzenie, zależność, osadzanie `.appex`, App Groups dla obu targetów, obrazy, punkt startowy mostu oraz [lokalne przypomnienia](powiadomienia-ios.md) w aplikacji. Powtórne uruchomienie aktualizuje źródła bez powielania targetów ani wywołania startowego.
 
 Istniejący eksport można uzupełnić poleceniem:
 
