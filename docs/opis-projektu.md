@@ -27,7 +27,7 @@ Naprowadzanie pozwala bezpiecznie rozpocząć naukę nieznanej komendy. Samodzie
 | Ruch | Chodzenie w lewo i prawo do wskazanego miejsca; okazjonalne samodzielne spacery |
 | Potrzeby | Sytość, energia, czystość, zabawa i bliskość |
 | Opieka | Jedzenie, głaskanie, zabawa, czesanie, odpoczynek i budzenie |
-| Zabawy dotykiem | Rzut piłki z podglądem łuku, sześć pociągnięć liny i śledzenie smakołyka pod kubkami |
+| Zabawy dotykiem | Rzut piłki z podglądem łuku, trzy wymiany pociągnięć liny z pieskiem i chowanie smakołyka, którego pies szuka pod kubkami |
 | Inicjatywa | Zaproszenia do czterech aktywności, pamięć reakcji i sekcja „Wasz rytm” w karcie psa |
 | Trening | Przyjdź, siad, podaj łapę; pomoc gestem i samodzielna próba |
 | Charakter | Cztery cechy losowane przy tworzeniu psa, niewielki dryf po aktywnych dniach, nabywane nawyki i stała ulubiona nagroda |

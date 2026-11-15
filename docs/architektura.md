@@ -45,6 +45,7 @@ flowchart TD
 | [PersonalitySystem](../scripts/systems/personality_system.gd) | Dziennik zdarzeń, dryf cech, nawyki i sprawdzanie propozycji zmian osobowości |
 | [LifeSystem](../scripts/systems/life_system.gd) | Odkrywanie dziwactw, stały nastrój dnia, symulowane relacje z nieobecności i powitania; bez nagradzania fikcyjnej aktywności gracza |
 | [InitiativeSystem](../scripts/systems/initiative_system.gd) | Dobór zaproszeń według temperamentu, nastroju i zapamiętanych odpowiedzi; ograniczona historia reakcji |
+| [CompanionVoice](../scripts/systems/companion_voice.gd) | Tylko odczyt stanu: priorytet potrzeby/zaproszenia, spokojne myśli i potwierdzone wpisami wspomnienia; 45-sekundowy odstęp treści |
 | [TouchPlaySystem](../scripts/systems/touch_play_system.gd) | Fazy liny, kubków i złapania piłki; czyste reguły gestów bez zależności od widoku |
 | [TouchPlayView](../scripts/ui/touch_play_view.gd) | Rysuje linę i kubki, pokazuje psa, obsługuje jeden palec lub mysz i przekazuje znormalizowane współrzędne |
 | [SaveSystem](../scripts/systems/save_system.gd) | Odczyt, walidowany zapis do pliku tymczasowego i odzyskiwanie kopii |
@@ -97,7 +98,7 @@ Cele ruchu to `Vector2` we współrzędnych świata. `RoomLayout.clamp_walk()` o
 
 ## Zaproszenia i zabawy
 
-`GameSession` utrzymuje jedno tymczasowe zaproszenie. `Main` przekazuje dostępność uwagi na podstawie fokusu, zakładki i dialogów, a karta zaproszenia daje odpowiedź lub „Później”. `initiative_requested(kind)` uruchamia prezentację w pokoju; samodzielne podejście korzysta z istniejącego tokenu stacji i można je przerwać odpowiedzią.
+`GameSession` utrzymuje jedno tymczasowe zaproszenie. `Main` przekazuje dostępność uwagi na podstawie fokusu, zakładki, dialogów i widoku całego pokoju. `CompanionVoice` wybiera treść górnego dymka, który przy zaproszeniu daje odpowiedź lub „Później”. Osobne `invitation_presented` zatrzymuje zegar odpowiedzi, kiedy pilniejsza potrzeba zasłania zaproszenie. Przycisk ponownie sprawdza bieżącą akcję przed przekazaniem jej do istniejącej sesji. Ten stan prezentacji nie zmienia schematu zapisu ani kamery pokoju. `initiative_requested(kind)` uruchamia prezentację w pokoju; samodzielne podejście korzysta z istniejącego tokenu stacji i można je przerwać odpowiedzią.
 
 `ball_aim_requested` kieruje kamerę do piłki. Gest w `RoomView` emituje `ball_thrown(target)`, a sesja po walidacji wysyła `ball_throw_requested(target, token)`. Widok odtwarza lot oraz pościg i potwierdza aktualny token dopiero po lądowaniu i dojściu. Sesja rozlicza wynik dokładnie raz. Anulowanie unieważnia token, gest i lot.
 
@@ -150,7 +151,7 @@ Przy rozbudowie reguły opieki i treningu powinny pozostać w systemach, a inter
 
 Sesja zleca dojście z tokenem. `RoomView` odczytuje punkt stacji z `RoomLayout`; dojście uruchamia efekt opieki w sesji. Pozycja piłki jest zmienna, pozostałe stacje mają stałe współrzędne. Przy podmianie grafiki można zachować ich kontrakt z logiką.
 
-Pokój jest rysowany na całą wysokość. `content_bottom` wyznacza dół sceny nad sterowaniem; kamera zostawia pod nim dodatkową podłogę, żeby łapy psa nie chowały się pod przyciskami. Współrzędne rozgrywki nadal wynoszą 1440 × 360, a siatka ma 3 jednostki świata na piksel logiczny. Podstawowe powiększenie wynika z szerokości (około 200 pikseli logicznych), dzięki czemu portret pokazuje psa wraz z sąsiednimi stacjami. Kamera dopuszcza fragment ściany powyżej początku świata i utrzymuje podłogę nad panelem. Dodatkowe 2× wymaga miejsca także w poziomie.
+Pokój jest rysowany na całą wysokość. `content_bottom` wyznacza dół sceny nad sterowaniem; kamera zostawia pod nim dodatkową podłogę, żeby łapy psa nie chowały się pod przyciskami. Współrzędne rozgrywki nadal wynoszą 1440 × 360, a siatka ma 3 jednostki świata na piksel logiczny. W pionie kamera wybiera największe całkowite powiększenie mieszczące co najmniej 480 jednostek świata — początkowy kadr obejmuje całego psa, miskę i piłkę. Nadmiar wysokości pomiędzy paskiem narzędzi a panelem opieki przenosi w 75% pod scenę jako podłogę, ograniczając pustą ścianę nad oknem. Poziomy układ zachowuje skalę wyznaczaną przez około 200 pikseli logicznych. Dodatkowe 2× wymaga miejsca także w poziomie; gdy zbliżenie zajmuje dostępny pion, dodatkowe przesunięcie zanika.
 
 Kamera łagodnie śledzi psa. Viewport ma po pikselu marginesu; shader `room_scroll.gdshader` przesuwa próbkowanie o pozostałą część ruchu zaokrągloną do fizycznego piksela. Wolny gest nie przeskakuje o cały powiększony piksel grafiki. `Camera2D.zoom` pozostaje 1. Rozmiar i pozycja `Sprite2D` uwzględniają transformację końcową viewportu oraz `canvas_items`, zachowując równe piksele również przy ułamkowym skalowaniu. Dymek i przyrost są elementami UI przeliczanymi z pozycji psa w każdej klatce. Wskazówka gestu nie wraca po zapisaniu `tutorial/room_dragged` w `ui.cfg`.
 

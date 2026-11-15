@@ -40,7 +40,7 @@ static func invitation_text(pet: PetState, kind: String) -> String:
 	return {
 		"ball": "%s ma ochotę na piłkę. Rzucisz?",
 		"tug": "%s zaprasza do zabawek. Może przeciąganie liny?",
-		"cups": "%s ma ochotę powęszyć. Poszukacie razem smakołyka?",
+		"cups": "%s ma ochotę powęszyć. Schowasz smakołyk do znalezienia?",
 		"cuddle": "%s wyciąga łapę w Twoją stronę. Chwila bliskości?",
 	}[kind] % pet.pet_name
 

@@ -12,8 +12,12 @@ signal ball_thrown(target: Vector2)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
 const DRAG_THRESHOLD := 9.0
+# The initial bowl-to-ball span, including both silhouettes, fits in 480 world units.
+const HOME_FRAME_WIDTH := 480.0
+const DECORATION_TOP := 60.0
 var animator := PetAnimator.new()
 var backdrop := RoomArtwork.new()
+var wall_clock := preload("res://scripts/ui/wall_clock.gd").new()
 var ball_art := RoomArtwork.new()
 var shadow := RoomArtwork.new()
 var viewport := SubViewport.new()
@@ -102,6 +106,9 @@ func _ready() -> void:
 	world.add_child(backdrop)
 	# Extra floor continues behind the floating controls; gameplay coordinates stay fixed.
 	backdrop.configure(Vector2(RoomLayout.SIZE.x, 960))
+	wall_clock.position = Vector2(471, 141)
+	wall_clock.z_index = -4
+	world.add_child(wall_clock)
 	world.add_child(actors)
 	throw_guide.width = 4
 	throw_guide.default_color = Color("fff3be")
@@ -351,6 +358,9 @@ func update_placement() -> void:
 	# Frame roughly two to three room sections instead of filling the height
 	# with a small horizontal slice. Interaction still offers a 2x close-up.
 	_base_pixel_scale = maxi(1, roundi(size.x * output_scale.x / 200.0))
+	if size.y > size.x:
+		# Use the largest whole-pixel magnification that still fits both care props.
+		_base_pixel_scale = maxi(1, floori(size.x * output_scale.x / (HOME_FRAME_WIDTH / RoomLayout.PIXEL_SIZE)))
 	if overview:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
@@ -420,7 +430,16 @@ func _clamp_camera(point: Vector2) -> Vector2:
 		_world_bottom() - half.y)
 
 func _world_bottom() -> float:
-	return RoomLayout.SIZE.y + maxf(0, size.y - content_bottom) / screen_scale().y if content_bottom > 0 else RoomLayout.SIZE.y
+	if content_bottom <= 0: return RoomLayout.SIZE.y
+	var scene_bottom := content_bottom
+	if not overview and size.y > size.x:
+		# Place the decorated room beneath the toolbar. Surplus height becomes floor
+		# below the puppy instead of a large blank wall above the window.
+		var scene_top := hud_bottom + 72.0
+		var art_height := (RoomLayout.SIZE.y - DECORATION_TOP) * screen_scale().y
+		var spare_height := maxf(0, scene_bottom - scene_top - art_height)
+		scene_bottom -= spare_height * 0.75
+	return RoomLayout.SIZE.y + maxf(0, size.y - scene_bottom) / screen_scale().y
 
 func _set_camera_center(point: Vector2) -> void:
 	_follow_position = _clamp_camera(point)

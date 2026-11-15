@@ -67,3 +67,19 @@ Eksport w `exports/ios-audio-v6/`, kompilacja Xcode i kontrola podpisu zakończy
 Pełna kopia kontenera sprzed aktualizacji: `exports/iphone-backups/2026-11-15-before-v7/`. Kopia `Documents` po uruchomieniu: `exports/iphone-backups/2026-11-15-after-v7/`. Porównanie potwierdziło to samo imię, identyfikator, ziarno osobowości, cechy, umiejętności i kamienie milowe. Oryginalne pliki pozostają w kopii. Format nadal wynosi 4; starszy album do 240 wpisów jest odczytywany przed ograniczeniem bieżących relacji do 10.
 
 Dowody eksportu, budowania, instalacji, uruchomienia, zrzut i porównanie danych: `exports/ios-room-v7/evidence/`. Testy pulpitu: **531/531**. Kontrola sprzętowa obejmowała instalację, uruchomienie, obraz domyślnego kadru oraz trwałość danych; nie zastępuje ręcznej oceny wygody gestów, całej ścieżki treningu ani odsłuchu.
+
+## Aktualizacja 0.1.0 (8) — widget iPhone’a
+
+15 listopada 2026 podpisano, zainstalowano i uruchomiono build 8 z natywnym rozszerzeniem WidgetKit: małym, średnim i prostokątnym na ekran blokady. Aplikacja i rozszerzenie mają wspólną App Group. [Źródła, eksport i instrukcja dodania](widget-ios.md).
+
+Po zgodzie użytkownika zabezpieczono wyłącznie `Documents/pet.json` w `exports/iphone-backups/2026-11-15-before-v8/`. Plik po uruchomieniu w `exports/iphone-backups/2026-11-15-after-v8/` potwierdził tę samą Glorię, identyfikator, osobowość, cechy, umiejętności, więź i osiągnięcia. Format zapisu nadal wynosi 4. `exports/ios-widget-v8/state-verification.json` zawiera wyniki porównania; obok są potwierdzenia instalacji, uruchomienia i wersji 8 z właściwą grupą.
+
+1525 sprawdzeń modelu Swift obejmuje 252 porównania prognozy z rzeczywistym `NeedsSystem` Godota. Cztery dodatkowe testy natywnego mostu na symulatorze sprawdziły aktualizacje pliku, uszkodzony zapis i późny zapis po wejściu w tło. Obejrzano natywne widoki mały, średni i śpiącego psa z długim imieniem. Pełny eksport gry nie zlinkował się dla symulatora arm64 z powodu architektury biblioteki Godota, dlatego podgląd uruchamiano niezależnie od silnika.
+
+System iOS odmówił zewnętrznego odczytu `pet-widget.json` z głównego katalogu App Group przez `devicectl` (polityka kontenera, błąd 11007). Testy na fizycznym telefonie nie potwierdzają jeszcze zawartości tego pliku ani rzeczywistego wyglądu widgetu po ręcznym dodaniu do ekranu początkowego.
+
+## Aktualizacja 0.1.0 (9) — zegar ścienny
+
+15 listopada 2026 zbudowano, podpisano, zainstalowano i uruchomiono build 9 na iPhonie 15 Pro Max „MagicPhone”. Aktualizacja zachowuje bundle ID, zespół i rozszerzenie WidgetKit (również build 9). Zegar obok portretu pieska pokazuje lokalny czas systemowy trzema wskazówkami. Zrzut z urządzenia potwierdził jego widoczność; testy interfejsu na komputerze zakończyły się wynikiem **238/238**.
+
+Kopie wyłącznie `Documents/pet.json` przed i po instalacji znajdują się w `exports/iphone-backups/2026-11-15-before-v9/` i `exports/iphone-backups/2026-11-15-after-v9/`. Porównanie potwierdziło zachowanie Glorii, identyfikatora, ziarna osobowości, cech, umiejętności, osiągnięć, więzi i formatu zapisu 4. Eksport, log kompilacji, potwierdzenia instalacji i uruchomienia, odczyt wersji, wyniki porównania oraz zrzut `iphone-clock.png` zapisano w `exports/ios-clock-v9/`. Pakiet gry w aplikacji jest identyczny ze sprawdzonym eksportem zawierającym skrypt zegara. Nie zmieniano systemowej godziny telefonu w ramach tej kontroli.

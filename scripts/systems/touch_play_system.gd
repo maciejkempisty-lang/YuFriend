@@ -2,23 +2,23 @@ class_name TouchPlaySystem
 extends RefCounted
 
 const REWARD_INTERVAL := 30.0
-const TUG_STROKES := 6
-const SWAP_SECONDS := 0.75
+const TUG_STROKES := 3
+const TUG_RETURN_SECONDS := 0.9
+const SEARCH_SECONDS := 1.5
 var kind := ""
 var phase := ""
 var elapsed := 0.0
 var success := false
 var settled := false
 var held := false
-var tug_handle := Vector2(0.78, 0.54)
-var tug_anchor := 0.78
-var tug_direction := -1
+var tug_handle := Vector2(0.60, 0.54)
+var tug_anchor := 0.60
+var tug_return_from := 0.80
 var strokes := 0
-var cups: Array = [0, 1, 2] # cup ID → visible slot
-var treat_cup := 0
+var treat_cup := -1
 var selected_cup := -1
-var swap_pair := Vector2i(0, 1)
-var swaps := 0
+var search_order: Array[int] = []
+var search_index := 0
 var _pressed_cup := -1
 var _press_point := Vector2.ZERO
 var _rng := RandomNumberGenerator.new()
@@ -29,8 +29,7 @@ func start(game: String, seed_value: int = 0) -> bool:
 	kind = game
 	if seed_value == 0: _rng.randomize()
 	else: _rng.seed = seed_value
-	phase = {"ball": "chase", "tug": "pull", "cups": "reveal"}[kind]
-	treat_cup = _rng.randi_range(0, 2)
+	phase = {"ball": "chase", "tug": "pull", "cups": "hide"}[kind]
 	return true
 
 func reset() -> void:
@@ -40,59 +39,75 @@ func reset() -> void:
 	success = false
 	settled = false
 	held = false
-	tug_handle = Vector2(0.78, 0.54)
+	tug_handle = Vector2(0.60, 0.54)
 	tug_anchor = tug_handle.x
-	tug_direction = -1
 	strokes = 0
-	cups = [0, 1, 2]
+	treat_cup = -1
 	selected_cup = -1
 	_pressed_cup = -1
-	swaps = 0
+	search_order.clear()
+	search_index = 0
 
 func running() -> bool:
 	return not kind.is_empty() and phase != "result"
 
 func advance(delta: float) -> void:
-	if not is_finite(delta) or delta <= 0 or kind != "cups": return
+	if not is_finite(delta) or delta <= 0: return
+	if kind == "tug" and phase == "dog_pull":
+		if held: return
+		elapsed = minf(elapsed + delta, TUG_RETURN_SECONDS)
+		tug_handle.x = lerpf(tug_return_from, 0.60, smoothstep(0, 1, elapsed / TUG_RETURN_SECONDS))
+		if elapsed >= TUG_RETURN_SECONDS:
+			elapsed = 0
+			tug_anchor = tug_handle.x
+			if strokes >= TUG_STROKES: _finish(true)
+			else: phase = "pull"
+		return
+	if kind != "cups": return
 	var left := delta
-	while left > 0 and phase in ["reveal", "cover", "shuffle"]:
-		var duration: float = {"reveal": 1.4, "cover": 0.5, "shuffle": SWAP_SECONDS}[phase]
+	while left > 0 and phase in ["cover", "search"]:
+		var duration := 0.7 if phase == "cover" else SEARCH_SECONDS
 		var step := minf(left, duration - elapsed)
 		elapsed += step
 		left -= step
 		if elapsed < duration: return
 		elapsed = 0
-		match phase:
-			"reveal": phase = "cover"
-			"cover":
-				phase = "shuffle"
-				_next_swap()
-			"shuffle":
-				var previous: int = cups[swap_pair.x]
-				cups[swap_pair.x] = cups[swap_pair.y]
-				cups[swap_pair.y] = previous
-				swaps += 1
-				if swaps == 3: phase = "guess"
-				else: _next_swap()
+		if phase == "cover": phase = "ready"
+		elif search_order[search_index] == treat_cup:
+			selected_cup = treat_cup
+			phase = "found"
+		else: search_index += 1
 
-func _next_swap() -> void:
-	swap_pair.x = _rng.randi_range(0, 2)
-	swap_pair.y = (swap_pair.x + _rng.randi_range(1, 2)) % 3
+# The player prepares the hiding place; only the dog chooses while searching.
+func cue() -> void:
+	if kind != "cups": return
+	if phase == "ready":
+		search_order.assign([0, 1, 2])
+		for index in range(2, 0, -1):
+			var other := _rng.randi_range(0, index)
+			var previous := search_order[index]
+			search_order[index] = search_order[other]
+			search_order[other] = previous
+		search_index = 0
+		elapsed = 0
+		phase = "search"
+	elif phase == "found": _finish(true)
 
 func cup_point(id: int) -> Vector2:
-	var slot := float(cups[id])
-	var lift := 0.0
-	if phase == "shuffle" and id in [swap_pair.x, swap_pair.y]:
-		var other := swap_pair.y if id == swap_pair.x else swap_pair.x
-		var progress := smoothstep(0.0, 1.0, elapsed / SWAP_SECONDS)
-		slot = lerpf(slot, float(cups[other]), progress)
-		lift = sin(progress * PI) * (0.08 if id == swap_pair.x else -0.08)
-	return Vector2(0.2 + slot * 0.3, 0.66 - lift)
+	return Vector2(0.2 + id * 0.3, 0.48)
 
 func cup_at(point: Vector2) -> int:
 	for id in 3:
-		if Rect2(cup_point(id) - Vector2(0.11, 0.27), Vector2(0.22, 0.32)).has_point(point): return id
+		if Rect2(cup_point(id) - Vector2(0.11, 0.34), Vector2(0.22, 0.39)).has_point(point): return id
 	return -1
+
+func dog_point() -> Vector2:
+	var x := 0.5
+	if phase == "search":
+		var from := 0.5 if search_index == 0 else cup_point(search_order[search_index - 1]).x
+		x = lerpf(from, cup_point(search_order[search_index]).x, smoothstep(0, 0.6, elapsed / SEARCH_SECONDS))
+	elif phase in ["found", "result"] and selected_cup >= 0: x = cup_point(selected_cup).x
+	return Vector2(x, 0.91)
 
 func _valid_point(point: Vector2) -> bool:
 	return point.is_finite() and Rect2(Vector2.ZERO, Vector2.ONE).has_point(point)
@@ -102,8 +117,7 @@ func press(point: Vector2) -> void:
 	if kind == "tug" and phase == "pull":
 		if absf(point.x - tug_handle.x) > 0.13 or absf(point.y - tug_handle.y) > 0.16: return
 		held = true
-		tug_anchor = tug_handle.x
-	elif kind == "cups" and phase == "guess":
+	elif kind == "cups" and phase == "hide":
 		_pressed_cup = cup_at(point)
 		held = _pressed_cup >= 0
 		_press_point = point
@@ -111,12 +125,12 @@ func press(point: Vector2) -> void:
 func move(point: Vector2) -> void:
 	if not held or not point.is_finite(): return
 	if kind == "tug" and phase == "pull":
-		tug_handle.x = clampf(point.x, 0.42, 0.88)
-		if (tug_handle.x - tug_anchor) * tug_direction >= 0.18:
+		tug_handle.x = clampf(point.x, 0.60, 0.88)
+		if tug_handle.x - tug_anchor >= 0.18:
 			strokes += 1
-			tug_anchor = tug_handle.x
-			tug_direction *= -1
-			if strokes >= TUG_STROKES: _finish(true)
+			tug_return_from = tug_handle.x
+			elapsed = 0
+			phase = "dog_pull"
 	elif kind == "cups" and point.distance_to(_press_point) > 0.06:
 		_pressed_cup = -1
 
@@ -124,9 +138,15 @@ func release(point: Vector2, cancelled: bool = false) -> void:
 	if not held: return
 	if not cancelled and _valid_point(point):
 		move(point)
-		if kind == "cups" and phase == "guess" and _pressed_cup >= 0 and cup_at(point) == _pressed_cup:
-			selected_cup = _pressed_cup
-			_finish(selected_cup == treat_cup)
+		if kind == "cups" and phase == "hide" and _pressed_cup >= 0 and cup_at(point) == _pressed_cup:
+			treat_cup = _pressed_cup
+			elapsed = 0
+			phase = "cover"
+	if cancelled and kind == "tug":
+		if phase == "dog_pull": strokes -= 1
+		phase = "pull"
+		tug_handle.x = 0.60
+		elapsed = 0
 	held = false
 	_pressed_cup = -1
 
@@ -141,8 +161,10 @@ func _finish(won: bool) -> void:
 
 func hint() -> String:
 	if phase == "result":
-		if kind == "cups" and not success: return "Tutaj był smakołyk! Możecie spróbować jeszcze raz."
-		return {"ball": "Piłka złapana!", "tug": "Ale zabawa! Lina na chwilę odpoczywa.", "cups": "Jest smakołyk! Świetny z Was zespół."}.get(kind, "")
+		return {"ball": "Piłka złapana!", "tug": "Trzy wspólne przeciągnięcia! Chwila odpoczynku.", "cups": "Smakołyk znaleziony i pochwała przyjęta!"}.get(kind, "")
 	if kind == "tug":
-		return "Chwyć węzeł i pociągnij %s. %d z %d" % ["w lewo ←" if tug_direction < 0 else "w prawo →", strokes, TUG_STROKES]
-	return {"reveal": "Zapamiętaj kubek ze smakołykiem.", "cover": "Teraz chowamy smakołyk…", "shuffle": "Śledź swój kubek…", "guess": "Pod którym kubkiem jest smakołyk? Dotknij go."}.get(phase, "Rzuć piłkę i patrz, jak ją łapie.")
+		if phase == "dog_pull":
+			return "Puść węzeł — teraz kolej pieska." if held else "Teraz piesek ciągnie! Poczekaj na swoją kolej. %d z %d" % [strokes, TUG_STROKES]
+		if not held: return "Chwyć węzeł, pociągnij w prawo → i puść. Piesek pociągnie do siebie."
+		return "Twoja kolej: pociągnij w prawo →. %d z %d" % [strokes, TUG_STROKES]
+	return {"hide": "Schowaj smakołyk: dotknij wybranego kubka. Piesek czeka.", "cover": "Smakołyk schowany…", "ready": "Kryjówka gotowa. Daj pieskowi komendę „Szukaj!”", "search": "Piesek węszy przy kubkach. Poczekaj, aż znajdzie smakołyk.", "found": "Nos wskazał ten kubek! Pochwal pieska za znalezienie."}.get(phase, "Rzuć piłkę i patrz, jak piesek ją łapie.")

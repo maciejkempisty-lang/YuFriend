@@ -69,13 +69,19 @@ var safe_rect := Rect2()
 # Physical window coordinates; used by device-layout regression tests.
 var safe_area_override := Rect2()
 var ui_settings_path := ""
-var invitation_card: PanelContainer
-var invitation_label: Label
-var invitation_accept: Button
+var companion_voice := CompanionVoice.new()
+var companion_card: PanelContainer
+var companion_title: Label
+var companion_label: Label
+var companion_action: Button
+var companion_later: Button
+var companion_tail: Polygon2D
+var companion_data: Dictionary = {}
 var play_menu: AcceptDialog
 var play_dialog: AcceptDialog
 var play_view: TouchPlayView
 var play_hint: Label
+var play_cue: Button
 var play_again: Button
 var app_foreground := true
 const ACTION_NEEDS := {"feed": "fullness", "rest": "energy", "clean": "hygiene", "play": "play", "pet": "contact"}
@@ -330,26 +336,74 @@ func _build_ui() -> void:
 	footer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	footer_label.hide()
 	add_child(footer_label)
-	_build_invitation_card()
+	_build_companion_card()
 	_build_dialogs()
 
-func _build_invitation_card() -> void:
-	invitation_card = PanelContainer.new()
-	invitation_card.add_theme_stylebox_override("panel", _style(CREAM, 20, 12))
-	add_child(invitation_card)
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	invitation_card.add_child(box)
-	invitation_label = _label("", 14, INK, true)
-	invitation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	invitation_label.custom_minimum_size.x = 280
-	box.add_child(invitation_label)
+func _build_companion_card() -> void:
+	companion_card = PanelContainer.new()
+	companion_card.add_theme_stylebox_override("panel", _style(CREAM, 18, 12))
+	add_child(companion_card)
+	companion_tail = Polygon2D.new()
+	companion_tail.color = CREAM
+	companion_tail.polygon = PackedVector2Array([Vector2(0, -1), Vector2(18, -1), Vector2(6, 9)])
+	companion_card.add_child(companion_tail)
 	var row := HBoxContainer.new()
-	box.add_child(row)
-	invitation_accept = _button("Pobawmy się", func(): session.accept_invitation(), true)
-	row.add_child(invitation_accept)
-	row.add_child(_button("Później", session.decline_invitation))
-	invitation_card.hide()
+	row.add_theme_constant_override("separation", 12)
+	companion_card.add_child(row)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	words.add_theme_constant_override("separation", 3)
+	row.add_child(words)
+	companion_title = _label("", 11, MUTED, true)
+	companion_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	words.add_child(companion_title)
+	companion_label = _label("", 14, INK, true)
+	companion_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.add_child(companion_label)
+	var actions := VBoxContainer.new()
+	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	actions.add_theme_constant_override("separation", 2)
+	row.add_child(actions)
+	companion_action = _button("", _companion_act, true)
+	companion_action.add_theme_font_size_override("font_size", 13)
+	actions.add_child(companion_action)
+	companion_later = _button("Później", session.decline_invitation)
+	companion_later.add_theme_font_size_override("font_size", 12)
+	actions.add_child(companion_later)
+	companion_card.hide()
+
+func _refresh_companion(delta: float = 0.0) -> void:
+	if companion_card == null or session.pet == null: return
+	companion_card.visible = session.attention_available and not session.suspended and not room.overview
+	var data := companion_voice.describe(session, delta if companion_card.visible else 0.0)
+	session.invitation_presented = companion_card.visible and data.get("kind") == "invitation"
+	if data != companion_data:
+		companion_data = data
+		companion_label.text = data.text
+		companion_action.text = data.label
+		companion_action.visible = not str(data.action).is_empty()
+		companion_action.disabled = not data.enabled
+		companion_action.accessibility_name = "%s. %s" % [data.text, data.label]
+		companion_later.visible = data.kind == "invitation"
+	# Renaming the dog also updates the bubble without restarting its quiet timer.
+	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz"}[data.kind]]
+	_position_companion()
+
+func _companion_act() -> void:
+	if not companion_card.visible or companion_data.is_empty(): return
+	# Recheck the current state: the need or invitation may have changed since touch-down.
+	var current := companion_voice.describe(session)
+	if current.action != companion_data.action or not current.enabled:
+		_refresh_companion()
+		return
+	var action: String = current.action
+	if action.begins_with("invite:"): session.accept_invitation()
+	elif action == "album": _select_tab("journal")
+	elif action == "play": _show_play_menu()
+	elif not action.is_empty(): session.act(action)
+	_update_attention()
+	_refresh_companion()
 
 func _build_care() -> VBoxContainer:
 	var box := VBoxContainer.new()
@@ -571,16 +625,20 @@ func _build_play_dialogs() -> void:
 	choices.add_theme_constant_override("separation", 12)
 	play_menu.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · gdzie smakołyk?"]]:
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · schowaj smakołyk"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
 	play_dialog.ok_button_text = "Zakończ"
 	play_dialog.min_size = Vector2i(280, 350)
 	add_child(play_dialog)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 10)
+	play_dialog.add_child(content)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	play_dialog.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(scroll)
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 10)
@@ -595,8 +653,10 @@ func _build_play_dialogs() -> void:
 	play_view.pressed_at.connect(session.play_press)
 	play_view.moved_to.connect(session.play_move)
 	play_view.released_at.connect(session.play_release)
+	play_cue = _button("Szukaj!", session.play_cue)
+	content.add_child(play_cue)
 	play_again = _button("Jeszcze raz", func(): session.start_touch_game(session.play.kind))
-	box.add_child(play_again)
+	content.add_child(play_again)
 	box.add_child(_label("Możesz zakończyć w dowolnej chwili.", 12, MUTED))
 	play_dialog.visibility_changed.connect(func():
 		if not play_dialog.visible: session.cancel_touch_game())
@@ -607,9 +667,10 @@ func _dialog_open() -> bool:
 	return false
 
 func _update_attention() -> void:
-	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open()
-	if invitation_card != null:
-		invitation_card.visible = session.attention_available and not session.invitation.is_empty() and not session.suspended
+	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview
+	if companion_card != null and not session.attention_available:
+		companion_card.hide()
+		session.invitation_presented = false
 
 func _show_play_menu() -> void:
 	var reason := session.play_readiness()
@@ -635,7 +696,7 @@ func _show_touch_game(kind: String) -> void:
 	play_dialog.title = InitiativeSystem.LABELS[kind]
 	play_hint.text = session.play.hint()
 	play_dialog.popup()
-	_position_dialog(play_dialog, Vector2i(350, 440))
+	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
 	if key != selected_tab:
@@ -689,7 +750,7 @@ func _fit_room() -> void:
 	_place(footer_label, Rect2(panel_x + 8, nav_y - 44, panel_width - 16, 42))
 	room.update_placement()
 	_position_feedback()
-	_position_invitation()
+	_position_companion()
 	for dialog in [profile_dialog, settings_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
 		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
 
@@ -794,12 +855,12 @@ func _refresh() -> void:
 	var pet := session.pet
 	_update_attention()
 	room.ball_throw_enabled = session.play_readiness().is_empty()
-	if not session.invitation.is_empty():
-		invitation_label.text = InitiativeSystem.invitation_text(pet, session.invitation.kind)
-		invitation_accept.text = {"ball": "Rzuć piłkę", "tug": "Chwyć linę", "cups": "Szukamy!", "cuddle": "Pogłaszcz"}[session.invitation.kind]
+	_refresh_companion()
 	play_hint.text = session.play.hint()
+	play_cue.visible = session.play.kind == "cups" and session.play.phase in ["ready", "found"]
+	play_cue.text = "Brawo!" if session.play.phase == "found" else "Szukaj!"
+	play_again.visible = session.play.phase == "result"
 	play_again.disabled = session.play.phase != "result" or session.busy()
-	_position_invitation()
 	room.mood_walk_speed = LifeSystem.walk_speed(pet)
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = pet.pet_name
@@ -974,7 +1035,7 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 
 func _process(delta: float) -> void:
 	_update_attention()
-	_position_invitation()
+	_refresh_companion(delta)
 	bubble_left = maxf(0, bubble_left - delta)
 	gain_left = maxf(0, gain_left - delta)
 	training_feedback_left = maxf(0, training_feedback_left - delta)
@@ -992,12 +1053,14 @@ func _process(delta: float) -> void:
 				button.queue_redraw()
 	_position_feedback()
 
-func _position_invitation() -> void:
-	if invitation_card == null or header == null: return
-	var width := minf(350, minf(room.size.x, safe_rect.end.x) - safe_rect.position.x - 24)
-	invitation_label.custom_minimum_size.x = width - 24
-	invitation_card.size = Vector2(width, 0)
-	invitation_card.position = Vector2(header.position.x, header.get_rect().end.y + 10)
+func _position_companion() -> void:
+	if companion_card == null or header == null: return
+	companion_card.size = Vector2(header.size.x, 0)
+	companion_card.position = Vector2(header.position.x, room.hud_bottom + 52)
+	companion_tail.position = Vector2(32, companion_card.size.y)
+	# Only move this UI hint; room bounds, camera and the approved framing stay intact.
+	if companion_card.visible and not room.overview:
+		room.room_hint.position = Vector2(room.overview_button.get_rect().end.x + 12, room.hud_bottom + 14)
 
 func _position_feedback() -> void:
 	if bubble == null or header == null: return
@@ -1006,12 +1069,13 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = bubble_left > 0 and on_screen and not invitation_card.visible
+	bubble.visible = bubble_left > 0 and on_screen and not (companion_card.visible and companion_data.get("kind") == "invitation")
 	gain_label.visible = gain_left > 0 and on_screen
 	var head := room.world_to_screen(room.pet_world - Vector2(0, 178) * room.presentation_scale)
 	var left := maxf(12, safe_rect.position.x + 8)
 	var right := minf(room.size.x - 12, safe_rect.end.x - 8)
 	var top := header.get_rect().end.y + 8
+	if companion_card.visible: top = companion_card.get_rect().end.y + 16
 	bubble.position = Vector2(clampf(head.x - bubble.size.x / 2, left, maxf(left, right - bubble.size.x)), maxf(top, head.y - bubble.size.y - 12))
 	bubble.modulate.a = minf(1, bubble_left * 3)
 	gain_label.reset_size()

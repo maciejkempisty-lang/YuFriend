@@ -31,37 +31,33 @@ func _draw_room() -> void:
 	# A medium portrait frame exposes more wall above the original panorama.
 	# Continue its top edge instead of showing the viewport's clear colour.
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(0, -2400, area.x, 2400), Rect2(0, 186, 1, 1))
-	# Temporary high-resolution reference; the room viewport samples it on the art grid.
-	var texture_scale := 0.4
 	# Extend the edge colour of each scanline so the central wall has no hard seam.
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(0, 0, 400, 260), Rect2(0, 186, 1, 650))
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(901.6, 0, area.x - 901.6, 260), Rect2(1253, 186, 1, 650))
 	var wall_source := Rect2(0, 186, 1254, 650)
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(400, 0, 501.6, 260), wall_source)
+	# Remove the baked plant before drawing wall decor. Its original pot was
+	# cropped by the wall/floor split, and the new portrait covered its leaves.
+	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(480, 198, 78, 62), Rect2(1080, 681, 1, 155))
 	_draw_window()
-	var floor_source := Rect2(0, 900, 600, 354)
-	var tile := floor_source.size * texture_scale
-	var y := RoomLayout.FLOOR_Y
-	while y < area.y:
-		var x := 0.0
-		while x < area.x:
-			draw_texture_rect_region(ROOM_BACKGROUND, Rect2(Vector2(x, y), tile), floor_source)
-			x += tile.x
-		y += tile.y
+	_draw_floor()
 	_pixel_rect(Rect2(0, RoomLayout.FLOOR_Y, area.x, 12), Color("805733"))
 	_pixel_rect(Rect2(0, RoomLayout.FLOOR_Y + 3, area.x, 6), Color("c79457"))
-	# Light belongs to the single window, rather than repeating in every floor tile.
-	for row in range(0, 87, 3):
-		if row >= 63 and row < 78: continue
-		for pane in 2:
-			_pixel_rect(Rect2(708 + pane * 51 - row * 0.75, RoomLayout.FLOOR_Y + 12 + row, 39, 3), Color(1.0, 0.92, 0.65, 0.24))
 	var rug := Vector2(745, 324)
 	_pixel_ellipse(rug + Vector2(0, 6), Vector2(256, 30), Color("b79364"))
 	_pixel_ellipse(rug, Vector2(256, 30), Color("7c9064"))
 	_pixel_ellipse(rug - Vector2(0, 3), Vector2(247, 27), Color("a9b582"))
 	_pixel_ellipse(rug - Vector2(0, 3), Vector2(231, 21), Color("c9cc9c"))
+	# Window light falls across both the floor and the rug, behind all solid props.
+	for row in range(0, 87, 3):
+		if row >= 63 and row < 78: continue
+		for pane in 2:
+			_pixel_rect(Rect2(708 + pane * 51 - row * 0.75, RoomLayout.FLOOR_Y + 12 + row, 39, 3), Color(1.0, 0.92, 0.65, 0.24))
 	_draw_wall_panels()
 	_draw_portrait()
+	# Floor plants sit in front of wall frames and the skirting board.
+	_pixel_ellipse(Vector2(519, 276), Vector2(30, 6), Color("b79364"))
+	_draw_planter(Vector2(519, 276), 1.2)
 	_draw_lamp(Vector2(870, 270))
 	_draw_music_corner()
 	_draw_sleep_corner()
@@ -79,6 +75,37 @@ func _draw_room() -> void:
 	_pixel_rect(Rect2(321, 111, 21, 15), Color("ad7350"))
 	_pixel_ellipse(Vector2(330, 102), Vector2(15, 15), Color("718960"))
 	_pixel_ellipse(Vector2(336, 96), Vector2(10, 13), Color("9db37b"))
+
+func _draw_floor() -> void:
+	# The reference is a perspective illustration, not a seamless floor tile.
+	# Draw whole planks on the art grid so its diagonal cuts cannot repeat.
+	var wood := [Color("d7a365"), Color("dba86b"), Color("d5a064"), Color("d9a66a"), Color("d4a066")]
+	var floor_bounds := Rect2(0, RoomLayout.FLOOR_Y, area.x, area.y - RoomLayout.FLOOR_Y)
+	draw_rect(floor_bounds, wood[0])
+	# A private seed keeps the room stable across redraws without changing gameplay RNG.
+	var grain := RandomNumberGenerator.new()
+	grain.seed = 72419
+	var plank_height := 24.0
+	var y := ceilf((RoomLayout.FLOOR_Y + 12) / PIXEL) * PIXEL
+	while y < area.y:
+		var x := -float(grain.randi_range(12, 72)) * PIXEL
+		while x < area.x:
+			var width := float(grain.randi_range(48, 88)) * PIXEL
+			var color: Color = wood[grain.randi_range(0, wood.size() - 1)]
+			_pixel_rect(Rect2(x, y, width, plank_height).intersection(floor_bounds), color)
+			_pixel_rect(Rect2(x, y, width, PIXEL).intersection(floor_bounds), color.lightened(0.10))
+			_pixel_rect(Rect2(x, y + plank_height - PIXEL, width, PIXEL).intersection(floor_bounds), Color("b88b55"))
+			if x >= 0:
+				_pixel_rect(Rect2(x, y + PIXEL, PIXEL, plank_height - PIXEL * 2).intersection(floor_bounds), Color("bd9059"))
+			# Sparse, horizontal grain; no diagonal wedges or repeated image boundaries.
+			for line in 2:
+				var length := float(grain.randi_range(6, 22)) * PIXEL
+				var offset := float(grain.randi_range(4, int((width - length) / PIXEL) - 4)) * PIXEL
+				var mark := Rect2(x + offset, y + (6 if line == 0 else 15), length, PIXEL)
+				if mark.intersects(floor_bounds):
+					_pixel_rect(mark.intersection(floor_bounds), color.lightened(0.045) if line == 0 else color.darkened(0.035))
+			x += width
+		y += plank_height
 
 func _draw_window() -> void:
 	# Replace the baked curtain/window locally with art on the room's actual pixel grid.
@@ -261,14 +288,6 @@ func _draw_music_corner() -> void:
 	_draw_planter(Vector2(1092, 135), 0.6)
 	_draw_trailing_vine(Vector2(1104, 123), 57)
 	_draw_guitar(Vector2(1182, 267))
-	# A small wall clock balances the tall guitar next to the doorway.
-	_pixel_ellipse(Vector2(1179, 78), Vector2(27, 27), Color("84613e"))
-	_pixel_ellipse(Vector2(1179, 78), Vector2(24, 24), Color("d5b17b"))
-	_pixel_ellipse(Vector2(1179, 78), Vector2(21, 21), Color("f3e6bc"))
-	for offset in [Vector2(0, -15), Vector2(15, 0), Vector2(0, 15), Vector2(-15, 0)]:
-		_pixel_rect(Rect2(Vector2(1179, 78) + offset, Vector2(3, 3)), Color("aa8f63"))
-	_pixel_rect(Rect2(1179, 66, 3, 15), Color("657860"))
-	_pixel_rect(Rect2(1170, 78, 12, 3), Color("657860"))
 
 func _draw_guitar(base: Vector2) -> void:
 	_pixel_ellipse(base + Vector2(3, 3), Vector2(42, 9), Color("ae9266"))

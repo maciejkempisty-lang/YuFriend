@@ -47,7 +47,7 @@ Po co najmniej 30 minutach nieobecności pojawia się krótka relacja „Kiedy C
 
 Gloria sama zaprasza do piłki, liny, szukania smakołyka albo bliskości. Możesz odpowiedzieć, wybrać „Później” lub zająć się czymś innym. Zapamiętuje reakcje i częściej proponuje lubiane aktywności; karta psa pokazuje **Wasz rytm**. Odmowa nie zmniejsza więzi.
 
-Wybierz **Pobaw się**: przeciągnij piłkę i puść, pociągaj węzeł liny naprzemiennie w obie strony albo śledź smakołyk pod mieszanymi kubkami. Działa dotyk i mysz. [Sterowanie i zasady nagród](docs/mechaniki-gry.md#zabawy-dotykiem).
+Wybierz **Pobaw się**: przeciągnij piłkę i puść, pociągnij węzeł liny i puść, żeby pies odpowiedział własnym pociągnięciem, albo schowaj smakołyk pod kubkiem i daj pieskowi komendę „Szukaj!”. Działa dotyk i mysz. [Sterowanie i zasady nagród](docs/mechaniki-gry.md#zabawy-dotykiem).
 
 ## Grafika i sprite’y
 
@@ -68,7 +68,9 @@ Muzyka z dostarczonego `video2.mp4` gra cicho w pętli. Pakiet 22 efektów Eleve
 
 ## Szeroki pokój
 
-Jeden świat 1440 × 360 ma dwa ręcznie wybierane kadry: widok pośredni śledzący psa i „Cały pokój”, pokazujący wszystkie stacje. Dotknięcie panoramy przybliża wybrane miejsce, a „Do pieska” przywraca śledzenie. Domyślny kadr pośredni dopasowuje skalę do szerokości: na sprawdzonych ekranach telefonu pokazuje 480–648 jednostek z 1440, czyli około ⅓–½ pokoju. Przy początkowej pozycji psa widać także miskę i piłkę. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój zachowuje siatkę 3 jednostek świata na piksel logiczny, a podłoga jest przedłużona za pływającymi panelami. Dodatkowe zbliżenie 2× działa tylko wtedy, gdy szerokość i wysokość mieszczą całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
+Na ścianie obok portretu pieska wisi pixelartowy zegar w drewnianej ramce. Pokazuje lokalny czas urządzenia i odświeża się także po powrocie do aplikacji oraz zmianie godziny systemowej. Roślina przy portrecie stoi przed ramą i listwą, a światło okna pada na podłogę i dywan bez powtarzania plam w całym pokoju.
+
+Jeden świat 1440 × 360 ma dwa ręcznie wybierane kadry: widok pośredni śledzący psa i „Cały pokój”, pokazujący wszystkie stacje. Dotknięcie panoramy przybliża wybrane miejsce, a „Do pieska” przywraca śledzenie. Domyślny kadr pośredni dopasowuje skalę do szerokości: na sprawdzonych ekranach telefonu pokazuje 480–585 jednostek z 1440, czyli około ⅓–⅖ pokoju. Scena jest przesunięta wyżej, dzięki czemu nad dekoracjami pozostaje mniej pustej ściany. Przy początkowej pozycji psa widać całą jego sylwetkę, miskę i piłkę. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój zachowuje siatkę 3 jednostek świata na piksel logiczny, a podłoga jest przedłużona za pływającymi panelami. Dodatkowe zbliżenie 2× działa tylko wtedy, gdy szerokość i wysokość mieszczą całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
 
 ![Cały pokój — podgląd świata bez interfejsu](docs/images/pokoj-panorama.png)
 
@@ -121,6 +123,10 @@ Testy uruchamiane z katalogu projektu:
 ```
 
 Dwa ostatnie testy otwierają okno i zapisują zrzuty do `test-results/`. Obejmuje układy 360 × 800, 390 × 844 i 540 × 960 oraz rzeczywiste skalowanie okien 320 × 640, 1100 × 720 i 1080 × 2340. To test pulpitu; obsługa dotyku i cykl życia na fizycznym telefonie wymagają osobnego sprawdzenia po eksporcie.
+
+## Widget na iPhone
+
+Dodano natywny widget: mały z najpilniejszą potrzebą, średni z pięcioma potrzebami i nastrojem oraz prostokątny na ekran blokady. Pokazuje psa z bieżącego zapisu, uwzględnia sen i upływ czasu. Eksport z widgetem: `sh tools/export_ios.sh`. [Instrukcja dodania, synchronizacja i zakres testów](docs/widget-ios.md).
 
 ## Kolejne etapy
 

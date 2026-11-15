@@ -40,6 +40,14 @@ Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zapros
 
 Przy sytości, zabawie lub czystości co najmniej 95 odpowiadająca opieka daje komunikat o zaspokojeniu potrzeby, bez dojścia, efektów ani wpisu do historii. Dotyczy to także zabawy przy koszu. Głaskanie nie ma takiego progu. Dotknięcie psa podczas jedzenia wyjaśnia, że właśnie je, i nie przerywa posiłku. Przy zbliżeniu piłka odsuwa się poza obszar łap.
 
+## Dymek Glorii
+
+W zakładce Dom, pod przyciskiem „Cały pokój”, znajduje się dymek z imieniem psa i krótkim tekstem w pierwszej osobie. To nakładka interfejsu: nie zmienia kadru, skali ani pozycji przedmiotów w pokoju.
+
+Dymek najpierw opisuje trwającą czynność lub sen. Gdy pies jest wolny, wybiera najniższą potrzebę poniżej 40%. Energia poniżej 28% lub zmęczenie co najmniej 75 dają pierwszeństwo odpoczynkowi przed zabawą. Następne w kolejności jest aktywne zaproszenie psa, a przy zaspokojonych potrzebach — myśl zależna od nastroju, odkrytego dziwactwa albo wspomnienie rzeczywistego wydarzenia z albumu. Spokojna treść zmienia się co 45 sekund widoczności lub po zmianie kontekstu, np. zapisaniu nowego wspomnienia; zwykłe odświeżenie interfejsu jej nie losuje.
+
+Przycisk uruchamia odpowiadającą opiekę, wybór zabawy, przyjęcie zaproszenia lub album. Podlega istniejącym regułom sesji i czasom oczekiwania; samo pokazanie dymka niczego nie nagradza. Zaproszenie ma też „Później”, a jego licznik odpowiedzi zatrzymuje się, gdy pilniejsza potrzeba zajmuje dymek. Dymek znika w treningu, albumie, dialogach, widoku całego pokoju i w tle aplikacji. Krótkie komunikaty po działaniach nadal pojawiają się przy psie.
+
 ## Zabawy dotykiem
 
 Przycisk **Pobaw się** otwiera wybór trzech gier. Każda działa palcem i myszą. Wymagają obudzonego psa, energii co najmniej 28, zmęczenia poniżej 85 i braku innej trwającej czynności. Można bawić się także przy pełnej potrzebie zabawy.
@@ -47,10 +55,10 @@ Przycisk **Pobaw się** otwiera wybór trzech gier. Każda działa palcem i mysz
 | Zabawa | Sterowanie i ukończenie |
 |---|---|
 | Piłka | Przeciągnij piłkę w pokoju w lewo lub prawo i puść. Łuk pokazuje cel; pies idzie do miejsca lądowania. Dopiero dogonienie piłki kończy rundę. Krótkie stuknięcie zachowuje prosty pościg. |
-| Przeciąganie liny | Chwyć widoczny węzeł i wykonaj sześć wyraźnych ruchów naprzemiennie w lewo i prawo, zgodnie ze strzałką. Samo trzymanie i drobne drżenie palca nie liczą się. |
-| Szukanie smakołyka | Zapamiętaj kubek ze smakołykiem, obserwuj trzy zamiany miejsc i dotknij wybranego kubka. Pomyłka odsłania odpowiedź i pozwala spróbować ponownie. |
+| Przeciąganie liny | Chwyć widoczny węzeł, pociągnij w prawo i puść. Piesek pociągnie linę do siebie, po czym możesz znów chwycić węzeł. Trzy takie wymiany kończą rundę. Samo trzymanie i drżenie palca nie zastępują Twojego pociągnięcia. Anulowany dotyk wycofuje niedokończoną wymianę. |
+| Szukanie smakołyka | Dotknij kubka, żeby schować pod nim smakołyk, a następnie wybierz „Szukaj!”. Piesek sam podchodzi do kubków w losowej kolejności i znajduje kryjówkę. Po odsłonięciu smakołyka wybierz „Brawo!”, żeby pochwalić psa i zakończyć rundę. Użytkownik przygotowuje zabawę, a pies szuka; nie ma zgadywania przez gracza. |
 
-Udana runda zwiększa zabawę o 18, bliskość o 6 i więź o 0,35, zużywając 3 energii i 1 czystości. Te przyrosty mają wspólny odstęp **30 sekund**, zachowywany po restarcie. W tym czasie nadal można grać kolejne rundy. Przyrosty trafiają do historii jako `play` i mogą odkrywać dziwactwa. Nieudana odpowiedź przy kubkach nie przyznaje nagrody ani kary. Pierwsza ukończona runda każdego rodzaju trafia do Albumu.
+Udana runda zwiększa zabawę o 18, bliskość o 6 i więź o 0,35, zużywając 3 energii i 1 czystości. Te przyrosty mają wspólny odstęp **30 sekund**, zachowywany po restarcie. W tym czasie nadal można grać kolejne rundy. Przyrosty trafiają do historii jako `play` i mogą odkrywać dziwactwa. Przy kubkach nagroda jest naliczana dopiero po pochwale; samo ukrycie lub znalezienie smakołyka jej nie przyznaje. Pierwsza ukończona runda każdego rodzaju trafia do Albumu.
 
 Lina i kubki mają przyciski „Jeszcze raz” i „Zakończ”. Zamknięcie sceny lub wstrzymanie aplikacji anuluje niedokończoną zabawę. Drugi palec nie przejmuje gestu, a anulowany dotyk nie rzuca piłki ani nie wybiera kubka. Przeciąganie rozpoczęte na piłce steruje rzutem; poza piłką nadal przesuwa pokój.
 

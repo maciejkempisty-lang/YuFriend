@@ -215,6 +215,7 @@ func _run() -> void:
 	check(app.room.action_at(app.room.ball_center()) == "play", "foreground ball remains touchable in the compact room")
 	check(app.room.pet_world == world_before_resize and app.room.ball_world == ball_before_resize, "resizing and tab changes preserve puppy and ball world positions")
 	await _test_training_visibility()
+	await _test_phone_framing()
 	await _test_room_overview()
 	# Save warnings must not cover the last action in the panel.
 	game.save_ok = false
@@ -538,7 +539,7 @@ func check_pixel_grid(label: String) -> void:
 				continue
 			var block := Rect2(Vector2(point), Vector2.ONE * room.pixel_scale)
 			var under_ui := false
-			for control in [app.header, app.sheet, app.navigation, app.bubble, app.gain_label, app.footer_label, room.return_button, room.overview_button, room.room_hint] + room.prop_markers.values():
+			for control in [app.header, app.sheet, app.navigation, app.bubble, app.companion_card, app.gain_label, app.footer_label, room.return_button, room.overview_button, room.room_hint] + room.prop_markers.values():
 				if control.is_visible_in_tree():
 					var ui_rect: Rect2 = root.get_final_transform() * control.get_global_rect().grow(24)
 					if ui_rect.intersects(block): under_ui = true
@@ -819,6 +820,46 @@ func _test_training_visibility() -> void:
 	app._select_tab("care")
 	check(not app.bubble.visible, "leaving training does not resurrect its old message over the puppy")
 	app._select_tab("training")
+
+func _test_phone_framing() -> void:
+	app._select_tab("care")
+	app.session._cancel_motion()
+	app.session.activity = "idle"
+	app.session.pet.resting = false
+	app.session._cancel_invitation()
+	app.bubble_left = 0
+	app.room.pan_hint_dismissed = true
+	app.room.pet_world = RoomLayout.START
+	app.room.target_world = RoomLayout.START
+	app.room.ball_world = RoomLayout.STATIONS.ball.position
+	app.room.ball_target = app.room.ball_world
+	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(1080, 2340), Vector2i(860, 1864)]:
+		root.size = layout
+		root.content_scale_size = Vector2i(390, 844)
+		await process_frame
+		await process_frame
+		app.safe_area_override = Rect2()
+		if layout.x >= 860:
+			app.safe_area_override = root.get_final_transform() * Rect2(12, 54, app.size.x - 24, app.size.y - 88)
+		app._fit_room()
+		app.room.focus_left = 0
+		app.room.set_interaction_focus(false)
+		app.room.focus_pet()
+		app.room._update_camera(10)
+		app.room._sync_layers()
+		app._position_feedback()
+		await capture("phone-framing-%d.png" % layout.x)
+		var room: RoomView = app.room
+		var clear_top := room.hud_bottom + 54
+		var stage := Rect2(0, clear_top, room.size.x, room.content_bottom - clear_top - 12)
+		var ball := room._screen_rect(Rect2(room.ball_world - Vector2(14, 14), Vector2(28, 32)))
+		check(stage.encloses(_puppy_screen_bounds()) and stage.encloses(room.bowl_rect()) and stage.encloses(ball), "phone frame keeps the entire puppy, bowl and ball between toolbar and care panel: " + str(layout))
+		var window_top := room.world_to_screen(Vector2(740, 75)).y
+		check(window_top >= clear_top and window_top - clear_top <= 110, "phone frame limits blank wall below the toolbar to 110 UI points: " + str(layout))
+		check(room.pet_world == RoomLayout.START and room.ball_world == RoomLayout.STATIONS.ball.position, "phone reframing preserves world positions: " + str(layout))
+		check_pixel_grid("phone framing " + str(layout))
+	app.safe_area_override = Rect2()
+	app._fit_room()
 
 func _test_room_overview() -> void:
 	app._select_tab("care")

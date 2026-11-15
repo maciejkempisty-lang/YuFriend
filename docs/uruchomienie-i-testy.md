@@ -40,12 +40,20 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 |---|---|---:|
 | [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 113 poprawnych sprawdzeń |
 | [test_life.gd](../tests/test_life.gd) | Dziwactwa, odkrywanie, nastrój o 05:00, cofnięcie zegara, relacje, powitania, migracja v2 i powrót do sesji | 46 poprawnych sprawdzeń |
-| [test_play.gd](../tests/test_play.gd) | Autonomiczne zaproszenia, pamięć reakcji, gesty, ograniczenie nagród, przerwania, trwałość i migracja v3 | 61 poprawnych sprawdzeń |
-| [ui_play.gd](../tests/ui_play.gd) | Karta zaproszenia, dotyk przycisku, rzut i pościg, lina, kubki, wznowienie oraz mały i szeroki ekran | 26 poprawnych sprawdzeń |
+| [test_play.gd](../tests/test_play.gd) | Autonomiczne zaproszenia, pamięć reakcji, gesty, ograniczenie nagród, przerwania, trwałość i migracja v3 | 94 poprawne sprawdzenia |
+| [ui_play.gd](../tests/ui_play.gd) | Karta zaproszenia, dotyk przycisku, rzut i pościg, lina, kubki, wznowienie oraz mały i szeroki ekran | 30 poprawnych sprawdzeń |
+| [test_companion.gd](../tests/test_companion.gd) | Priorytety potrzeb, zmęczenie, potwierdzone wspomnienia, stabilność myśli, czas oczekiwania i blokady akcji | 23 poprawne sprawdzenia |
+| [ui_companion.gd](../tests/ui_companion.gd) | Dymek i dotyk akcji, cztery rozmiary ekranu, bezpieczne marginesy, niezmieniony kadr i widoczność psa/miski/piłki | 34 poprawne sprawdzenia |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, nieregularne regiony, podparcie, skalowanie, kompletny pakiet 22/142, zasób `.res`, przejścia i ukończenie prezentacji | 38 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 214 poprawnych sprawdzeń |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 238 poprawnych sprawdzeń |
+
+Dymek potrzeb, myśli i wspomnień, 15 listopada 2026: **419/419 sprawdzeń** w pięciu zestawach (`test_companion`, `ui_companion`, `test_play`, `ui_play`, `ui_smoke`). Nowe zrzuty `test-results/companion-*.png` obejmują 390 × 844, 320 × 640, 860 × 1864 z symulowanymi marginesami urządzenia oraz 1100 × 720. Obejrzano spokojną myśl, potrzebę, wspomnienie i zaproszenie. Test mierzy niezmienność kamery, skali i pozycji psa po zmianie treści, brak zasłaniania psa/miski/piłki i faktyczne dotknięcia przycisków. Sprawdzono na pulpicie, bez instalacji tej zmiany na fizycznym iPhonie.
+
+Audyt ról w zabawach, 15 listopada 2026: **450/450 sprawdzeń** w czterech zestawach — 93 zabaw, 30 UI zabaw, 113 logiki i 214 UI opieki/treningu. Kubki sprawdzają chowanie przez gracza, samodzielne szukanie psa i pochwałę; lina sprawdza pociągnięcie gracza, puszczenie i odpowiedź psa. Obejrzano zrzuty kubków i liny oraz dostępność przycisków bez przewijania na małym ekranie. Te zmiany nie zostały jeszcze sprawdzone na fizycznym iPhonie.
 
 Korekta kadru pośredniego i limitu albumu: **531/531** w siedmiu zestawach. Nowe regresje mierzą szerokość domyślnego kadru i obecność miski/piłki w 390 × 844, 320 × 640 i 1080 × 2340 oraz wczytują stary album v4 z 200 osiągnięciami i 40 relacjami, zachowując wszystkie osiągnięcia i 10 ostatnich relacji. Zrzuty `room-medium-*.png` pokazują nowy kadr. Build 7 uruchomiono również na fizycznym iPhonie; szczegóły i zakres kontroli opisuje [test iOS](test-ios.md).
+
+Dalsza korekta pionowego kadru (mniej pustej ściany nad sceną): **238/238 sprawdzeń UI**. Regresje obejmują 390 × 844, 320 × 640, 1080 × 2340 i 860 × 1864, także z symulowanymi bezpiecznymi marginesami. Kontrolują pełną widoczność psa, miski i piłki pomiędzy paskiem narzędzi a panelem opieki, odstęp nad oknem do 110 punktów UI, niezmienność pozycji świata oraz ostre, równe piksele. Zrzuty: `test-results/phone-framing-*.png`. Tę późniejszą korektę sprawdzono na pulpicie; nie jest jeszcze częścią instalacji build 7 na iPhonie.
 
 Poprawki po audycie, 15 listopada 2026: **524/524** w siedmiu zestawach, w tym dodatkowe **33 sprawdzenia `test_audio.gd`**. Regresje obejmują 60 powrotów z zachowaniem pierwszego dnia i siadu po ponownym odczycie, osobne limity 200+40 wpisów, brak obserwacji dziwactw offline, rozkład 400 nowych psów (95 sennych), karmienie podczas zaproszenia do bliskości oraz pięciominutowy odstęp zaproszeń. UI sprawdza neutralny tekst dla Glorii oraz widok całego pokoju, wybór miejsca i powrót do psa w trzech pionowych rozdzielczościach. Zrzuty: `room-overview-390.png`, `room-overview-320.png`, `room-overview-1080.png`. Obejrzano widok 1080 × 2340 i zbliżenie; fizyczny iPhone nadal wymaga próby tych zmian.
 
@@ -60,6 +68,8 @@ Wcześniejszy wynik pełnego zestawu **355/355** pochodzi z weryfikacji 15 listo
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_sprites.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_life.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_play.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_companion.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_companion.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_play.gd
 ```
@@ -80,7 +90,7 @@ Uruchom grę z `--qa`. Wykonaj poniższe czynności również po większej zmian
 | Kliknij lewą i prawą stronę pokoju | Pies zmienia kierunek i dochodzi do celu; po siadzie najpierw wstaje |
 | Nakarm, pogłaszcz, pobaw się i wyczesz | Pies idzie do miski, goni piłkę i odpowiada na kolejne dotknięcia; efekty i wspomnienia naliczają się tylko raz |
 | Poczekaj na zaproszenie, odpowiedz lub wybierz „Później” | Karta psa pokazuje reakcję w „Waszym rytmie”; ponowne uruchomienie zachowuje pamięć |
-| Otwórz „Pobaw się” i ukończ piłkę, linę oraz kubki | Gesty odpowiadają wskazówkom, wynik nalicza się raz, pomyłka przy kubkach nie daje kary |
+| Otwórz „Pobaw się” i ukończ piłkę, linę oraz kubki | Gesty odpowiadają wskazówkom, wynik nalicza się raz; przy kubkach Ty chowasz smakołyk i chwalisz, a pies go szuka; przy linie pies sam odpowiada pociągnięciem |
 | Przerwij przeciąganie lub wyślij aplikację w tło podczas rundy | Nie ma dodatkowego rzutu, wyboru kubka ani nagrody po wznowieniu |
 | Włącz odpoczynek i poczekaj | Pies idzie do legowiska, energia rośnie i przy 85 pies sam wstaje; ręczne budzenie nadal działa |
 | Ćwicz siad z gestem i nagradzaj na czas | Opanowanie rośnie; po 25% dostępna staje się łapa |

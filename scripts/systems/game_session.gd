@@ -43,6 +43,8 @@ var _sleep_elapsed: float = 0.0
 var _discovery_message: String = ""
 var invitation: Dictionary = {}
 var attention_available := true
+# The top bubble may temporarily show a more urgent need instead of this offer.
+var invitation_presented := true
 var initiatives_enabled := true
 var _initiative_wait := 90.0
 var play := TouchPlaySystem.new()
@@ -102,7 +104,7 @@ func _process(delta: float) -> void:
 	if not active or suspended: return
 	if attention_available and not pet.resting and not busy():
 		_initiative_wait = maxf(0, _initiative_wait - delta)
-		if not invitation.is_empty():
+		if invitation_presented and not invitation.is_empty():
 			invitation.remaining -= delta
 			if float(invitation.remaining) <= 0: _finish_invitation("ignored")
 	if play.running():
@@ -653,10 +655,16 @@ func throw_ball(target: Vector2) -> bool:
 	activity = "approach"
 	_pending_action = "touch_ball"
 	_pending_by_player = true
-	say("Piłka w ruch! Łapiemy razem.")
+	say("Piłka w ruch! %s biegnie ją złapać." % pet.pet_name)
 	ball_throw_requested.emit(RoomLayout.clamp_walk(target), _approach_token)
 	changed.emit()
 	return true
+
+func play_cue() -> void:
+	if not writable or suspended: return
+	play.cue()
+	_settle_touch_game()
+	changed.emit()
 
 func play_press(point: Vector2) -> void:
 	if writable and not suspended: play.press(point)

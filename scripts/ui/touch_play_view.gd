@@ -9,10 +9,11 @@ var model: TouchPlaySystem
 var puppy := PetAnimator.new()
 var _pointer := -1
 var _last_phase := ""
+var _last_kind := ""
 var _mat := StyleBoxFlat.new()
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(240, 220)
+	custom_minimum_size = Vector2(240, 260)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_mat.bg_color = Color("e7ecd9")
@@ -28,12 +29,25 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if model == null: return
-	puppy.visible = model.kind == "tug"
+	puppy.visible = model.kind in ["tug", "cups"]
 	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
-	puppy.position = Vector2(size.x * 0.19 + (model.tug_handle.x - 0.65) * 12, size.y * 0.67)
-	if _last_phase != model.phase:
+	var clip := "play_bow"
+	if model.kind == "cups":
+		puppy.scale *= 0.75
+		var point := model.dog_point() * size
+		if model.phase == "search":
+			if absf(point.x - puppy.position.x) > 0.01: puppy.facing_left = point.x < puppy.position.x
+			clip = "walk" if model.elapsed < TouchPlaySystem.SEARCH_SECONDS * 0.6 else "head_tilt_stand"
+		else: clip = "head_tilt_stand" if model.phase == "found" else "idle"
+		puppy.position = point
+	else:
+		puppy.facing_left = false
+		puppy.position = Vector2(size.x * (0.19 + (model.tug_handle.x - 0.60) * 0.16), size.y * 0.67)
+	if model.phase == "result": clip = "tail_wag_stand"
+	if _last_phase != model.phase or _last_kind != model.kind or (puppy.current != clip and puppy.pending != clip):
 		_last_phase = model.phase
-		puppy.request_clip("tail_wag_stand" if model.phase == "result" else "play_bow")
+		_last_kind = model.kind
+		puppy.request_clip(clip)
 	queue_redraw()
 
 func _on_input(event: InputEvent) -> void:
@@ -73,7 +87,7 @@ func _draw() -> void:
 	elif model.kind == "cups": _draw_cups()
 
 func _draw_rope() -> void:
-	var start := Vector2(size.x * 0.25, size.y * 0.49)
+	var start := Vector2(puppy.position.x + size.x * 0.06, size.y * 0.49)
 	var end := model.tug_handle * size
 	var points := PackedVector2Array()
 	for index in 21:
@@ -89,7 +103,8 @@ func _draw_rope() -> void:
 	draw_arc(end, 18, 0, TAU, 24, Color("9a7246"), 3, true)
 	var font := get_theme_default_font()
 	draw_string(font, Vector2(size.x * 0.1, size.y * 0.87), "Raz Ty, raz ja", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("315d49"))
-	var direction := -1.0 if model.tug_direction < 0 else 1.0
+	if model.phase == "result": return
+	var direction := -1.0 if model.phase == "dog_pull" else 1.0
 	var arrow := end + Vector2(direction * 44, 0)
 	draw_line(arrow - Vector2(direction * 10, 0), arrow, Color("315d49"), 3, true)
 	draw_line(arrow, arrow - Vector2(direction * 6, 5), Color("315d49"), 3, true)
@@ -100,20 +115,28 @@ func _draw_cups() -> void:
 	for id in 3:
 		var base := model.cup_point(id) * size
 		draw_ellipse_shadow(base)
-		var reveal := model.phase == "reveal" or (model.phase == "result" and (id == model.treat_cup or id == model.selected_cup))
+		var reveal := model.phase == "hide" or (model.phase == "cover" and id == model.treat_cup) or (model.phase in ["found", "result"] and id == model.selected_cup)
 		if id == model.treat_cup and reveal:
 			var treat := Rect2(base - Vector2(14, 13), Vector2(28, 28))
 			draw_texture_rect(GameIcons.texture("treat", Color("a56f39")), treat, false)
-		var lift := size.y * 0.20 if reveal else 0.0
+		var lift := size.y * 0.12 if reveal else 0.0
+		if model.phase == "cover": lift *= 1.0 - clampf(model.elapsed / 0.7, 0, 1)
 		var width := size.x * 0.20
-		var height := size.y * 0.25
+		var height := size.y * 0.21
 		var bottom := base - Vector2(0, lift)
 		var shape := PackedVector2Array([bottom + Vector2(-width / 2, 0), bottom + Vector2(-width * 0.34, -height), bottom + Vector2(width * 0.34, -height), bottom + Vector2(width / 2, 0)])
 		draw_colored_polygon(shape, Color("d9b67c") if id == model.selected_cup else Color("819c77"))
 		draw_polyline(PackedVector2Array([shape[0], shape[1], shape[2], shape[3], shape[0]]), Color("42634d"), 3, true)
 		draw_line(bottom + Vector2(-width * 0.4, -height * 0.3), bottom + Vector2(width * 0.4, -height * 0.3), Color("edf1dd"), 7, true)
-		if model.phase in ["guess", "result"]:
-			draw_string(font, base + Vector2(-5, 38), str(int(model.cups[id]) + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("315d49"))
+		if model.phase in ["hide", "ready", "found", "result"]:
+			draw_string(font, base + Vector2(-5, 38), str(id + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("315d49"))
+
+	if model.phase == "search":
+		var target := model.cup_point(model.search_order[model.search_index]) * size
+		draw_arc(target + Vector2(0, 13), 12 + sin(model.elapsed * 8) * 3, 0, PI, 16, Color("a56f39"), 2, true)
+	if model.phase == "found":
+		var target := model.cup_point(model.selected_cup) * size
+		draw_string(font, Vector2(maxf(8, target.x - 25), size.y * 0.66), "Jest!", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("315d49"))
 
 func draw_ellipse_shadow(base: Vector2) -> void:
 	draw_set_transform(base + Vector2(0, 4), 0, Vector2(1, 0.2))
