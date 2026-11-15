@@ -106,3 +106,5 @@ Ostatni test otwiera okno i zapisuje zrzuty do `test-results/`. Obejmuje układy
 4. Opcjonalny backend AI, bogatsze zachowania i kolejne etapy wieku.
 
 Obecna gra nie korzysta z płatnego API i nie generuje kosztów wywołań modeli. Pole `life_stage` jest przygotowane, ale dorastanie jeszcze nie działa. Szczegółowy zakres późniejszych prac opisuje [plan implementacji](docs/plan-implementacji.md).
+
+Pierwsza instalacja na fizycznym iPhonie: 15 listopada 2026, testowy pies **Gloria**. [Instrukcja i zakres weryfikacji iOS](docs/test-ios.md).

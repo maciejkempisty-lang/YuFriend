@@ -39,6 +39,9 @@ func start(save_path: String = "user://pet.json") -> void:
 	storage = SaveSystem.new(save_path)
 	var loaded := storage.load_pet()
 	pet = loaded.pet
+	# Seed only a new mobile playtest pet; existing saves keep their name.
+	if loaded.status == "new" and OS.has_feature("gloria_playtest"):
+		pet.pet_name = "Gloria"
 	writable = loaded.writable
 	var away := NeedsSystem.catch_up(pet, Time.get_unix_time_from_system())
 	var news := _reflect()
