@@ -21,3 +21,11 @@ Otwórz `exports/ios/YuFriend.xcodeproj`, wybierz swój telefon, podpisywanie au
 Bieżący profil deweloperski wygasa 22 listopada 2026 o 13:24 czasu warszawskiego. W razie potrzeby ponownie podpisz i zainstaluj aplikację jako aktualizację. Eksport zgłosił automatyczną zmianę rozmiaru ikony oraz ostrzeżenie o brakującym ustawieniu `application/boot_splash/fullsize`; kompilacja Xcode i kontrola podpisu zakończyły się powodzeniem.
 
 Weryfikacja obejmuje instalację, uruchomienie potwierdzone przez użytkownika i odczyt zapisu Glorii, a także 104 testy logiki na Macu po zmianie. Pełny test gestów, przerw w działaniu aplikacji, powrotu następnego dnia i wyglądu na telefonie pozostaje do wykonania.
+
+## Aktualizacja 0.1.0 (2) — płynne przesuwanie
+
+Poprawka usuwa przesuwanie kamery co cały powiększony piksel grafiki. `RoomView` renderuje dodatkowy piksel marginesu z każdej strony, a `room_scroll.gdshader` przesuwa próbkowanie gotowego obrazu o pojedyncze piksele ekranu. Zachowane są ostre krawędzie, całkowite powiększenie i zgodność dotyku z widocznymi przedmiotami. Margines nie powiększa widocznego świata ani nie wymaga ponownego rysowania tła co klatkę.
+
+Test pulpitu przy 1080 × 2340 obejmuje wolny gest, brak skoku po puszczeniu palca, porównanie przesunięcia tła o jeden piksel między wyrenderowanymi klatkami oraz równe bloki kolorów przy przesuniętej kamerze. Wynik: 109 sprawdzeń UI i 38 importu/animacji. Subiektywna płynność na iPhonie wymaga potwierdzenia użytkownika po aktualizacji. Przed aktualizacją wykonano kopię zapisu Glorii.
+
+Aktualizacja (2) została zainstalowana i uruchomiona na iPhonie. Odczyt zapisu po aktualizacji potwierdził ten sam identyfikator Glorii.

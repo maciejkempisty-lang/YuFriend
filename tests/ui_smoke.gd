@@ -174,6 +174,7 @@ func _run() -> void:
 	app._select_tab("care")
 	await capture("20-phone-resolution.png")
 	check_pixel_grid("1080 x 2340 with fractional UI stretch")
+	await _test_slow_pan()
 	# Exercise the actual stretch configuration, without changing the base viewport.
 	root.size = Vector2i(1100, 720)
 	root.content_scale_size = Vector2i(390, 844)
@@ -269,7 +270,7 @@ func _test_world_room() -> void:
 	var game: GameSession = app.session
 	room.focus_pet()
 	step_game(5)
-	var screens := RoomLayout.SIZE.x / (room.viewport.size.x * RoomLayout.PIXEL_SIZE)
+	var screens := RoomLayout.SIZE.x / (room._view_size.x * RoomLayout.PIXEL_SIZE)
 	check(screens >= 2 and screens <= 3.01 and RoomLayout.STATIONS.size() == 6, "one world spans two to three screens and holds six stations")
 	var sample := Vector2(1090, 310)
 	check(room.screen_to_world(room.world_to_screen(sample)).distance_to(sample) < 0.01, "camera screen/world conversion round-trips away from the puppy")
@@ -453,17 +454,17 @@ func check_pixel_grid(label: String) -> void:
 	var transform := root.get_final_transform() * room.get_global_transform_with_canvas()
 	var size_pixels := room.render_rect.size * transform.get_scale()
 	var origin_pixels := transform * room.render_rect.position
-	var scale_pixels := size_pixels / Vector2(room.viewport.size)
+	var scale_pixels := size_pixels / Vector2(room._view_size)
 	check(scale_pixels.is_equal_approx(Vector2.ONE * room.pixel_scale) and origin_pixels.distance_to(origin_pixels.round()) < 0.01 and room.camera.zoom == Vector2.ONE, "room pixels use uniform integer magnification: " + label)
 	var offset := room.camera.position - Vector2(room.viewport.size) * 0.5
 	check(offset.distance_to(offset.round()) < 0.01, "camera origin stays on the art grid: " + label)
 	# Check actual rendered blocks, not only the scale calculation (UI stays high-res).
 	var shot := root.get_texture().get_image()
-	var start := Vector2i(origin_pixels.round())
+	var start := Vector2i((origin_pixels - room._scroll_offset * room.pixel_scale).round())
 	var uniform := true
 	var first_mismatch := Vector2i(-1, -1)
-	for y in range(room.viewport.size.y / 2, room.viewport.size.y - 2):
-		for x in range(2, room.viewport.size.x - 2):
+	for y in range(room._view_size.y / 2, room._view_size.y - 2):
+		for x in range(2, room._view_size.x - 2):
 			var point := start + Vector2i(x, y) * room.pixel_scale
 			if point.x < 0 or point.y < 0 or point.x + room.pixel_scale > shot.get_width() or point.y + room.pixel_scale > shot.get_height():
 				uniform = false
@@ -477,3 +478,39 @@ func check_pixel_grid(label: String) -> void:
 	if not uniform:
 		print("PIXEL DEBUG ", label, " start=", start, " scale=", room.pixel_scale, " size=", shot.get_size(), " first=", first_mismatch, " room=", transform, " root=", root.get_screen_transform(), " final=", root.get_final_transform(), " mode=", root.content_scale_mode, " filter=", room.display.texture_filter, " parentfilter=", room.texture_filter, " stretch=", root.get_stretch_transform())
 	check(uniform, "rendered room contains equal-sized solid pixel blocks: " + label)
+
+func _test_slow_pan() -> void:
+	var room: RoomView = app.room
+	room.look_at_world(Vector2(700, 300))
+	var start := room.render_rect.get_center()
+	room._pointer_down(start, 12)
+	room._pointer_move(start + Vector2(15, 0), 12)
+	var physical_scale := (root.get_final_transform() * room.get_global_transform_with_canvas()).get_scale().x
+	var previous := room.world_to_screen(Vector2(700, 300)).x
+	var smooth := true
+	for i in range(1, 25):
+		room._pointer_move(start + Vector2(15 + i / physical_scale, 0), 12)
+		var current := room.world_to_screen(Vector2(700, 300)).x
+		if absf((current - previous) * physical_scale - 1.0) > 0.02: smooth = false
+		previous = current
+	check(smooth, "slow drag advances every physical pixel instead of whole enlarged art pixels")
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var before_image := root.get_texture().get_image()
+	var patch := Vector2i((root.get_final_transform() * room.world_to_screen(Vector2(740, 120))).round())
+	room._pointer_move(start + Vector2(15 + 25 / physical_scale, 0), 12)
+	await process_frame
+	await RenderingServer.frame_post_draw
+	var after_image := root.get_texture().get_image()
+	var image_shifted := true
+	for y in range(-20, 20):
+		for x in range(-20, 20):
+			var point := patch + Vector2i(x, y)
+			if before_image.get_pixelv(point) != after_image.get_pixelv(point + Vector2i(1, 0)): image_shifted = false
+	check(image_shifted, "rendered background translates by exactly one physical pixel during slow drag")
+	previous = room.world_to_screen(Vector2(700, 300)).x
+	room._pointer_up(start + Vector2(15 + 25 / physical_scale, 0), 12)
+	step_game(0.2)
+	check(absf(room.world_to_screen(Vector2(700, 300)).x - previous) < 0.01, "releasing a slow drag does not snap the camera back")
+	await capture("21-smooth-pan.png")
+	check_pixel_grid("subpixel camera phase")

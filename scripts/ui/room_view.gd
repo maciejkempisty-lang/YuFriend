@@ -43,6 +43,9 @@ var interaction_focus := false
 var focus_left := 0.0
 var pixel_scale := 1
 var zoom_level := 1
+var _view_size := Vector2i.ONE
+var _scroll_offset := Vector2.ZERO
+var _scroll_material := ShaderMaterial.new()
 var _base_pixel_scale := 1
 var _available_rect := Rect2()
 var _follow_position := Vector2.ZERO
@@ -103,6 +106,9 @@ func _ready() -> void:
 	camera.position_smoothing_enabled = false
 	camera.enabled = true
 	display.texture = viewport.get_texture()
+	_scroll_material.shader = preload("res://scripts/ui/room_scroll.gdshader")
+	display.material = _scroll_material
+	display.region_enabled = true
 	# Control pixel snapping happens before UI stretch; a sprite preserves the
 	# physical-pixel alignment computed below, even at e.g. 1080 / 390 scale.
 	display.centered = false
@@ -198,10 +204,10 @@ func _hits_pet(where: Vector2) -> bool:
 	return _touch_masks[texture].get_bitv(pixel)
 
 func camera_center() -> Vector2:
-	return camera.position * RoomLayout.PIXEL_SIZE
+	return (camera.position + _scroll_offset) * RoomLayout.PIXEL_SIZE
 
 func screen_scale() -> Vector2:
-	return render_rect.size / Vector2(viewport.size) / RoomLayout.PIXEL_SIZE
+	return render_rect.size / Vector2(_view_size) / RoomLayout.PIXEL_SIZE
 
 func world_to_screen(point: Vector2) -> Vector2:
 	return render_rect.get_center() + (point - camera_center()) * screen_scale()
@@ -271,17 +277,19 @@ func _apply_pixel_scale(level: int) -> void:
 	var available := (end - origin).max(Vector2.ONE)
 	var logical_size := (available / pixel_scale).floor().max(Vector2.ONE)
 	logical_size = logical_size.min(RoomLayout.SIZE / RoomLayout.PIXEL_SIZE / zoom_level)
-	viewport.size = Vector2i(logical_size)
-	var physical_size := Vector2(viewport.size) * pixel_scale
+	_view_size = Vector2i(logical_size)
+	viewport.size = _view_size + Vector2i(2, 2)
+	display.region_rect = Rect2(Vector2.ONE, Vector2(_view_size))
+	var physical_size := Vector2(_view_size) * pixel_scale
 	var physical_origin := (origin + (available - physical_size) * 0.5).floor()
 	render_rect = Rect2(transform.affine_inverse() * physical_origin, physical_size / output_scale)
 	display.position = render_rect.position
-	display.scale = render_rect.size / Vector2(viewport.size)
+	display.scale = render_rect.size / Vector2(_view_size)
 	# Magnification happens after rasterization, so zoom never invents smaller pixels.
 	camera.zoom = Vector2.ONE
 
 func _visible_world_size() -> Vector2:
-	return Vector2(viewport.size) * RoomLayout.PIXEL_SIZE
+	return Vector2(_view_size) * RoomLayout.PIXEL_SIZE
 
 func _clamp_camera(point: Vector2) -> Vector2:
 	var half := _visible_world_size() * 0.5
@@ -289,9 +297,13 @@ func _clamp_camera(point: Vector2) -> Vector2:
 
 func _set_camera_center(point: Vector2) -> void:
 	_follow_position = _clamp_camera(point)
-	var half := Vector2(viewport.size) * 0.5
-	# Snap the viewport origin, including odd-sized viewports, rather than its center.
-	camera.position = (_follow_position / RoomLayout.PIXEL_SIZE - half).round() + half
+	var half := Vector2(_view_size) * 0.5
+	# Rasterize on the art grid, then scroll inside the gutter in physical pixels.
+	var origin := _follow_position / RoomLayout.PIXEL_SIZE - half
+	var screen_origin := (origin * pixel_scale).round() / pixel_scale
+	camera.position = screen_origin.floor() + half
+	_scroll_offset = screen_origin - screen_origin.floor()
+	_scroll_material.set_shader_parameter("camera_offset", _scroll_offset)
 	camera.force_update_scroll()
 
 func _clear_ball_from_pet() -> void:
