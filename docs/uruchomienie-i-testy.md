@@ -38,12 +38,14 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 
 | Skrypt | Zakres | Ostatni odnotowany wynik |
 |---|---|---:|
-| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 112 poprawnych sprawdzeń |
+| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 113 poprawnych sprawdzeń |
 | [test_life.gd](../tests/test_life.gd) | Dziwactwa, odkrywanie, nastrój o 05:00, cofnięcie zegara, relacje, powitania, migracja v2 i powrót do sesji | 46 poprawnych sprawdzeń |
 | [test_play.gd](../tests/test_play.gd) | Autonomiczne zaproszenia, pamięć reakcji, gesty, ograniczenie nagród, przerwania, trwałość i migracja v3 | 61 poprawnych sprawdzeń |
 | [ui_play.gd](../tests/ui_play.gd) | Karta zaproszenia, dotyk przycisku, rzut i pościg, lina, kubki, wznowienie oraz mały i szeroki ekran | 26 poprawnych sprawdzeń |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, nieregularne regiony, podparcie, skalowanie, kompletny pakiet 22/142, zasób `.res`, przejścia i ukończenie prezentacji | 38 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 208 poprawnych sprawdzeń |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 214 poprawnych sprawdzeń |
+
+Korekta kadru pośredniego i limitu albumu: **531/531** w siedmiu zestawach. Nowe regresje mierzą szerokość domyślnego kadru i obecność miski/piłki w 390 × 844, 320 × 640 i 1080 × 2340 oraz wczytują stary album v4 z 200 osiągnięciami i 40 relacjami, zachowując wszystkie osiągnięcia i 10 ostatnich relacji. Zrzuty `room-medium-*.png` pokazują nowy kadr. Build 7 uruchomiono również na fizycznym iPhonie; szczegóły i zakres kontroli opisuje [test iOS](test-ios.md).
 
 Poprawki po audycie, 15 listopada 2026: **524/524** w siedmiu zestawach, w tym dodatkowe **33 sprawdzenia `test_audio.gd`**. Regresje obejmują 60 powrotów z zachowaniem pierwszego dnia i siadu po ponownym odczycie, osobne limity 200+40 wpisów, brak obserwacji dziwactw offline, rozkład 400 nowych psów (95 sennych), karmienie podczas zaproszenia do bliskości oraz pięciominutowy odstęp zaproszeń. UI sprawdza neutralny tekst dla Glorii oraz widok całego pokoju, wybór miejsca i powrót do psa w trzech pionowych rozdzielczościach. Zrzuty: `room-overview-390.png`, `room-overview-320.png`, `room-overview-1080.png`. Obejrzano widok 1080 × 2340 i zbliżenie; fizyczny iPhone nadal wymaga próby tych zmian.
 

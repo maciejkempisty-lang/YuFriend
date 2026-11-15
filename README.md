@@ -68,7 +68,7 @@ Muzyka z dostarczonego `video2.mp4` gra cicho w pętli. Pakiet 22 efektów Eleve
 
 ## Szeroki pokój
 
-Jeden świat 1440 × 360 ma dwa ręcznie wybierane kadry: zbliżenie śledzące psa i „Cały pokój”, pokazujący wszystkie stacje. Dotknięcie panoramy przybliża wybrane miejsce, a „Do pieska” przywraca śledzenie. Powiększenie dopasowuje się do wysokości sceny; w portretowym widoku domowym panorama zajmuje około siedmiu szerokości ekranu. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój zachowuje siatkę 3 jednostek świata na piksel logiczny, a podłoga jest przedłużona za pływającymi panelami. Dodatkowe zbliżenie 2× działa tylko wtedy, gdy szerokość i wysokość mieszczą całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
+Jeden świat 1440 × 360 ma dwa ręcznie wybierane kadry: widok pośredni śledzący psa i „Cały pokój”, pokazujący wszystkie stacje. Dotknięcie panoramy przybliża wybrane miejsce, a „Do pieska” przywraca śledzenie. Domyślny kadr pośredni dopasowuje skalę do szerokości: na sprawdzonych ekranach telefonu pokazuje 480–648 jednostek z 1440, czyli około ⅓–½ pokoju. Przy początkowej pozycji psa widać także miskę i piłkę. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój zachowuje siatkę 3 jednostek świata na piksel logiczny, a podłoga jest przedłużona za pływającymi panelami. Dodatkowe zbliżenie 2× działa tylko wtedy, gdy szerokość i wysokość mieszczą całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
 
 ![Cały pokój — podgląd świata bez interfejsu](docs/images/pokoj-panorama.png)
 
@@ -96,6 +96,8 @@ Nie uruchamiaj równolegle dwóch zwykłych instancji na tym samym zapisie. Do p
 | `tests/` | Testy logiki, sprite’ów i interfejsu |
 
 ## Sprawdzenie projektu
+
+Korekta kadru i albumu, 15 listopada 2026: **531/531 sprawdzeń** (113 logiki/zapisu, 46 życia, 61 zabaw, 38 animacji, 33 audio, 214 UI, 26 UI zabaw). Domyślny widok jest szerszy, a album zachowuje 10 ostatnich relacji obok trwałych wspomnień, również po wczytaniu starego v4. Wersję **0.1.0 (7)** zbudowano, podpisano, zainstalowano i uruchomiono na iPhonie 15 Pro Max. [Zrzut z urządzenia](docs/images/interfejs-dom.png) potwierdza widoczność psa, miski i piłki; porównanie zapisów potwierdza zachowanie Glorii i postępów. Ocena wygody gestów pozostaje próbą użytkownika.
 
 Poprawki po audycie, 15 listopada 2026: **524/524 sprawdzenia** w siedmiu zestawach (112 logiki/zapisu, 46 życia psa, 61 inicjatywy/zabaw, 38 animacji, 33 audio, 208 UI i 26 UI zabaw). Album chroni trwałe wspomnienia, nieobecność nie odkrywa dziwactw, zaproszenia są rzadsze i neutralnie reagują na inną opiekę, teksty pasują też do suczki, a senność ma równą wagę temperamentu. [Widok całego pokoju](docs/images/pokoj-caly.png) sprawdzono w 390 × 844, 320 × 640 i 1080 × 2340; dotknięcie miejsca i powrót do psa są objęte testami. Fizycznego iPhone’a nie użyto do weryfikacji tych poprawek. Wspomnienia usunięte przez wcześniejszą wersję nie są automatycznie odtwarzane.
 

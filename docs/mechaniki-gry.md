@@ -144,4 +144,4 @@ Więź zaczyna się od 12. Rosną ją głaskanie i nagrody; obecna wersja nie zm
 
 Wpisanie zwrotu uruchamia samodzielną próbę z tymi samymi warunkami co przycisk. Dłuższa swobodna wypowiedź, np. „proszę, usiądź obok mnie”, nie jest obecnie interpretowana.
 
-Dziennik obejmuje powitanie, pierwsze czynności opieki, pierwsze nagrodzone próby i osiągnięcia 75%. Zachowuje do 200 trwałych osiągnięć i 40 najnowszych wpisów powtarzalnych, we wspólnym porządku od najnowszego. Identyfikatory w `milestones` zapobiegają duplikatom i chronią wspomnienia przed wyparciem przez relacje z nieobecności.
+Dziennik obejmuje powitanie, pierwsze czynności opieki, pierwsze nagrodzone próby i osiągnięcia 75%. Zachowuje do 200 trwałych osiągnięć i 10 najnowszych wpisów powtarzalnych, we wspólnym porządku od najnowszego. Identyfikatory w `milestones` zapobiegają duplikatom i chronią wspomnienia przed wyparciem przez relacje z nieobecności.

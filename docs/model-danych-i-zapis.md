@@ -22,7 +22,7 @@ Stan jednego psa jest przechowywany jako JSON o `schema_version: 4`. Plik zawier
 | `bond`, `fatigue` | Więź i zmęczenie, wczytywane do zakresu 0–100 |
 | `resting` | Wartość logiczna informująca o odpoczynku |
 | `last_seen_at` | Nieujemny czas Unix w sekundach, używany do przeliczenia nieobecności |
-| `journal` | Tablica do 240 wydarzeń (do 200 trwałych osiągnięć i 40 bieżących wpisów): `key`, `title`, `detail`, `at` |
+| `journal` | Tablica do 210 wydarzeń (do 200 trwałych osiągnięć i 10 bieżących wpisów): `key`, `title`, `detail`, `at` |
 | `milestones` | Tablica do 200 identyfikatorów zdarzeń, które już wystąpiły |
 | `history` | Tablica do 14 dziennych koszyków: `day`, liczniki `events` i liczniki pór dnia `parts` |
 | `habits` | Tablica identyfikatorów nawyków z katalogu `PetState.HABIT_KEYS` |
@@ -125,3 +125,5 @@ Sen po nieobecności jest liczony do progu 85 energii (netto +13/h), a pozostał
 Nastrój ma osobny znacznik dnia zaczynającego się o 05:00. Relacje i powitania używają pełnego czasu nieobecności, bez rozszerzania ośmiogodzinnego limitu potrzeb. Szczegóły opisuje [własne życie psa](osobowosc.md#własne-życie--etap-1-15-listopada-2026).
 
 Limit albumu stosuje się oddzielnie do wpisów oznaczonych w `milestones` oraz do pozostałych. Struktura zapisu v4 nie zmienia się; dotychczasowe zapisy v1–4 nadal są odczytywane. Wspomnień już usuniętych przez starszą wersję nie odtwarzamy z wymyśloną datą ani treścią. Do odzyskania potrzebna byłaby kopia zawierająca te wpisy.
+
+Czytnik nadal przyjmuje wcześniejsze albumy v4 do 240 wpisów. Po walidacji zachowuje kamienie milowe i 10 najnowszych pozostałych wpisów; pełny stary album nie powoduje odrzucenia zapisu ani utraty psa.

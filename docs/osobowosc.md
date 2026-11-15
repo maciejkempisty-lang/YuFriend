@@ -92,7 +92,7 @@ Nastrój zmienia tempo chodu i klipu `walk` w zakresie 0,85–1,12 oraz wybór s
 
 Nieobecność trwająca co najmniej **30 minut** tworzy dwa krótkie zdarzenia; od czterech godzin powstają trzy. Są to lokalnie symulowane drobne zachowania wynikające z dziwactw, cech i snu. Nie są zapisem pracy gry w tle. Nie przyznają jedzenia, więzi, nagród ani wyuczonych komend. W tej iteracji ślady, np. skarpetka przy legowisku, występują wyłącznie w tekście — nie dodano ich do grafiki pokoju.
 
-Relacja pojawia się w oknie powrotu i pozostaje w Albumie. Ten sam ani nakładający się przedział czasu nie tworzy drugiej relacji. Album zachowuje wszystkie wpisy osiągnięć (maksymalnie 200) oraz 40 najnowszych wpisów powtarzalnych. Relacje nie wypierają pierwszych wspólnych chwil. W zapisanym stanie pozostaje też ostatnia relacja.
+Relacja pojawia się w oknie powrotu i pozostaje w Albumie. Ten sam ani nakładający się przedział czasu nie tworzy drugiej relacji. Album zachowuje wszystkie wpisy osiągnięć (maksymalnie 200) oraz 10 najnowszych wpisów powtarzalnych. Relacje nie wypierają pierwszych wspólnych chwil. W zapisanym stanie pozostaje też ostatnia relacja.
 
 Powitanie odróżnia krótki powrót, godzinę i trzy dni: podniesienie głowy, merdanie ogonem albo spokojne obwąchanie. Śpiący pies nadal odpoczywa. Długość nieobecności na potrzeby powitania jest rzeczywista; dotychczasowa symulacja potrzeb pozostaje ograniczona do ośmiu godzin. Nie dodano kary za długą nieobecność.
 

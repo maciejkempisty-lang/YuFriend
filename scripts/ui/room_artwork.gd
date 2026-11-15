@@ -28,6 +28,9 @@ func _draw() -> void:
 func _draw_room() -> void:
 	if area.x <= 0: return
 	draw_rect(Rect2(Vector2.ZERO, area), Color("eae9d2"))
+	# A medium portrait frame exposes more wall above the original panorama.
+	# Continue its top edge instead of showing the viewport's clear colour.
+	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(0, -2400, area.x, 2400), Rect2(0, 186, 1, 1))
 	# Temporary high-resolution reference; the room viewport samples it on the art grid.
 	var texture_scale := 0.4
 	# Extend the edge colour of each scanline so the central wall has no hard seam.

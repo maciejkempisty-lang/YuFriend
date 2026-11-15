@@ -13,4 +13,6 @@ Wideo jest wykluczone z eksportu. W aplikacji używany jest import audio, około
 
 ## Prawa do nagrania
 
-Źródłem technicznym jest wideo dostarczone przez użytkownika. Autor, tytuł utworu oraz licencja pozwalająca na dystrybucję w grze nie zostały dotąd potwierdzone. Przed wydaniem komercyjnym trzeba uzupełnić te informacje i dowód uprawnień albo zastąpić utwór nagraniem z potwierdzoną licencją.
+Autorem muzyki jest właściciel projektu YuFriend — użytkownik potwierdził 15 listopada 2026, że to jego autorska muzyka demo. Źródłem technicznym pozostaje dostarczony `video2.mp4`; nie jest to utwór pobrany z biblioteki stockowej.
+
+Status: **autorskie demo do projektu**. Nie przypisujemy nagraniu licencji Creative Commons ani licencji zewnętrznego dostawcy. Tytuł utworu i publiczna forma podpisu autora nie zostały określone. Obecny plik pozostaje wersją demonstracyjną.

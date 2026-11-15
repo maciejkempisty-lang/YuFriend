@@ -56,6 +56,12 @@ func _test_personality() -> void:
 	for index in 60: first.add_journal_entry("away_%d" % index, "Report", "", 1000 + index)
 	check(first.journal.size() == PetState.MAX_MILESTONES + PetState.MAX_RECENT_ENTRIES and PetState.from_dict(first.to_dict()) != null, "permanent and recurring album entries have separate bounded budgets")
 
+	var legacy := first.to_dict()
+	for index in 30:
+		legacy.journal.append({"key": "old_report_%d" % index, "title": "Report", "detail": "", "at": 1})
+	var loaded := PetState.from_dict(legacy)
+	check(loaded != null and loaded.journal.size() == PetState.MAX_MILESTONES + 10 and loaded.milestones == first.milestones, "old v4 albums with forty reports load and trim to ten without losing milestones")
+
 func _test_needs() -> void:
 	var pet := PetState.create(1, 10000)
 	var initial := pet.needs.duplicate()

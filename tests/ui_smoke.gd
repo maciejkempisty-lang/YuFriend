@@ -538,7 +538,7 @@ func check_pixel_grid(label: String) -> void:
 				continue
 			var block := Rect2(Vector2(point), Vector2.ONE * room.pixel_scale)
 			var under_ui := false
-			for control in [app.header, app.sheet, app.navigation, app.bubble, app.gain_label, app.footer_label, room.return_button, room.room_hint] + room.prop_markers.values():
+			for control in [app.header, app.sheet, app.navigation, app.bubble, app.gain_label, app.footer_label, room.return_button, room.overview_button, room.room_hint] + room.prop_markers.values():
 				if control.is_visible_in_tree():
 					var ui_rect: Rect2 = root.get_final_transform() * control.get_global_rect().grow(24)
 					if ui_rect.intersects(block): under_ui = true
@@ -764,7 +764,7 @@ func _test_redesigned_ui() -> void:
 	app.room.camera_manual = true
 	app.room.zoom_level = 2
 	app._fit_room()
-	check(app.room.zoom_level == 1 and app.room.pet_position().y < app.sheet.position.y - 20, "resizing a manually panned closeup reframes the puppy above care controls")
+	check(app.room.zoom_level == app.room._wanted_zoom() and app.room.pet_position().y < app.sheet.position.y - 20, "resizing a manually panned closeup reframes the puppy above care controls")
 	app.room.focus_pet()
 
 func _puppy_screen_bounds() -> Rect2:
@@ -831,6 +831,16 @@ func _test_room_overview() -> void:
 		root.content_scale_size = Vector2i(390, 844)
 		await process_frame
 		app._fit_room()
+		app.room.focus_pet()
+		app.room.focus_left = 0
+		app.room.set_interaction_focus(false)
+		app.room.pet_world = RoomLayout.START
+		app.room.target_world = RoomLayout.START
+		step_game(3)
+		await capture("room-medium-%d.png" % layout.x)
+		var visible_width: float = app.room._visible_world_size().x
+		check(visible_width >= 450 and visible_width <= 720, "default phone frame shows at least a third of the room at " + str(layout))
+		check(app.room.render_rect.encloses(app.room.bowl_rect()) and app.room.render_rect.has_point(app.room.ball_center()), "default frame includes bowl and ball beside the dog at " + str(layout))
 		app.room.overview_button.pressed.emit()
 		step_game(0.1)
 		await capture("room-overview-%d.png" % layout.x)

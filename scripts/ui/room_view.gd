@@ -348,7 +348,9 @@ func update_placement() -> void:
 	var output_scale := _output_transform.get_scale().abs()
 	var stage_height := content_bottom if content_bottom > 0 else size.y
 	_render_pixel_size = RoomLayout.PIXEL_SIZE
-	_base_pixel_scale = maxi(1, maxi(floori(size.x * output_scale.x / 160.0), ceili(stage_height * output_scale.y / 120.0)))
+	# Frame roughly two to three room sections instead of filling the height
+	# with a small horizontal slice. Interaction still offers a 2x close-up.
+	_base_pixel_scale = maxi(1, roundi(size.x * output_scale.x / 200.0))
 	if overview:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
@@ -412,7 +414,10 @@ func _visible_world_size() -> Vector2:
 func _clamp_camera(point: Vector2) -> Vector2:
 	if overview: return RoomLayout.SIZE * 0.5
 	var half := _visible_world_size() * 0.5
-	return point.clamp(half, Vector2(RoomLayout.SIZE.x, maxf(half.y * 2, _world_bottom())) - half)
+	# The wall may continue above world zero on tall screens. Keep the floor
+	# above the action panel instead of forcing the entire room to the top.
+	return Vector2(clampf(point.x, half.x, RoomLayout.SIZE.x - half.x),
+		_world_bottom() - half.y)
 
 func _world_bottom() -> float:
 	return RoomLayout.SIZE.y + maxf(0, size.y - content_bottom) / screen_scale().y if content_bottom > 0 else RoomLayout.SIZE.y
@@ -444,13 +449,12 @@ func show_overview() -> void:
 	return_button.hide()
 
 func focus_pet(close_up: bool = false) -> void:
-	if overview:
-		overview = false
-		update_placement()
+	overview = false
 	camera_manual = false
 	if close_up:
 		focus_left = 3.5
 		_clear_ball_from_pet()
+	update_placement()
 	return_button.hide()
 
 func set_interaction_focus(value: bool) -> void:
@@ -473,7 +477,6 @@ func _update_camera(delta: float) -> void:
 	if zoom_level != wanted_zoom: _apply_pixel_scale(wanted_zoom)
 	if not camera_manual:
 		var y := _world_bottom() - _visible_world_size().y * 0.5
-		if zoom_level > 1: y = pet_world.y - _visible_world_size().y * 0.2
 		var desired := _clamp_camera(Vector2(pet_world.x, y))
 		_set_camera_center(_follow_position.lerp(desired, 1.0 - exp(-6.0 * delta)))
 	else:

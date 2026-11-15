@@ -10,7 +10,8 @@ const PART_KEYS := ["morning", "afternoon", "evening", "night"]
 const HABIT_KEYS := ["time_morning", "time_afternoon", "time_evening", "time_night", "cuddler", "playful", "student"]
 const MAX_HISTORY_DAYS := 14
 const MAX_MILESTONES := 200
-const MAX_RECENT_ENTRIES := 40
+const MAX_RECENT_ENTRIES := 10
+const MAX_LOADED_JOURNAL := MAX_MILESTONES + 40 # Accept existing v4 albums before trimming.
 const MAX_EVENT_COUNT := 100000
 const QUIRK_KEYS := ["sock_collector", "ball_guard", "window_watch", "door_listener", "toy_sorter", "bed_circles",
 	"happy_wiggle", "brush_lean", "meal_sniff", "sun_napper", "head_tilter", "dream_runner"]
@@ -150,11 +151,14 @@ func remember(key: String, title: String, detail: String, now: float = -1.0) -> 
 	add_journal_entry(key, title, detail, now)
 	return true
 
-# Keep every milestone and only the latest 40 recurring entries.
+# Keep every milestone and only the latest 10 recurring entries.
 # Both groups remain in chronological order in the same album.
 func add_journal_entry(key: String, title: String, detail: String, now: float) -> void:
 	journal.push_front({"key": key, "title": title, "detail": detail,
 		"at": Time.get_unix_time_from_system() if now < 0 else now})
+	trim_journal()
+
+func trim_journal() -> void:
 	var recent := 0
 	var seen: Array = []
 	var kept: Array = []
@@ -219,7 +223,7 @@ static func from_dict(data: Dictionary) -> PetState:
 				return null
 	if not data.get("journal") is Array or not data.get("milestones") is Array:
 		return null
-	if data.journal.size() > MAX_MILESTONES + MAX_RECENT_ENTRIES or data.milestones.size() > MAX_MILESTONES:
+	if data.journal.size() > MAX_LOADED_JOURNAL or data.milestones.size() > MAX_MILESTONES:
 		return null
 	for entry in data.journal:
 		if not entry is Dictionary or not valid_number(entry.get("at")):
@@ -282,4 +286,5 @@ static func from_dict(data: Dictionary) -> PetState:
 			"successes": mini(int(data.skills[key].successes), 1000000)}
 	pet.journal = data.journal.duplicate(true)
 	pet.milestones = data.milestones.duplicate()
+	pet.trim_journal()
 	return pet
