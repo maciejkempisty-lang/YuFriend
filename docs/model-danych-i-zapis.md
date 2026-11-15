@@ -4,7 +4,7 @@
 
 ## Format danych
 
-Stan jednego psa jest przechowywany jako JSON o `schema_version: 4`. Plik zawiera dwa główne pola: numer schematu oraz obiekt `pet`. Syntetyczne przykłady poprzednich formatów to [zapis-v2.json](przyklady/zapis-v2.json) i [zapis-v1.json](przyklady/zapis-v1.json); nie są kopiami danych gracza. Testy sprawdzają ich migrację do bieżącego formatu.
+Stan jednego psa jest przechowywany jako JSON o `schema_version: 5`. Plik zawiera dwa główne pola: numer schematu oraz obiekt `pet`. Syntetyczne przykłady poprzednich formatów to [zapis-v2.json](przyklady/zapis-v2.json) i [zapis-v1.json](przyklady/zapis-v1.json); nie są kopiami danych gracza. Testy sprawdzają ich migrację do bieżącego formatu.
 
 Źródłem formatu jest [PetState.to_dict() i from_dict()](../scripts/model/pet_state.gd). Wersję i obsługę plików określa [SaveSystem](../scripts/systems/save_system.gd).
 
@@ -20,7 +20,8 @@ Stan jednego psa jest przechowywany jako JSON o `schema_version: 4`. Plik zawier
 | `needs` | Liczby dla `fullness`, `energy`, `hygiene`, `play`, `contact`, wczytywane do zakresu 0–100 |
 | `skills` | Obiekty `come`, `sit`, `paw`, każdy z `mastery`, `attempts`, `successes` |
 | `bond`, `fatigue` | Więź i zmęczenie, wczytywane do zakresu 0–100 |
-| `resting` | Wartość logiczna informująca o odpoczynku |
+| `resting` | Wartość logiczna regeneracji podczas odpoczynku; widoczny sen nocny może trwać po jej zakończeniu |
+| `rhythm` | Przesunięcie godzin snu, dzień ostatniej korekty i ograniczenia automatycznych drzemek |
 | `last_seen_at` | Nieujemny czas Unix w sekundach, używany do przeliczenia nieobecności |
 | `journal` | Tablica do 210 wydarzeń (do 200 trwałych osiągnięć i 10 bieżących wpisów): `key`, `title`, `detail`, `at` |
 | `milestones` | Tablica do 200 identyfikatorów zdarzeń, które już wystąpiły |
@@ -44,7 +45,7 @@ Limit pliku wynosi **1 MiB**. Gra czyta wersje `1`, `2`, `3` i `4`. Każda inna 
 
 Zapis w wersji 1 jest uzupełniany przez `SaveSystem.migrate()` o pustą historię, pustą listę nawyków i `reflected_day: 0`; pozostałe pola nie są zmieniane. Oryginał jest kopiowany do pliku tymczasowego, sprawdzany i zatwierdzany jako `pet.json.v1`. Dotyczy to także odzyskiwania wersji 1 z `.bak`; późniejsze rotacje kopii nie usuwają `.v1`. Poprawna kopia tej wersji i tego samego psa jest ponownie używana. Jeśli istniejąca `.v1` dotyczy innego psa lub jest niepoprawna, pozostaje nietknięta, a własna kopia trafia do `.v1.<pełny SHA-256 źródła>`. Ponowienie używa tego samego pliku po sprawdzeniu wersji, identyfikatora i skrótu zawartości. Błąd systemu plików lub walidacji kopii nadal wstrzymuje zapis bez utraty oryginału.
 
-Jeśli zabezpieczenie oryginału się nie powiedzie, `load_pet()` zwraca `migration_failed` z wczytanym psem i `writable: false`. Również bezpośrednie `save_pet()` odmawia zastąpienia starszego zapisu bez poprawnej kopii. Po udanym zabezpieczeniu najbliższy zapis tworzy wersję 4. Kolejna zmiana struktury wymaga dopisania następnego kroku w `migrate()` i testu odczytu starszego psa.
+Jeśli zabezpieczenie oryginału się nie powiedzie, `load_pet()` zwraca `migration_failed` z wczytanym psem i `writable: false`. Również bezpośrednie `save_pet()` odmawia zastąpienia starszego zapisu bez poprawnej kopii. Po udanym zabezpieczeniu najbliższy zapis tworzy wersję 5. Kolejna zmiana struktury wymaga dopisania następnego kroku w `migrate()` i testu odczytu starszego psa.
 
 Akceptacja wartości `young`, `adult` i `senior` przez walidator nie uruchamia dorastania ani innych grafik. Zmiana wieku wymaga osobnego rozszerzenia logiki i wyboru zasobów.
 
@@ -68,11 +69,19 @@ Wersje 1–3 otrzymują pustą pamięć `social`. Oryginał wersji 3 pozostaje w
 
 Liczniki `social` muszą być całkowite i mieścić się w 0–100000. Aktywne zaproszenie, odliczanie, przeciągany węzeł, układ kubków i lot piłki są tymczasowe. Wstrzymanie anuluje niedokończoną rundę bez przyznawania nagrody.
 
+## Rytm dnia — migracja 4 → 5
+
+Wersje 1–4 otrzymują `rhythm: {offset_minutes: 0, updated_day: -1, nap_day: -1, nap_at: 0.0}`. Oryginał v4 jest zabezpieczany w `.v4` przed zapisem nowej wersji, także przy odzyskiwaniu z kopii. W schemacie v5 brak lub niepoprawny `rhythm` jest błędem odczytu.
+
+`offset_minutes` jest liczbą całkowitą od −30 do 180. `updated_day` i `nap_day` są całkowitymi lokalnymi numerami dni (początkowo −1); `nap_at` jest nieujemnym, skończonym czasem lokalnym w tej samej reprezentacji co historia osobowości. Jeden zaobserwowany nowy dzień zmienia przesunięcie najwyżej o 30 minut. Cofnięty zegar ani restart tego samego dnia nie wykonują kolejnego kroku. Dłuższa nieobecność nie nadrabia wielu kroków naraz.
+
+Sen nocny, senność po obudzeniu, pamięć trzech zachowań i kolejka scenki są stanem sesji. Noc wynika z lokalnego zegara i zapisanego przesunięcia. Przy otwarciu w nocy pies wita gracza na jawie; krótkie przejście w tło zachowuje trwający sen lub czuwanie. [Pełne reguły cyklu](cykl-zachowan.md).
+
 ## Co jest trwałe
 
 Zapis obejmuje imię, tożsamość, wygląd, cechy, potrzeby, relację, komendy, odpoczynek, wspomnienia, historię zdarzeń, nawyki, pamięć reakcji, liczniki zabaw i czas. Ziarno służy do pierwotnego losowania; podczas odczytu cechy są pobierane z pliku.
 
-Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka interfejsu, czasy ponownego użycia i rozpoczęta próba treningowa są tymczasowe. Tymczasowe są także cel opieki i token dojścia; przerwane dojście nie daje efektu po wznowieniu. Współrzędne świata i ręczne ustawienie kamery nie są zapisywane. Po restarcie pies zaczyna w środkowej części pokoju (670, 322). Wczytany odpoczynek ustawia psa w legowisku i odtwarza pozycję snu, o ile przeliczenie nieobecności nie zakończyło już drzemki; niezakończony trening nie daje oczekującej nagrody.
+Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka interfejsu, czasy ponownego użycia i rozpoczęta próba treningowa są tymczasowe. Tymczasowe są także cel opieki i token dojścia; przerwane dojście nie daje efektu po wznowieniu. Współrzędne świata i ręczne ustawienie kamery nie są zapisywane. Po restarcie pies zaczyna w środkowej części pokoju (670, 322). Jeśli zapisany odpoczynek umieścił go w legowisku, nocne powitanie budzi go w tym miejscu. Wczytany odpoczynek ustawia psa w legowisku i odtwarza pozycję snu, o ile przeliczenie nieobecności nie zakończyło już drzemki; niezakończony trening nie daje oczekującej nagrody.
 
 ## Lokalizacja i momenty zapisu
 
@@ -124,6 +133,6 @@ Sen po nieobecności jest liczony do progu 85 energii (netto +13/h), a pozostał
 
 Nastrój ma osobny znacznik dnia zaczynającego się o 05:00. Relacje i powitania używają pełnego czasu nieobecności, bez rozszerzania ośmiogodzinnego limitu potrzeb. Szczegóły opisuje [własne życie psa](osobowosc.md#własne-życie--etap-1-15-listopada-2026).
 
-Limit albumu stosuje się oddzielnie do wpisów oznaczonych w `milestones` oraz do pozostałych. Struktura zapisu v4 nie zmienia się; dotychczasowe zapisy v1–4 nadal są odczytywane. Wspomnień już usuniętych przez starszą wersję nie odtwarzamy z wymyśloną datą ani treścią. Do odzyskania potrzebna byłaby kopia zawierająca te wpisy.
+Limit albumu stosuje się oddzielnie do wpisów oznaczonych w `milestones` oraz do pozostałych. Sama korekta albumu nie zmieniała struktury v4; obecny schemat v5 dodaje opisany wyżej rytm. Dotychczasowe zapisy v1–4 nadal są odczytywane. Wspomnień już usuniętych przez starszą wersję nie odtwarzamy z wymyśloną datą ani treścią. Do odzyskania potrzebna byłaby kopia zawierająca te wpisy.
 
 Czytnik nadal przyjmuje wcześniejsze albumy v4 do 240 wpisów. Po walidacji zachowuje kamienie milowe i 10 najnowszych pozostałych wpisów; pełny stary album nie powoduje odrzucenia zapisu ani utraty psa.

@@ -118,6 +118,8 @@ func _ready() -> void:
 	room.performance_finished.connect(session.performance_finished)
 	session.save_status.connect(func(_ok: bool): _refresh())
 	room.floor_tapped.connect(session.move_to)
+	room.room_viewed.connect(session.follow_room)
+	room.return_button.pressed.connect(session.player_activity)
 	room.care_requested.connect(func(action: String): session.act(action))
 	room.ball_thrown.connect(session.throw_ball)
 	session.ball_throw_requested.connect(room.throw_ball)
@@ -387,8 +389,7 @@ func _build_companion_card() -> void:
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
 	companion_card.visible = session.attention_available and not session.suspended and not room.overview
-	var data := companion_voice.describe(session, delta if companion_card.visible else 0.0)
-	session.invitation_presented = companion_card.visible and data.get("kind") == "invitation"
+	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
 		companion_label.text = data.text
@@ -400,6 +401,7 @@ func _refresh_companion(delta: float = 0.0) -> void:
 	# Renaming the dog also updates the bubble without restarting its quiet timer.
 	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz"}[data.kind]]
 	_position_companion()
+	session.invitation_presented = companion_card.visible and companion_card.modulate.a > 0 and data.get("kind") == "invitation"
 
 func _companion_act() -> void:
 	if not companion_card.visible or companion_data.is_empty(): return
@@ -711,6 +713,7 @@ func _dialog_open() -> bool:
 	return false
 
 func _update_attention() -> void:
+	session.set_training_view(selected_tab == "training")
 	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview
 	if companion_card != null and not session.attention_available:
 		companion_card.hide()
@@ -857,7 +860,7 @@ func _show_profile() -> void:
 		profile_bars.add_child(bar)
 	profile_traits.text = "Ulubiona nagroda: " + (REWARD_LABELS[session.pet.favorite_reward] if session.pet.milestones.has("favorite_reward") else "odkryjecie ją podczas ćwiczeń")
 	profile_life.text = "%s\n%s\n\nMałe dziwactwa\n%s" % [LifeSystem.mood_label(session.pet), session.pet.life.mood_reason, "\n".join(PackedStringArray(LifeSystem.quirk_lines(session.pet)))]
-	profile_social.text = "Wasz rytm\n" + InitiativeSystem.profile_text(session.pet)
+	profile_social.text = "Wasz rytm\n" + DailyRhythm.schedule_label(session.pet) + "\n" + InitiativeSystem.profile_text(session.pet)
 	var habits := PersonalitySystem.habit_labels(session.pet)
 	if habits.is_empty(): habits.append("Dopiero się poznajemy")
 	for habit in habits:
@@ -923,7 +926,7 @@ func _refresh() -> void:
 	play_cue.text = "Brawo!" if session.play.phase == "found" else "Szukaj!"
 	play_again.visible = session.play.phase == "result"
 	play_again.disabled = session.play.phase != "result" or session.busy()
-	room.mood_walk_speed = LifeSystem.walk_speed(pet)
+	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = pet.pet_name
 	bond_label.text = "%s · %d%%" % ["Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"), roundi(pet.bond)]
@@ -939,8 +942,8 @@ func _refresh() -> void:
 		button.cooldown_ratio = clampf(button.cooldown_left / float(GameSession.CARE_COOLDOWNS.get(key, 1)), 0, 1)
 		button.accessibility_name = "%s. %s %d procent.%s" % [ACTION_LABELS[key], NEED_LABELS[need], roundi(button.need_value), " Kolejny przyrost za %d sekund." % ceili(button.cooldown_left) if button.cooldown_left > 0 else ""]
 		button.queue_redraw()
-	care_buttons.rest.caption = "Obudź" if pet.resting else ("Senność" if float(pet.needs.energy) < 30 else "Drzemka")
-	care_buttons.rest.icon_name = "sun" if pet.resting else "moon"
+	care_buttons.rest.caption = "Obudź" if session.is_sleeping() else ("Senność" if float(pet.needs.energy) < 30 else "Drzemka")
+	care_buttons.rest.icon_name = "sun" if session.is_sleeping() else "moon"
 	care_status.text = _activity_status()
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "Opanowanie %d%%" % roundi(mastery)
@@ -1046,7 +1049,7 @@ func _activity_status() -> String:
 	if not session.invitation.is_empty(): return session.pet.pet_name + " zaprasza Cię do wspólnej chwili"
 	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
 	if session.training.phase == "attempt": return "Wykonuje komendę · otwórz Trening"
-	if session.pet.resting: return "Odpoczywa · dotknij słońca, aby obudzić"
+	if session.is_sleeping(): return "Odpoczywa · dotknij słońca, aby obudzić"
 	if session.activity == "approach":
 		return {"feed": "Idzie do miski…", "rest": "Idzie do legowiska…", "play": "Łapie piłkę…"}.get(session._pending_action, "Odkrywa pokój…")
 	if session.activity_left > 0 and session.activity in ["feed", "clean", "play", "happy"]:
@@ -1122,11 +1125,50 @@ func _process(delta: float) -> void:
 func _position_companion() -> void:
 	if companion_card == null or header == null: return
 	companion_card.size = Vector2(header.size.x, 0)
-	companion_card.position = Vector2(header.position.x, room.hud_bottom + 52)
-	companion_tail.position = Vector2(32, companion_card.size.y)
+	var pet_bounds := room.pet_screen_bounds()
+	if companion_card.visible:
+		_place_pet_overlay(companion_card, Vector2(header.position.x, room.hud_bottom + 52),
+			[pet_bounds.grow(20), room.bowl_rect().grow(4), room.ball_touch_rect().grow(4)])
+	var below := companion_card.position.y >= pet_bounds.end.y
+	companion_tail.position = Vector2(clampf(pet_bounds.get_center().x - companion_card.position.x, 20, companion_card.size.x - 38), 0 if below else companion_card.size.y)
+	companion_tail.scale.y = -1 if below else 1
 	# Only move this UI hint; room bounds, camera and the approved framing stay intact.
 	if companion_card.visible and not room.overview:
 		room.room_hint.position = Vector2(room.overview_button.get_rect().end.x + 12, room.hud_bottom + 14)
+
+func _place_pet_overlay(control: Control, preferred: Vector2, obstacles: Array[Rect2]) -> bool:
+	var left := maxf(12, safe_rect.position.x + 8)
+	var right := minf(room.size.x - 12, safe_rect.end.x - 8)
+	var top := room.overview_button.get_rect().end.y + 8
+	var bottom := minf(safe_rect.end.y - 12, room.content_bottom - 12)
+	var area := Rect2(left, top, maxf(0, right - left), maxf(0, bottom - top))
+	var xs: Array[float] = [clampf(preferred.x, left, maxf(left, right - control.size.x)), left, right - control.size.x]
+	var ys: Array[float] = [preferred.y, top]
+	for obstacle in obstacles:
+		ys.append(obstacle.position.y - control.size.y - 10)
+		ys.append(obstacle.end.y + 10)
+		xs.append(obstacle.position.x - control.size.x - 10)
+		xs.append(obstacle.end.x + 10)
+	for y in ys:
+		for x in xs:
+			var candidate := Rect2(Vector2(x, y), control.size)
+			if not area.encloses(candidate): continue
+			var clear := true
+			for obstacle in obstacles:
+				if candidate.intersects(obstacle):
+					clear = false
+					break
+			if clear:
+				control.position = candidate.position
+				control.modulate.a = 1
+				return true
+	# A close-up can leave no readable space. Wait for room instead of covering
+	# the dog or moving the camera to make an optional message fit.
+	# Keep containers participating in layout while wrapped text settles. Hiding
+	# them here would freeze their first, narrow-width minimum height forever.
+	control.position = Vector2(-10000, -10000)
+	control.modulate.a = 0
+	return false
 
 func _position_feedback() -> void:
 	if bubble == null or header == null: return
@@ -1135,18 +1177,26 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = bubble_left > 0 and on_screen and not (companion_card.visible and companion_data.get("kind") == "invitation")
+	bubble.visible = bubble_left > 0 and on_screen and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
 	gain_label.visible = gain_left > 0 and on_screen
-	var head := room.world_to_screen(room.pet_world - Vector2(0, 178) * room.presentation_scale)
-	var left := maxf(12, safe_rect.position.x + 8)
-	var right := minf(room.size.x - 12, safe_rect.end.x - 8)
-	var top := header.get_rect().end.y + 8
-	if companion_card.visible: top = companion_card.get_rect().end.y + 16
-	bubble.position = Vector2(clampf(head.x - bubble.size.x / 2, left, maxf(left, right - bubble.size.x)), maxf(top, head.y - bubble.size.y - 12))
-	bubble.modulate.a = minf(1, bubble_left * 3)
+	var pet_bounds := room.pet_screen_bounds()
+	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
+	var obstacles: Array[Rect2] = [pet_bounds.grow(12)]
+	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(10))
+	if bubble.visible:
+		var preferred := Vector2(head.x - bubble.size.x / 2, head.y - bubble.size.y - 24)
+		if not _place_pet_overlay(bubble, preferred, obstacles) and obstacles.size() > 1:
+			# On a short screen let the immediate response take the thought's place.
+			companion_card.position = Vector2(-10000, -10000)
+			companion_card.modulate.a = 0
+			obstacles.resize(1)
+			_place_pet_overlay(bubble, preferred, obstacles)
+	bubble.modulate.a *= minf(1, bubble_left * 3)
 	gain_label.reset_size()
-	gain_label.position = Vector2(clampf(head.x - gain_label.size.x / 2, left, maxf(left, right - gain_label.size.x)), maxf(top, head.y + 4 - (1.8 - gain_left) * 20))
-	gain_label.modulate.a = minf(1, gain_left * 2)
+	if bubble.visible and bubble.modulate.a > 0: obstacles.append(bubble.get_rect().grow(8))
+	if gain_label.visible:
+		_place_pet_overlay(gain_label, Vector2(head.x - gain_label.size.x / 2, pet_bounds.end.y + 24 - (1.8 - gain_left) * 10), obstacles)
+	gain_label.modulate.a *= minf(1, gain_left * 2)
 
 func _load_ui_preferences() -> void:
 	var config := ConfigFile.new()

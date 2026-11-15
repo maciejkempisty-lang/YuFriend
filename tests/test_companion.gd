@@ -5,6 +5,7 @@ var failed := 0
 
 func _initialize() -> void:
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	game.pet = PetState.create(42)
 	var voice := CompanionVoice.new()
 	var before := game.pet.to_dict().duplicate(true)

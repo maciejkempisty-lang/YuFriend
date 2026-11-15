@@ -1,7 +1,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 4
+const VERSION := 5
 const MAX_BYTES := 1024 * 1024
 var path: String
 var last_error: String = ""
@@ -20,7 +20,7 @@ func _read(file_path: String) -> Dictionary:
 		return {"status": "invalid"}
 	var data: Dictionary = parsed.data
 	var version: Variant = data.get("schema_version")
-	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3):
+	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4):
 		return {"status": "unsupported"}
 	if not data.get("pet") is Dictionary:
 		return {"status": "invalid"}
@@ -42,7 +42,9 @@ static func migrate(pet_data: Dictionary, version: int) -> Dictionary:
 	if version < 3 and not result.has("life") and PetState.valid_number(result.get("personality_seed")):
 		result.life = PetState.initial_life(int(result.personality_seed))
 	# 3 → 4: responses to invitations and touch-play history. Existing life stays intact.
-	if not result.has("social"): result.social = PetState.initial_social()
+	if version < 4 and not result.has("social"): result.social = PetState.initial_social()
+	# 4 → 5: persistent, gradual daily rhythm and bounded automatic naps.
+	if not result.has("rhythm"): result.rhythm = DailyRhythm.initial()
 	return result
 
 func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:

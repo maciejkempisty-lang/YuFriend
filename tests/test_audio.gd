@@ -46,6 +46,7 @@ func _run() -> void:
 	var directory := ("user://" if test_root.is_empty() else test_root).path_join("qa-audio-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory.path_join("pet.json")
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	app.session.set_process(false)
 	app.room.set_process(false)
@@ -137,7 +138,7 @@ func _test_pet_happy() -> void:
 	await _reset()
 	requests.clear()
 	app.session.pet.resting = true
-	check(not app.session.act("pet") and requests.is_empty() and not _effect_is_playing("pet_happy"), "a sleeping puppy does not squeak for rejected petting")
+	check(app.session.act("pet") and not app.session.is_sleeping() and requests.is_empty() and not _effect_is_playing("pet_happy"), "touch wakes a sleeping puppy quietly without a petting reward")
 	app.session.pet.resting = false
 	app.session.activity = "feed"
 	check(not app.session.act("pet") and requests.is_empty() and not _effect_is_playing("pet_happy"), "an eating puppy does not squeak for rejected petting")

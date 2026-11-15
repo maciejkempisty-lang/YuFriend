@@ -21,8 +21,11 @@ for (index, fixture) in fixtures.enumerated() {
 }
 
 let sampleSave = fixtures[0]["save"] as! [String: Any]
+var legacySave = sampleSave
+legacySave["schema_version"] = 4
+check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: legacySave)) != nil, "Keep reading v4 alongside v5")
 var malformed = sampleSave
-malformed["schema_version"] = 5
+malformed["schema_version"] = 99
 check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) == nil, "Reject unknown schema")
 var brokenPet = sampleSave["pet"] as! [String: Any]
 brokenPet["needs"] = ["energy": 20]

@@ -101,3 +101,21 @@ Pozostaje ręczna próba rzeczywistego doręczenia, otwarcia gry z komunikatu or
 **Użytkownik potwierdził na iPhonie**, że ustawienia mieszczą się pod Dynamic Island i da się z nich wyjść. Build 11 zbudowano, podpisano, zainstalowano i uruchomiono na tym samym urządzeniu. Testy: **52/52** sprawdzenia ustawień w sześciu układach z marginesami i skalowaniem 2×/3× oraz **302/302** dotychczasowe sprawdzenia UI. Obejrzano zrzuty pionowego i poziomego panelu.
 
 Kopie `pet.json` przed i po aktualizacji znajdują się w `exports/iphone-backups/2026-11-15-before-v11/` i `exports/iphone-backups/2026-11-15-after-v11/`. Porównanie potwierdziło zachowanie identyfikatora, imienia, ziarna osobowości, cech, umiejętności, osiągnięć, więzi i schematu 4. Dowody instalacji, uruchomienia, testów i porównania: `exports/ios-settings-v11/`. Duży eksport i produkty kompilacji pozostawiono na dysku Maca w `/tmp/yufriend-settings-v11/` i `/tmp/yufriend-settings-v11-build/`, aby nie zapełniać zewnętrznego SSD.
+
+## Aktualizacja 0.1.0 (14) — poranne przypomnienie i przejście w tło
+
+15 listopada 2026 zbudowano, podpisano, zainstalowano i uruchomiono build 14 na MagicPhone. Aplikacja i rozszerzenie widgetu mają build 14, dotychczasowy bundle ID oraz zespół. Eksport i kompilacja są w `/tmp/yufriend-morning-v14/` oraz `/tmp/yufriend-morning-v14-build/`; logi i potwierdzenia w `exports/ios-morning-v14/`. Kontrola podpisu przeszła, źródła natywne odpowiadają repozytorium, a pakiet gry w aplikacji ma tę samą sumę co eksport.
+
+Planista dopuszcza jedno przypomnienie następnego dnia między 09:00 a 12:00, zachowując limit spadku potrzeb do 8 godzin i dotychczasowe budżety. Ponownie przeszło **1067 sprawdzeń planisty, 18 kontrolera i sprawdzenie typów iOS**.
+
+Próba buildu 12 ujawniła dodatkowy problem integracyjny: po rzeczywistym wyjściu z gry harmonogram pozostawał pusty, choć prognoza z pobranego zapisu wskazywała poranną potrzebę. Samo synchroniczne rozpoczęcie pracy w tle i dodanie obserwacji zdarzeń sceny w buildzie 13 nie wystarczyło. Build 14 dodatkowo przechowuje stan aktywności ze zdarzeń cyklu życia zamiast ponownie ustalać go przez `UIApplication.applicationState` przy każdym odczycie zapisu.
+
+Użytkownik potwierdził poprawny widget z Glorią i potrzebami na ekranie początkowym podczas próby buildu 12. Kopia sprzed aktualizacji jest w `exports/iphone-backups/2026-11-15-before-v12/`; porównania po buildach 12, 13 i 14 potwierdziły zachowanie identyfikatora, imienia, ziarna osobowości, cech, umiejętności, osiągnięć, więzi i schematu 4. Kopia po najnowszej instalacji jest w `exports/iphone-backups/2026-11-15-after-v14/`, a wynik porównania w `exports/ios-morning-v14/state-verification.json`. Na tym etapie harmonogram po potwierdzonym wyjściu z buildu 14 oraz rzeczywiste doręczenie powiadomienia pozostają do sprawdzenia.
+
+## Build 0.1.0 (15) — rytm i poprawki przed testem tygodniowym
+
+Przygotowano pakiet obejmujący [rytm dnia](cykl-zachowan.md), wcześniejszą poprawkę porannego przypomnienia i przejścia w tło oraz poprawki rozmieszczania dymków. Nocne otwarcie gry wita gracza zamiast wymagać budzenia; po nagrodzie treningowej pies pozostaje na miejscu, a teksty senności pasują również do Glorii. Zakładka treningu wstrzymuje autonomiczne spacery między powtórzeniami.
+
+Przeszło 1636 sprawdzeń gry w 14 zestawach, 1526 widgetu i 1085 przypomnień. Kopia `Documents/pet.json` sprzed aktualizacji jest w `exports/iphone-backups/2026-11-15-before-v15/`. Przed instalacją migracja jej roboczej kopii do v5 zachowała wszystkie dotychczasowe pola i oryginał v4. Eksport oraz podpisana kompilacja aplikacji i widgetu zakończyły się powodzeniem; duże produkty są w `/tmp/yufriend-rhythm-v15/` i `/tmp/yufriend-rhythm-v15-build/`. Dowody: `exports/ios-rhythm-v15/`.
+
+Na etapie tego wpisu instalacja buildu 15 oczekuje na zakończenie commita. Rzeczywiste doręczenie przypomnienia, zachowanie widgetu po aktualizacji i tygodniowy test z ludźmi wymagają obserwacji na urządzeniu.

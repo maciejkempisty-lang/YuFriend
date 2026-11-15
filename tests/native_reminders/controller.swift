@@ -70,7 +70,9 @@ import UserNotifications
         let restarted = PetReminderController(documents: directory, center: center, defaults: defaults, clock: { now }, calendar: calendar)
         restarted.update(snapshot: snapshot, foreground: false)
         await settle()
-        check(center.requests.isEmpty, "Due budget survives cancellation and controller restart")
+        check(center.requests.count == 1 && center.requests.values.allSatisfy {
+            ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval == 19.5 * 3600
+        }, "Due budget survives restart: next invitation waits until the next morning's rolling slot")
         // Isolate the remaining lifecycle tests from the consumed budget.
         try FileManager.default.removeItem(at: directory.appendingPathComponent("reminder-ledger.json"))
         now = Date(timeIntervalSince1970: snapshot.savedAt)
@@ -113,6 +115,21 @@ import UserNotifications
         await settle()
         check(center.requests.isEmpty && status() == "error", "Scheduling failure removes partial schedule")
         center.failAdd = false
+        now = ISO8601DateFormatter().date(from: "2026-11-15T20:45:00Z")!
+        let eveningSnapshot = PetSnapshot(version: 1, petID: "test", name: "Gloria", savedAt: now.timeIntervalSince1970,
+            needs: snapshot.needs, resting: false, sociability: 0.5, mood: "calm")
+        fresh.update(snapshot: eveningSnapshot, foreground: false)
+        await settle()
+        check(center.requests.count == 1 && center.requests.values.allSatisfy {
+            let trigger = $0.trigger as? UNTimeIntervalNotificationTrigger
+            return trigger?.timeInterval == 12.25 * 3600 && trigger?.repeats == false
+        }, "Evening departure registers one non-repeating request for nine next morning")
+        let savedLedger = try JSONDecoder().decode(PetReminderLedger.self,
+            from: Data(contentsOf: directory.appendingPathComponent("reminder-ledger.json")))
+        check(savedLedger.pending == [now.addingTimeInterval(12.25 * 3600)], "Morning reservation is persisted")
+        fresh.update(snapshot: eveningSnapshot, foreground: true)
+        await settle()
+        check(center.requests.isEmpty, "Return before morning cancels the overnight request")
         try Data("broken-ledger".utf8).write(to: directory.appendingPathComponent("reminder-ledger.json"))
         let broken = PetReminderController(documents: directory, center: center, defaults: defaults, clock: { now }, calendar: calendar)
         broken.update(snapshot: snapshot, foreground: false)

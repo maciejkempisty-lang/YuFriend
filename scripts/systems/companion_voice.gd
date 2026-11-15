@@ -62,8 +62,10 @@ var _quiet_index := 0
 func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 	if game.pet == null: return {}
 	var pet := game.pet
-	if pet.resting:
+	if game.is_sleeping():
 		return _line("activity", "Ciii… zbieram siły na kolejne przygody.", "rest", "Obudź", game)
+	if game.sleep_warning:
+		return _line("activity", "Za chwilę pójdę spać. Jeszcze chwila razem?", "pet", "Pogłaszcz", game)
 	if game.busy():
 		var text: String = {
 			"feed": "Mniam! Teraz pora na jedzenie.",

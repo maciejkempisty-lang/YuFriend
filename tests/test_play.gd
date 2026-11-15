@@ -29,6 +29,7 @@ func check(condition: bool, label: String) -> void:
 
 func _game() -> GameSession:
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	game.pet = PetState.create(42)
 	game.pet.pet_name = "Gloria"
 	game.active = true
@@ -298,6 +299,6 @@ func _test_migration() -> void:
 	var loaded := store.load_pet()
 	check(loaded.writable and loaded.pet.pet_id == old.pet_id and loaded.pet.life.quirks == old.life.quirks and loaded.pet.life.discovered == old.life.discovered and loaded.pet.life.mood == old.life.mood and loaded.pet.life.mood_day == old.life.mood_day and loaded.pet.life.observations[old.life.quirks[0]] == old.life.observations[old.life.quirks[0]], "v3 migration preserves identity, quirks, discoveries and daily mood")
 	check(loaded.pet.social == PetState.initial_social() and FileAccess.get_file_as_string(path + ".v3") == raw, "v3 original is retained and response memory starts empty")
-	check(store.save_pet(loaded.pet) and store.load_pet().writable, "migrated v3 state saves and reloads in v4")
+	check(store.save_pet(loaded.pet) and store.load_pet().writable, "migrated v3 state saves and reloads in the current schema")
 	data.erase("life")
 	check(PetState.from_dict(SaveSystem.migrate(data, 3)) == null, "v3 missing life data is rejected instead of silently rerolling the dog")

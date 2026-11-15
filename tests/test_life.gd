@@ -91,6 +91,7 @@ func _test_mood() -> void:
 	print("MOOD DISTRIBUTION: ", counts)
 	check(int(counts.get("sleepy", 0)) >= 20 and counts.size() == 5, "sleepy mood occurs naturally across four hundred new dogs")
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	game.pet = PetState.create(42)
 	game.active = true
 	game._save_left = 25
@@ -157,6 +158,7 @@ func _test_migration_and_resume() -> void:
 	var session_path := directory.path_join("session.json")
 	SaveSystem.new(session_path).save_pet(pet)
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	var reports: Array = []
 	game.away_report_ready.connect(func(): reports.append(true))
 	game.start(session_path)

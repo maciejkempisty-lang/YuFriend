@@ -16,7 +16,7 @@ Podgląd natywnego widoku na syntetycznym stanie, nie zrzut danych Glorii z tele
 
 ## Dane i odświeżanie
 
-`PetWidgetBridge.swift` uruchamia się z natywnego punktu inicjalizacji eksportu Godota. Odczytuje zatwierdzony `Documents/pet.json` (wersja zapisu 4), wybiera minimalny zestaw pól i atomowo publikuje `pet-widget.json` w App Group. Nigdy nie zapisuje ani nie migruje pliku gry. Błędny lub nieobsługiwany zapis nie zastępuje ostatniego poprawnego obrazu stanu.
+`PetWidgetBridge.swift` uruchamia się z natywnego punktu inicjalizacji eksportu Godota. Odczytuje zatwierdzony `Documents/pet.json` (wersje zapisu 4 i 5), wybiera minimalny zestaw pól i atomowo publikuje `pet-widget.json` w App Group. Nigdy nie zapisuje ani nie migruje pliku gry. Błędny lub nieobsługiwany zapis nie zastępuje ostatniego poprawnego obrazu stanu.
 
 Most obserwuje katalog `Documents`, dzięki czemu działa również po atomowej podmianie pliku. Odczytuje stan przy starcie i wznowieniu, kontrolnie co 10 sekund w aktywnej aplikacji oraz podczas krótkiego zadania po przejściu w tło. Wywołuje `WidgetCenter.reloadTimelines` po publikacji nowego stanu. Serie zdarzeń plikowych są łączone w jedno odczytanie.
 

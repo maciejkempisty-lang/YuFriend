@@ -11,8 +11,8 @@ Powiadomienie ma imię psa w tytule i krótkie zaproszenie w pierwszej osobie, n
 - Prognoza korzysta z tego samego `PetSnapshot.projected` co widget, zgodnego z `NeedsSystem` Godota.
 - Przypomnienia są planowane w tle po zapisie gry, dla potrzeby **poniżej 30%**, co najmniej **30 minut** po opuszczeniu gry. Kandydaci są sprawdzani co 15 minut.
 - Najwyżej **dwa na dzień lokalny**, dodatkowo najwyżej dwa w ruchomym oknie 24 godzin. Między nimi są co najmniej **cztery godziny**. Podczas jednej nieobecności ta sama potrzeba nie jest powtarzana.
-- Cisza nocna **21:00–09:00** według lokalnego czasu. Przesunięcie na rano jest możliwe tylko w granicach prognozy.
-- Horyzont kończy się **8 godzin od znacznika zapisu**. Nie ma bezterminowych ani codziennie powtarzanych alarmów. Pies zaspokojony albo zapis z przyszłości nie wywołują przypomnień. Podczas snu energia nie jest powodem do alarmu.
+- Cisza nocna **21:00–09:00** według lokalnego czasu. Następnego dnia po zapisie możliwe jest **jedno poranne przypomnienie, od 09:00 do przed 12:00**, w ramach tych samych limitów i odstępów. Wykorzystany limit może przesunąć poranny termin albo całkowicie go wykluczyć.
+- Horyzont planowania kończy się **o 12:00 następnego lokalnego dnia po zapisie**; ponowne przeliczenie tego samego zapisu go nie przedłuża. Spadek potrzeb nadal zatrzymuje się po **8 godzinach** — poranny komunikat korzysta z zamrożonego stanu. Nie ma bezterminowych ani codziennie powtarzanych alarmów. Pies zaspokojony albo zapis z przyszłości nie wywołują przypomnień. Podczas snu energia nie jest powodem do alarmu.
 - Powrót do gry usuwa oczekujące przypomnienia; kolejne wyjście przelicza je na podstawie nowego stanu. Błędny zapis również anuluje wcześniejszy plan.
 
 iOS może opóźnić lub ukryć prezentację z powodu ustawień systemowych, Trybu skupienia lub podsumowania powiadomień. Limity dotyczą planowanych terminów. Upłynięty termin zużywa limit również wtedy, gdy system nie pokazał komunikatu — aplikacja nie ponawia go jako „niedostarczonego”.
@@ -30,6 +30,10 @@ Eksport: `sh tools/export_ios.sh`, domyślnie do `exports/ios-reminders-v10/`. I
 API: [zgoda na powiadomienia](https://developer.apple.com/documentation/usernotifications/asking-permission-to-use-notifications) i [planowanie lokalne](https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app).
 
 ## Weryfikacja — 15 listopada 2026
+
+Poprawka wieczornego wyjścia: **1067 sprawdzeń planisty i 18 kontrolera** oraz kontrola typów iOS z ostrzeżeniami jako błędami przechodzą. Testy obejmują wyjścia o 08:00, 13:00, 17:00, 19:00, 20:00 i 22:00, jedno zaproszenie następnego ranka, zamrożenie potrzeb po 8 godzinach, zwalnianie limitu 24 godzin, odstępy i koniec okna w południe. Sprawdzają też wieczór przed obiema zmianami czasu, rejestrację porannego terminu w kontrolerze, trwałą rezerwację i anulowanie po powrocie. Ponownie przechodzi **1525 sprawdzeń widgetu**, w tym 252 porównania prognozy z Godotem. Poprawkę zainstalowano na iPhonie; próby ujawniły dodatkowy problem przekazania stanu tła do kontrolera. Build 14 zawiera korektę tej integracji. Harmonogram po wyjściu z tej wersji i rzeczywiste doręczenie wymagają potwierdzenia. [Przebieg i dowody prób](test-ios.md#aktualizacja-010-14--poranne-przypomnienie-i-przejście-w-tło).
+
+Wcześniejsza weryfikacja pierwszej implementacji:
 
 - `sh tools/test_ios_reminders.sh`: **365** sprawdzeń planisty (m.in. progi, sen, cisza nocna, zmiany czasu i trwałość limitu), **15** sprawdzeń kontrolera z atrapą centrum powiadomień (zgoda, odmowa, wznowienie, restart, anulowanie w trakcie zapisu do iOS, uszkodzenie licznika i błąd planowania). Kod natywny przechodzi też sprawdzenie typów dla iOS z ostrzeżeniami traktowanymi jako błędy.
 - `tests/test_reminders.gd`: **10** sprawdzeń preferencji, błędów zapisu i izolacji od pliku gry.

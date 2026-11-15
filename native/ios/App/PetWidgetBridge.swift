@@ -17,11 +17,13 @@ import OSLog
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     private var sourceURL: URL?
     private var reminders: PetReminderController?
+    private var foreground = true
 
     func start() {
         guard sourceURL == nil,
               let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         sourceURL = documents.appendingPathComponent("pet.json")
+        foreground = UIApplication.shared.applicationState != .background
         reminders = PetReminderController(documents: documents)
         let descriptor = open(documents.path, O_EVTONLY)
         if descriptor >= 0 {
@@ -32,12 +34,21 @@ import OSLog
             source.resume()
         }
         let center = NotificationCenter.default
-        observers.append(center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.publish(forceReminders: true) }
-        })
-        observers.append(center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in self?.flushInBackground() }
-        })
+        for name in [UIApplication.didBecomeActiveNotification, UIScene.didActivateNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    self?.foreground = true
+                    self?.publish(forceReminders: true)
+                }
+            })
+        }
+        for name in [UIApplication.didEnterBackgroundNotification, UIScene.didEnterBackgroundNotification] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                // Claim background execution before UIKit's callback returns;
+                // deferring this to a Task can let iOS suspend us first.
+                MainActor.assumeIsolated { self?.flushInBackground() }
+            })
+        }
         observers.append(center.addObserver(forName: UIApplication.significantTimeChangeNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.publish(forceReminders: true) }
         })
@@ -64,6 +75,9 @@ import OSLog
     }
 
     private func flushInBackground() {
+        // The scene event is authoritative. UIApplication.applicationState can
+        // still be inactive while the scene is already entering the background.
+        foreground = false
         finishBackgroundTask()
         backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "Pet widget snapshot") { [weak self] in
             self?.finishBackgroundTask()
@@ -81,7 +95,7 @@ import OSLog
         if let sourceURL,
            let size = try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, size <= 1_048_576,
            let data = try? Data(contentsOf: sourceURL) { snapshot = PetSnapshot.fromGameSave(data) }
-        reminders?.update(snapshot: snapshot, foreground: UIApplication.shared.applicationState != .background, force: forceReminders)
+        reminders?.update(snapshot: snapshot, foreground: foreground, force: forceReminders)
         guard let snapshot, snapshot != lastPublished else { return }
         guard let destination = PetWidgetConfig.sharedURL else {
             logger.error("Widget App Group unavailable; check signing and entitlements.")

@@ -25,6 +25,14 @@ Dalsze pomysły: pora dnia i pogoda za oknem, kolekcja prezentów ze spacerów, 
 
 ## Pozostałe prace i wcześniejsze priorytety
 
+### Kolejność po audycie przypomnień — 15 listopada 2026
+
+1. Naprawić planowanie po wieczornym wyjściu i pokryć poranny termin testami. Implementacja obejmuje teraz jedno przypomnienie następnego ranka, bez dalszego spadku potrzeb po 8 godzinach.
+2. Potwierdzić na iPhonie doręczenie rzeczywistego powiadomienia, otwarcie gry i widget na ekranie początkowym.
+3. Przeprowadzić tygodniową próbę z 5–10 osobami **przed dalszą rozbudową**. Zanotować powroty drugiego i siódmego dnia, powody powrotu, problemy z pierwszą sesją i elementy, które nudzą. Bez danych nie traktować samej gotowości technicznej jako potwierdzenia skuteczności pętli powrotu.
+4. Według wyników ustalić zakres pierwszego uruchomienia (imię, poznanie psa, dobrowolna propozycja przypomnień), pozytywnego zaproszenia w ramach limitu dwóch, ujednolicenia głosu psa, wibracji i dymka po powrocie.
+5. Dopiero potem ustalić priorytety poziomów więzi, spaceru, kąpieli i przeniesienia zabaw do pokoju. Przed wydaniem dopracować grafikę, muzykę, politykę prywatności i zakres Androida.
+
 | Priorytet | Zakres | Warunek ukończenia |
 |---|---|---|
 | Gotowe | Poprawki zachowania z audytu | Spacer nie blokuje opieki, nowy cel zastępuje poprzedni, pełne potrzeby i dotyk podczas jedzenia mają reakcję |

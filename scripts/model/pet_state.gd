@@ -41,6 +41,7 @@ var habits: Array = []
 var reflected_day: int = 0
 var life: Dictionary = {}
 var social: Dictionary = {}
+var rhythm: Dictionary = DailyRhythm.initial()
 
 static func create(seed_value: int = 0, now: float = -1.0) -> PetState:
 	var pet := PetState.new()
@@ -179,7 +180,7 @@ func to_dict() -> Dictionary:
 		"resting": resting, "last_seen_at": last_seen_at,
 		"journal": journal.duplicate(true), "milestones": milestones.duplicate(),
 		"history": history.duplicate(true), "habits": habits.duplicate(), "reflected_day": reflected_day,
-		"life": life.duplicate(true), "social": social.duplicate(true)}
+		"life": life.duplicate(true), "social": social.duplicate(true), "rhythm": rhythm.duplicate(true)}
 
 static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
@@ -189,6 +190,7 @@ static func from_dict(data: Dictionary) -> PetState:
 	# never silently replaced with a new animal.
 	if not valid_life(data.get("life")): return null
 	if not valid_social(data.get("social")): return null
+	if not DailyRhythm.valid(data.get("rhythm")): return null
 	for key in ["pet_id", "pet_name", "life_stage", "skin", "favorite_reward"]:
 		if not data.get(key) is String:
 			return null
@@ -259,6 +261,9 @@ static func from_dict(data: Dictionary) -> PetState:
 	var pet := PetState.new()
 	pet.life = data.life.duplicate(true)
 	pet.social = data.social.duplicate(true)
+	pet.rhythm = data.rhythm.duplicate(true)
+	for key in ["offset_minutes", "updated_day", "nap_day"]: pet.rhythm[key] = int(pet.rhythm[key])
+	pet.rhythm.nap_at = float(pet.rhythm.nap_at)
 	for kind in INITIATIVE_KEYS:
 		for key in RESPONSE_KEYS: pet.social.responses[kind][key] = int(pet.social.responses[kind][key])
 		pet.social.responses[kind].interest = float(pet.social.responses[kind].interest)

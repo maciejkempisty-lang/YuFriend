@@ -26,6 +26,7 @@ func _run() -> void:
 	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-integration-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory + "/pet.json"
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.set_process(false)
@@ -141,7 +142,7 @@ func _run() -> void:
 	game.pet.needs.play = 95.0
 	game.pet.fatigue = 90.0
 	game._spontaneous(0.0)
-	check(game.activity == "habit" and game.last_message.contains("czeka na głaskanie"), "a habit shows up as spontaneous behaviour")
+	check(game.activity == "walk" and game._sequence_id == "patrol", "weighted choice starts an interruptible behavior sequence")
 	check(game.act("pet") and game.activity == "pet", "player can answer a habit invitation immediately")
 	step_game(2.2)
 	game.pet.fatigue = 0.0
@@ -329,6 +330,14 @@ func _test_living_room() -> void:
 func _test_world_room() -> void:
 	var room: RoomView = app.room
 	var game: GameSession = app.session
+	game._cancel_motion()
+	game.activity = "idle"
+	game.activity_left = 0
+	game._brain_left = INF
+	game.player_activity()
+	room.pet_world = RoomLayout.START
+	room.target_world = RoomLayout.START
+	room.play_clip("idle")
 	room.focus_pet()
 	step_game(5)
 	var screens := RoomLayout.SIZE.x / (room._view_size.x * RoomLayout.PIXEL_SIZE)

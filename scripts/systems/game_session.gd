@@ -48,6 +48,24 @@ var invitation_presented := true
 var initiatives_enabled := true
 var _initiative_wait := 90.0
 var play := TouchPlaySystem.new()
+# Injectable local clock; inactivity uses elapsed foreground time, not wall time.
+var local_clock: Callable = PersonalitySystem.local_now
+var training_view_active := false
+var _reward_from_training := false
+var night_sleep := false
+var automatic_nap := false
+var groggy_left := 0.0
+var sleep_warning := false
+var _idle_seconds := 0.0
+var _woken_at_night := false
+var _attention_shown := false
+var _recent_behaviors: Array = []
+var _last_behavior_place := ""
+var _sequence: Array = []
+var _sequence_id := ""
+var _travel_left := 0.0
+var _follow_target := Vector2.INF
+var _follow_left := 0.0
 
 const SATISFIED_NEED := 95.0
 const CARE_COOLDOWNS := {"feed": 10.0, "play": 8.0, "clean": 12.0, "pet": 4.0}
@@ -96,13 +114,16 @@ func start(save_path: String = "user://pet.json") -> void:
 		clip_requested.emit("sleep")
 	elif away > 300:
 		clip_requested.emit(LifeSystem.greeting(pet, away).clip)
+	_sync_rhythm_on_return()
 	flush()
 	changed.emit()
 	if report: away_report_ready.emit()
 
 func _process(delta: float) -> void:
 	if not active or suspended: return
-	if attention_available and not pet.resting and not busy():
+	var was_idle := activity == "idle"
+	_tick_rhythm(delta)
+	if attention_available and not is_sleeping() and not busy():
 		_initiative_wait = maxf(0, _initiative_wait - delta)
 		if invitation_presented and not invitation.is_empty():
 			invitation.remaining -= delta
@@ -111,10 +132,15 @@ func _process(delta: float) -> void:
 		play.advance(delta)
 		_settle_touch_game()
 	NeedsSystem.advance(pet, delta)
-	if pet.resting:
+	if is_sleeping():
 		_sleep_elapsed += delta
-		if _sleep_elapsed >= 6 and float(pet.needs.energy) >= NeedsSystem.WAKE_ENERGY:
-			_wake()
+		if night_sleep:
+			# Regeneration ends at the existing threshold; the visible night continues.
+			if float(pet.needs.energy) >= NeedsSystem.WAKE_ENERGY: pet.resting = false
+		elif automatic_nap:
+			if _sleep_elapsed >= 180 or (_sleep_elapsed >= 60 and float(pet.needs.energy) >= NeedsSystem.WAKE_ENERGY): _wake(false)
+		elif _sleep_elapsed >= 6 and float(pet.needs.energy) >= NeedsSystem.WAKE_ENERGY:
+			_wake(false)
 	for key in cooldowns:
 		cooldowns[key] = maxf(0, float(cooldowns[key]) - delta)
 	var result := training.advance(delta, performance_done)
@@ -130,9 +156,14 @@ func _process(delta: float) -> void:
 	if activity_left > 0:
 		activity_left -= delta
 		if activity_left <= 0:
-			activity = "idle"
-			clip_requested.emit("sit_idle" if pose == "sit" else "idle")
-	if training.phase == "idle" and activity == "idle" and not pet.resting and play.kind.is_empty() and invitation.is_empty():
+			if not _sequence_id.is_empty():
+				_advance_behavior()
+			elif activity in ["feed", "play", "happy"] and not _reward_from_training and not training_view_active and play.kind.is_empty():
+				_start_behavior("carpet")
+			else:
+				activity = "idle"
+				clip_requested.emit(PetAnimator.BASE.get(pose, "idle"))
+	if was_idle and not training_view_active and training.phase == "idle" and activity == "idle" and not is_sleeping() and play.kind.is_empty() and invitation.is_empty():
 		_brain_left -= delta
 		if _brain_left <= 0:
 			_brain_left = randf_range(9, 15)
@@ -154,7 +185,7 @@ func _process(delta: float) -> void:
 		flush()
 
 func _local_now() -> float:
-	return PersonalitySystem.local_now()
+	return float(local_clock.call())
 
 func _note(event: String) -> void:
 	if writable:
@@ -175,44 +206,28 @@ func _update_life(seen: float, now: float, was_resting: bool) -> bool:
 func _reflect() -> String:
 	if not writable: return ""
 	var notes := PersonalitySystem.reflect(pet, _local_now())
+	DailyRhythm.adapt(pet, _local_now())
 	return "" if notes.is_empty() else "%s: %s" % [notes[0].title, notes[0].detail]
-
-func _lively() -> bool:
-	return pet.habits.has("time_" + PersonalitySystem.part_of(_local_now()))
 
 func _greeting(away: float = 3600) -> String:
 	return LifeSystem.greeting(pet, away).text
 
 # Samodzielna decyzja psa: odpoczynek, zachowanie wynikające z nawyku albo spacer.
 func _spontaneous(roll: float = -1.0) -> void:
+	if not writable or suspended or training_view_active or is_sleeping(): return
 	if float(pet.needs.energy) < 28:
 		act("rest", false)
 		return
 	for need in [["fullness", "hungry"], ["play", "bored"]]:
+		# At night boredom asks for quiet company instead of a ball.
+		if need[0] == "play" and DailyRhythm.quiet(pet, _local_now()): continue
 		if float(pet.needs[need[0]]) < 30 and float(cooldowns.get(need[1], 0)) <= 0:
 			cooldowns[need[1]] = 60.0
 			_approach(need[1], false)
 			return
 	if _initiative_wait <= 0 and offer_initiative(): return
-	var lively := _lively()
-	var options: Array = []
-	if pet.habits.has("cuddler") and float(pet.needs.contact) < 80: options.append("cuddler")
-	if pet.habits.has("playful") and float(pet.needs.play) < 80: options.append("playful")
-	if pet.habits.has("student") and pose != "sit" and training.readiness(pet, "sit").is_empty(): options.append("student")
-	if options.is_empty():
-		match pet.life.mood:
-			"cuddly": options.append("cuddler")
-			"playful": options.append("playful")
-			"curious": options.append("explorer")
-			"sleepy", "calm": options.append("quiet")
-	var chance := randf() if roll < 0 else roll
-	if not options.is_empty() and chance < (0.6 if lively else 0.35):
-		show_habit(options[randi() % options.size()])
-	elif randf() < float(pet.traits.curiosity) + (0.15 if lively else 0.0):
-		if randf() < 0.55:
-			_approach("window" if randf() < float(pet.traits.curiosity) else "door", false)
-		else:
-			move_to(RoomLayout.random_walk_point(), false)
+	var options := BehaviorSystem.weights(pet, _local_now(), _recent_behaviors, _last_behavior_place)
+	_start_behavior(BehaviorSystem.choose(options, randf() if roll < 0 else roll))
 
 func show_habit(id: String) -> void:
 	activity = "habit"
@@ -247,7 +262,7 @@ func say(text: String) -> void:
 	feedback.emit(text)
 
 func _inviting() -> bool:
-	return activity in ["habit", "need", "initiative"] or (activity == "approach" and not _pending_by_player)
+	return activity in ["habit", "need", "initiative", "behavior"] or (activity == "approach" and not _pending_by_player)
 
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
@@ -255,9 +270,13 @@ func busy() -> bool:
 	return play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
-	return writable and not suspended and not pet.resting and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
+	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
 
 func _cancel_motion() -> void:
+	_reward_from_training = false
+	_sequence.clear()
+	_sequence_id = ""
+	_travel_left = 0
 	_approach_token += 1
 	_pending_action = ""
 	_pending_by_player = false
@@ -300,6 +319,8 @@ func arrive_at(token: int) -> void:
 			_settle_touch_game()
 			return
 		"rest":
+			night_sleep = DailyRhythm.phase(pet, _local_now()) == "night"
+			DailyRhythm.note_nap(pet, _local_now())
 			pet.resting = true
 			_sleep_elapsed = 0
 			activity = "sleep"
@@ -339,14 +360,21 @@ func arrive_at(token: int) -> void:
 	flush()
 	changed.emit()
 
-func _wake() -> void:
+func _wake(by_player: bool = true) -> void:
+	var was_night := night_sleep
+	night_sleep = false
+	automatic_nap = false
+	if by_player: player_activity()
+	_woken_at_night = was_night and DailyRhythm.phase(pet, _local_now()) == "night"
+	if _woken_at_night: groggy_left = 180.0
+	_brain_left = 12.0
 	pet.resting = false
 	_sleep_elapsed = 0
 	activity = "idle"
 	activity_left = 0
 	pose = "stand"
 	clip_requested.emit("idle")
-	say("Koniec drzemki. Czas na Wasz dzień.")
+	say("Jeszcze chwila na rozbudzenie. Dobrze, że jesteś. Możecie pobyć razem." if _woken_at_night else "Koniec odpoczynku. Czas na Wasz dzień.")
 	flush()
 	changed.emit()
 
@@ -384,14 +412,19 @@ func _pet() -> bool:
 
 func act(action: String, by_player: bool = true) -> bool:
 	if not writable or suspended: return false
+	if by_player and action in ["pet", "feed", "rest", "play", "toys", "window", "door", "clean"]:
+		player_activity()
+		if action == "pet" and is_sleeping():
+			_wake()
+			return true
 	if action == "pet": return _pet()
 	if busy() and not (training.phase == "idle" and _inviting()):
 		say("Jeszcze chwilka — kończymy tę czynność.")
 		return false
-	if action == "rest" and pet.resting:
+	if action == "rest" and is_sleeping():
 		_wake()
 		return true
-	if pet.resting:
+	if is_sleeping():
 		say("Najpierw delikatnie obudź pieska.")
 		return false
 	var satisfied := _satisfied_message(action)
@@ -432,7 +465,7 @@ func _satisfied_message(action: String) -> String:
 	}[need]
 
 func move_to(world_position: Vector2, announce: bool = true) -> void:
-	if not writable or busy() or pet.resting or suspended: return
+	if not writable or busy() or is_sleeping() or suspended: return
 	if announce: _answer_action("walk")
 	_cancel_motion()
 	pose = "stand"
@@ -446,6 +479,10 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 
 func destination_reached() -> void:
 	if activity != "walk": return
+	_travel_left = 0
+	if not _sequence_id.is_empty():
+		_advance_behavior()
+		return
 	activity = "idle"
 	clip_requested.emit("idle")
 	changed.emit()
@@ -456,6 +493,10 @@ func performance_finished(trial_id: int) -> void:
 
 func begin_training(key: String, guided: bool) -> bool:
 	if not writable or suspended: return false
+	player_activity()
+	if is_sleeping():
+		say("Najpierw spokojnie obudź pieska.")
+		return false
 	if busy() and not (training.phase == "idle" and _inviting()):
 		say("Poczekaj, aż piesek skończy tę czynność.")
 		return false
@@ -482,6 +523,7 @@ func begin_training(key: String, guided: bool) -> bool:
 
 func give_reward(kind: String) -> bool:
 	if suspended or not writable: return false
+	player_activity()
 	var result := training.reward(pet, kind)
 	if not result.ok:
 		say(result.message)
@@ -489,6 +531,7 @@ func give_reward(kind: String) -> bool:
 	_note("reward_" + kind)
 	sound_requested.emit("success")
 	if kind == "treat": sound_requested.emit("treat")
+	_reward_from_training = true
 	activity = "happy"
 	activity_left = 1.4
 	if pose == "sit":
@@ -526,7 +569,7 @@ func suspend_session() -> void:
 	training.cancel()
 	_cancel_motion()
 	activity_left = 0
-	activity = "sleep" if pet.resting else "idle"
+	activity = "sleep" if is_sleeping() else "idle"
 	suspended = true
 	flush()
 
@@ -538,7 +581,7 @@ func resume_session() -> void:
 	var away := maxf(0, now - seen)
 	NeedsSystem.catch_up(pet, now)
 	suspended = false
-	activity = "sleep" if pet.resting else "idle"
+	activity = "sleep" if is_sleeping() else "idle"
 	if pet.resting: place_requested.emit("rest")
 	clip_requested.emit("sleep" if pet.resting else "idle")
 	pose = "stand"
@@ -550,15 +593,17 @@ func resume_session() -> void:
 		clip_requested.emit(LifeSystem.greeting(pet, away).clip)
 	elif not news.is_empty():
 		say(news)
+	_sync_rhythm_on_return(away >= 60)
 	flush()
 	changed.emit()
 	if report: away_report_ready.emit()
 
 func offer_initiative(kind: String = "", now: float = -1.0) -> bool:
-	if not active or not writable or suspended or not initiatives_enabled or not attention_available or busy() or pet.resting or not invitation.is_empty() or not play.kind.is_empty(): return false
+	if not active or not writable or suspended or not initiatives_enabled or not attention_available or busy() or is_sleeping() or not invitation.is_empty() or not play.kind.is_empty(): return false
 	if now < 0: now = Time.get_unix_time_from_system()
 	if not is_finite(now) or now - float(pet.social.last_offer_at) < InitiativeSystem.OFFER_INTERVAL: return false
-	if kind.is_empty(): kind = InitiativeSystem.choose(pet)
+	if kind.is_empty(): kind = "cuddle" if DailyRhythm.quiet(pet, _local_now()) else InitiativeSystem.choose(pet)
+	if DailyRhythm.quiet(pet, _local_now()) and kind != "cuddle": return false
 	if not PetState.INITIATIVE_KEYS.has(kind) or float(InitiativeSystem.weights(pet)[kind]) <= 0: return false
 	_cancel_motion()
 	activity = "initiative"
@@ -595,6 +640,7 @@ func _finish_invitation(response: String) -> void:
 	changed.emit()
 
 func _answer_action(kind: String) -> void:
+	player_activity()
 	if invitation.is_empty(): return
 	if kind == invitation.kind:
 		_finish_invitation("accepted")
@@ -624,7 +670,7 @@ func play_readiness() -> String:
 	if not writable: return "Najpierw trzeba odzyskać poprawny zapis."
 	if suspended: return "Wróć do gry, żeby się pobawić."
 	if busy(): return "Dokończmy najpierw tę czynność."
-	if pet.resting: return "Najpierw spokojnie obudź pieska."
+	if is_sleeping(): return "Najpierw spokojnie obudź pieska."
 	if float(pet.needs.energy) < 28 or pet.fatigue >= 85: return "Najpierw chwila odpoczynku, potem zabawa."
 	return ""
 
@@ -691,6 +737,7 @@ func _settle_touch_game() -> void:
 		pet.bond = minf(100, pet.bond + 0.35)
 		_note("play")
 	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + InitiativeSystem.LABELS[kind], "Pierwsza runda zabawy sterowanej dotykiem.", now)
+	_reward_from_training = false
 	activity = "happy"
 	activity_left = 1.4
 	clip_requested.emit("tail_wag_stand" if play.success else "head_tilt_stand")
@@ -709,4 +756,150 @@ func cancel_touch_game() -> void:
 	pose = "stand"
 	clip_requested.emit("idle")
 	touch_game_closed.emit()
+	changed.emit()
+
+func is_sleeping() -> bool:
+	return night_sleep or pet.resting
+
+func walk_speed() -> float:
+	return LifeSystem.walk_speed(pet) * (0.75 if groggy_left > 0 else (0.85 if DailyRhythm.quiet(pet, _local_now()) else 1.0))
+
+func set_training_view(value: bool) -> void:
+	if training_view_active == value: return
+	training_view_active = value
+	if not value: return
+	player_activity()
+	if not _sequence_id.is_empty():
+		_cancel_motion()
+		activity = "idle"
+		activity_left = 0
+		clip_requested.emit(PetAnimator.BASE.get(pose, "idle"))
+
+func player_activity() -> void:
+	_idle_seconds = 0
+	sleep_warning = false
+	_attention_shown = false
+	_follow_target = Vector2.INF
+
+func follow_room(point: Vector2) -> void:
+	if not writable or suspended: return
+	player_activity()
+	_follow_target = RoomLayout.clamp_walk(point)
+	_follow_left = 3.0
+
+func _sync_rhythm_on_return(reset: bool = true) -> void:
+	if not writable: return
+	DailyRhythm.adapt(pet, _local_now())
+	if DailyRhythm.phase(pet, _local_now()) == "night":
+		if reset:
+			# Opening the game is an invitation to meet, even before habits form.
+			if is_sleeping(): _wake(false)
+			_cancel_motion()
+			activity = "idle"
+			activity_left = 0
+			pose = "stand"
+			clip_requested.emit("tail_wag_stand")
+			say("Dobrze, że jesteś! Chwila razem, zanim przyjdzie czas na sen.")
+		elif night_sleep:
+			clip_requested.emit("sleep")
+	elif night_sleep:
+		_wake(false)
+	if reset:
+		_idle_seconds = 0
+		_woken_at_night = false
+		sleep_warning = false
+
+func _tick_rhythm(delta: float) -> void:
+	groggy_left = maxf(0, groggy_left - delta)
+	if not writable: return
+	if night_sleep and DailyRhythm.phase(pet, _local_now()) != "night": _wake(false)
+	if is_sleeping(): return
+	# A round/result panel, training or continuous stroking keeps the dog awake.
+	if training_view_active or not play.kind.is_empty() or training.phase != "idle" or activity in ["pet", "feed", "clean", "happy"] or (busy() and _sequence_id.is_empty()):
+		_idle_seconds = 0
+		sleep_warning = false
+		return
+	if not attention_available: return
+	_idle_seconds += delta
+	if _travel_left > 0:
+		_travel_left -= delta
+		if _travel_left <= 0:
+			_cancel_motion()
+			activity = "idle"
+			clip_requested.emit("idle")
+	if _follow_target.is_finite():
+		_follow_left -= delta
+		if _follow_left <= 0:
+			var target := _follow_target
+			_follow_target = Vector2.INF
+			move_to(target, false)
+	var night := DailyRhythm.phase(pet, _local_now()) == "night"
+	if night:
+		var limit := 120.0 if _woken_at_night else 180.0
+		if _idle_seconds >= limit - 20 and not sleep_warning:
+			sleep_warning = true
+			say("Chce mi się spać. Za chwilę pójdę do legowiska. Dotknij mnie, jeśli chcesz jeszcze pobyć razem.")
+		if _idle_seconds >= limit and _sequence_id != "night": _start_behavior("night")
+	elif _idle_seconds >= 60 and _idle_seconds < 180 and not _attention_shown and not busy() and invitation.is_empty() and _sequence_id.is_empty():
+		_attention_shown = true
+		_start_behavior("wait")
+
+func _start_behavior(id: String) -> void:
+	if not invitation.is_empty(): _cancel_invitation()
+	_cancel_motion()
+	_sequence_id = id
+	_sequence = BehaviorSystem.steps(id, pet, DailyRhythm.quiet(pet, _local_now()))
+	if BehaviorSystem.BEHAVIORS.has(id):
+		_recent_behaviors.push_front(id)
+		if _recent_behaviors.size() > 3: _recent_behaviors.resize(3)
+		_last_behavior_place = BehaviorSystem.BEHAVIORS[id][1]
+	_advance_behavior()
+
+func _advance_behavior() -> void:
+	if _sequence.is_empty():
+		var event: String = {"window": "window", "door": "door", "toys": "play"}.get(_sequence_id, "")
+		_sequence_id = ""
+		activity = "idle"
+		activity_left = 0
+		_brain_left = randf_range(9, 15)
+		if not event.is_empty(): _observe(event)
+		clip_requested.emit(PetAnimator.BASE.get(pose, "idle"))
+		return
+	var step: Dictionary = _sequence.pop_front()
+	if step.has("point"):
+		activity = "walk"
+		activity_left = 0
+		pose = "stand"
+		_travel_left = 90.0
+		destination_requested.emit(step.point)
+		clip_requested.emit("walk")
+	elif step.has("sleep"):
+		if step.sleep == "night" and DailyRhythm.phase(pet, _local_now()) != "night":
+			_cancel_motion()
+			activity = "idle"
+			clip_requested.emit("idle")
+		else:
+			_enter_sleep(step.sleep)
+	else:
+		activity = "behavior"
+		activity_left = float(step.seconds)
+		pose = PetAnimator.CLIPS[step.clip][1]
+		clip_requested.emit(step.clip)
+	changed.emit()
+
+func _enter_sleep(kind: String, observe: bool = true) -> void:
+	_cancel_invitation()
+	_cancel_motion()
+	night_sleep = kind == "night"
+	automatic_nap = kind == "nap"
+	pet.resting = not night_sleep or float(pet.needs.energy) < NeedsSystem.WAKE_ENERGY
+	_sleep_elapsed = 0
+	activity = "sleep"
+	activity_left = 0
+	pose = "sleep"
+	if automatic_nap: DailyRhythm.note_nap(pet, _local_now())
+	clip_requested.emit("sleep")
+	say("Ciii… pora na nocny sen. Dotknij pieska, aby łagodnie go obudzić." if night_sleep else "Chwila drzemki. Dotknij pieska, kiedy chcesz pobyć razem.")
+	if observe: _observe("rest")
+	flush()
 	changed.emit()

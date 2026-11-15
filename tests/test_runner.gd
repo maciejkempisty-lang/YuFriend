@@ -322,11 +322,13 @@ func _cleanup() -> void:
 func _test_session_interruptions() -> void:
 	for action in ["feed", "play", "clean"]:
 		var game := GameSession.new()
+		game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 		game.pet = PetState.create(42)
 		game.move_to(Vector2(1300, 310), false)
 		check(not game.busy() and game.act(action), "autonomous walk yields immediately to " + action)
 		game.free()
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	game.pet = PetState.create(42)
 	var targets: Array[Vector2] = []
 	game.destination_requested.connect(func(point: Vector2): targets.append(point))
@@ -367,6 +369,7 @@ func _test_session_interruptions() -> void:
 
 func _test_action_feedback() -> void:
 	var game := GameSession.new()
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	game.pet = PetState.create(42)
 	game.pet.needs.fullness = 90.0
 	var received: Array = []

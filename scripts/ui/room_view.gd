@@ -7,6 +7,7 @@ signal destination_reached
 signal performance_finished(trial_id: int)
 signal station_reached(token: int)
 signal sound_requested(effect: String)
+signal room_viewed(point: Vector2)
 signal first_pan
 signal ball_thrown(target: Vector2)
 
@@ -74,6 +75,7 @@ var _press_camera := Vector2.ZERO
 var _press_zoom := 1.0
 var _dragged := false
 var _touch_masks: Dictionary = {}
+var _pet_frame_bounds: Dictionary = {}
 var _step_distance := 0.0
 var _ball_was_rolling := false
 var ball_throw_enabled := true
@@ -252,6 +254,7 @@ func _pointer_up(point: Vector2, id: int, cancelled: bool = false) -> void:
 	if ball_drag and _dragged:
 		if _throw_target.distance_to(ball_world) >= 40: ball_thrown.emit(_throw_target)
 		return
+	if _dragged and not overview: room_viewed.emit(Vector2(camera_center().x, RoomLayout.FLOOR_Y + 50))
 	if not _dragged and render_rect.has_point(point): _interact(point)
 
 func _interact(point: Vector2) -> void:
@@ -311,6 +314,19 @@ func screen_to_world(point: Vector2) -> Vector2:
 
 func pet_position() -> Vector2:
 	return world_to_screen(pet_world)
+
+func pet_screen_bounds() -> Rect2:
+	var sprite := animator.sprite
+	if sprite.sprite_frames == null: return Rect2(pet_position(), Vector2.ZERO)
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if texture == null: return Rect2(pet_position(), Vector2.ZERO)
+	# Cache the alpha bounds: reading the texture on every UI frame is expensive.
+	if not _pet_frame_bounds.has(texture):
+		_pet_frame_bounds[texture] = Rect2(texture.get_image().get_used_rect())
+	var used: Rect2 = _pet_frame_bounds[texture]
+	if sprite.flip_h: used.position.x = texture.get_width() - used.end.x
+	var transformed := sprite.get_global_transform() * used
+	return _screen_rect(Rect2(transformed.position * _render_pixel_size, transformed.size * _render_pixel_size))
 
 func station_bounds(id: String) -> Rect2:
 	var data: Dictionary = RoomLayout.STATIONS[id]

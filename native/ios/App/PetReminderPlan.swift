@@ -43,7 +43,11 @@ enum PetReminderPlan {
     static func make(snapshot: PetSnapshot?, now: Date, consumed: [Date],
                      calendar: Calendar = .current) -> [PetReminder] {
         guard let snapshot, snapshot.isValid, snapshot.savedAt <= now.timeIntervalSince1970 else { return [] }
-        let end = Date(timeIntervalSince1970: snapshot.savedAt + PetSnapshot.maxOffline)
+        let savedAt = Date(timeIntervalSince1970: snapshot.savedAt)
+        // The simulation freezes after eight hours, but its final state is still
+        // useful next morning. Anchor the window to the save, never to a replan.
+        guard let nextDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: savedAt)),
+              let end = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: nextDay) else { return [] }
         var date = now.addingTimeInterval(minimumDelay)
         var result: [PetReminder] = []
         while date < end && result.count < 2 {
@@ -58,6 +62,8 @@ enum PetReminderPlan {
                     status.value(need) < 30 && !result.contains(where: { $0.need == need })
                 }) {
                     result.append(PetReminder(date: date, need: need, name: snapshot.name))
+                    // At most one invitation on the morning after the save.
+                    if date >= nextDay { break }
                 }
             }
             date = date.addingTimeInterval(15 * 60)

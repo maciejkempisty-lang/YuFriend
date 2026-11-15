@@ -140,7 +140,7 @@ import OSLog
             content.body = reminder.body
             content.sound = .default
             content.threadIdentifier = "yufriend.needs"
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, reminder.date.timeIntervalSinceNow), repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, reminder.date.timeIntervalSince(clock())), repeats: false)
             do {
                 try await center.add(UNNotificationRequest(identifier: identifiers[index], content: content, trigger: trigger))
             } catch {
