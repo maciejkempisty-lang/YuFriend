@@ -19,6 +19,8 @@ Aktualizacja interfejsu: większy pokój z interaktywnym psem i przedmiotami, ok
 | [Rozwój projektu](rozwoj-projektu.md) | Priorytety, kryteria ukończenia, decyzje otwarte i planowane AI |
 | [Lista sprite’ów szczeniaka](lista-spriteow-szczeniaka.md) | Brief 22 animacji, pozy, kierunki i kolejność produkcji |
 | [Integracja sprite’ów](integracja-spriteow.md) | Foldery PNG, manifest, importer i podpinanie częściowych zestawów |
+| [Dźwięk](../assets/audio/sfx/README.md) | Muzyka, efekty ElevenLabs, źródła i obróbka |
+| [Test iOS](test-ios.md) | Instalacja i aktualizacje na fizycznym iPhonie |
 | [Pierwotny plan implementacji](plan-implementacji.md) | Szersza koncepcja oraz początkowe szacunki zakresu i czasu pracy |
 
 ## Od czego zacząć

@@ -36,6 +36,7 @@ func _run() -> void:
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
 	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 22, "new puppy uses the complete pixel animation pack")
 	await _test_music()
+	_test_effects()
 	await capture("01-care.png")
 	check_pixel_grid("390 x 844")
 	check(app.room.render_rect.end.y <= app.bubble.position.y - 7, "the whole room fits above the message and action panel")
@@ -535,3 +536,97 @@ func _test_music() -> void:
 	app._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
 	check(app.music.stream_paused, "returning to the app respects music disabled in profile")
 	app.music_toggle.button_pressed = true
+
+func _test_effects() -> void:
+	var loaded_count := 0
+	var valid_recordings: bool = app.effects.recordings.size() == 10
+	for id in SoundEffects.GROUPS:
+		var variants: Array = app.effects.recordings.get(id, [])
+		valid_recordings = valid_recordings and variants.size() == maxi(1, SoundEffects.GROUPS[id][1])
+		for recording in variants:
+			loaded_count += 1
+			valid_recordings = valid_recordings and recording is AudioStreamWAV and recording.mix_rate == 48000 and not recording.stereo and recording.loop_mode == AudioStreamWAV.LOOP_DISABLED and recording.get_length() > 0 and recording.get_length() <= 3
+	check(valid_recordings and loaded_count == 20, "all 20 production effects load in 10 groups as short mono 48 kHz one-shots")
+	check(app.effects.recordings["step"].all(func(recording): return recording.get_length() <= 0.17), "footstep one-shots end before the next walking contact")
+	var heard: Array[String] = []
+	var game := GameSession.new()
+	root.add_child(game)
+	game.set_process(false)
+	game.start(directory + "/effects-pet.json")
+	game.sound_requested.connect(func(id: String): heard.append(id))
+	game.pet.needs.fullness = 100
+	check(not game.act("feed") and heard.is_empty(), "rejected care does not request an effect")
+	game.pet.needs.fullness = 40
+	game.act("feed")
+	check(heard.is_empty(), "food does not crunch while the puppy is still walking to the bowl")
+	game.arrive_at(game._approach_token)
+	game.arrive_at(game._approach_token)
+	check(heard == ["eat"], "arrival requests eating audio once, matching the actual meal")
+	game.act("pet")
+	check(heard == ["eat"], "petting a busy eating puppy does not play a misleading stroke")
+	game._process(3)
+	game.act("pet")
+	check(heard == ["eat", "pet"], "accepted petting requests its own sound")
+	heard.clear()
+	game.give_reward("treat")
+	game.training.phase = "reward"
+	game.training.time_left = 1
+	game.training.trick = "sit"
+	game.give_reward("treat")
+	game.give_reward("treat")
+	check(heard == ["success", "treat"], "only one valid training reward requests success and treat sounds")
+	game.free()
+
+	var room := RoomView.new()
+	room.size = Vector2(390, 430)
+	root.add_child(room)
+	room.set_process(false)
+	room.animator.set_process(false)
+	var movement: Array[String] = []
+	room.sound_requested.connect(func(id: String): movement.append(id))
+	room.move_to(room.pet_world + Vector2(50, 0))
+	room.play_clip("walk")
+	room._process(0.26)
+	room.cancel_activity()
+	room._process(1)
+	check(movement == ["step"], "steps follow actual world movement and stop when movement is cancelled")
+	movement.clear()
+	room.ball_target = room.ball_world + Vector2(100, 0)
+	room._process(0.1)
+	room._process(0.1)
+	check(movement == ["ball_roll"], "one rolling sound starts per continuous ball movement")
+	room.free()
+
+	var sounds := SoundEffects.new()
+	root.add_child(sounds)
+	sounds.start(directory + "/audio-test.cfg")
+	sounds.recordings.clear()
+	check(not sounds.play_effect("eat") and not sounds.play_effect("unknown"), "missing and unknown effects remain safely silent")
+	# A silent one-second fixture tests the mixer without depending on production recordings.
+	var fixture := AudioStreamWAV.new()
+	fixture.format = AudioStreamWAV.FORMAT_16_BITS
+	fixture.mix_rate = 44100
+	var bytes := PackedByteArray()
+	bytes.resize(88200)
+	fixture.data = bytes
+	for id in ["eat", "pet", "brush", "step", "bark"]: sounds.recordings[id] = [fixture]
+	check(sounds.play_effect("pet") and not sounds.play_effect("pet"), "rapid repeated effects are rate limited")
+	var filled := sounds.play_effect("eat") and sounds.play_effect("brush") and sounds.play_effect("step")
+	check(filled and not sounds.play_effect("bark") and sounds.players.size() == SoundEffects.MAX_VOICES, "effect playback has a bounded voice pool")
+	sounds.set_backgrounded(true)
+	check(not sounds.players.any(func(player): return player.playing) and not sounds.play_effect("bark"), "backgrounding stops effects and rejects new playback")
+	sounds.set_backgrounded(false)
+	check(not sounds.players.any(func(player): return player.playing), "returning does not replay stale one-shot effects")
+	sounds.free()
+	app.effects_toggle.button_pressed = false
+	app.music_toggle.button_pressed = false
+	var config := ConfigFile.new()
+	config.load(app.music.settings_path)
+	check(not config.get_value("audio", "music_enabled", true) and not config.get_value("audio", "effects_enabled", true), "music and effects switches preserve each other's preferences")
+	app.music_toggle.button_pressed = true
+	var restored := SoundEffects.new()
+	root.add_child(restored)
+	restored.start(app.music.settings_path)
+	check(not restored.enabled and not restored.play_effect("pet"), "effects mute persists independently when music is enabled again")
+	restored.free()
+	app.effects_toggle.button_pressed = true

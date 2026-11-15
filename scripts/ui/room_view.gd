@@ -6,6 +6,7 @@ signal care_requested(action: String)
 signal destination_reached
 signal performance_finished(trial_id: int)
 signal station_reached(token: int)
+signal sound_requested(effect: String)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
 const DRAG_THRESHOLD := 9.0
@@ -57,6 +58,8 @@ var _press_camera := Vector2.ZERO
 var _press_zoom := 1.0
 var _dragged := false
 var _touch_masks: Dictionary = {}
+var _step_distance := 0.0
+var _ball_was_rolling := false
 
 func _ready() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -373,6 +376,8 @@ func place_at_station(action: String) -> void:
 
 func cancel_activity() -> void:
 	moving = false
+	_step_distance = 0.0
+	_ball_was_rolling = false
 	station_token = 0
 	station_action = ""
 	anchored_station = ""
@@ -408,7 +413,12 @@ func _process(delta: float) -> void:
 		var difference := target_world - pet_world
 		if absf(difference.x) > 0.1: animator.facing_left = difference.x < 0
 		var speed := WALK_SPEED
+		var previous := pet_world
 		pet_world = pet_world.move_toward(target_world, speed * delta)
+		_step_distance += previous.distance_to(pet_world)
+		if _step_distance >= WALK_SPEED * 0.25:
+			_step_distance = fmod(_step_distance, WALK_SPEED * 0.25)
+			sound_requested.emit("step")
 		if pet_world.is_equal_approx(target_world):
 			moving = false
 			if station_token > 0:
@@ -429,10 +439,14 @@ func _process(delta: float) -> void:
 	# Keep the authored timing. A faster chase needs a separate run clip.
 	animator.sprite.speed_scale = 1.0
 	if not ball_world.is_equal_approx(ball_target):
+		if not _ball_was_rolling: sound_requested.emit("ball_roll")
+		_ball_was_rolling = true
 		var before := ball_world.x
 		ball_world = ball_world.move_toward(ball_target, delta * 290)
 		ball_art.roll_phase += (ball_world.x - before) / 12
 		ball_art.queue_redraw()
+	else:
+		_ball_was_rolling = false
 	effect_left = maxf(0, effect_left - delta)
 	focus_left = maxf(0, focus_left - delta)
 	_sync_layers()

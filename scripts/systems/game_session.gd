@@ -11,6 +11,7 @@ signal approach_requested(action: String, token: int)
 signal place_requested(action: String)
 signal activity_cancelled
 signal attention_requested(close_up: bool)
+signal sound_requested(effect: String)
 
 var pet: PetState
 var training := TrainingSystem.new()
@@ -240,6 +241,7 @@ func arrive_at(token: int) -> void:
 			NeedsSystem.change(pet, RoomLayout.station("feed").effects)
 			cooldowns.feed = 10.0
 			clip_requested.emit("eat_loop")
+			sound_requested.emit("eat")
 			say("Mała porcja. %s zajada z apetytem." % pet.pet_name)
 			pet.remember("feed", "Pierwsza wspólna miska", "Małe rytuały budują poczucie bezpieczeństwa.")
 		"play":
@@ -251,6 +253,7 @@ func arrive_at(token: int) -> void:
 		"hungry", "bored":
 			activity = "need"
 			clip_requested.emit("bark_stand" if action == "hungry" else "play_bow")
+			if action == "hungry": sound_requested.emit("bark")
 			say("%s szczeka przy misce. Ma ochotę na jedzenie." % pet.pet_name if action == "hungry" else "%s trąca piłkę i zaprasza Cię do zabawy." % pet.pet_name)
 		"toys", "window", "door":
 			activity = "need"
@@ -301,6 +304,7 @@ func _pet() -> bool:
 		flush()
 	attention_requested.emit(true)
 	clip_requested.emit("petted_stand")
+	sound_requested.emit("pet")
 	say("Przymyka oczy. Lubi być blisko Ciebie.")
 	changed.emit()
 	return true
@@ -335,6 +339,7 @@ func act(action: String, by_player: bool = true) -> bool:
 	NeedsSystem.change(pet, {"hygiene": 25, "contact": 5})
 	cooldowns.clean = 12.0
 	clip_requested.emit("petted_stand")
+	sound_requested.emit("brush")
 	say("Kilka ruchów szczotką i sierść znów jest miękka.")
 	pet.remember("clean", "Mały rytuał pielęgnacji", "Spokojne czesanie i chwila bliskości.")
 	if by_player: _note(action)
@@ -405,6 +410,8 @@ func give_reward(kind: String) -> bool:
 		say(result.message)
 		return false
 	_note("reward_" + kind)
+	sound_requested.emit("success")
+	if kind == "treat": sound_requested.emit("treat")
 	activity = "happy"
 	activity_left = 1.4
 	if pose == "sit":

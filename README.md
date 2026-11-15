@@ -49,6 +49,10 @@ Gotowa obsługa `AnimatedSprite2D` obejmuje 22 nazwy klipów, przejścia między
 - PNG i manifest produkcyjny: `assets/sprites/puppy/pixel/`
 - [Tło pokoju i prompt](assets/art/environments/README.md)
 
+## Dźwięk
+
+Muzyka z dostarczonego `video2.mp4` gra cicho w pętli. Pakiet 20 efektów ElevenLabs obejmuje szczeknięcia, kroki, jedzenie, głaskanie, czesanie, piłkę i trening. 17 nagrań jest używanych teraz; trzy odbicia czekają na odpowiednią animację. Muzykę i efekty wyciszysz osobno w Profilu. Odtwarzanie jest lokalne, bez API. [Źródła, przygotowanie i zakres weryfikacji audio](assets/audio/sfx/README.md).
+
 ## Szeroki pokój
 
 Jeden świat 1440 × 360 zajmuje około 2–3 ekranów w podstawowym widoku. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój jest rasteryzowany na wspólnej siatce 480 × 120 pikseli logicznych. Zbliżenie jest skokowe 2×, jeśli wysokość ekranu mieści całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
@@ -80,7 +84,7 @@ Nie uruchamiaj równolegle dwóch zwykłych instancji na tym samym zapisie. Do p
 
 ## Sprawdzenie projektu
 
-Weryfikacja 15 listopada 2026: **257 sprawdzeń zakończonych powodzeniem** — 104 logiki, osobowości i zapisu, 38 importu i animacji oraz 115 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi, układy ekranu, nawyki po nieobecności i ochronę oryginału podczas migracji. Sprawdzono również dojście do przedmiotów, anulowanie opieki, wybudzanie, konflikt kopii `.v1`, powtarzane głaskanie i brak ponownego budowania statycznego tła podczas ruchu. Regresje panoramy sprawdzają przesuwanie bez przypadkowych akcji, granice kamery, zbliżenia, współrzędne po zmianie okna oraz dojście do nowych stacji. Audyt zachowania dodaje przerwanie spaceru opieką, zmianę celu, reakcję na pełne potrzeby i dotyk podczas jedzenia. Kontrola gotowych zrzutów potwierdza równe bloki pikseli również przy ułamkowym skalowaniu całego okna. Zrzuty obejrzano także wizualnie.
+Weryfikacja 15 listopada 2026: **274 sprawdzenia zakończonych powodzeniem** — 104 logiki, osobowości i zapisu, 38 importu i animacji oraz 132 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi, układy ekranu, nawyki po nieobecności i ochronę oryginału podczas migracji. Sprawdzono również dojście do przedmiotów, anulowanie opieki, wybudzanie, konflikt kopii `.v1`, powtarzane głaskanie i brak ponownego budowania statycznego tła podczas ruchu. Regresje panoramy sprawdzają przesuwanie bez przypadkowych akcji, granice kamery, zbliżenia, współrzędne po zmianie okna oraz dojście do nowych stacji. Audyt zachowania dodaje przerwanie spaceru opieką, zmianę celu, reakcję na pełne potrzeby i dotyk podczas jedzenia. Kontrola gotowych zrzutów potwierdza równe bloki pikseli również przy ułamkowym skalowaniu całego okna. Zrzuty obejrzano także wizualnie.
 
 Przy pierwszym otwarciu lub po dodaniu PNG poczekaj, aż Godot zaimportuje zasoby. Import można wykonać także bez okna:
 

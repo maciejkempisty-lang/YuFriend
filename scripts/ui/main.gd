@@ -10,6 +10,8 @@ const NEED_ICONS := {"fullness": "bowl", "energy": "moon", "hygiene": "brush", "
 var session := GameSession.new()
 var music := BackgroundMusic.new()
 var music_toggle: CheckButton
+var effects := SoundEffects.new()
+var effects_toggle: CheckButton
 var room := RoomView.new()
 var needs_ui: Dictionary = {}
 var care_buttons: Dictionary = {}
@@ -79,10 +81,15 @@ func _ready() -> void:
 	var path := "user://pet.json"
 	if OS.get_cmdline_user_args().has("--qa"): path = "user://qa-ui/pet.json"
 	if not save_path_override.is_empty(): path = save_path_override
-	session.start(path)
 	add_child(music)
 	music.start(path.get_base_dir().path_join("audio.cfg"))
 	music_toggle.set_pressed_no_signal(music.enabled)
+	add_child(effects)
+	effects.start(path.get_base_dir().path_join("audio.cfg"))
+	effects_toggle.set_pressed_no_signal(effects.enabled)
+	session.sound_requested.connect(effects.play_effect)
+	room.sound_requested.connect(effects.play_effect)
+	session.start(path)
 	_refresh()
 
 func _build_theme() -> void:
@@ -432,6 +439,10 @@ func _build_dialogs() -> void:
 	music_toggle.text = "Muzyka w tle"
 	music_toggle.toggled.connect(music.set_enabled)
 	box.add_child(music_toggle)
+	effects_toggle = CheckButton.new()
+	effects_toggle.text = "Efekty dźwiękowe"
+	effects_toggle.toggled.connect(effects.set_enabled)
+	box.add_child(effects_toggle)
 	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
 	text_dialog = AcceptDialog.new()
 	text_dialog.title = "Napisz komendę"
@@ -456,6 +467,7 @@ func _build_dialogs() -> void:
 	text_dialog.visibility_changed.connect(update_shade)
 
 func _select_tab(key: String) -> void:
+	if key != selected_tab: effects.play_effect("ui")
 	selected_tab = key
 	for tab in panels:
 		panels[tab].visible = tab == key
@@ -639,9 +651,11 @@ func _notification(what: int) -> void:
 		get_tree().quit()
 	elif what == NOTIFICATION_APPLICATION_PAUSED:
 		music.set_backgrounded(true)
+		effects.set_backgrounded(true)
 		session.suspend_session()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		session.resume_session()
 		music.set_backgrounded(false)
+		effects.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		session.flush()

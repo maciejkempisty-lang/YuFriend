@@ -1,0 +1,1 @@
+Apple SoundAnalysis version1, 0.5-second windows, no overlap. Short runtime clips padded with silence to 0.5s. Heuristic screening only; does not replace listening. Original runtime results in all-classifications.jsonl. Steps are intentionally shortened to 160ms. Source and output hashes recorded in ../../processing.json.

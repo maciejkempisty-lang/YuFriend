@@ -35,3 +35,19 @@ Aktualizacja (2) została zainstalowana i uruchomiona na iPhonie. Odczyt zapisu 
 Dodano ścieżkę z `video2.mp4`, ciche odtwarzanie w pętli, pauzę po zawieszeniu aplikacji i zapamiętywany przełącznik w Profilu. Źródła opisuje [katalog muzyki](../assets/audio/music/README.md). 115 sprawdzeń UI obejmuje pełną długość nagrania, przejście przez punkt pętli, pauzę/wznowienie oraz zachowanie wyciszenia po ponownym uruchomieniu. Odsłuch na telefonie pozostaje do oceny użytkownika.
 
 Wersja (3) została zainstalowana i uruchomiona na iPhonie; odczyt kontenera potwierdził zachowanie identyfikatora Glorii i jej umiejętności.
+
+## Aktualizacja 0.1.0 (4) — efekty ElevenLabs
+
+Dodano [20 krótkich nagrań](../assets/audio/sfx/README.md), wyzwalanie efektów przez faktyczne czynności i ruch oraz osobne wyciszenie efektów w Profilu. Trzy nagrania odbicia piłki są rezerwą; obecny ruch korzysta z odgłosu toczenia. W tle efekty zatrzymują się, a muzyka pozostaje niezależna. Gra nadal działa offline.
+
+Eksport i kompilacja Xcode zakończyły się powodzeniem. Wersję (4) zainstalowano jako aktualizację i uruchomiono przez `devicectl`. Kopie kontenera przed i po potwierdziły imię Gloria, ten sam identyfikator, umiejętności i format zapisu 2. Testy na macOS: 104 domenowe, 38 sprite’ów i 131 UI. **Naturalność nagrań oraz balans efektów z muzyką na iPhonie wymagają odsłuchu użytkownika**; sama instalacja i testy tego nie potwierdzają.
+
+## Aktualizacja 0.1.0 (5) — korekta treści efektów
+
+Po zgłoszeniu szczekania podczas spaceru wymieniono 11 nagrań, w tym wszystkie cztery kroki. Przypisanie `step → paw_wood` było poprawne; błędna była treść części wygenerowanych próbek. Kroki mają teraz 160 ms i test ogranicza ich długość, aby nie nakładały się podczas marszu. Szczegóły i ograniczenia kontroli akustycznej opisuje [katalog efektów](../assets/audio/sfx/README.md).
+
+164 sprawdzenia UI i efektów zakończyły się bez błędów. Sprawdzono też format i sumy źródeł/wyników wszystkich 20 nagrań. Eksport, kompilacja Xcode, instalacja wersji (5) i uruchomienie na iPhonie zakończyły się powodzeniem. Kopie kontenera przed i po aktualizacji potwierdziły tę samą Glorię i jej umiejętności. Instalacja nie zastępuje odsłuchu: nowe brzmienie spaceru, cicha pielęgnacja i toczenie piłki pozostają do oceny użytkownika na głośniku telefonu.
+
+Wersja telefonu (5) zawierała również równoległe lokalne zmiany interfejsu i życia psa. Wynik 164 dotyczy tamtego pełnego katalogu; publikacja audio wydziela tylko obsługę i nagrania dźwięków. Zapis Glorii na telefonie ma po tych równoległych zmianach wersję 3, podczas gdy sam commit audio nie zmienia schematu zapisu. Nie instaluj starszego schematu na tej Glorii bez zgodnej obsługi migracji.
+
+Wydzielony zakres audio przed publikacją sprawdzono osobno na bazie `c23df29`: **274/274** (104 logiki, 38 animacji, 132 UI). Obejmuje komplet 20 nagrań, kroki tylko podczas ruchu, limit 160 ms, brak dźwięku po odrzuconej opiece, zatrzymanie efektów w tle oraz niezależne wyciszenie. Te testy nie stanowią oceny naturalności nagrań.

@@ -140,3 +140,9 @@ Obszar wyświetlania zaczyna się 16 jednostek poniżej wiersza potrzeb (w szero
 Dotknięcie jest rozpoznawane po puszczeniu palca. Ruch o co najmniej 9 jednostek uruchamia przesuwanie widoku i wyklucza akcję dotknięcia. Ręcznie ustawiona kamera pozostaje na miejscu do użycia „Do pieska” lub rozpoczęcia nowej czynności. `world_to_screen()` i `screen_to_world()` obsługują wszystkie strefy kliknięcia po panoramowaniu i zoomie. Maski alfa psa powstają dopiero przy dotknięciu danej klatki; na pierwszym planie pierwszeństwo mają piłka i przedmioty zasłaniające psa.
 
 Zmiana rozmiaru okna przelicza wyłącznie widok i kamerę — nie pozycje psa i przedmiotów. `RoomArtwork.draw_count` sprawdza, że chód nie przebudowuje tła. Zmiana rozmiaru viewportu może jednorazowo odświeżyć listę. To kontrola listy rysowania na CPU, a nie pomiar baterii lub wydajności GPU na telefonie.
+
+## Efekty dźwiękowe
+
+`GameSession.sound_requested` zgłasza przyjęte czynności (jedzenie, głaskanie, czesanie, nagroda i głód przy misce). `RoomView.sound_requested` zgłasza kroki po przebytej odległości i początek toczenia piłki. `Main` przekazuje oba sygnały do `SoundEffects`. System ładuje 20 lokalnych WAV w 10 grupach, losuje warianty, ogranicza odtwarzanie do czterech głosów i zatrzymuje efekty w tle. Muzyka i efekty współdzielą `audio.cfg`, zachowując niezależne przełączniki. Źródła i archiwalne próbki są wyłączone z eksportu.
+
+Przypisanie zdarzenia nie gwarantuje poprawnej treści nagrania: po zgłoszeniu szczekania w krokach podmieniono 11 próbek. Kroki mają 160 ms. Szczegóły generowania, kontrola i ograniczenia są w [dokumentacji audio](../assets/audio/sfx/README.md).

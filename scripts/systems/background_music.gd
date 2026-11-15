@@ -22,6 +22,7 @@ func set_enabled(value: bool) -> void:
 	enabled = value
 	_update_playback()
 	var config := ConfigFile.new()
+	config.load(settings_path)
 	config.set_value("audio", "music_enabled", enabled)
 	if config.save(settings_path) != OK:
 		push_warning("Could not save music preference.")

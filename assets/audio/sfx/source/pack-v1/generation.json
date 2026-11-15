@@ -1,0 +1,109 @@
+{
+  "generated_on": "2026-11-15",
+  "provider": "ElevenLabs",
+  "interface": "ElevenCreative Sound Effects",
+  "model": "v3",
+  "plan_observed": "Starter",
+  "credits_before": 40000,
+  "credits_used_observed": 90,
+  "prompt_influence": 0.3,
+  "prompt_enhancement_enabled": true,
+  "loop": false,
+  "download_format": "WAV 48kHz",
+  "unused_duplicate_generation": "0Mabh2KueAQOdJ6sspoG",
+  "notes": "Four candidates per generation. Selected variant numbers are not an acoustic rating; final listening review remains open. Kibble variants 1/2, treat variant 3. Provider sharing setting remained unchanged. No credentials or network client in game.",
+  "generations": [
+    {
+      "group": "puppy_bark",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=DQXAjoBIBzoywed3v4jH",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2,
+        3
+      ],
+      "prompt": "A single gentle friendly bark from a young golden retriever puppy. Small warm rounded woof, playful and reassuring, close and dry, isolated studio foley for a cozy pet game. One bark only, no growling, no whining, no human voices, no music, no ambience, no reverb."
+    },
+    {
+      "group": "paw_wood",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=1vDZkuXXg0zcUUQF0k8z",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "prompt": "One tiny puppy paw softly touching a wooden floor. A single muted padded tap with a faint delicate claw tick, very light small dog footstep, natural dry close-up foley for a relaxing pet game. One contact only, no walking sequence, no heavy thump, no voices, no music, no ambience or reverb."
+    },
+    {
+      "group": "pet_stroke",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=1LZGAMM0BuheIFfNb08d",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2
+      ],
+      "prompt": "Gentle hand stroking soft puppy fur once. A short smooth warm silky fur rustle, intimate quiet dry foley, soft friction and a gentle release. Calm cozy pet game interaction. No animal vocalization, no human voice, no breathing, no music, no ambience, no reverb."
+    },
+    {
+      "group": "training_success",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=9Y1SqLyp1oLQe6guoDsW",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1
+      ],
+      "prompt": "Warm two-note success chime for a cozy puppy training game. Two soft rounded wooden marimba notes gently rising, friendly memorable tiny melody with a clean short natural decay. Understated, calm and rewarding, no bright bells, no coins, no orchestra, no voice, no background music or reverb."
+    },
+    {
+      "group": "kibble_and_treat",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=ETY4E7ynFzFJfieiQOPY",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2,
+        3
+      ],
+      "prompt": "Puppy eating dry kibble, one short gentle crunch and tiny mouth movement. Small golden retriever chewing a small biscuit piece, close dry natural foley, soft pleasant texture, not wet or exaggerated. Cozy pet game. No bowl clatter, no voice, no barking, no music, no ambience or reverb."
+    },
+    {
+      "group": "brush",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=DJEwxme2uJcu7wMETXa4",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2
+      ],
+      "prompt": "Soft grooming brush gently passing through fluffy puppy fur once. One short delicate bristle swish, warm dry silky texture, calm satisfying natural close-up foley for a cozy pet game. Gentle and quiet, no harsh scraping, no water, no voice, no animal cries, no music, no background noise or reverb."
+    },
+    {
+      "group": "ball_bounce",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=4h1Lvs3YiODln2PJPurk",
+      "requested_duration_seconds": 0.6,
+      "downloaded_variants": [
+        1,
+        2,
+        3
+      ],
+      "prompt": "Small soft rubber dog toy ball bouncing once on a wooden floor. One gentle low rounded hollow plop with a tiny rubber squeak, playful quiet dry close-up foley for a cozy puppy game. Single impact with short decay, no repeated bounces, no basketball, no loud thud, no voice, no music, no ambience or reverb."
+    },
+    {
+      "group": "ball_roll",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=OMbxtvrPjUsgpF0DngvP",
+      "requested_duration_seconds": 1.4,
+      "downloaded_variants": [
+        1
+      ],
+      "prompt": "Rubber puppy toy ball gently rolling across smooth wooden floor and slowing to a stop. Quiet close-up soft rubber friction with tiny uneven wooden ticks, smooth continuous short roll fading naturally. Cozy pet game natural dry foley, no bounces, no heavy rumble, no voices, no music, no ambience or reverb."
+    },
+    {
+      "group": "ui_tap",
+      "history_url": "https://elevenlabs.io/app/sound-effects/history?id=LFfzkEAV0WTRFLWBT1TE",
+      "requested_duration_seconds": 0.5,
+      "downloaded_variants": [
+        1
+      ],
+      "prompt": "Tiny soft wooden UI tap, one very short muted rounded tick for a cozy pet game button. Gentle warm tactile click, instant attack and quick clean decay, subtle and satisfying. One click only, no beep, no melody, no voice, no music, no background noise, no reverb."
+    }
+  ]
+}
