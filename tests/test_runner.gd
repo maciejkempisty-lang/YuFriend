@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_habits()
 	_test_personality_edges()
 	_test_migration()
+	_test_session_interruptions()
 	_cleanup()
 	print("TEST RESULTS: %d passed, %d failed" % [passed, failed])
 	quit(1 if failed > 0 else 0)
@@ -306,3 +307,49 @@ func _cleanup() -> void:
 	if dir != null:
 		for file in dir.get_files(): DirAccess.remove_absolute(absolute.path_join(file))
 		DirAccess.remove_absolute(absolute)
+
+func _test_session_interruptions() -> void:
+	for action in ["feed", "play", "clean"]:
+		var game := GameSession.new()
+		game.pet = PetState.create(42)
+		game.move_to(Vector2(1300, 310), false)
+		check(not game.busy() and game.act(action), "autonomous walk yields immediately to " + action)
+		game.free()
+	var game := GameSession.new()
+	game.pet = PetState.create(42)
+	var targets: Array[Vector2] = []
+	game.destination_requested.connect(func(point: Vector2): targets.append(point))
+	game.move_to(Vector2(1200, 310))
+	game.move_to(Vector2(250, 310))
+	check(targets == [Vector2(1200, 310), Vector2(250, 310)], "a second floor destination replaces an unfinished walk")
+	game.act("feed")
+	var token := game._approach_token
+	game.move_to(Vector2(800, 310))
+	game.destination_reached()
+	check(targets.size() == 2 and game.activity == "approach" and game._approach_token == token, "care approach cannot be redirected or ended by an old floor arrival")
+	game.arrive_at(token)
+	var needs := game.pet.needs.duplicate()
+	var history := game.pet.history.duplicate(true)
+	check(not game.act("pet") and game.last_message.contains("zajada") and game.activity == "feed" and game.pet.needs == needs and game.pet.history == history, "touch during eating explains the wait without interrupting or granting care")
+	game.activity = "idle"
+	game.activity_left = 0
+	for level in [100.0, 99.9]:
+		game.pet.needs.fullness = level
+		game.pet.needs.play = level
+		game.pet.needs.hygiene = level
+		for action in ["feed", "play", "clean", "toys"]:
+			needs = game.pet.needs.duplicate()
+			game.last_message = ""
+			check(not game.act(action) and not game.last_message.is_empty() and game.activity == "idle" and game.pet.needs == needs and game.pet.history == history, "satisfied need gets feedback without effects: %s at %.1f" % [action, level])
+	game.pet.needs.fullness = 50.0
+	game.cooldowns.clear()
+	game._approach("hungry", false)
+	token = game._approach_token
+	game.move_to(Vector2(400, 310))
+	game.arrive_at(token)
+	check(game.activity == "walk" and game.pet.needs.fullness == 50, "redirecting an autonomous invitation invalidates its late arrival")
+	check(game.begin_training("sit", true), "training can take over a floor walk")
+	var target_count := targets.size()
+	game.move_to(Vector2(600, 310))
+	check(not game.act("feed") and targets.size() == target_count and game.training.phase == "attempt", "care and floor taps preserve an ongoing training attempt")
+	game.free()

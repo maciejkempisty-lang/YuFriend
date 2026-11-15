@@ -2,7 +2,7 @@
   "version": 1,
   "frame_size": [64, 64],
   "anchor": [32, 54],
-  "display_height": 256,
+  "display_height": 300,
   "animations": {
     "idle": {
       "sheet": "res://assets/sprites/puppy/pixel/idle.png",

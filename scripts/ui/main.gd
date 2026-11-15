@@ -476,7 +476,7 @@ func _fit_room() -> void:
 	if layout_wide:
 		panel_top = rail_top + 182
 		nav_y = panel_top + panel_height + 12 + warning_space
-	_place(room, Rect2(0, 0, scene_width, size.y if layout_wide else panel_top + 36))
+	_place(room, Rect2(0, 0, scene_width, size.y - 102 if layout_wide else panel_top - 72))
 	if layout_wide:
 		_place(header, Rect2(panel_x + 12, rail_top, panel_width - 24, 82))
 		_place(needs_row, Rect2(panel_x + 8, rail_top + 96, panel_width - 16, 62))

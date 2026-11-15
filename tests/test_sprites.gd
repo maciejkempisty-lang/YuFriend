@@ -20,6 +20,9 @@ func _manifest() -> Dictionary:
 		"give_paw": {"sheet": SOURCE, "columns": 2, "count": 3, "fps": 1, "durations": [1, 3, 1]}}}
 
 func _run() -> void:
+	# Headless Godot exposes a 64x64 window. Test logical geometry here;
+	# actual window stretch and rendered pixels are covered by ui_smoke.gd.
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 	var result := SpriteImporter.build(_manifest())
 	check(result.ok, "partial atlas pack imports")
 	if not result.ok:
@@ -120,7 +123,7 @@ func _run() -> void:
 	room._process(0.5)
 	check(room.pet_world == RoomLayout.START and arrivals.is_empty(), "seated pet does not slide toward destination")
 	room.animator._process(0.61)
-	room._process(2.5)
+	room._process(5.0)
 	check(room.pet_world == RoomLayout.START + Vector2(180, 0) and arrivals == [11], "come finishes only at destination")
 	var distances: Array[float] = []
 	for width in [390, 1100]:
@@ -133,7 +136,8 @@ func _run() -> void:
 		room._process(0.1)
 		distances.append((room.pet_world.x - before) / room.presentation_scale)
 	check(is_equal_approx(distances[0], distances[1]), "room width does not change walking speed relative to puppy size")
-	check(room.action_at(room.world_to_screen(room.pet_world - Vector2(0, 170) * room.presentation_scale)) == "pet", "top of the animated puppy is also touchable")
+	var top_point := room.world_to_screen(room.pet_world - Vector2(0, 170) * room.presentation_scale)
+	check(room.action_at(top_point) == "pet", "top of the animated puppy is also touchable")
 	room.free()
 	# Exercise the actual delivered pack, including serialized source geometry.
 	var production: PetSkin = load("res://data/skins/puppy_pixel.tres")

@@ -10,7 +10,7 @@ Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpi
 
 `Main._fit_room()` układa pokój, nagłówek, wskaźniki potrzeb, aktywny panel i nawigację. Cały ekran nie przewija się; przewijany jest album. Szeroki układ przenosi sterowanie obok pokoju. `GameIcons` współdzieli własne ikony, `IconActionButton` rysuje akcje i nawigację, a `NeedIndicator` pokazuje poziomy potrzeb. Font Nunito jest dołączony wraz z licencją w `assets/fonts/`.
 
-Pokój jest osobnym światem 2D w `SubViewport`, wyświetlanym przez `TextureRect` pod HUD-em. `Camera2D` przesuwa i przybliża tylko świat, a potrzeby, panele i komunikat pozostają w interfejsie. [RoomLayout](../scripts/model/room_layout.gd) określa wymiary 1440 × 480, płytki pas chodzenia oraz sześć stacji. Ich pozycje nie zmieniają się wraz z wielkością okna.
+Pokój jest osobnym światem 2D w `SubViewport`, wyświetlanym przez `Sprite2D` pod HUD-em. `Camera2D` przesuwa tylko świat; zbliżenie realizuje całkowite powiększenie tekstury pokoju, a potrzeby, panele i komunikat pozostają w interfejsie. [RoomLayout](../scripts/model/room_layout.gd) określa wymiary 1440 × 360, płytki pas chodzenia oraz sześć stacji. Ich pozycje nie zmieniają się wraz z wielkością okna.
 
 `RoomArtwork` składa panoramę z fragmentów istniejącego tła pixel art i osobnych przedmiotów. Tło ma zachowaną listę rysowania, przedmioty są oddzielnymi węzłami, a `actors.y_sort_enabled` ustawia kolejność psa i kosza/miski/piłki według głębokości. Legowisko i drzwi są nad tłem, lecz za postacią. [Opis zasobów](../assets/art/environments/README.md) wskazuje sposób składania grafiki.
 
@@ -86,7 +86,7 @@ Połączenia są tworzone w `Main._ready()`.
 | `destination_reached` | Kończy zwykłe chodzenie w sesji |
 | `performance_finished(trial_id)` | Zgłasza ukończenie prezentacji próby do sesji |
 
-Cele ruchu to `Vector2` we współrzędnych świata. `RoomLayout.clamp_walk()` ogranicza je do prostokąta od (95, 286) do (1345, 328). Podstawowy chód ma 85 jednostek świata na sekundę; pościg 1,6× więcej. Tempo klipu chodu rośnie proporcjonalnie do prędkości, zachowując wcześniejsze dopasowanie przesunięcia do kroku. Ruch zaczyna się dopiero po przejściu animatora do `walk`. Dla „przyjdź” widok wyznacza cel około 150 jednostek od obecnego położenia, zamiast dawnego ułamka szerokości ekranu.
+Cele ruchu to `Vector2` we współrzędnych świata. `RoomLayout.clamp_walk()` ogranicza je do prostokąta od (95, 286) do (1345, 328). Podstawowy chód ma 38,4 jednostki świata na sekundę (12,8 piksela logicznego). Klip gra w oryginalnym tempie 1×, także przy podążaniu za piłką. Szybszy pościg wymaga osobnego klipu biegu i pomiaru długości kroku. Ruch zaczyna się dopiero po przejściu animatora do `walk`. Dla „przyjdź” widok wyznacza cel około 150 jednostek od obecnego położenia, zamiast dawnego ułamka szerokości ekranu.
 
 ## Synchronizacja treningu
 
@@ -135,8 +135,8 @@ Przy rozbudowie reguły opieki i treningu powinny pozostać w systemach, a inter
 
 Sesja zleca dojście z tokenem. `RoomView` odczytuje punkt stacji z `RoomLayout`; dojście uruchamia efekt opieki w sesji. Pozycja piłki jest zmienna, pozostałe stacje mają stałe współrzędne. Przy podmianie grafiki można zachować ich kontrakt z logiką.
 
-Obszar wyświetlania zaczyna się 16 jednostek poniżej wiersza potrzeb (w szerokim układzie HUD jest obok). Bazowy zoom dopasowuje wysokość świata i pokazuje około 1/3 jego szerokości. Kamera łagodnie śledzi psa, a przy interakcji powiększa widok 1,38×. Głaskanie utrzymuje zbliżenie przez 3,5 sekundy; trening przez próbę, okno nagrody i reakcję na nią. Granice kamery zapobiegają odsłanianiu pustki poza pokojem.
+Obszar wyświetlania zaczyna się 16 jednostek poniżej wiersza potrzeb (w szerokim układzie HUD jest obok). Pokój kończy się nad dymkiem i panelem. Świat ma 480 × 120 pikseli logicznych (1 piksel = 3 jednostki świata). Kamera łagodnie śledzi psa, a jej początek widoku jest przyciągany do siatki. `Camera2D.zoom` pozostaje 1; zbliżenie 2× zwiększa całkowite powiększenie gotowej tekstury i zmniejsza widoczny fragment świata. Przy za małej wysokości pozostaje widok podstawowy, aby nie uciąć psa. Rozmiar i pozycja `Sprite2D` uwzględniają transformację końcową viewportu oraz `canvas_items`, dzięki czemu piksele nie stają się nierówne po zmianie rozmiaru okna. `Sprite2D` omija zaokrąglanie pozycji kontrolek przed skalowaniem UI. Transformacja korzysta z [metod Viewport](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-get-final-transform). Pozostałe miejsce wypełnia kolor ściany. Głaskanie utrzymuje zbliżenie przez 3,5 sekundy; trening przez próbę, okno nagrody i reakcję na nią. Granice kamery zapobiegają odsłanianiu pustki poza pokojem.
 
 Dotknięcie jest rozpoznawane po puszczeniu palca. Ruch o co najmniej 9 jednostek uruchamia przesuwanie widoku i wyklucza akcję dotknięcia. Ręcznie ustawiona kamera pozostaje na miejscu do użycia „Do pieska” lub rozpoczęcia nowej czynności. `world_to_screen()` i `screen_to_world()` obsługują wszystkie strefy kliknięcia po panoramowaniu i zoomie. Maski alfa psa powstają dopiero przy dotknięciu danej klatki; na pierwszym planie pierwszeństwo mają piłka i przedmioty zasłaniające psa.
 
-Zmiana rozmiaru okna przelicza wyłącznie widok i kamerę — nie pozycje psa i przedmiotów. `RoomArtwork.draw_count` sprawdza, że chód nie przebudowuje tła. To kontrola listy rysowania na CPU, a nie pomiar baterii lub wydajności GPU na telefonie.
+Zmiana rozmiaru okna przelicza wyłącznie widok i kamerę — nie pozycje psa i przedmiotów. `RoomArtwork.draw_count` sprawdza, że chód nie przebudowuje tła. Zmiana rozmiaru viewportu może jednorazowo odświeżyć listę. To kontrola listy rysowania na CPU, a nie pomiar baterii lub wydajności GPU na telefonie.

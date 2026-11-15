@@ -38,11 +38,11 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 
 | Skrypt | Zakres | Ostatni odnotowany wynik |
 |---|---|---:|
-| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 87 poprawnych sprawdzeń |
+| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 104 poprawne sprawdzenia |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, nieregularne regiony, podparcie, skalowanie, kompletny pakiet 22/142, zasób `.res`, przejścia i ukończenie prezentacji | 38 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 83 poprawne sprawdzenia |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 103 poprawne sprawdzenia |
 
-Wynik **208/208** pochodzi z weryfikacji prototypu 14 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału. Nowe regresje obejmują obcą kopię `.v1`, wybudzanie także offline, dojście przed naliczeniem opieki, anulowanie dojścia, reakcję na kolejne głaskanie, sygnalizowanie potrzeb oraz brak przebudowy statycznego tła podczas ruchu. Przebudowa świata dodaje próby przesuwania kamery, rozróżnienia gestu i tapnięcia, granic, zbliżeń, przechodzenia za przedmiotami, sześciu stacji i niezmienności współrzędnych przy zmianie rozmiaru okna.
+Wynik **245/245** pochodzi z weryfikacji prototypu 15 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału. Nowe regresje obejmują obcą kopię `.v1`, wybudzanie także offline, dojście przed naliczeniem opieki, anulowanie dojścia, reakcję na kolejne głaskanie, sygnalizowanie potrzeb oraz brak przebudowy statycznego tła podczas ruchu. Audyt zachowania obejmuje też przerwanie spaceru opieką, zmianę celu, reakcję na potrzeby 100/99,9 i dotyk podczas jedzenia, bez naruszenia treningu. Przebudowa świata dodaje próby przesuwania kamery, rozróżnienia gestu i tapnięcia, granic, zbliżeń, przechodzenia za przedmiotami, sześciu stacji i niezmienności współrzędnych przy zmianie rozmiaru okna.
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_runner.gd
@@ -50,7 +50,7 @@ Wynik **208/208** pochodzi z weryfikacji prototypu 14 listopada 2026 w Godot 4.7
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 ```
 
-Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640 i 1100 × 720. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku (także przeciągnięciem) oraz kontrolowanym upływem czasu. Zapisuje też lewy i prawy koniec pokoju, zbliżenie, obie głębokości przy koszu i pełną panoramę świata w `19-panorama.png`. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
+Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640, 1100 × 720 i 1080 × 2340. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku (także przeciągnięciem) oraz kontrolowanym upływem czasu. Zapisuje też lewy i prawy koniec pokoju, zbliżenie, obie głębokości przy koszu i pełną panoramę świata w `19-panorama.png`. Dodatkowo mierzy rzeczywiste bloki koloru na zrzutach, a nie tylko parametry kamery: powiększenie pozostaje całkowite po uwzględnieniu transformacji całego okna. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
 
 Testy używają własnych tymczasowych danych i sprzątają je po normalnym zakończeniu. Nie nadpisują `user://pet.json` ani ręcznego zapisu `--qa`. Katalog `test-results/` jest pomijany przez Git i skaner zasobów Godota.
 

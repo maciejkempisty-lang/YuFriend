@@ -6,13 +6,15 @@
 
 Podstawowa pętla opieki, nauki i zapisu działa w lokalnym prototypie. 14 listopada 2026 wybrano pixel art i podłączono dostarczone 22 klipy / 142 klatki pakietu A+B. Następny krok to ocena gry w kilku krótkich sesjach i pierwszy eksport na telefon.
 
-Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze z nowym psem. Pokój ma tło pixel art, stały świat 1440 × 480, sześć stacji, kamerę śledzącą i przesuwanie palcem. Głaskanie i trening przybliżają widok, a pies przechodzi przed i za przedmiotami. Nadal potrzebne są test na telefonie oraz ocena czytelności przy rzeczywistym skalowaniu. W dostawie pozostają drobne różnice proporcji między niezależnie narysowanymi klipami.
+Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze z nowym psem. Pokój ma tło pixel art, stały świat 1440 × 360, sześć stacji, kamerę śledzącą i przesuwanie palcem. Głaskanie i trening przybliżają widok, a pies przechodzi przed i za przedmiotami. Nadal potrzebne są test na telefonie oraz ocena czytelności przy rzeczywistym skalowaniu. W dostawie pozostają drobne różnice proporcji między niezależnie narysowanymi klipami.
 
 ## Kolejność prac
 
 | Priorytet | Zakres | Warunek ukończenia |
 |---|---|---|
-| P0 | Ocena dostarczonego pakietu A+B w grze | Komplet jest podłączony; dopracować proporcje na styku klipów i fazy chodu |
+| Gotowe | Poprawki zachowania z audytu | Spacer nie blokuje opieki, nowy cel zastępuje poprzedni, pełne potrzeby i dotyk podczas jedzenia mają reakcję |
+| Gotowe | Wspólna siatka renderowania | Pokój 480 × 120 px, całkowite powiększenia, podłoga nad panelem |
+| P0 | Próba finalnej grafiki i eksport na telefon | Na ustalonej siatce sprawdzić stanie, siad i chód, wspólną paletę oraz dotyk na urządzeniu |
 | Gotowe | Szeroki pokój i kamera | Jeden świat na około 2–3 ekrany, sześć stacji, ręczne przesuwanie, zbliżenia i płytka głębia |
 | Gotowe | Opieka w przestrzeni pokoju | Dojście do miski i legowiska, pościg za piłką, sygnalizowanie potrzeb i automatyczne budzenie |
 | P1 | Balans i czytelność | W kilku sesjach gracz rozumie potrzeby, odmowę próby, moment nagrody i różnicę po nauczeniu komendy |
@@ -72,7 +74,7 @@ Przed implementacją trzeba ustalić, co wyzwala zmianę etapu: wspólnie spędz
 
 | Decyzja | Kiedy będzie potrzebna |
 |---|---|
-| Docelowa siatka i paleta pixel art | Przed finalnym ręcznym dopracowaniem dostarczonych dużych arkuszy |
+| Zamknięta paleta pixel art | Siatka jest ustalona w [instrukcji integracji](integracja-spriteow.md); odcienie zatwierdzić na pierwszych ręcznych pozach |
 | Pierwsza platforma mobilna | Przed konfiguracją eksportu i testem na urządzeniu |
 | Tempo potrzeb, regeneracji i nauki | Po kilku sesjach gry z czytelnymi animacjami |
 | Zakres AI i limit kosztów | Przed przygotowaniem backendu i dostępu do dostawcy |

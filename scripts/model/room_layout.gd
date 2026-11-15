@@ -2,7 +2,8 @@ class_name RoomLayout
 extends RefCounted
 
 # World units never depend on viewport size. The side sprite uses only shallow depth.
-const SIZE := Vector2(1440, 480)
+const PIXEL_SIZE := 3.0 # One logical art pixel in legacy world coordinates.
+const SIZE := Vector2(1440, 360)
 const FLOOR_Y := 260.0
 const WALK_AREA := Rect2(95, 286, 1250, 42)
 const PUPPY_SCALE := 0.64

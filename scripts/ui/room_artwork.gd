@@ -2,7 +2,7 @@ class_name RoomArtwork
 extends Node2D
 
 const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-v1.png")
-const PIXEL := 3.0
+const PIXEL := RoomLayout.PIXEL_SIZE
 var kind := "room"
 var area := Vector2.ZERO
 var roll_phase := 0.0
@@ -27,7 +27,7 @@ func _draw() -> void:
 func _draw_room() -> void:
 	if area.x <= 0: return
 	draw_rect(Rect2(Vector2.ZERO, area), Color("eae9d2"))
-	# One world-space density. The existing room supplies the central wall and floor.
+	# Temporary high-resolution reference; the room viewport samples it on the art grid.
 	var texture_scale := 0.4
 	# Extend the edge colour of each scanline so the central wall has no hard seam.
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(0, 0, 400, 260), Rect2(0, 186, 1, 650))
@@ -46,15 +46,15 @@ func _draw_room() -> void:
 	_pixel_rect(Rect2(0, RoomLayout.FLOOR_Y, area.x, 12), Color("805733"))
 	_pixel_rect(Rect2(0, RoomLayout.FLOOR_Y + 3, area.x, 6), Color("c79457"))
 	# Light belongs to the single window, rather than repeating in every floor tile.
-	for row in range(0, 162, 3):
+	for row in range(0, 87, 3):
 		if row >= 63 and row < 78: continue
 		for pane in 2:
 			_pixel_rect(Rect2(708 + pane * 51 - row * 0.75, RoomLayout.FLOOR_Y + 12 + row, 39, 3), Color(1.0, 0.92, 0.65, 0.24))
-	var rug := Vector2(745, 357)
-	_pixel_ellipse(rug + Vector2(0, 6), Vector2(256, 63), Color("b79364"))
-	_pixel_ellipse(rug, Vector2(256, 63), Color("7c9064"))
-	_pixel_ellipse(rug - Vector2(0, 3), Vector2(247, 57), Color("a9b582"))
-	_pixel_ellipse(rug - Vector2(0, 3), Vector2(231, 46), Color("c9cc9c"))
+	var rug := Vector2(745, 324)
+	_pixel_ellipse(rug + Vector2(0, 6), Vector2(256, 30), Color("b79364"))
+	_pixel_ellipse(rug, Vector2(256, 30), Color("7c9064"))
+	_pixel_ellipse(rug - Vector2(0, 3), Vector2(247, 27), Color("a9b582"))
+	_pixel_ellipse(rug - Vector2(0, 3), Vector2(231, 21), Color("c9cc9c"))
 	# A quiet corner above the bed, using the same three-unit prop grid.
 	_pixel_rect(Rect2(138, 93, 78, 84), Color("805733"))
 	_pixel_rect(Rect2(144, 99, 66, 72), Color("f4d8a7"))

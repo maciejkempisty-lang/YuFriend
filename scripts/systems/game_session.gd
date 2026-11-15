@@ -33,6 +33,8 @@ var _pending_action: String = ""
 var _pending_by_player: bool = false
 var _sleep_elapsed: float = 0.0
 
+const SATISFIED_NEED := 95.0
+
 func start(save_path: String = "user://pet.json") -> void:
 	storage = SaveSystem.new(save_path)
 	var loaded := storage.load_pet()
@@ -178,7 +180,9 @@ func _inviting() -> bool:
 	return activity in ["habit", "need"] or (activity == "approach" and not _pending_by_player)
 
 func busy() -> bool:
-	return training.phase != "idle" or (activity_left > 0 and activity not in ["habit", "need", "pet"]) or activity in ["walk", "approach"]
+	# A floor walk or an autonomous invitation can always yield to the player.
+	# A care approach, care animation and a training trial must finish or be cancelled.
+	return training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not pet.resting and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
@@ -270,7 +274,16 @@ func _wake() -> void:
 	changed.emit()
 
 func _pet() -> bool:
-	if not can_pet(): return false
+	if not can_pet():
+		if activity == "feed":
+			say("Teraz zajada. Za chwilę znów będzie czas na głaskanie.")
+		elif training.phase != "idle":
+			say("Skupia się na komendzie. Pogłaszcz go po ćwiczeniu.")
+		elif pet.resting:
+			say("Śpi spokojnie. Dotknij legowiska, jeśli chcesz go obudzić.")
+		else:
+			say("Kończy swoją czynność. Zaraz będzie czas na głaskanie.")
+		return false
 	_cancel_motion()
 	pose = "stand"
 	activity = "pet"
@@ -295,14 +308,18 @@ func act(action: String, by_player: bool = true) -> bool:
 	if busy() and not (training.phase == "idle" and _inviting()):
 		say("Jeszcze chwilka — kończymy tę czynność.")
 		return false
-	if float(cooldowns.get(action, 0)) > 0:
-		say("Daj mu chwilę nacieszyć się tą chwilą.")
-		return false
 	if action == "rest" and pet.resting:
 		_wake()
 		return true
 	if pet.resting:
 		say("Najpierw delikatnie obudź pieska.")
+		return false
+	var satisfied := _satisfied_message(action)
+	if not satisfied.is_empty():
+		say(satisfied)
+		return false
+	if float(cooldowns.get(action, 0)) > 0:
+		say("Daj mu chwilę nacieszyć się tą chwilą.")
 		return false
 	if action in ["feed", "rest", "play", "toys", "window", "door"]:
 		_approach(action, by_player)
@@ -322,8 +339,18 @@ func act(action: String, by_player: bool = true) -> bool:
 	changed.emit()
 	return true
 
+func _satisfied_message(action: String) -> String:
+	var need: String = {"feed": "fullness", "play": "play", "toys": "play", "clean": "hygiene"}.get(action, "")
+	if need.is_empty() or float(pet.needs[need]) < SATISFIED_NEED: return ""
+	return {
+		"fullness": "Brzuszek jest pełny. Miska poczeka na później.",
+		"play": "Na razie wystarczy zabawy. Ma ochotę na spokojną chwilę razem.",
+		"hygiene": "Sierść jest już czysta. Może zamiast szczotki trochę głaskania?"
+	}[need]
+
 func move_to(world_position: Vector2, announce: bool = true) -> void:
 	if not writable or busy() or pet.resting or suspended: return
+	_cancel_motion()
 	pose = "stand"
 	activity = "walk"
 	activity_left = 0
@@ -331,6 +358,7 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 	if announce: attention_requested.emit(false)
 	clip_requested.emit("walk")
 	if announce: say("Już idę! Małe łapki odkrywają pokój.")
+	changed.emit()
 
 func destination_reached() -> void:
 	if activity != "walk": return

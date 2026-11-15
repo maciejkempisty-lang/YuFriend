@@ -36,6 +36,8 @@ func _run() -> void:
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
 	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 22, "new puppy uses the complete pixel animation pack")
 	await capture("01-care.png")
+	check_pixel_grid("390 x 844")
+	check(app.room.render_rect.end.y <= app.bubble.position.y - 7, "the whole room fits above the message and action panel")
 	check(curtain_clears_needs(), "curtain rod stays below need labels with a safe margin")
 	var room_draws: int = app.room.backdrop.draw_count
 	step_game(0.5)
@@ -50,6 +52,8 @@ func _run() -> void:
 	check(game.act("pet") and not app.care_buttons.pet.disabled, "immediate repeated petting receives a reaction")
 	check(game.pet.bond == bond and game.pet.history[0].events.get("pet", 0) == pet_events, "repeated petting does not farm bond or history during the gain cooldown")
 	step_game(2.2)
+	game.move_to(Vector2(1300, 310), false)
+	check(not app.care_buttons.feed.disabled and not app.care_buttons.play.disabled and not app.care_buttons.clean.disabled, "care controls stay enabled during autonomous walking")
 	var hunger: float = game.pet.needs.fullness
 	app.care_buttons.feed.pressed.emit()
 	check(game.activity == "approach" and game.pet.needs.fullness == hunger, "feeding first sends the puppy to the bowl without granting food")
@@ -61,6 +65,8 @@ func _run() -> void:
 	check(game.pet.milestones.has("feed"), "feeding adds real event to journal")
 	step_game(1.0)
 	await capture("12-feeding.png")
+	await click_at(app.room.world_to_screen(app.room.pet_world - Vector2(0, 85) * app.room.presentation_scale))
+	check(game.activity == "feed" and game.last_message.contains("zajada"), "touching the eating puppy gives contextual feedback through the room")
 	step_game(2.0)
 	app.tab_buttons.training.pressed.emit()
 	app.trick_buttons.sit.pressed.emit()
@@ -104,6 +110,7 @@ func _run() -> void:
 	check(game.pet.resting and game.pet.needs.energy > energy, "rest restores energy")
 	await capture("13-sleeping.png")
 	game.act("rest")
+	game.pet.needs.fullness = 60.0
 	app.room.look_at_world(RoomLayout.STATIONS.food.position)
 	await click_at(app.room.bowl_rect().get_center())
 	check(game.activity == "approach", "clicking the bowl starts a new feeding approach")
@@ -162,17 +169,24 @@ func _run() -> void:
 	await capture("09-narrow-training.png")
 	check(visible_above_navigation(app.guided_button), "narrow training actions fit above navigation")
 	check(curtain_clears_needs(), "narrow training layout keeps the curtain below the HUD")
+	root.size = Vector2i(1080, 2340)
+	root.content_scale_size = Vector2i(390, 844)
+	app._select_tab("care")
+	await capture("20-phone-resolution.png")
+	check_pixel_grid("1080 x 2340 with fractional UI stretch")
 	# Exercise the actual stretch configuration, without changing the base viewport.
 	root.size = Vector2i(1100, 720)
 	root.content_scale_size = Vector2i(390, 844)
 	app._select_tab("care")
 	await capture("10-landscape.png")
+	check_pixel_grid("landscape")
 	check(app.layout_wide and app.room.size.x <= app.sheet.position.x, "wide window places controls beside the room")
 	check(visible_above_navigation(app.care_buttons.train), "wide action panel stays usable")
 	root.size = Vector2i(320, 640)
 	root.content_scale_size = Vector2i(390, 844)
 	app._select_tab("training")
 	await capture("11-short-training.png")
+	check_pixel_grid("short phone")
 	overflowing.clear()
 	_find_overflow(app, overflowing)
 	check(overflowing.is_empty() and visible_above_navigation(app.guided_button), "small training viewport keeps actions within bounds: " + str(overflowing))
@@ -238,6 +252,9 @@ func _test_living_room() -> void:
 	check(not game.pet.resting and game.activity == "idle", "restored energy automatically wakes the puppy")
 	step_game(3)
 	check(app.room.animator.pose == "stand", "waking completes the transition back to standing")
+	# Flush the pending redraw after viewport resize/zoom before measuring walking.
+	await process_frame
+	await RenderingServer.frame_post_draw
 	var backdrop_draws: int = app.room.backdrop.draw_count
 	game.move_to(Vector2(700, 320))
 	for i in 3:
@@ -245,24 +262,24 @@ func _test_living_room() -> void:
 		await process_frame
 		await RenderingServer.frame_post_draw
 	check(app.room.backdrop.draw_count == backdrop_draws, "walking does not redraw the static room")
-	step_game(8)
+	step_game(15)
 
 func _test_world_room() -> void:
 	var room: RoomView = app.room
 	var game: GameSession = app.session
 	room.focus_pet()
 	step_game(5)
-	var screens := RoomLayout.SIZE.x * room.base_zoom / room.render_rect.size.x
+	var screens := RoomLayout.SIZE.x / (room.viewport.size.x * RoomLayout.PIXEL_SIZE)
 	check(screens >= 2 and screens <= 3.01 and RoomLayout.STATIONS.size() == 6, "one world spans two to three screens and holds six stations")
 	var sample := Vector2(1090, 310)
 	check(room.screen_to_world(room.world_to_screen(sample)).distance_to(sample) < 0.01, "camera screen/world conversion round-trips away from the puppy")
 	var bond: float = game.pet.bond
 	var pet_before: Vector2 = room.pet_world
-	var camera_before: Vector2 = room.camera.position
+	var camera_before: Vector2 = room.camera_center()
 	var header_before: Vector2 = app.header.position
 	var start := room.world_to_screen(room.pet_world - Vector2(0, 80) * room.presentation_scale)
 	await drag_touch(start, start + Vector2(150, 0))
-	check(room.camera_manual and room.camera.position.x < camera_before.x - 100, "horizontal touch drag pans the camera across the room")
+	check(room.camera_manual and room.camera_center().x < camera_before.x - 100, "horizontal touch drag pans the camera across the room")
 	check(game.pet.bond == bond and room.pet_world == pet_before and game.activity == "idle", "a drag beginning on the puppy does not pet it or issue a walk")
 	check(app.header.position == header_before, "panning leaves the HUD in place")
 	var manual_position: Vector2 = room.camera.position
@@ -270,19 +287,29 @@ func _test_world_room() -> void:
 	check(room.camera.position == manual_position and room.return_button.visible, "manual browsing stays put until follow is requested")
 	await click_at(room.return_button.get_global_rect().get_center())
 	step_game(1)
-	check(not room.camera_manual and absf(room.camera.position.x - pet_before.x) < 3, "return button smoothly restores puppy following")
+	check(not room.camera_manual and absf(room.camera_center().x - pet_before.x) < 3, "return button smoothly restores puppy following")
+	room.ball_world = room.pet_world + Vector2(15, 0)
+	room.ball_target = room.ball_world
 	game.act("pet")
 	step_game(1)
-	check(room.camera.zoom.x > room.base_zoom * 1.3, "petting brings the camera closer")
+	check(absf(room.ball_world.x - room.pet_world.x) >= 120, "interaction rolls the ball clear of the puppy's paws")
+	check(room.zoom_level == 2, "petting brings the camera closer")
 	await capture("14-petting-closeup.png")
+	check_pixel_grid("petting closeup")
 	step_game(4)
-	check(absf(room.camera.zoom.x - room.base_zoom) < 0.02, "camera returns to room scale after the interaction")
+	check(room.zoom_level == 1, "camera returns to room scale after the interaction")
 	room.look_at_world(Vector2(-10000, 240))
 	check(room.screen_to_world(room.render_rect.position).x >= -0.01, "manual pan cannot reveal space beyond the left wall")
 	await capture("15-left-room.png")
+	await touch_at(room.world_to_screen(Vector2(320, 310)))
+	await touch_at(room.world_to_screen(Vector2(370, 310)))
+	check(game.activity == "walk" and room.target_world.distance_to(Vector2(370, 310)) < 0.1, "second floor touch redirects an ongoing walk")
+	game.act("pet")
+	step_game(4)
 	room.look_at_world(Vector2(10000, 240))
 	check(room.screen_to_world(room.render_rect.end).x <= RoomLayout.SIZE.x + 0.01, "manual pan cannot reveal space beyond the right wall")
 	await capture("16-right-room.png")
+	game.pet.needs.play = 60.0
 	for id in ["window", "toys", "door"]:
 		room.look_at_world(RoomLayout.STATIONS[id].position)
 		await click_at(room.world_to_screen(room.station_bounds(id).get_center()))
@@ -297,7 +324,7 @@ func _test_world_room() -> void:
 	check(game.pet.needs.play <= before_auto, "autonomous station visits do not farm care rewards")
 	step_game(3.3)
 	game.move_to(Vector2(1090, 290))
-	step_game(3)
+	step_game(4)
 	room.look_at_world(Vector2(1090, 240))
 	check(room.actors.y_sort_enabled and room.puppy.position.y < room.station_nodes.toys.position.y, "shallow movement places the puppy behind the toy basket")
 	await capture("17-behind-toys.png")
@@ -312,7 +339,7 @@ func _test_world_room() -> void:
 	while game.training.phase == "attempt" and remaining > 0:
 		step_game(0.02)
 		remaining -= 0.02
-	check(game.training.phase == "reward" and not room.moving and room.camera.zoom.x > room.base_zoom * 1.3, "come reward waits for world-space arrival and keeps the closeup")
+	check(game.training.phase == "reward" and not room.moving and room.zoom_level == 2, "come reward waits for world-space arrival and keeps the closeup")
 	game.give_reward("praise")
 	step_game(6)
 
@@ -332,7 +359,7 @@ func drag_touch(start: Vector2, end: Vector2) -> void:
 	await process_frame
 
 func wait_for_arrival() -> void:
-	var remaining := 20.0
+	var remaining := 40.0
 	while app.session.activity == "approach" and remaining > 0:
 		step_game(0.02)
 		remaining -= 0.02
@@ -384,8 +411,8 @@ func capture_panorama() -> void:
 	var previous_size: Vector2i = room.viewport.size
 	var previous_position: Vector2 = room.camera.position
 	var previous_zoom: Vector2 = room.camera.zoom
-	room.viewport.size = Vector2i(RoomLayout.SIZE)
-	room.camera.position = RoomLayout.SIZE * 0.5
+	room.viewport.size = Vector2i(RoomLayout.SIZE / RoomLayout.PIXEL_SIZE)
+	room.camera.position = RoomLayout.SIZE / RoomLayout.PIXEL_SIZE * 0.5
 	room.camera.zoom = Vector2.ONE
 	room.camera.force_update_scroll()
 	await process_frame
@@ -420,3 +447,33 @@ func _cleanup() -> void:
 	if dir != null:
 		for file in dir.get_files(): DirAccess.remove_absolute(absolute.path_join(file))
 		DirAccess.remove_absolute(absolute)
+
+func check_pixel_grid(label: String) -> void:
+	var room: RoomView = app.room
+	var transform := root.get_final_transform() * room.get_global_transform_with_canvas()
+	var size_pixels := room.render_rect.size * transform.get_scale()
+	var origin_pixels := transform * room.render_rect.position
+	var scale_pixels := size_pixels / Vector2(room.viewport.size)
+	check(scale_pixels.is_equal_approx(Vector2.ONE * room.pixel_scale) and origin_pixels.distance_to(origin_pixels.round()) < 0.01 and room.camera.zoom == Vector2.ONE, "room pixels use uniform integer magnification: " + label)
+	var offset := room.camera.position - Vector2(room.viewport.size) * 0.5
+	check(offset.distance_to(offset.round()) < 0.01, "camera origin stays on the art grid: " + label)
+	# Check actual rendered blocks, not only the scale calculation (UI stays high-res).
+	var shot := root.get_texture().get_image()
+	var start := Vector2i(origin_pixels.round())
+	var uniform := true
+	var first_mismatch := Vector2i(-1, -1)
+	for y in range(room.viewport.size.y / 2, room.viewport.size.y - 2):
+		for x in range(2, room.viewport.size.x - 2):
+			var point := start + Vector2i(x, y) * room.pixel_scale
+			if point.x < 0 or point.y < 0 or point.x + room.pixel_scale > shot.get_width() or point.y + room.pixel_scale > shot.get_height():
+				uniform = false
+				continue
+			var color := shot.get_pixelv(point)
+			for dy in room.pixel_scale:
+				for dx in room.pixel_scale:
+					if shot.get_pixelv(point + Vector2i(dx, dy)) != color:
+						uniform = false
+						if first_mismatch.x < 0: first_mismatch = point + Vector2i(dx, dy)
+	if not uniform:
+		print("PIXEL DEBUG ", label, " start=", start, " scale=", room.pixel_scale, " size=", shot.get_size(), " first=", first_mismatch, " room=", transform, " root=", root.get_screen_transform(), " final=", root.get_final_transform(), " mode=", root.content_scale_mode, " filter=", room.display.texture_filter, " parentfilter=", room.texture_filter, " stretch=", root.get_stretch_transform())
+	check(uniform, "rendered room contains equal-sized solid pixel blocks: " + label)

@@ -147,8 +147,8 @@ Pakiet C w [briefie spriteów](lista-spriteow-szczeniaka.md) obejmuje m.in. bieg
 ## Specyfikacja materiałów dla animatora
 
 - Wzorzec postaci: pełna sylwetka z przezroczystością, proporcje i kolory zgodne z wybraną wersją szczeniaka; wspólne cechy psa zachowane między etapami dorastania.
-- Dla gładkiej ilustracji 2D: PNG RGBA, jednakowe płótno 512 × 512 px. Materiał źródłowy można przygotować w większej rozdzielczości. Dla pixel art najpierw ustalamy rzeczywistą małą siatkę, np. 64 × 64 px, oraz paletę; wygenerowane duże przykłady są koncepcjami stylu, a nie gotowymi arkuszami na tej siatce.
-- Dla płótna 512 × 512 px: wspólna linia podłoża na wysokości około 430 px i punkt odniesienia postaci w okolicy `(256, 430)`. Dla pixel art ustalamy odpowiednie całkowite współrzędne po wyborze siatki. Są to ustalenia dla przyszłych klatek; wzorzec koncepcyjny nie musi być już tak zarejestrowany.
+- Dla gładkiej ilustracji 2D: PNG RGBA, jednakowe płótno 512 × 512 px. Materiał źródłowy można przygotować w większej rozdzielczości. Aktualne ustalenie dla pixel art to 64 × 64 px, sylwetka około 40 × 40 px, ze wspólną paletą dobieraną na pierwszych pozach; wygenerowane duże przykłady są koncepcjami stylu, a nie gotowymi arkuszami na tej siatce.
+- Dla płótna 512 × 512 px: wspólna linia podłoża na wysokości około 430 px i punkt odniesienia postaci w okolicy `(256, 430)`. Dla pixel art punkt podparcia to (32, 54), zgodnie z [instrukcją integracji](integracja-spriteow.md). Są to ustalenia dla przyszłych klatek; wzorzec koncepcyjny nie musi być już tak zarejestrowany.
 - Bez automatycznego przycinania przezroczystych marginesów osobno dla każdej klatki. Stała skala, kamera i położenie względem punktu odniesienia zapobiegają skakaniu obrazu.
 - Jeden kierunek źródłowy: w prawo. Dla ruchu w lewo odbijamy postać i powiązane punkty przedmiotów. Unikamy asymetrycznych napisów i akcesoriów.
 - Oddzielny arkusz dla każdego klipu, maksymalnie 4 kolumny, albo numerowane pliki, np. `walk_00.png`. Puste końcowe pola arkusza nie są klatkami animacji.

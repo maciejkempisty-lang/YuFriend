@@ -48,6 +48,12 @@ func set_skin(value: PetSkin) -> void:
 			skin.frame_height = pack.frame_size.y
 			skin.display_height = pack.display_height
 			skin.clip_layouts = pack.clip_layouts
+	# Partial packs can fall back to their own poses, without loading old references.
+	if skin.frames != null:
+		if skin.standing == null and skin.frames.has_animation("idle") and skin.frames.get_frame_count("idle") > 0:
+			skin.standing = skin.frames.get_frame_texture("idle", 0)
+		if skin.sitting == null and skin.frames.has_animation("sit_idle") and skin.frames.get_frame_count("sit_idle") > 0:
+			skin.sitting = skin.frames.get_frame_texture("sit_idle", 0)
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if skin.pixel_art else CanvasItem.TEXTURE_FILTER_LINEAR
 	if skin.alpha_cutoff > 0:
 		var material := ShaderMaterial.new()

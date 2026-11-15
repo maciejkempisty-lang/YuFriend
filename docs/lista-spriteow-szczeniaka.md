@@ -109,7 +109,7 @@ Brud na łapkach lub mokrą sierść warto najpierw rozważyć jako dodatkową w
 
 - Każdy klip dostarczamy jako numerowane PNG RGBA albo osobny arkusz z jawną liczbą klatek. Przykładowo `puppy_side_tail_wag_stand_00.png`.
 - Jedna animacja = ta sama kamera, skala, proporcje, paleta, linia podłoża i punkt odniesienia we wszystkich klatkach. Nie przycinamy osobno przezroczystych marginesów.
-- Dla gładkiej ilustracji proponowane płótno to 512 × 512 px. Dla pixel art ustalamy rzeczywistą małą siatkę, np. 64 × 64 px, oraz ograniczoną paletę. Dotychczasowe duże przykłady pixel art są wzorcami stylu.
+- Dla gładkiej ilustracji proponowane płótno to 512 × 512 px. Aktualna siatka pixel art: płótno 64 × 64 px, podparcie (32, 54), sylwetka około 40 × 40 px z zapasem na ruch. Szczegóły i paletę opisuje [integracja](integracja-spriteow.md). Dotychczasowe duże przykłady pixel art są wzorcami stylu.
 - Pies musi mieścić się na płótnie także przy wyciągniętej łapie, otwartym pysku i skrajnym wychyleniu ogona. Pozostawiamy marginesy.
 - Pętle łączą się płynnie; identycznej pierwszej klatki nie trzeba kopiować na końcu. Przejścia jednorazowe kończą się w zdefiniowanej pozycji bazowej.
 - Chód i bieg powstają w miejscu. Przesunięcie psa po scenie wykonuje gra, z prędkością dopasowaną do cyklu łap.

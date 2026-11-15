@@ -40,7 +40,7 @@ Ciekawość wpływa na spontaniczne spacery, cierpliwość na czas reakcji i nag
 
 Gra korzysta z dostarczonego pakietu **22 klipów / 142 klatek** w stylu pixel art. Pies mruga, chodzi, siada, podaje łapę, macha ogonem, reaguje na głaskanie, je i śpi. Arkusze są podłączone z zachowaniem ich kolejności i czasów; kalibracja wyrównuje rozmiar sylwetki i linię podparcia. Wybrane poprawki `sleep` i `eat_loop` są uwzględnione.
 
-Pixel art obowiązuje również dla starszych zapisów z `skin: simple`, bez zmiany tożsamości ani postępów. Usunięto przełącznik stylu, metodę `change_skin` i nieużywaną skórkę ilustracyjną. Pole `skin` pozostaje wyłącznie dla zgodności istniejących zapisów. Duże arkusze nadal mają drobne różnice proporcji i nie są równą siatką 64 × 64. [Opis dostawy i uwagi jakościowe](assets/sprites/puppy/pixel/README.md) wskazuje pozostałe poprawki.
+Pixel art obowiązuje również dla starszych zapisów z `skin: simple`, bez zmiany tożsamości ani postępów. Usunięto przełącznik stylu, metodę `change_skin` i nieużywaną skórkę ilustracyjną. Pole `skin` pozostaje wyłącznie dla zgodności istniejących zapisów; produkcyjna skórka nie odwołuje się już do dawnych obrazów zastępczych. Duże arkusze nadal mają drobne różnice proporcji i nie są równą siatką 64 × 64. [Opis dostawy i uwagi jakościowe](assets/sprites/puppy/pixel/README.md) wskazuje pozostałe poprawki.
 
 Gotowa obsługa `AnimatedSprite2D` obejmuje 22 nazwy klipów, przejścia między pozycjami, odbicie lewo/prawo i indywidualny czas klatek. Nagroda czeka na zakończenie sztuczki lub dotarcie do celu. Można dostarczać animacje partiami.
 
@@ -51,7 +51,7 @@ Gotowa obsługa `AnimatedSprite2D` obejmuje 22 nazwy klipów, przejścia między
 
 ## Szeroki pokój
 
-Jeden świat 1440 × 480 zajmuje około 2–3 ekranów w podstawowym widoku. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Przy głaskaniu i treningu zbliża się o 38%.
+Jeden świat 1440 × 360 zajmuje około 2–3 ekranów w podstawowym widoku. Ma sześć stacji: legowisko, miskę, piłkę, kosz z zabawkami, okno i drzwi. Pies porusza się w płytkim pasie podłogi; przedmioty mogą zasłaniać go od przodu, a interfejs pozostaje nieruchomy. Po ręcznym przesunięciu kamera czeka na „Do pieska” lub nową czynność. Pokój jest rasteryzowany na wspólnej siatce 480 × 120 pikseli logicznych. Zbliżenie jest skokowe 2×, jeśli wysokość ekranu mieści całego psa; wynik jest powiększany wyłącznie całkowitą liczbę razy, niezależnie od skalowania UI.
 
 ![Cały pokój — podgląd świata bez interfejsu](docs/images/pokoj-panorama.png)
 
@@ -80,7 +80,7 @@ Nie uruchamiaj równolegle dwóch zwykłych instancji na tym samym zapisie. Do p
 
 ## Sprawdzenie projektu
 
-Weryfikacja 14 listopada 2026: **208 sprawdzeń zakończonych powodzeniem** — 87 logiki, osobowości i zapisu, 38 importu i animacji oraz 83 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi, układy ekranu, nawyki po nieobecności i ochronę oryginału podczas migracji. Sprawdzono również dojście do przedmiotów, anulowanie opieki, wybudzanie, konflikt kopii `.v1`, powtarzane głaskanie i brak ponownego budowania statycznego tła podczas ruchu. Regresje panoramy sprawdzają przesuwanie bez przypadkowych akcji, granice kamery, zbliżenia, współrzędne po zmianie okna oraz dojście do nowych stacji. Zrzuty obejrzano także wizualnie.
+Weryfikacja 15 listopada 2026: **245 sprawdzeń zakończonych powodzeniem** — 104 logiki, osobowości i zapisu, 38 importu i animacji oraz 103 interfejsu. Obejmuje wejście myszy i symulowanego dotyku w pokoju, dostępność nagród, dialogi, układy ekranu, nawyki po nieobecności i ochronę oryginału podczas migracji. Sprawdzono również dojście do przedmiotów, anulowanie opieki, wybudzanie, konflikt kopii `.v1`, powtarzane głaskanie i brak ponownego budowania statycznego tła podczas ruchu. Regresje panoramy sprawdzają przesuwanie bez przypadkowych akcji, granice kamery, zbliżenia, współrzędne po zmianie okna oraz dojście do nowych stacji. Audyt zachowania dodaje przerwanie spaceru opieką, zmianę celu, reakcję na pełne potrzeby i dotyk podczas jedzenia. Kontrola gotowych zrzutów potwierdza równe bloki pikseli również przy ułamkowym skalowaniu całego okna. Zrzuty obejrzano także wizualnie.
 
 Przy pierwszym otwarciu lub po dodaniu PNG poczekaj, aż Godot zaimportuje zasoby. Import można wykonać także bez okna:
 
@@ -96,7 +96,7 @@ Testy uruchamiane z katalogu projektu:
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 ```
 
-Ostatni test otwiera okno i zapisuje zrzuty do `test-results/`. Obejmuje układy 360 × 800, 390 × 844 i 540 × 960 oraz rzeczywiste skalowanie okien 320 × 640 i 1100 × 720. To test pulpitu; obsługa dotyku i cykl życia na fizycznym telefonie wymagają osobnego sprawdzenia po eksporcie.
+Ostatni test otwiera okno i zapisuje zrzuty do `test-results/`. Obejmuje układy 360 × 800, 390 × 844 i 540 × 960 oraz rzeczywiste skalowanie okien 320 × 640, 1100 × 720 i 1080 × 2340. To test pulpitu; obsługa dotyku i cykl życia na fizycznym telefonie wymagają osobnego sprawdzenia po eksporcie.
 
 ## Kolejne etapy
 

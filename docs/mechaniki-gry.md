@@ -2,7 +2,7 @@
 
 [Mapa dokumentacji](README.md)
 
-Wartości poniżej opisują prototyp z 14 listopada 2026. Są parametrami do dalszego sprawdzenia w rozgrywce. Ich źródłami są [NeedsSystem](../scripts/systems/needs_system.gd), [TrainingSystem](../scripts/systems/training_system.gd), [GameSession](../scripts/systems/game_session.gd) i [PetState](../scripts/model/pet_state.gd).
+Wartości poniżej opisują prototyp z 15 listopada 2026. Są parametrami do dalszego sprawdzenia w rozgrywce. Ich źródłami są [NeedsSystem](../scripts/systems/needs_system.gd), [TrainingSystem](../scripts/systems/training_system.gd), [GameSession](../scripts/systems/game_session.gd) i [PetState](../scripts/model/pet_state.gd).
 
 ## Potrzeby
 
@@ -36,11 +36,13 @@ Ikony w zakładce Dom i dotknięcia psa, miski, piłki lub legowiska wywołują 
 
 W odpoczynku przyrost energii wynosi 0,8 punktu na sekundę aktywnej gry lub 18 punktów na godzinę nieobecności. W tym samym czasie działa zwykły pasywny ubytek energii. Pies sam budzi się przy energii co najmniej 85 po minimum 6 sekundach aktywnej drzemki; można go też obudzić wcześniej. Przeliczenie nieobecności kończy sen po dojściu do 85 i liczy resztę czasu już na jawie. Przykład: z energią 20 pies po 5 godzinach osiąga 85, a po kolejnych 3 godzinach czuwania ma 70. Nieobecność nadal jest ograniczona do 8 godzin.
 
-Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zaproszenia wynikające z potrzeb lub nawyków można od razu przerwać odpowiedzią gracza; głaskanie może przerwać zwykły spacer. Śpiącego psa trzeba obudzić przed opieką i treningiem. Przy problemie z odczytem zapisu zmiany stanu są zablokowane.
+Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zaproszenia wynikające z potrzeb lub nawyków oraz zwykły spacer można od razu przerwać opieką, treningiem lub nowym celem na podłodze. Dotyczy to spaceru samodzielnego i zleconego przez gracza. Dojście do wybranej stacji oraz rozpoczęty trening pozostają chronione. Śpiącego psa trzeba obudzić przed opieką i treningiem. Przy problemie z odczytem zapisu zmiany stanu są zablokowane.
+
+Przy sytości, zabawie lub czystości co najmniej 95 odpowiadająca opieka daje komunikat o zaspokojeniu potrzeby, bez dojścia, efektów ani wpisu do historii. Dotyczy to także zabawy przy koszu. Głaskanie nie ma takiego progu. Dotknięcie psa podczas jedzenia wyjaśnia, że właśnie je, i nie przerywa posiłku. Przy zbliżeniu piłka odsuwa się poza obszar łap.
 
 ## Stacje i oglądanie pokoju
 
-Pokój ma rozmiar 1440 × 480 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Do pieska” wznawia śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
+Pokój ma rozmiar 1440 × 360 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Do pieska” wznawia śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
 
 | Stacja | Reakcja | Efekt działania gracza |
 |---|---|---|
