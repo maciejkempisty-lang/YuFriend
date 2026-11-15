@@ -34,6 +34,8 @@ Uruchomienie z oddzielnym zapisem do ręcznego sprawdzania:
 
 ## Testy automatyczne
 
+Poprawka ustawień iPhone’a (build 11), 15 listopada 2026: **52/52** sprawdzenia `ui_reminders.gd`. Test obejmuje sześć układów, w tym skalowanie 2×/3×, symulowane marginesy Dynamic Island i dolnego gestu, przewijanie oraz zamykanie obu przycisków zdarzeniami dotyku. **302/302** dotychczasowych sprawdzeń UI (`ui_smoke`, `ui_play`, `ui_companion`) również przechodzą. Obejrzano zrzuty pionowe i poziome. Ta regresja zastępuje wcześniejsze 13 sprawdzeń panelu, które nie obejmowały marginesów i skalowania iPhone’a.
+
 Lokalne przypomnienia iOS, 15 listopada 2026: `sh tools/test_ios_reminders.sh` — **365** sprawdzeń planisty, **15** kontrolera z atrapą centrum powiadomień i kontrola typów iOS. `tests/test_reminders.gd` — **10**, `tests/ui_reminders.gd` — **13**. Razem nowy zakres: **403**. Dotychczasowe **649** sprawdzeń gry i **1525** widgetu przechodzą; zestawy UI powtórzono po zmianie ustawień. [Reguły, ograniczenia i próba na telefonie](powiadomienia-ios.md).
 
 Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego frameworka. Sukces daje kod zakończenia 0, a niespełnione sprawdzenie — 1. Gdy pojawia się błąd parsowania lub zasobu, najpierw sprawdź import projektu.

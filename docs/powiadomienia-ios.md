@@ -2,6 +2,8 @@
 
 W ustawieniach gry włącz **Przypomnienia od pieska** i zaakceptuj zgodę iOS. Domyślnie są wyłączone. Po odmowie aplikacja wskazuje Ustawienia iPhone’a; nie ponawia automatycznie pytania. Wyłączenie przełącznika usuwa zaplanowane przypomnienia. Na pozostałych platformach opcja jest nieaktywna.
 
+Od buildu 11 ustawienia są panelem wewnątrz gry, mieszczącym się w bezpiecznym obszarze ekranu. „Zamknij” u góry oraz „Wróć do pokoju” u dołu pozostają dostępne podczas przewijania opcji. Poprawka odpowiada na zgłoszenie zasłaniania ustawień przez Dynamic Island i braku dostępnego wyjścia na telefonie.
+
 Powiadomienie ma imię psa w tytule i krótkie zaproszenie w pierwszej osobie, np. „Burczy mi w brzuchu. Zjemy coś?”. Dotknięcie otwiera grę. Nie wymaga internetu, konta ani serwera.
 
 ## Reguły

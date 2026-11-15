@@ -93,3 +93,11 @@ Kopie zapisu przed i po instalacji: `exports/iphone-backups/2026-11-15-before-v1
 Nowy zakres ma **403** sprawdzenia, istniejąca gra **649**, widget **1525**. Powtórzenie instalatora nie tworzy dodatkowych targetów, kopii źródeł ani wywołania startowego. Kontrola podpisu aplikacji i rozszerzenia przeszła. Kompilacja najpierw zatrzymała się z powodu braku miejsca na SSD; nieudany cache tej próby usunięto, a udany build powstał w `/tmp/yufriend-reminders-v10-build/`. Log sukcesu zachowano jako `exports/ios-reminders-v10/build-success.log`. Ostrzeżenia pełnego eksportu dotyczą generowanych przez Godota nagłówków i pustych opisów uprawnień kamery, mikrofonu i zdjęć; natywne źródła przypomnień przechodzą kontrolę typów z ostrzeżeniami jako błędami.
 
 Pozostaje ręczna próba rzeczywistego doręczenia, otwarcia gry z komunikatu oraz zachowania przy Trybie skupienia. Nie skracano produkcyjnego minimum 30 minut ani nie zmieniano potrzeb Glorii w pliku, żeby wywołać alarm testowy.
+
+## Aktualizacja 0.1.0 (11) — bezpieczny ekran ustawień
+
+15 listopada 2026 po zgłoszeniu nachodzenia ustawień na Dynamic Island i braku dostępnego wyjścia zastąpiono osobne okno dialogowe panelem w obszarze gry. Panel korzysta ze współrzędnych i bezpiecznych marginesów głównego interfejsu. Nagłówek z przyciskiem „Zamknij” oraz dolny przycisk „Wróć do pokoju” są poza przewijaną treścią. Oba mają pola dotykowe o wysokości co najmniej 44 punktów.
+
+**Użytkownik potwierdził na iPhonie**, że ustawienia mieszczą się pod Dynamic Island i da się z nich wyjść. Build 11 zbudowano, podpisano, zainstalowano i uruchomiono na tym samym urządzeniu. Testy: **52/52** sprawdzenia ustawień w sześciu układach z marginesami i skalowaniem 2×/3× oraz **302/302** dotychczasowe sprawdzenia UI. Obejrzano zrzuty pionowego i poziomego panelu.
+
+Kopie `pet.json` przed i po aktualizacji znajdują się w `exports/iphone-backups/2026-11-15-before-v11/` i `exports/iphone-backups/2026-11-15-after-v11/`. Porównanie potwierdziło zachowanie identyfikatora, imienia, ziarna osobowości, cech, umiejętności, osiągnięć, więzi i schematu 4. Dowody instalacji, uruchomienia, testów i porównania: `exports/ios-settings-v11/`. Duży eksport i produkty kompilacji pozostawiono na dysku Maca w `/tmp/yufriend-settings-v11/` i `/tmp/yufriend-settings-v11-build/`, aby nie zapełniać zewnętrznego SSD.

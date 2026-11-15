@@ -41,7 +41,10 @@ var name_edit: LineEdit
 var profile_traits: Label
 var profile_bars: VBoxContainer
 var profile_badges: HFlowContainer
-var settings_dialog: AcceptDialog
+var settings_dialog: PanelContainer
+var settings_close: Button
+var settings_close_top: Button
+var settings_scroll: ScrollContainer
 var profile_life: Label
 var profile_social: Label
 var reunion_dialog: AcceptDialog
@@ -560,14 +563,33 @@ func _build_dialogs() -> void:
 	profile_social.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(profile_social)
 	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
-	settings_dialog = AcceptDialog.new()
-	settings_dialog.title = "Ustawienia"
-	settings_dialog.ok_button_text = "Gotowe"
-	settings_dialog.min_size = Vector2i(280, 210)
+	# Use the same canvas and safe-area coordinates as the room. A separate
+	# Window adds another coordinate space on scaled mobile displays.
+	settings_dialog = PanelContainer.new()
+	settings_dialog.add_theme_stylebox_override("panel", _style(CREAM, 18, 18))
+	settings_dialog.z_index = 101
+	settings_dialog.hide()
 	add_child(settings_dialog)
+	var settings_layout := VBoxContainer.new()
+	settings_layout.add_theme_constant_override("separation", 12)
+	settings_dialog.add_child(settings_layout)
+	var settings_header := HBoxContainer.new()
+	settings_header.add_theme_constant_override("separation", 8)
+	settings_layout.add_child(settings_header)
+	var settings_title := _label("Ustawienia", 20, INK, true)
+	settings_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_header.add_child(settings_title)
+	settings_close_top = _button("Zamknij", _hide_settings)
+	settings_close_top.custom_minimum_size.y = 44
+	settings_header.add_child(settings_close_top)
+	settings_scroll = ScrollContainer.new()
+	settings_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	settings_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	settings_layout.add_child(settings_scroll)
 	var settings_box := VBoxContainer.new()
 	settings_box.add_theme_constant_override("separation", 12)
-	settings_dialog.add_child(settings_box)
+	settings_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_scroll.add_child(settings_box)
 	music_toggle = CheckButton.new()
 	music_toggle.text = "Muzyka w tle"
 	music_toggle.custom_minimum_size.y = 44
@@ -590,6 +612,9 @@ func _build_dialogs() -> void:
 	reminders_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	settings_box.add_child(reminders_status)
 	settings_box.add_child(_label("Zmiany zapisują się od razu.", 12, MUTED))
+	settings_close = _button("Wróć do pokoju", _hide_settings)
+	settings_close.custom_minimum_size.y = 48
+	settings_layout.add_child(settings_close)
 	reunion_dialog = AcceptDialog.new()
 	reunion_dialog.title = "Znów razem"
 	reunion_dialog.ok_button_text = "Miło wrócić"
@@ -770,8 +795,9 @@ func _fit_room() -> void:
 	room.update_placement()
 	_position_feedback()
 	_position_companion()
-	for dialog in [profile_dialog, settings_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
+	for dialog in [profile_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
 		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
+	if settings_dialog != null and settings_dialog.visible: _fit_settings()
 
 func _safe_content_rect() -> Rect2:
 	var full := Rect2(Vector2.ZERO, size)
@@ -844,8 +870,24 @@ func _show_profile() -> void:
 
 func _show_settings() -> void:
 	reminders_status.text = reminders.status_text()
-	settings_dialog.popup()
-	_position_dialog(settings_dialog, Vector2i(330, 360))
+	settings_dialog.show()
+	settings_dialog.move_to_front()
+	settings_scroll.scroll_vertical = 0
+	_fit_settings()
+	settings_close.grab_focus()
+
+func _fit_settings() -> void:
+	safe_rect = _safe_content_rect()
+	var panel_size := Vector2(minf(370, safe_rect.size.x - 24), minf(440, safe_rect.size.y - 24))
+	_place(settings_dialog, Rect2(safe_rect.position + (safe_rect.size - panel_size) / 2, panel_size))
+
+func _hide_settings() -> void:
+	settings_dialog.hide()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if settings_dialog.visible and event.is_action_pressed("ui_cancel"):
+		_hide_settings()
+		get_viewport().set_input_as_handled()
 
 func _show_reunion() -> void:
 	var report: Dictionary = session.pet.life.away_report

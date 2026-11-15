@@ -18,6 +18,16 @@ func settle() -> void:
 	await process_frame
 	await process_frame
 
+func tap(button: Button) -> void:
+	var event := InputEventScreenTouch.new()
+	event.position = button.get_global_rect().get_center()
+	event.pressed = true
+	root.push_input(event, true)
+	event = event.duplicate()
+	event.pressed = false
+	root.push_input(event, true)
+	await settle()
+
 func _run() -> void:
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
@@ -40,19 +50,34 @@ func _run() -> void:
 	response.close()
 	app._process(1)
 	check(app.reminders_status.text.contains("Ustawieniach iPhone"), "Native denial updates the visible settings")
-	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(1100, 720)]:
+	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(860, 1864), Vector2i(1290, 2796), Vector2i(1100, 720), Vector2i(844, 390)]:
 		root.size = layout
-		root.content_scale_size = layout
+		root.content_scale_size = Vector2i(430, 932) if layout.x in [860, 1290] else layout
 		await settle()
+		var margins := Rect2(0, 62, app.size.x, app.size.y - 96)
+		if layout.x > layout.y: margins = Rect2(59, 0, app.size.x - 118, app.size.y - 21)
+		app.safe_area_override = root.get_final_transform() * margins
 		app._fit_room()
 		app._show_settings()
 		await settle()
-		var dialog: Rect2 = Rect2(app.settings_dialog.position, app.settings_dialog.size)
+		var dialog: Rect2 = app.settings_dialog.get_global_rect()
 		check(app.safe_rect.encloses(dialog), "Settings fit safe bounds at " + str(layout))
 		check(app.reminders_toggle.size.y >= 44, "Toggle has a touch target at " + str(layout))
-		check(app.reminders_status.get_global_rect().end.y < app.settings_dialog.get_ok_button().get_global_rect().position.y, "Permission explanation fits above Done at " + str(layout))
+		check(app.settings_scroll.get_global_rect().end.y <= app.settings_close.get_global_rect().position.y, "Scrollable content cannot cover the exit at " + str(layout))
+		for button in [app.settings_close, app.settings_close_top]:
+			check(app.safe_rect.encloses(button.get_global_rect()) and button.size.y >= 44, "Exit stays below island and above home indicator at " + str(layout))
+		var close_position: Vector2 = app.settings_close.global_position
+		app.settings_scroll.scroll_vertical = 10000
+		await settle()
+		check(app.settings_close.global_position == close_position, "Exit does not scroll away at " + str(layout))
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://test-results/reminders-settings-%d.png" % layout.x)
+		await tap(app.settings_close)
+		check(not app.settings_dialog.visible and not app._dialog_open(), "Touching return closes settings at " + str(layout))
+		app._show_settings()
+		await settle()
+		await tap(app.settings_close_top)
+		check(not app.settings_dialog.visible, "Touching top close also exits at " + str(layout))
 	app.reminders_toggle.button_pressed = false
 	check(not app.reminders.enabled, "UI opt-out is saved")
 	app.session.active = false
