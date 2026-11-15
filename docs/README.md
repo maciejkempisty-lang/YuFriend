@@ -2,7 +2,7 @@
 
 YuFriend to gra o opiece nad szczeniakiem golden retrievera, budowaniu więzi i uczeniu komend. Ten zestaw opisuje działający prototyp Godot oraz kolejne kroki jego rozwoju. Stan dokumentacji: **10 listopada 2026**.
 
-Pierwsza wersja działa lokalnie na Macu. Ma potrzeby, temperament, trening, wspomnienia i zapis. Użytkownik przygotowuje klatki animacji; obecnie pies korzysta z ilustracji zastępczych. AI, dorastanie i wydanie na telefon należą do dalszego zakresu.
+Pierwsza wersja działa lokalnie na Macu. Ma potrzeby, temperament, trening, wspomnienia i zapis. Dostarczony pakiet A+B obejmuje 22 klipy i 142 klatki; gra używa pixel art. Integrację i ograniczenia jakości opisuje [instrukcja sprite’ów](integracja-spriteow.md). AI, dorastanie i wydanie na telefon należą do dalszego zakresu.
 
 Aktualizacja interfejsu: większy pokój z interaktywnym psem i przedmiotami, okrągłe wskaźniki potrzeb, stała nawigacja **Dom / Trening / Album**, kontekstowe nagrody oraz panel boczny w szerokim oknie. Sterowanie opisuje [opis projektu](opis-projektu.md#ekrany-i-sterowanie), a zakres weryfikacji — [uruchomienie i testy](uruchomienie-i-testy.md#testy-automatyczne).
 

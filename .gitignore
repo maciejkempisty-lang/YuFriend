@@ -8,3 +8,6 @@ test-results/
 .env.*
 !.env.example
 *.tmp
+# Original delivery is kept locally; runtime copies live under assets/sprites/.
+/YuFriend-AB/
+/YuFriend-AB-v1.zip

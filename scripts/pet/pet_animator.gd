@@ -36,6 +36,7 @@ var current_id: int = 0
 func _ready() -> void:
 	add_child(sprite)
 	sprite.centered = false
+	sprite.frame_changed.connect(_apply_transform)
 
 func set_skin(value: PetSkin) -> void:
 	skin = value.duplicate()
@@ -46,7 +47,15 @@ func set_skin(value: PetSkin) -> void:
 			skin.frame_anchor = pack.anchor
 			skin.frame_height = pack.frame_size.y
 			skin.display_height = pack.display_height
+			skin.clip_layouts = pack.clip_layouts
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST if skin.pixel_art else CanvasItem.TEXTURE_FILTER_LINEAR
+	if skin.alpha_cutoff > 0:
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://scripts/pet/sprite_alpha.gdshader")
+		material.set_shader_parameter("cutoff", skin.alpha_cutoff)
+		sprite.material = material
+	else:
+		sprite.material = null
 	_start(current, current_id)
 
 func request_clip(name: String, request_id: int = 0) -> void:
@@ -82,6 +91,7 @@ func _start(name: String, request_id: int = 0) -> void:
 	if real_clip:
 		sprite.sprite_frames = skin.frames
 		sprite.play(name)
+		sprite.set_frame_and_progress(0, 0)
 		# Authored frame timing controls one-shot transitions when supplied.
 		if not bool(spec[3]):
 			var duration := 0.0
@@ -114,10 +124,16 @@ func _process(delta: float) -> void:
 
 func _apply_transform() -> void:
 	if skin == null or sprite.sprite_frames == null: return
+	if not sprite.sprite_frames.has_animation(sprite.animation): return
 	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	if texture == null: return
 	var ratio: float = skin.display_height / (skin.frame_height if real_clip else float(texture.get_height()))
 	var anchor := skin.frame_anchor if real_clip else Vector2(texture.get_width() * 0.5, texture.get_height() * 0.85)
+	if real_clip and skin.clip_layouts.has(current):
+		var layout: Dictionary = skin.clip_layouts[current]
+		ratio *= float(layout.get("scale", 1.0))
+		var anchors: Array = layout.get("anchors", [])
+		if sprite.frame < anchors.size(): anchor = anchors[sprite.frame]
 	var breath := 1.0 if real_clip else 1.0 + sin(clock * 2.2) * 0.009
 	sprite.scale = Vector2(ratio, ratio * breath)
 	sprite.flip_h = facing_left

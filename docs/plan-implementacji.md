@@ -30,7 +30,7 @@ Kolejny zakres obejmuje „zostań”, obrót i aport, więcej zachowań spontan
 
 ## Wygląd golden retrievera
 
-Wzorzec postaci pochodzi ze zdjęcia golden retrievera użytkownika jako szczeniaka: jasna złota sierść, ciemniejsze opadające uszy, potargana grzywka, ciemne oczy, czarny nos i jaśniejsze końce łap. Uproszczenie zachowuje te cechy, a ogranicza szczegóły sierści. Porównujemy dwa kierunki: prostą ilustrację 2D i pixel art. Wybór stylu pozostaje otwarty.
+Wzorzec postaci pochodzi ze zdjęcia golden retrievera użytkownika jako szczeniaka: jasna złota sierść, ciemniejsze opadające uszy, potargana grzywka, ciemne oczy, czarny nos i jaśniejsze końce łap. Uproszczenie zachowuje te cechy, a ogranicza szczegóły sierści. Decyzja z 14 listopada 2026: pixel art jest jedynym stylem produkcyjnym. Pakiet A+B (22 klipy / 142 klatki) jest podłączony; wcześniejsze propozycje 2D zachowujemy jako materiały historyczne.
 
 Docelowy podstawowy widok podczas ruchu pokazuje psa z boku, zwróconego w prawo. Ruch w lewo wykorzystuje lustrzane odbicie całej postaci. Pies porusza się początkowo wzdłuż jednej płaszczyzny podłogi. Dostępne wzorce szczeniaka obejmują siad ze spojrzeniem w stronę gracza oraz pozycję stojącą z boku i od tyłu. Przed przygotowaniem animacji trzeba wyrównać skalę, położenie względem podłoża i punkty odniesienia między ujęciami.
 

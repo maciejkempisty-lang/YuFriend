@@ -8,5 +8,6 @@
 script = ExtResource("1")
 animation_pack_path = "res://data/animations/puppy_pixel.res"
 pixel_art = true
+alpha_cutoff = 0.5
 standing = ExtResource("2")
 sitting = ExtResource("3")

@@ -10,6 +10,10 @@ Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpi
 
 `Main._fit_room()` układa pokój, nagłówek, wskaźniki potrzeb, aktywny panel i nawigację. Cały ekran nie przewija się; przewijany jest album. Szeroki układ przenosi sterowanie obok pokoju. `GameIcons` współdzieli własne ikony, `IconActionButton` rysuje akcje i nawigację, a `NeedIndicator` pokazuje poziomy potrzeb. Font Nunito jest dołączony wraz z licencją w `assets/fonts/`.
 
+Pokój jest osobnym światem 2D w `SubViewport`, wyświetlanym przez `TextureRect` pod HUD-em. `Camera2D` przesuwa i przybliża tylko świat, a potrzeby, panele i komunikat pozostają w interfejsie. [RoomLayout](../scripts/model/room_layout.gd) określa wymiary 1440 × 480, płytki pas chodzenia oraz sześć stacji. Ich pozycje nie zmieniają się wraz z wielkością okna.
+
+`RoomArtwork` składa panoramę z fragmentów istniejącego tła pixel art i osobnych przedmiotów. Tło ma zachowaną listę rysowania, przedmioty są oddzielnymi węzłami, a `actors.y_sort_enabled` ustawia kolejność psa i kosza/miski/piłki według głębokości. Legowisko i drzwi są nad tłem, lecz za postacią. [Opis zasobów](../assets/art/environments/README.md) wskazuje sposób składania grafiki.
+
 ```mermaid
 flowchart TD
     Main["Main — interfejs i połączenia sygnałów"] --> Session["GameSession — przebieg sesji"]
@@ -20,6 +24,9 @@ flowchart TD
     Session --> Personality["PersonalitySystem — historia, dryf i nawyki"]
     Session --> Save["SaveSystem — zapis i odzyskiwanie"]
     Main --> Commands["LocalCommands — rozpoznawanie zwrotów"]
+    Room --> Artwork["RoomArtwork — statyczne tło i osobne przedmioty"]
+    Room --> Layout["RoomLayout — świat i stacje"]
+    Room --> Camera["SubViewport + Camera2D — widok świata"]
     Room --> Animator["PetAnimator — pozycje i klipy"]
     Animator --> Skin["PetSkin / PetAnimationSet — grafika i klatki"]
     Session -. "żądanie ruchu lub animacji" .-> Room
@@ -37,7 +44,9 @@ flowchart TD
 | [PersonalitySystem](../scripts/systems/personality_system.gd) | Dziennik zdarzeń, dryf cech, nawyki i sprawdzanie propozycji zmian osobowości |
 | [SaveSystem](../scripts/systems/save_system.gd) | Odczyt, walidowany zapis do pliku tymczasowego i odzyskiwanie kopii |
 | [LocalCommands](../scripts/services/local_commands.gd) | Normalizuje wpisany tekst i zwraca identyfikator istniejącej komendy |
-| [RoomView](../scripts/ui/room_view.gd) | Rysuje pokój, obsługuje wejście, przesuwa psa i przekazuje zakończenie ruchu |
+| [RoomView](../scripts/ui/room_view.gd) | Tworzy świat i kamerę, odróżnia tapnięcie od przesuwania, przelicza ekran/świat, prowadzi ruch i zbliżenia |
+| [RoomLayout](../scripts/model/room_layout.gd) | Stałe współrzędne, granice ruchu i definicje stacji: miejsce, punkt dojścia, klip, potrzeba oraz efekty |
+| [RoomArtwork](../scripts/ui/room_artwork.gd) | Zachowuje statyczne listy rysowania tła i przedmiotów; osobne instancje obsługują cień i piłkę |
 | [PetAnimator](../scripts/pet/pet_animator.gd) | Dobiera przejścia między pozycjami i odtwarza klipy lub zastępcze ilustracje |
 | [PetSkin](../scripts/pet/pet_skin.gd), [PetAnimationSet](../scripts/pet/pet_animation_set.gd) | Zasoby wyglądu, klatek, skali i punktu podparcia |
 | [SpriteImporter](../scripts/pet/sprite_importer.gd) | Waliduje manifest i buduje zasób z PNG lub fragmentów arkusza |
@@ -50,8 +59,8 @@ flowchart TD
 2. Wybiera ścieżkę zapisu: normalną, `--qa` lub nadpisaną przez test.
 3. `GameSession.start()` wczytuje psa i ustala, czy zapis jest dostępny do modyfikacji.
 4. `NeedsSystem.catch_up()` przelicza nieobecność.
-5. Jeśli pies odpoczywał, sesja zleca pozycję snu.
-6. Sesja próbuje zapisać stan i odświeża interfejs; `Main` dobiera styl grafiki z profilu.
+5. Jeśli pies nadal odpoczywa po przeliczeniu nieobecności, sesja umieszcza go w legowisku i zleca sen.
+6. Sesja próbuje zapisać stan i odświeża interfejs; `RoomView` używa jednego produkcyjnego pakietu pixel art również dla dawnych zapisów.
 
 Zegary czynności, animacji i próby treningowej nie są wczytywane z dysku. Po restarcie wraca stan psa, a nowa próba musi zostać rozpoczęta od początku.
 
@@ -65,14 +74,19 @@ Połączenia są tworzone w `Main._ready()`.
 | `feedback(text)` | Aktualizuje komunikat dla gracza |
 | `save_status(ok)` | Odświeża informację o zapisie |
 | `clip_requested(clip)` | `RoomView.play_clip()` uruchamia zwykłą reakcję lub pozycję |
-| `destination_requested(ratio)` | `RoomView.move_to()` ustawia poziomy cel ruchu |
+| `destination_requested(world_position)` | `RoomView.move_to()` ustawia cel `Vector2` we współrzędnych świata |
+| `approach_requested(action, token)` | Widok ustawia drogę do miski, legowiska lub piłki; nie przyznaje efektów |
+| `RoomView.station_reached(token)` | Sesja przyjmuje tylko aktualne dojście i jednorazowo wykonuje opiekę lub sygnalizuje potrzebę |
+| `attention_requested(close_up)` | Przywraca śledzenie psa, opcjonalnie z krótkim zbliżeniem |
+| `activity_cancelled` | Widok zatrzymuje ruch i usuwa poprzedni cel |
+| `place_requested(action)` | Odtworzenie położenia w legowisku po wczytaniu / wznowieniu |
 | `performance_requested(clip, trial_id)` | `RoomView.play_performance()` rozpoczyna prezentację konkretnej próby |
-| `RoomView.floor_tapped(ratio)` | `GameSession.move_to()` sprawdza możliwość ruchu |
+| `RoomView.floor_tapped(world_position)` | `GameSession.move_to()` sprawdza możliwość ruchu |
 | `RoomView.care_requested(action)` | Akcja opieki po dotknięciu psa, miski, piłki lub legowiska; nadal podlega regułom `GameSession.act()` |
 | `destination_reached` | Kończy zwykłe chodzenie w sesji |
 | `performance_finished(trial_id)` | Zgłasza ukończenie prezentacji próby do sesji |
 
-Współrzędna `ratio` to logiczny cel ruchu w zakresie 0,23–0,77, a jej prędkość zmiany wynosi 0,24 na sekundę. Widok mapuje ją na dostępną szerokość z marginesem na ciało psa. Skala prezentacji i wysokość łap dopasowują się do miejsca nad komunikatem. Ruch zaczyna się dopiero wtedy, gdy animator przejdzie do `walk`.
+Cele ruchu to `Vector2` we współrzędnych świata. `RoomLayout.clamp_walk()` ogranicza je do prostokąta od (95, 286) do (1345, 328). Podstawowy chód ma 85 jednostek świata na sekundę; pościg 1,6× więcej. Tempo klipu chodu rośnie proporcjonalnie do prędkości, zachowując wcześniejsze dopasowanie przesunięcia do kroku. Ruch zaczyna się dopiero po przejściu animatora do `walk`. Dla „przyjdź” widok wyznacza cel około 150 jednostek od obecnego położenia, zamiast dawnego ułamka szerokości ekranu.
 
 ## Synchronizacja treningu
 
@@ -107,12 +121,22 @@ Animator rozróżnia pozycje `stand`, `sit`, `lie`, `sleep` i `eat`. Każdy z 22
 
 W danym momencie oczekuje jedno żądanie klipu. Kolejne żądanie zastępuje oczekujące, a trwający klip jednorazowy kończy się przed zmianą. Dla klipu jednorazowego `request_completed(id)` oznacza zakończenie; dla pętli — wejście do niej po przejściach. Pokój dodaje osobny warunek dotarcia przy przywołaniu.
 
-Czas dostarczonego klipu jednorazowego to suma mnożników czasu klatek podzielona przez FPS. Brak klipu uruchamia grafikę zastępczą z czasem z `PetAnimator.CLIPS`. Ręczne `PetSkin.frames` ma pierwszeństwo przed pakietem wskazanym przez `animation_pack_path`. [Integracja sprite’ów](integracja-spriteow.md) opisuje format wejściowy.
+Czas dostarczonego klipu jednorazowego to suma mnożników czasu klatek podzielona przez FPS. Brak klipu uruchamia grafikę zastępczą z czasem z `PetAnimator.CLIPS`. Ręczne `PetSkin.frames` ma pierwszeństwo przed pakietem wskazanym przez `animation_pack_path`. `PetAnimationSet.clip_layouts` przenosi skalę klipów i punkty podparcia poszczególnych klatek. Regiony `AtlasTexture` pozwalają użyć dostarczonych nierównych pól bez przerysowania PNG. Filtr alfa w skórce działa wyłącznie podczas renderowania. [Integracja sprite’ów](integracja-spriteow.md) opisuje format wejściowy.
 
 `GameSession.pose` opisuje pozycję oczekiwaną przez rozgrywkę. `PetAnimator.pose` opisuje pozycję osiągniętą po zakończeniu przejścia. Nie należy traktować ich jako zawsze identycznych w trakcie animacji.
 
 ## Cykl życia aplikacji
 
-Zamknięcie okna wywołuje zapis, a następnie kończy grę. Utrata fokusu na pulpicie wywołuje zapis, lecz sama nie wstrzymuje symulacji. Powiadomienie o wstrzymaniu aplikacji anuluje próbę, zatrzymuje aktualizację sesji i zapisuje stan. Wznowienie przelicza nieobecność i odtwarza pozycję odpoczynku lub stania.
+Zamknięcie okna wywołuje zapis, a następnie kończy grę. Utrata fokusu na pulpicie wywołuje zapis, lecz sama nie wstrzymuje symulacji. Powiadomienie o wstrzymaniu aplikacji anuluje próbę i token niedokończonego dojścia, zatrzymuje ruch oraz aktualizację sesji, a następnie zapisuje stan. Wznowienie przelicza nieobecność i odtwarza pozycję odpoczynku lub stania.
 
 Przy rozbudowie reguły opieki i treningu powinny pozostać w systemach, a interfejs powinien wywoływać metody sesji. Zmiana grafiki nie powinna bezpośrednio zwiększać umiejętności ani przepisywać danych psa.
+
+## Opieka w pokoju i kamera
+
+Sesja zleca dojście z tokenem. `RoomView` odczytuje punkt stacji z `RoomLayout`; dojście uruchamia efekt opieki w sesji. Pozycja piłki jest zmienna, pozostałe stacje mają stałe współrzędne. Przy podmianie grafiki można zachować ich kontrakt z logiką.
+
+Obszar wyświetlania zaczyna się 16 jednostek poniżej wiersza potrzeb (w szerokim układzie HUD jest obok). Bazowy zoom dopasowuje wysokość świata i pokazuje około 1/3 jego szerokości. Kamera łagodnie śledzi psa, a przy interakcji powiększa widok 1,38×. Głaskanie utrzymuje zbliżenie przez 3,5 sekundy; trening przez próbę, okno nagrody i reakcję na nią. Granice kamery zapobiegają odsłanianiu pustki poza pokojem.
+
+Dotknięcie jest rozpoznawane po puszczeniu palca. Ruch o co najmniej 9 jednostek uruchamia przesuwanie widoku i wyklucza akcję dotknięcia. Ręcznie ustawiona kamera pozostaje na miejscu do użycia „Do pieska” lub rozpoczęcia nowej czynności. `world_to_screen()` i `screen_to_world()` obsługują wszystkie strefy kliknięcia po panoramowaniu i zoomie. Maski alfa psa powstają dopiero przy dotknięciu danej klatki; na pierwszym planie pierwszeństwo mają piłka i przedmioty zasłaniające psa.
+
+Zmiana rozmiaru okna przelicza wyłącznie widok i kamerę — nie pozycje psa i przedmiotów. `RoomArtwork.draw_count` sprawdza, że chód nie przebudowuje tła. To kontrola listy rysowania na CPU, a nie pomiar baterii lub wydajności GPU na telefonie.

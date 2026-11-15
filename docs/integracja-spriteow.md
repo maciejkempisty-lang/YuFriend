@@ -2,18 +2,19 @@
 
 [Mapa dokumentacji](README.md) · [Architektura animacji](architektura.md)
 
-Możesz przygotowywać klipy po kolei. Gra użyje dostarczonych klatek, a dla brakujących zachowa dotychczasowe ilustracje. Nie trzeba czekać na komplet 22 animacji. Brief ruchów i ich kolejność są w [liście sprite’ów](lista-spriteow-szczeniaka.md).
+Od 14 listopada 2026 gra używa pakietu **22 klipów / 142 klatek** z dostawy `YuFriend-AB`, w jednym stylu pixel art. Uwzględniono poprawione warianty snu i jedzenia. Opis źródeł, sumy kontrolne i uwagi jakościowe są w [katalogu pakietu](../assets/sprites/puppy/pixel/README.md). Importer nadal obsługuje częściowe zestawy; brief ruchów jest w [liście sprite’ów](lista-spriteow-szczeniaka.md).
 
 ## Gdzie umieścić obrazy
 
-- Ilustracja: `assets/sprites/puppy/simple/`
-- Pixel art: `assets/sprites/puppy/pixel/`
+- Produkcyjne PNG: `assets/sprites/puppy/pixel/sheets/`
+- Produkcyjny manifest: `assets/sprites/puppy/pixel/manifest.json`
+- Starszy przykład ilustracji: `assets/sprites/puppy/simple/`; obecny interfejs go nie wybiera.
 
-W każdym folderze jest `manifest.example.json`. Skopiuj go jako `manifest.json`, wpisz rzeczywiste nazwy obrazów i pozostaw tylko klipy, których pliki już masz. Przykład ma dwa przyszłe arkusze `idle.png` i `walk.png`; nie są jeszcze dostarczone.
+`manifest.example.json` pozostaje przykładem regularnej siatki dla przyszłych materiałów. Nie zastępuj nim produkcyjnego manifestu: obecny pakiet używa dokładnych prostokątów dostawy i indywidualnej kalibracji.
 
-W obrębie jednego pakietu wszystkie klatki mają wspólny rozmiar i punkt podparcia. Startowe ustawienie ilustracji to **512 × 512**, punkt **(256, 430)**. Przykład pixel art używa **64 × 64**, punktu **(32, 54)** i wysokości wyświetlania 256, czyli bazowej skali 4× w animatorze. Inna siatka wymaga zmiany tych wartości w manifeście.
+Dla regularnych arkuszy i osobnych PNG wszystkie klatki mają wspólny rozmiar i punkt podparcia. Startowe ustawienie ilustracji to **512 × 512**, punkt **(256, 430)**. Przykład pixel art używa **64 × 64**, punktu **(32, 54)** i wysokości wyświetlania 256. Dostarczone duże arkusze nie mają takiej siatki; korzystają z wariantu `regions`, opisanego poniżej.
 
-`RoomView` dodatkowo skaluje całego animatora, dopasowując psa do miejsca nad komunikatem, a `canvas_items` z aspektem `expand` dopasowuje widok do okna. Sama wartość `display_height` nie gwarantuje więc całkowitego mnożnika na ekranie. Filtr `nearest` pozostaje włączony dla pixel art, ale równe piksele trzeba ocenić na docelowym urządzeniu. Nowe klatki warto obejrzeć w Domu i Treningu, ponieważ wysokość pokoju jest w tych zakładkach różna.
+`RoomView` stosuje stałą skalę psa 0,64 w świecie 1440 × 480; `Camera2D` dopasowuje widok i zbliża interakcje, a `canvas_items` z aspektem `expand` dopasowuje widok do okna. Sama wartość `display_height` nie gwarantuje więc całkowitego mnożnika na ekranie. Filtr `nearest` pozostaje włączony dla pixel art, ale równe piksele trzeba ocenić na docelowym urządzeniu. Nowe klatki warto obejrzeć w Domu i Treningu, ponieważ wysokość pokoju jest w tych zakładkach różna.
 
 PNG powinny mieć przezroczyste tło i identyczne marginesy. Pies jest skierowany w prawo; odbicie w lewo wykonuje gra. Chód rysujemy w miejscu, bez przesuwania płótna.
 
@@ -63,20 +64,28 @@ Bez dodatkowych ustawień każda klatka trwa `1 / fps` sekundy. Opcjonalne `dura
 
 Pętle i klipy jednorazowe wynikają z nazw w briefie. Importer ustawia je automatycznie. Gra odczytuje faktyczny czas klipu, przeprowadza potrzebne przejścia między pozycjami i czeka z nagrodą na koniec sztuczki. Okno nagrody pozostaje osobnym parametrem rozgrywki.
 
+## Wariant 3: dokładne prostokąty i kalibracja dostawy
+
+Obecny pakiet używa `sheet` oraz `regions` zamiast `columns` i `count`. Każdy region to `[x, y, szerokość, wysokość]` w oryginalnym PNG; kolejność tablicy jest kolejnością odtwarzania. Pola mogą różnić się wymiarami, np. 443/444 px w `walk`. Nie przycinamy ani nie skalujemy zapisanych obrazów.
+
+Każdy klip ma `anchors`: po jednym `[x, y]` w lokalnych współrzędnych regionu, oraz `scale`: jednolity mnożnik rozmiaru klipu. Bazowa skala wynosi `display_height / frame_size[1]`, a potem jest mnożona przez `scale`. Dla tej dostawy podparcie Y zmierzono przy nieprzezroczystej sylwetce, a X pozostaje stały w klipie. Skala jest kalibracją prezentacji, nie zmianą danych psa. Odbicie w lewo uwzględnia rzeczywistą szerokość regionu.
+
+Manifest ma `fps: 10`; każdy `durationMs` z dostawy został przeliczony na mnożnik `durationMs / 100`. Zachowuje to również nierówne czasy przy podawaniu łapy. Wszystkie 22 klipy trafiają do jednego `puppy_pixel.res`, z metadanymi `clip_layouts`. Próg alfa 0,5 w `puppy_pixel.tres` usuwa przy renderowaniu słabo przezroczyste obwódki; źródłowe PNG pozostają nietknięte.
+
 ## Import do gry
 
 1. Dodaj PNG i `manifest.json`. Otwórz projekt w Godocie i poczekaj na import obrazów, albo wykonaj pierwsze polecenie poniżej.
 2. Uruchom importer dla wybranego stylu. Jeśli pakiet już był wygenerowany, dopisz `--replace`, aby go przebudować z aktualnego manifestu.
-3. Uruchom grę ponownie, otwórz **Profil** ikoną ustawień obok imienia i wybierz właściwy styl.
+3. Uruchom grę ponownie. Pixel art jest wybierany automatycznie także przy starym zapisie; w Profilu nie ma przełącznika stylu.
 
 Polecenia z katalogu projektu:
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --editor --quit
-'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tools/import_sprites.gd -- simple res://assets/sprites/puppy/simple/manifest.json
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tools/import_sprites.gd -- pixel res://assets/sprites/puppy/pixel/manifest.json --replace
 ```
 
-Dla pixel art zmień `simple` na `pixel` w obu miejscach drugiego polecenia. Importer tworzy `data/animations/puppy_simple.res` lub `puppy_pixel.res`; gra wczytuje ten pakiet automatycznie. Nie modyfikuje źródłowych PNG, zapisu psa ani referencji. Ponowny import **zastępuje cały pakiet**: zachowaj w manifeście także wcześniej dostarczone animacje.
+Importer tworzy `data/animations/puppy_pixel.res`; gra wczytuje ten pakiet automatycznie. Importer produkcyjny przyjmuje wyłącznie `pixel`; ilustracyjne referencje i dawne przykłady pozostają materiałami źródłowymi. Import nie modyfikuje źródłowych PNG, zapisu psa ani referencji. Ponowny import **zastępuje cały pakiet**: zachowaj w manifeście także wcześniej dostarczone animacje.
 
 Nieznana nazwa klipu, brak pliku, niezgodny rozmiar lub błędny czas klatki zatrzymują import przed zastąpieniem istniejącego pakietu. Lista brakujących klipów jest informacją: nadal można uruchomić grę z częściowym zestawem.
 
@@ -91,6 +100,9 @@ Nieznana nazwa klipu, brak pliku, niezgodny rozmiar lub błędny czas klatki zat
 | `animations` | Co najmniej jeden klip o nazwie z briefu |
 | `sheet` / `frames` | Dokładnie jedno źródło klatek dla klipu; PNG wewnątrz `res://assets/` |
 | `columns` i `count` | Dla arkusza: 1–4 kolumny i 1–64 używane klatki mieszczące się w arkuszu |
+| `regions` | Alternatywa dla `columns/count`: 1–64 całkowite prostokąty wewnątrz arkusza; wymaga `anchors` |
+| `anchors` | Opcjonalnie po jednym punkcie wewnątrz odpowiedniej klatki; obowiązkowe z `regions` |
+| `scale` | Opcjonalny skończony mnożnik od 0,1 do 8; domyślnie 1 |
 | `frames` | Dla osobnych plików: 1–64 ścieżki, wszystkie obrazy o rozmiarze `frame_size` |
 | `fps` | Liczba większa od 0 i nie większa od 60 |
 | `durations` | Opcjonalna tablica mnożników większych od 0 i nie większych od 60, po jednym na klatkę |
@@ -99,10 +111,10 @@ Importer sprawdza strukturę i geometrię plików. Przezroczystość, spójnoś�
 
 ## Edycja bez manifestu
 
-Można też otworzyć `data/skins/puppy_simple.tres` albo `puppy_pixel.tres` w Inspektorze i przypisać własny `SpriteFrames` do pola `frames`. Ręcznie przypisany zasób ma pierwszeństwo przed generowanym pakietem. Ustaw wtedy także `frame_anchor`, `frame_height` i `display_height` oraz właściwe pętle i FPS. Pozostaw pole `frames` puste, jeśli korzystasz z importera.
+Można też otworzyć `data/skins/puppy_pixel.tres` w Inspektorze i przypisać własny `SpriteFrames` do pola `frames`. Ręcznie przypisany zasób ma pierwszeństwo przed generowanym pakietem. Ustaw wtedy także `frame_anchor`, `frame_height` i `display_height` oraz właściwe pętle i FPS. Pozostaw pole `frames` puste, jeśli korzystasz z importera.
 
-## Sprawdzenie pierwszej partii
+## Ocena obecnej dostawy
 
-Najpierw sprawdzimy `idle`, `walk`, `sit_down`, `sit_idle`, `stand_up` oraz zgodność siadu i stania. Następnie machanie ogonem i `give_paw`. Kontrolujemy stabilność łap, brak skoków sylwetki przy zmianie klipu, poprawne odbicie i czytelność przy małym rozmiarze.
+Obejrzano wszystkie 142 klatki wyrenderowane w Godocie oraz ekran Domu i Treningu. Podparcie i skala są skorygowane, a nagroda nadal czeka na koniec sztuczki. Nie jest to jeszcze finalny ręczny pixel art: między klipami pozostają różnice anatomii, palety i gęstości „pikseli”, szczególnie przy wstawaniu z leżenia. Weryfikacja na fizycznym telefonie pozostaje otwarta.
 
-Prędkość przesuwania po pokoju oraz pozycję miski dopasujemy po otrzymaniu rzeczywistych klatek. Obecna miska i legowisko są elementami prototypowego pokoju, a ruchy pyska nie są jeszcze do nich dopasowane. `bark_stand` i `treat_take_stand` są rozpoznawane przez animator, lecz nie mają jeszcze osobnej sytuacji rozgrywki; pozostałe klipy uruchamiają opieka, ruch i trening.
+Chód przesuwa psa o 85 jednostek świata na sekundę, niezależnie od szerokości okna. Prędkość odtwarzania chodu jest dopasowana do tej wartości; pościg zwiększa obie 1,6×. Ostateczne zgranie faz łap z ruchem wymaga dopracowania samego cyklu. Miska i legowisko pozostają elementami prototypowego pokoju; pysk nie jest jeszcze dokładnie dopasowany do miski. `bark_stand` wita po ponownym uruchomieniu gry po ponad 5 minutach nieobecności, jeśli pies nie śpi. `treat_take_stand` pokazuje przyjęcie smakołyku po ćwiczeniu na stojąco; po siadzie pies zachowuje pozycję i macha ogonem. Szczeknięcie jest na razie bez dźwięku.

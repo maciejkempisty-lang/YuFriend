@@ -1,230 +1,389 @@
 class_name RoomView
 extends Control
 
-signal floor_tapped(ratio: float)
+signal floor_tapped(world_position: Vector2)
 signal care_requested(action: String)
 signal destination_reached
 signal performance_finished(trial_id: int)
+signal station_reached(token: int)
+
+const WALK_SPEED := 85.0
+const DRAG_THRESHOLD := 9.0
 var animator := PetAnimator.new()
-var current_ratio: float = 0.5
-var target_ratio: float = 0.5
-var sleeping: bool = false
-var effect: String = ""
-var effect_left: float = 0.0
-var moving: bool = false
-var walk_performance: int = 0
-var walk_ready: bool = false
-var presentation_scale: float = 1.0
-var elapsed: float = 0.0
+var backdrop := RoomArtwork.new()
+var ball_art := RoomArtwork.new()
+var shadow := RoomArtwork.new()
+var viewport := SubViewport.new()
+var display := TextureRect.new()
+var world := Node2D.new()
+var actors := Node2D.new()
+var puppy := Node2D.new()
+var camera := Camera2D.new()
+var station_nodes: Dictionary = {}
+var effect_label := Label.new()
+var sleep_label := Label.new()
+var return_button := Button.new()
+var room_hint := Label.new()
+var pet_world: Vector2 = RoomLayout.START
+var target_world: Vector2 = RoomLayout.START
+var ball_world: Vector2 = RoomLayout.STATIONS.ball.position
+var ball_target: Vector2 = ball_world
+var moving := false
+var presentation_scale: float = RoomLayout.PUPPY_SCALE
+var hud_bottom := 0.0
+var render_rect := Rect2()
+var walk_performance := 0
+var walk_ready := false
+var station_token := 0
+var station_action := ""
+var anchored_station := ""
+var effect_left := 0.0
+var camera_manual := false
+var interaction_focus := false
+var focus_left := 0.0
+var base_zoom := 1.0
+var _manual_zoom := 1.0
+var _camera_initialized := false
+var _pointer_id := -1
+var _press_point := Vector2.ZERO
+var _press_camera := Vector2.ZERO
+var _press_zoom := 1.0
+var _dragged := false
+var _touch_masks: Dictionary = {}
 
 func _ready() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	clip_contents = true
-	add_child(animator)
-	animator.set_skin(load("res://data/skins/puppy_simple.tres"))
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var wall := ColorRect.new()
+	wall.color = Color("eae9d2")
+	wall.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(wall)
+	wall.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	viewport.world_2d = World2D.new()
+	viewport.disable_3d = true
+	viewport.gui_disable_input = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	viewport.add_child(world)
+	world.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	backdrop.z_index = -5
+	world.add_child(backdrop)
+	backdrop.configure(RoomLayout.SIZE)
+	world.add_child(actors)
+	actors.y_sort_enabled = true
+	for id in RoomLayout.STATIONS:
+		if id == "ball": continue
+		var node := RoomArtwork.new()
+		node.kind = id
+		node.position = RoomLayout.STATIONS[id].position
+		if id in ["bed", "window", "door"]: node.z_index = -1
+		actors.add_child(node)
+		station_nodes[id] = node
+	actors.add_child(puppy)
+	shadow.kind = "shadow"
+	puppy.add_child(shadow)
+	puppy.add_child(animator)
+	ball_art.kind = "ball"
+	actors.add_child(ball_art)
+	for label in [effect_label, sleep_label]:
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", 23)
+		label.add_theme_color_override("font_color", Color("758d77"))
+		puppy.add_child(label)
+		label.hide()
+	effect_label.add_theme_color_override("font_color", Color("b9745b"))
+	sleep_label.text = "z Z"
+	viewport.add_child(camera)
+	camera.position_smoothing_enabled = false
+	camera.enabled = true
+	display.texture = viewport.get_texture()
+	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	display.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	add_child(display)
+	room_hint.text = "Przesuń pokój ↔"
+	room_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	room_hint.add_theme_font_size_override("font_size", 11)
+	room_hint.add_theme_color_override("font_color", Color("78826c"))
+	add_child(room_hint)
+	return_button.text = "Do pieska"
+	return_button.add_theme_font_size_override("font_size", 12)
+	return_button.pressed.connect(func(): focus_pet(false))
+	add_child(return_button)
+	return_button.hide()
+	animator.set_skin(load("res://data/skins/puppy_pixel.tres"))
 	animator.request_completed.connect(_on_animation_completed)
 	resized.connect(update_placement)
 	gui_input.connect(_on_input)
+	update_placement()
 
 func _on_input(event: InputEvent) -> void:
-	if event is InputEventScreenTouch and event.pressed:
-		if event.device != InputEvent.DEVICE_ID_EMULATION: _interact(event.position)
+	if event.device == InputEvent.DEVICE_ID_EMULATION: return
+	if event is InputEventScreenTouch:
+		if event.pressed: _pointer_down(event.position, event.index)
+		else: _pointer_up(event.position, event.index)
 		accept_event()
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		# Mobile's emulated mouse must not dispatch the same care action twice.
-		if event.device != InputEvent.DEVICE_ID_EMULATION: _interact(event.position)
+	elif event is InputEventScreenDrag:
+		_pointer_move(event.position, event.index)
 		accept_event()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed: _pointer_down(event.position, -2)
+		else: _pointer_up(event.position, -2)
+		accept_event()
+	elif event is InputEventMouseMotion and _pointer_id == -2:
+		_pointer_move(event.position, -2)
+		accept_event()
+
+func _pointer_down(point: Vector2, id: int) -> void:
+	if _pointer_id != -1 or not render_rect.has_point(point): return
+	_pointer_id = id
+	_press_point = point
+	_press_camera = camera.position
+	_press_zoom = camera.zoom.x
+	_dragged = false
+
+func _pointer_move(point: Vector2, id: int) -> void:
+	if id != _pointer_id: return
+	if point.distance_to(_press_point) >= DRAG_THRESHOLD: _dragged = true
+	if not _dragged: return
+	camera_manual = true
+	_manual_zoom = _press_zoom
+	camera.zoom = Vector2.ONE * _press_zoom
+	camera.position = _clamp_camera(_press_camera - Vector2((point.x - _press_point.x) / _press_zoom, 0), _press_zoom)
+	camera.force_update_scroll()
+	return_button.show()
+
+func _pointer_up(point: Vector2, id: int) -> void:
+	if id != _pointer_id: return
+	_pointer_move(point, id)
+	_pointer_id = -1
+	if not _dragged and render_rect.has_point(point): _interact(point)
 
 func _interact(point: Vector2) -> void:
 	var action := action_at(point)
-	if not action.is_empty():
-		care_requested.emit(action)
-	elif point.y >= size.y * 0.60:
-		var margin := _walking_margin()
-		var ratio := inverse_lerp(margin, size.x - margin, point.x)
-		floor_tapped.emit(lerpf(0.23, 0.77, clampf(ratio, 0, 1)))
+	if not action.is_empty(): care_requested.emit(action)
+	elif screen_to_world(point).y >= RoomLayout.FLOOR_Y:
+		floor_tapped.emit(RoomLayout.clamp_walk(screen_to_world(point)))
 
 func action_at(point: Vector2) -> String:
-	if bowl_rect().grow(8).has_point(point): return "feed"
-	if bed_rect().grow(5).has_point(point): return "rest"
-	if point.distance_to(ball_center()) < 23: return "play"
-	var foot := pet_position()
-	if Rect2(foot - Vector2(79, 158) * presentation_scale, Vector2(158, 168) * presentation_scale).has_point(point): return "pet"
+	if not render_rect.has_point(point): return ""
+	var where := screen_to_world(point)
+	if where.distance_to(ball_world) < maxf(18, 21 / camera.zoom.x): return "play"
+	# Crate/bowl in front of the puppy keep the same priority as Y-sorted rendering.
+	for id in ["toys", "food"]:
+		if RoomLayout.STATIONS[id].position.y > pet_world.y and station_bounds(id).has_point(where):
+			return RoomLayout.STATIONS[id].action
+	if _hits_pet(where): return "rest" if animator.pose == "sleep" else "pet"
+	for id in RoomLayout.STATIONS:
+		if id != "ball" and station_bounds(id).grow(5).has_point(where): return RoomLayout.STATIONS[id].action
+	if Rect2(pet_world - Vector2(100, 190) * presentation_scale, Vector2(200, 200) * presentation_scale).has_point(where): return "pet"
 	return ""
 
-func _walking_margin() -> float:
-	return minf(size.x * 0.37, 93 * presentation_scale + 12)
+func _hits_pet(where: Vector2) -> bool:
+	var sprite := animator.sprite
+	if sprite.sprite_frames == null: return false
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if texture == null: return false
+	var pixel := Vector2i(sprite.to_local(where).floor())
+	if pixel.x < 0 or pixel.y < 0 or pixel.x >= texture.get_width() or pixel.y >= texture.get_height(): return false
+	if sprite.flip_h: pixel.x = texture.get_width() - 1 - pixel.x
+	if not _touch_masks.has(texture):
+		var mask := BitMap.new()
+		mask.create_from_image_alpha(texture.get_image(), 0.5)
+		_touch_masks[texture] = mask
+	return _touch_masks[texture].get_bitv(pixel)
+
+func world_to_screen(point: Vector2) -> Vector2:
+	return render_rect.get_center() + (point - camera.position) * camera.zoom
+
+func screen_to_world(point: Vector2) -> Vector2:
+	return camera.position + (point - render_rect.get_center()) / camera.zoom
 
 func pet_position() -> Vector2:
-	var margin := _walking_margin()
-	return Vector2(lerpf(margin, size.x - margin, inverse_lerp(0.23, 0.77, current_ratio)), minf(size.y * 0.79, size.y - 112))
+	return world_to_screen(pet_world)
+
+func station_bounds(id: String) -> Rect2:
+	var data: Dictionary = RoomLayout.STATIONS[id]
+	return Rect2(data.position + data.bounds.position, data.bounds.size)
+
+func _screen_rect(rect: Rect2) -> Rect2:
+	return Rect2(world_to_screen(rect.position), rect.size * camera.zoom)
 
 func bowl_rect() -> Rect2:
-	return Rect2(size.x - 83, size.y * 0.77, 56, 31)
+	return _screen_rect(station_bounds("food"))
 
 func bed_rect() -> Rect2:
-	return Rect2(20, size.y * 0.69, 88, 44)
+	return _screen_rect(station_bounds("bed"))
 
 func ball_center() -> Vector2:
-	return Vector2(size.x * 0.77, size.y * 0.69)
+	return world_to_screen(ball_world)
+
+func station_point(action: String) -> Vector2:
+	if action in ["play", "bored"]:
+		var direction := 1.0 if ball_target.x >= pet_world.x else -1.0
+		return RoomLayout.clamp_walk(ball_target + Vector2(-direction * 70 * presentation_scale, 10))
+	return RoomLayout.station(action).get("stand", pet_world)
 
 func update_placement() -> void:
-	presentation_scale = clampf(minf((pet_position().y - 210) / 180, (size.x - 104) / 180), 0.55, 1.55)
+	if not is_inside_tree() or size.x <= 0: return
+	render_rect = Rect2(0, hud_bottom, size.x, maxf(80, size.y - hud_bottom))
+	display.position = render_rect.position
+	display.size = render_rect.size
+	viewport.size = Vector2i(render_rect.size.ceil())
+	base_zoom = minf(render_rect.size.y / RoomLayout.SIZE.y, render_rect.size.x / (RoomLayout.SIZE.x / 3.0))
 	animator.scale = Vector2.ONE * presentation_scale
-	animator.position = pet_position()
-	queue_redraw()
+	shadow.scale = Vector2.ONE * presentation_scale
+	room_hint.position = render_rect.position + Vector2(20, 10)
+	return_button.position = Vector2(size.x - 112, hud_bottom + 6)
+	return_button.size = Vector2(96, 32)
+	if not _camera_initialized:
+		camera.zoom = Vector2.ONE * base_zoom
+		camera.position = _clamp_camera(Vector2(pet_world.x, RoomLayout.SIZE.y * 0.5), base_zoom)
+		_manual_zoom = base_zoom
+		_camera_initialized = true
+	else:
+		# Keep the view's relative zoom when rotating, without changing any world point.
+		camera.zoom = Vector2.ONE * base_zoom * (1.38 if interaction_focus or focus_left > 0 else 1.0)
+		_manual_zoom = camera.zoom.x
+		camera.position = _clamp_camera(camera.position, camera.zoom.x)
+	camera.force_update_scroll()
+	_sync_layers()
 
-func move_to(ratio: float) -> void:
-	target_ratio = clampf(ratio, 0.23, 0.77)
+func _clamp_camera(point: Vector2, zoom_level: float) -> Vector2:
+	var half := render_rect.size / maxf(0.01, zoom_level) * 0.5
+	return Vector2(clampf(point.x, minf(half.x, RoomLayout.SIZE.x * 0.5), maxf(RoomLayout.SIZE.x - half.x, RoomLayout.SIZE.x * 0.5)), clampf(point.y, minf(half.y, RoomLayout.SIZE.y * 0.5), maxf(RoomLayout.SIZE.y - half.y, RoomLayout.SIZE.y * 0.5)))
+
+func focus_pet(close_up: bool = false) -> void:
+	camera_manual = false
+	if close_up: focus_left = 3.5
+	return_button.hide()
+
+func set_interaction_focus(value: bool) -> void:
+	if value and not interaction_focus: focus_pet(false)
+	interaction_focus = value
+
+func look_at_world(point: Vector2) -> void:
+	camera_manual = true
+	_manual_zoom = camera.zoom.x
+	camera.position = _clamp_camera(point, _manual_zoom)
+	camera.force_update_scroll()
+	return_button.show()
+
+func _update_camera(delta: float) -> void:
+	if not _camera_initialized or _pointer_id != -1: return
+	var zoom_target := _manual_zoom if camera_manual else base_zoom * (1.38 if interaction_focus or focus_left > 0 else 1.0)
+	var blend := 1.0 - exp(-6.0 * delta)
+	var next_zoom := lerpf(camera.zoom.x, zoom_target, blend)
+	camera.zoom = Vector2.ONE * next_zoom
+	if not camera_manual:
+		var y := RoomLayout.SIZE.y * 0.5
+		if interaction_focus or focus_left > 0:
+			y = pet_world.y - render_rect.size.y / next_zoom * 0.14
+		var desired := _clamp_camera(Vector2(pet_world.x, y), next_zoom)
+		camera.position = camera.position.lerp(desired, blend)
+	camera.position = _clamp_camera(camera.position, next_zoom)
+	camera.force_update_scroll()
+	return_button.visible = camera_manual
+	room_hint.visible = camera_manual or not (interaction_focus or focus_left > 0)
+
+func move_to(point: Vector2) -> void:
+	cancel_activity()
+	target_world = RoomLayout.clamp_walk(point)
 	moving = true
 
+func approach_station(action: String, token: int) -> void:
+	cancel_activity()
+	station_action = action
+	station_token = token
+	if action == "play":
+		ball_target = RoomLayout.clamp_walk(Vector2(clampf(pet_world.x + (230 if pet_world.x < RoomLayout.SIZE.x * 0.58 else -230), 280, 1180), 317))
+		animator.request_clip("play_bow")
+	target_world = station_point(action)
+	moving = true
+	animator.request_clip("walk")
+
+func place_at_station(action: String) -> void:
+	anchored_station = action
+	pet_world = station_point(action)
+	target_world = pet_world
+	animator.facing_left = RoomLayout.station(action).get("facing_left", false)
+	_sync_layers()
+	if not camera_manual:
+		camera.position = _clamp_camera(Vector2(pet_world.x, RoomLayout.SIZE.y * 0.5), camera.zoom.x)
+		camera.force_update_scroll()
+
+func cancel_activity() -> void:
+	moving = false
+	station_token = 0
+	station_action = ""
+	anchored_station = ""
+	walk_performance = 0
+	walk_ready = false
+	ball_target = ball_world
+	_pointer_id = -1
+
 func play_performance(clip: String, trial_id: int) -> void:
+	if clip == "walk" and not moving: move_to(RoomLayout.come_target(pet_world))
 	walk_performance = trial_id if clip == "walk" else 0
 	walk_ready = false
 	animator.request_clip(clip, trial_id)
 
 func _on_animation_completed(trial_id: int) -> void:
-	if trial_id == walk_performance:
-		walk_ready = true
-	else:
-		performance_finished.emit(trial_id)
+	if trial_id == walk_performance: walk_ready = true
+	else: performance_finished.emit(trial_id)
 
 func play_clip(clip: String) -> void:
 	if clip != "walk":
 		moving = false
 		walk_performance = 0
 	animator.request_clip(clip)
-	sleeping = clip == "sleep"
 	if clip in ["tail_wag_sit", "tail_wag_stand", "petted_stand"]:
-		effect = "♥"
+		effect_label.text = "♥"
 		effect_left = 1.7
 	elif clip == "head_tilt_stand":
-		effect = "?"
+		effect_label.text = "?"
 		effect_left = 1.4
 
 func _process(delta: float) -> void:
-	# The completed walk still belongs to the training trial, not to the UI.
 	if moving and animator.current == "walk":
-		animator.facing_left = target_ratio < current_ratio
-		current_ratio = move_toward(current_ratio, target_ratio, delta * 0.24)
-		if is_equal_approx(current_ratio, target_ratio):
+		var difference := target_world - pet_world
+		if absf(difference.x) > 0.1: animator.facing_left = difference.x < 0
+		var speed := WALK_SPEED * (1.6 if station_action == "play" else 1.0)
+		pet_world = pet_world.move_toward(target_world, speed * delta)
+		if pet_world.is_equal_approx(target_world):
 			moving = false
-			if walk_performance > 0 and walk_ready:
-				var completed := walk_performance
-				walk_performance = 0
-				performance_finished.emit(completed)
-			destination_reached.emit()
-	animator.position = pet_position()
+			if station_token > 0:
+				var token := station_token
+				station_token = 0
+				if station_action not in ["play", "bored"]:
+					anchored_station = station_action
+					animator.facing_left = RoomLayout.station(station_action).get("facing_left", false)
+				elif station_action == "bored":
+					ball_target.x = clampf(ball_world.x + (35 if not animator.facing_left else -35), 200, 1230)
+				station_reached.emit(token)
+			else:
+				if walk_performance > 0 and walk_ready:
+					var completed := walk_performance
+					walk_performance = 0
+					performance_finished.emit(completed)
+				destination_reached.emit()
+	# Preserve the delivered walk's stride-to-distance ratio at the chosen world speed.
+	animator.sprite.speed_scale = WALK_SPEED / (60 * presentation_scale) * (1.6 if station_action == "play" else 1.0) if animator.current == "walk" else 1.0
+	if not ball_world.is_equal_approx(ball_target):
+		var before := ball_world.x
+		ball_world = ball_world.move_toward(ball_target, delta * 290)
+		ball_art.roll_phase += (ball_world.x - before) / 12
+		ball_art.queue_redraw()
 	effect_left = maxf(0, effect_left - delta)
-	elapsed += delta
-	queue_redraw()
+	focus_left = maxf(0, focus_left - delta)
+	_sync_layers()
+	_update_camera(delta)
 
-func _box(rect: Rect2, color: Color, radius: int = 16) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.set_corner_radius_all(radius)
-	draw_style_box(style, rect)
-
-func _arch(rect: Rect2, color: Color) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = color
-	style.corner_radius_top_left = int(rect.size.x / 2)
-	style.corner_radius_top_right = int(rect.size.x / 2)
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
-	draw_style_box(style, rect)
-
-func _ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
-	var points := PackedVector2Array()
-	for i in 64:
-		var angle := TAU * i / 64.0
-		points.append(center + Vector2(cos(angle), sin(angle)) * radii)
-	draw_colored_polygon(points, color)
-
-func _leaf(center: Vector2, radius: Vector2, angle: float, color: Color) -> void:
-	draw_set_transform(center, angle)
-	_ellipse(Vector2.ZERO, radius, color)
-	draw_set_transform(Vector2.ZERO)
-
-func _draw() -> void:
-	var w := size.x
-	var h := size.y
-	if w <= 0 or h <= 0: return
-	var floor_y := h * 0.60
-	# A quiet wall leaves the top of the scene readable for the compact HUD.
-	for i in 40:
-		var t := i / 39.0
-		draw_rect(Rect2(0, h * i / 40.0, w, h / 40.0 + 1), Color("f5f2df").lerp(Color("dfe5c8"), t))
-	var scene_top := maxf(182, h * 0.32)
-	var window_h := clampf(floor_y - scene_top + 8, 88, 220)
-	var window_w := clampf(w * 0.31, 108, 220)
-	var window_x := w * 0.64 - window_w * 0.25
-	var window := Rect2(window_x, scene_top, window_w, window_h)
-	_arch(Rect2(window.position + Vector2(5, 5), window.size), Color(0.36, 0.40, 0.28, 0.07))
-	_arch(window, Color("fffbee"))
-	var sky := window.grow(-8)
-	_arch(sky, Color("c5dfd8"))
-	draw_circle(sky.position + Vector2(sky.size.x * 0.69, sky.size.y * 0.32), 13, Color("f7e4a6"))
-	var hill_y := sky.end.y - sky.size.y * 0.3
-	draw_colored_polygon(PackedVector2Array([Vector2(sky.position.x, hill_y + 7), Vector2(sky.position.x + sky.size.x * 0.33, hill_y - 10), Vector2(sky.end.x, hill_y + 8), sky.end, Vector2(sky.position.x, sky.end.y)]), Color("a5bf9b"))
-	draw_line(Vector2(window.get_center().x, sky.position.y + 3), Vector2(window.get_center().x, sky.end.y), Color("fffbee"), 5, true)
-	draw_line(Vector2(sky.position.x, sky.position.y + sky.size.y * 0.61), Vector2(sky.end.x, sky.position.y + sky.size.y * 0.61), Color("fffbee"), 5, true)
-	_box(Rect2(window_x - 9, window.end.y, window_w + 18, 9), Color("c6aa7e"), 4)
-	# A linen curtain and a small framed paw print make the room feel lived in.
-	draw_line(Vector2(window_x - 8, scene_top - 7), Vector2(window.end.x + 9, scene_top - 7), Color("ae9671"), 3, true)
-	_box(Rect2(window_x - 4, scene_top - 5, 19, window_h * 0.68), Color("ede2bc"), 7)
-	draw_line(Vector2(window_x + 3, scene_top + 6), Vector2(window_x + 3, scene_top + window_h * 0.55), Color("ddd0a8"), 1.5, true)
-	var frame := Rect2(w * 0.13, scene_top + 8, 54, 66)
-	_box(Rect2(frame.position + Vector2(3, 4), frame.size), Color(0.4, 0.38, 0.22, 0.06), 7)
-	_box(frame, Color("b99d76"), 5)
-	_box(frame.grow(-5), Color("fbf0d9"), 2)
-	draw_texture_rect(GameIcons.texture("paw", Color("c29b69")), Rect2(frame.position + Vector2(13, 17), Vector2(28, 28)), false)
-	# Floor boards and a broad shaft of sunlight establish space without clutter.
-	draw_rect(Rect2(0, floor_y, w, h - floor_y), Color("dfc49d"))
-	draw_rect(Rect2(0, floor_y, w, 7), Color("c5ad87"))
-	draw_line(Vector2(0, floor_y + 7), Vector2(w, floor_y + 7), Color("eddbb7"), 2)
-	for i in range(-2, 10):
-		var x := w * i / 7.0
-		draw_line(Vector2(x, floor_y + 10), Vector2(x - 74, h), Color("d3b58b"), 1.2, true)
-	for t in [0.32, 0.72]:
-		draw_line(Vector2(0, lerpf(floor_y, h, t)), Vector2(w, lerpf(floor_y, h, t)), Color("d6b98e"), 1, true)
-	draw_colored_polygon(PackedVector2Array([Vector2(window_x, floor_y + 9), Vector2(window.end.x - 5, floor_y + 9), Vector2(w * 0.73, h), Vector2(w * 0.17, h)]), Color(1.0, 0.96, 0.75, 0.21))
-	# Rug follows the room, independently from the puppy's animation anchor.
-	var rug := Vector2(w * 0.5, h * 0.80)
-	_ellipse(rug + Vector2(0, 5), Vector2(w * 0.35, h * 0.105), Color(0.46, 0.34, 0.18, 0.06))
-	_ellipse(rug, Vector2(w * 0.35, h * 0.105), Color("b3bf95"))
-	_ellipse(rug, Vector2(w * 0.32, h * 0.091), Color("ccd1a8"))
-	_ellipse(rug, Vector2(w * 0.29, h * 0.078), Color("d5d8b3"))
-	# Plant sits beside the bed; subtle leaf motion does not distract from training.
-	var pot := Vector2(w * 0.10, floor_y - 4)
-	var sway := sin(elapsed * 0.7) * 0.025
-	draw_line(pot - Vector2(0, 18), pot - Vector2(0, 70), Color("71865b"), 2.5, true)
-	_leaf(pot + Vector2(-11, -44), Vector2(18, 8), 0.45 + sway, Color("889b6c"))
-	_leaf(pot + Vector2(12, -61), Vector2(18, 8), -0.5 + sway, Color("9aab7b"))
-	_leaf(pot + Vector2(-6, -72), Vector2(12, 7), 0.7 + sway, Color("789363"))
-	_box(Rect2(pot.x - 15, pot.y - 24, 30, 30), Color("c58b6b"), 8)
-	_box(Rect2(pot.x - 17, pot.y - 25, 34, 7), Color("d6a17e"), 3)
-	var bed := bed_rect()
-	_ellipse(bed.get_center() + Vector2(0, 6), bed.size * Vector2(0.53, 0.43), Color(0.4, 0.36, 0.2, 0.08))
-	_ellipse(bed.get_center(), bed.size * 0.5, Color("7c9582"))
-	_ellipse(bed.get_center() - Vector2(0, 3), bed.size * Vector2(0.40, 0.32), Color("b8c5a6"))
-	_ellipse(bed.get_center() - Vector2(0, 2), bed.size * Vector2(0.30, 0.23), Color("c7d0b1"))
-	var ball := ball_center()
-	_ellipse(ball + Vector2(1, 12), Vector2(15, 5), Color(0.44, 0.34, 0.2, 0.09))
-	draw_circle(ball, 12, Color("ce8968"))
-	draw_arc(ball + Vector2(-4, -1), 11, -1.0, 1.4, 24, Color("edbf8d"), 2.5, true)
-	var bowl := bowl_rect()
-	_ellipse(bowl.get_center() + Vector2(0, 8), Vector2(32, 11), Color(0.44, 0.34, 0.2, 0.09))
-	_box(bowl, Color("b9795e"), 11)
-	_ellipse(Vector2(bowl.get_center().x, bowl.position.y + 5), Vector2(28, 10), Color("e4b08a"))
-	_ellipse(Vector2(bowl.get_center().x, bowl.position.y + 5), Vector2(21, 6), Color("896346"))
-	for i in 6:
-		draw_circle(Vector2(bowl.position.x + 13 + i * 6, bowl.position.y + 4 + (i % 2) * 2), 2.5, Color("c39a5d"))
-	var foot := pet_position()
-	_ellipse(foot + Vector2(0, 2), Vector2(53, 9) * presentation_scale, Color(0.35, 0.31, 0.20, 0.12))
-	if sleeping:
-		draw_string(get_theme_font("font"), foot + Vector2(55, -124) * presentation_scale, "z Z", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("758d77"))
-	if effect_left > 0:
-		var color := Color("b9745b")
-		color.a = minf(1, effect_left)
-		draw_string(get_theme_font("font"), foot + Vector2(55, -145) * presentation_scale - Vector2(0, (1.7 - effect_left) * 16), effect, HORIZONTAL_ALIGNMENT_LEFT, -1, 29, color)
+func _sync_layers() -> void:
+	puppy.position = pet_world
+	ball_art.position = ball_world
+	effect_label.visible = effect_left > 0
+	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
+	effect_label.modulate.a = minf(1, effect_left)
+	sleep_label.visible = animator.current == "sleep"
+	sleep_label.position = Vector2(55, -100) * presentation_scale

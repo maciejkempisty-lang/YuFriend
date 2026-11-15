@@ -2,7 +2,7 @@
 
 [Mapa dokumentacji](README.md) · [Podpinanie gotowych klatek](integracja-spriteow.md)
 
-Brief produkcyjny z 10 listopada 2026 dla golden retrievera wzorowanego na zdjęciu psa użytkownika. Lista jest wspólna dla prostej ilustracji 2D i pixel art. Pełny zestaw klatek przygotowujemy po wyborze jednego stylu. Obecne obrazy są wzorcami wyglądu i pozy; nie są jeszcze wyrównanymi klatkami animacji.
+Brief produkcyjny z 10 listopada 2026 dla golden retrievera wzorowanego na zdjęciu psa użytkownika. **Aktualizacja 14 listopada 2026:** wybrano pixel art i podłączono dostarczone 22 klipy / 142 klatki pakietu A+B. Poniższa lista zachowuje pierwotny brief; aktualny import, kalibrację i ograniczenia opisuje [integracja sprite’ów](integracja-spriteow.md). Dawne referencje obu stylów pozostają materiałem historycznym.
 
 Pierwszy kompletny zestaw obejmuje 22 klipy i orientacyjnie 142 klatki dla głównego widoku bocznego. Najpierw powstaje 8 klipów ruchu i treningu, następnie 14 klipów opieki i reakcji. Liczby klatek są punktem wyjścia i można je zmienić po obejrzeniu ruchu. Lista rozszerza wcześniejszy szkic 13 klipów i jest aktualnym briefem animacji do [planu implementacji](plan-implementacji.md).
 

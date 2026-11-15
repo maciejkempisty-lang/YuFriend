@@ -13,7 +13,7 @@ Stan jednego psa jest przechowywany jako JSON o `schema_version: 2`. Plik zawier
 | `pet_id` | Stały, niepusty identyfikator tekstowy; maksymalnie 100 znaków |
 | `pet_name` | Imię do 24 znaków; nie może składać się wyłącznie z białych znaków |
 | `life_stage` | `puppy`, `young`, `adult` albo `senior`; gra tworzy i prezentuje obecnie szczeniaka |
-| `skin` | `simple` albo `pixel` |
+| `skin` | `simple` albo `pixel`; nowe psy mają `pixel`. Pole starszego zapisu zostaje zachowane, ale obecny widok zawsze używa pixel art |
 | `personality_seed` | Ziarno losowania od 1 do 2147483646 |
 | `traits` | Liczby dla `curiosity`, `patience`, `sociability`, `sensitivity`, wczytywane do zakresu 0–1 |
 | `favorite_reward` | `treat`, `praise` albo `play` |
@@ -40,7 +40,7 @@ Odczyt wymaga poprawnego obiektu JSON i wszystkich pól wymaganych przez `from_d
 
 Limit pliku wynosi **1 MiB**. Gra czyta wersje `1` i `2`. Każda inna wartość `schema_version`, również brak tego pola w obiekcie JSON, daje status `unsupported`.
 
-Zapis w wersji 1 jest uzupełniany przez `SaveSystem.migrate()` o pustą historię, pustą listę nawyków i `reflected_day: 0`; pozostałe pola nie są zmieniane. Oryginał jest kopiowany do pliku tymczasowego, sprawdzany i zatwierdzany jako `pet.json.v1`. Dotyczy to także odzyskiwania wersji 1 z `.bak`; późniejsze rotacje kopii nie usuwają `.v1`. Istniejąca kopia musi być poprawnym zapisem tej wersji i tego samego psa.
+Zapis w wersji 1 jest uzupełniany przez `SaveSystem.migrate()` o pustą historię, pustą listę nawyków i `reflected_day: 0`; pozostałe pola nie są zmieniane. Oryginał jest kopiowany do pliku tymczasowego, sprawdzany i zatwierdzany jako `pet.json.v1`. Dotyczy to także odzyskiwania wersji 1 z `.bak`; późniejsze rotacje kopii nie usuwają `.v1`. Poprawna kopia tej wersji i tego samego psa jest ponownie używana. Jeśli istniejąca `.v1` dotyczy innego psa lub jest niepoprawna, pozostaje nietknięta, a własna kopia trafia do `.v1.<pełny SHA-256 źródła>`. Ponowienie używa tego samego pliku po sprawdzeniu wersji, identyfikatora i skrótu zawartości. Błąd systemu plików lub walidacji kopii nadal wstrzymuje zapis bez utraty oryginału.
 
 Jeśli zabezpieczenie oryginału się nie powiedzie, `load_pet()` zwraca `migration_failed` z wczytanym psem i `writable: false`. Również bezpośrednie `save_pet()` odmawia zastąpienia starszego zapisu bez poprawnej kopii. Po udanym zabezpieczeniu najbliższy zapis tworzy wersję 2. Kolejna zmiana struktury wymaga dopisania następnego kroku w `migrate()` i testu odczytu starszego psa.
 
@@ -50,7 +50,7 @@ Akceptacja wartości `young`, `adult` i `senior` przez walidator nie uruchamia d
 
 Zapis obejmuje imię, tożsamość, wygląd, cechy, potrzeby, relację, komendy, odpoczynek, wspomnienia, historię zdarzeń, nawyki i czas. Ziarno służy do pierwotnego losowania; podczas odczytu cechy są pobierane z pliku.
 
-Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka interfejsu, czasy ponownego użycia i rozpoczęta próba treningowa są tymczasowe. Po restarcie pies zaczyna w środkowej części pokoju. Wczytany odpoczynek odtwarza pozycję snu; niezakończony trening nie daje oczekującej nagrody.
+Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka interfejsu, czasy ponownego użycia i rozpoczęta próba treningowa są tymczasowe. Tymczasowe są także cel opieki i token dojścia; przerwane dojście nie daje efektu po wznowieniu. Współrzędne świata i ręczne ustawienie kamery nie są zapisywane. Po restarcie pies zaczyna w środkowej części pokoju (670, 322). Wczytany odpoczynek ustawia psa w legowisku i odtwarza pozycję snu, o ile przeliczenie nieobecności nie zakończyło już drzemki; niezakończony trening nie daje oczekującej nagrody.
 
 ## Lokalizacja i momenty zapisu
 
@@ -62,14 +62,14 @@ Pozycja w pokoju, kierunek patrzenia, aktualny klip, kolejka animacji, zakładka
 
 Standardowy katalog projektu na macOS to `~/Library/Application Support/Godot/app_userdata/YuFriend/`. Dane są poza katalogiem kodu. Rzeczywistą ścieżkę określa `ProjectSettings.globalize_path("user://")`.
 
-`GameSession.flush()` zapisuje po ważnych akcjach: opiece, rozpoczęciu treningu, nagrodzie, zmianie imienia i stylu, a także przy starcie, wstrzymaniu, wznowieniu, utracie fokusu i zamknięciu okna. Dodatkowo zapis następuje po 25 sekundach bez kolejnego `flush()`. Sam ruch po pokoju nie wymaga osobnego zapisu pozycji.
+`GameSession.flush()` zapisuje po ważnych akcjach: opiece, rozpoczęciu treningu, nagrodzie, zmianie imienia, a także przy starcie, wstrzymaniu, wznowieniu, utracie fokusu i zamknięciu okna. Dodatkowo zapis następuje po 25 sekundach bez kolejnego `flush()`. Sam ruch po pokoju nie wymaga osobnego zapisu pozycji.
 
 ## Zatwierdzanie pliku
 
 1. Stan przechodzi walidację przez `PetState.from_dict()`.
 2. Nowy JSON trafia do `pet.json.tmp`; plik jest opróżniany do systemu plików, zamykany i ponownie odczytywany przez walidator.
 3. Jeśli obecny główny plik ma nieobsługiwany schemat, zapis zostaje przerwany.
-4. Przed zastąpieniem pliku lub rotacją kopii starszy poprawny zapis z pliku głównego lub `.bak` musi mieć zabezpieczony oryginał `.v1`.
+4. Przed zastąpieniem pliku lub rotacją kopii starszy poprawny zapis z pliku głównego lub `.bak` musi mieć zabezpieczony oryginał `.v1` lub właściwą dodatkową kopię ze skrótem źródła.
 5. Jeśli obecny główny plik jest poprawny, jest kopiowany do `pet.json.bak.tmp`, a następnie zatwierdzany jako `pet.json.bak`.
 6. Plik tymczasowy zastępuje główny przez zmianę nazwy w tym samym katalogu.
 
@@ -97,3 +97,5 @@ Przy ręcznym diagnozowaniu zamknij grę i zachowaj kopię całego katalogu dany
 W aktywnej sesji potrzeby korzystają z `delta`. Przy starcie i wznowieniu wyliczana jest różnica `now − last_seen_at`, ograniczona do 0–28800 sekund. Po przeliczeniu `last_seen_at` jest ustawiany na większą z wartości poprzedniej i bieżącego czasu. Zapis także nie cofa tego znacznika.
 
 Cofnięcie zegara nie daje ujemnej nieobecności. Przesunięcie zegara w przód może wywołać przeliczenie, lecz tylko do limitu ośmiu godzin. Gra nie pobiera czasu z serwera. To łagodne zasady lokalnej symulacji, bez sieciowego rozliczania czasu.
+
+Sen po nieobecności jest liczony do progu 85 energii (netto +13/h), a pozostały czas jako czuwanie (−5/h). W aktywnej grze wybudzeniem zarządza sesja, z minimum 6 sekundami drzemki. To zmiana zachowania, bez nowej wersji schematu. Pole `skin` nadal przechodzi przez odczyt i zapis, ale nie wybiera już wyglądu gry.

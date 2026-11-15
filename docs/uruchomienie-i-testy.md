@@ -38,11 +38,11 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 
 | Skrypt | Zakres | Ostatni odnotowany wynik |
 |---|---|---:|
-| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 80 poprawnych sprawdzeń |
-| [test_sprites.gd](../tests/test_sprites.gd) | Manifest, rozmiary, kolejność klatek, zasób `.res`, przejścia i ukończenie prezentacji | 26 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 32 poprawne sprawdzenia |
+| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 87 poprawnych sprawdzeń |
+| [test_sprites.gd](../tests/test_sprites.gd) | Manifest, nieregularne regiony, podparcie, skalowanie, kompletny pakiet 22/142, zasób `.res`, przejścia i ukończenie prezentacji | 38 poprawnych sprawdzeń |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 83 poprawne sprawdzenia |
 
-Wynik **138/138** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału.
+Wynik **208/208** pochodzi z weryfikacji prototypu 14 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału. Nowe regresje obejmują obcą kopię `.v1`, wybudzanie także offline, dojście przed naliczeniem opieki, anulowanie dojścia, reakcję na kolejne głaskanie, sygnalizowanie potrzeb oraz brak przebudowy statycznego tła podczas ruchu. Przebudowa świata dodaje próby przesuwania kamery, rozróżnienia gestu i tapnięcia, granic, zbliżeń, przechodzenia za przedmiotami, sześciu stacji i niezmienności współrzędnych przy zmianie rozmiaru okna.
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_runner.gd
@@ -50,7 +50,7 @@ Wynik **138/138** pochodzi z weryfikacji prototypu 10 listopada 2026 w Godot 4.7
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
 ```
 
-Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640 i 1100 × 720. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku oraz kontrolowanym upływem czasu. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
+Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640 i 1100 × 720. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku (także przeciągnięciem) oraz kontrolowanym upływem czasu. Zapisuje też lewy i prawy koniec pokoju, zbliżenie, obie głębokości przy koszu i pełną panoramę świata w `19-panorama.png`. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
 
 Testy używają własnych tymczasowych danych i sprzątają je po normalnym zakończeniu. Nie nadpisują `user://pet.json` ani ręcznego zapisu `--qa`. Katalog `test-results/` jest pomijany przez Git i skaner zasobów Godota.
 
@@ -60,10 +60,10 @@ Uruchom grę z `--qa`. Wykonaj poniższe czynności również po większej zmian
 
 | Czynność | Oczekiwany rezultat |
 |---|---|
-| Otwórz Profil, zmień imię i styl, zapisz | Zmiany pojawiają się w grze; przyciski dialogu mieszczą się w oknie |
+| Otwórz Profil, zmień imię, zapisz | Zmiany pojawiają się w grze; przyciski dialogu mieszczą się w oknie |
 | Kliknij lewą i prawą stronę pokoju | Pies zmienia kierunek i dochodzi do celu; po siadzie najpierw wstaje |
-| Nakarm, pogłaszcz, pobaw się i wyczesz | Wskaźniki reagują, pojawiają się komunikaty i pierwsze wspomnienia |
-| Włącz odpoczynek, poczekaj, obudź | Energia rośnie, opieka i trening wracają po wybudzeniu |
+| Nakarm, pogłaszcz, pobaw się i wyczesz | Pies idzie do miski, goni piłkę i odpowiada na kolejne dotknięcia; efekty i wspomnienia naliczają się tylko raz |
+| Włącz odpoczynek i poczekaj | Pies idzie do legowiska, energia rośnie i przy 85 pies sam wstaje; ręczne budzenie nadal działa |
 | Ćwicz siad z gestem i nagradzaj na czas | Opanowanie rośnie; po 25% dostępna staje się łapa |
 | Nagródź przed wykonaniem, po czasie i dwa razy | Żadna z tych dodatkowych prób nie przyznaje postępu |
 | Wpisz „usiądź”, a następnie nierozpoznawany zwrot | Pierwszy uruchamia samodzielną próbę, drugi daje wyjaśnienie |
@@ -80,7 +80,7 @@ Jakość rzeczywistych sprite’ów oceniamy osobno: stabilne łapy, zgodne pozy
 | Efekt opieki i czas ponownego użycia | `GameSession.act()`; sprawdź reguły oraz przepływ UI |
 | Szansa wykonania i nagrody | `TrainingSystem`; sprawdź wczesne, podwójne i wygasłe nagrody |
 | Układ, napisy i dialogi | `scripts/ui/main.gd`; sprawdź układy pionowe i szeroki panel boczny |
-| Wygląd pokoju i ruch | `RoomView`; sprawdź cel, kierunek i przejście z siadu do chodu |
+| Wygląd pokoju i ruch | `RoomView` i `RoomArtwork`; sprawdź cel, kierunek, dojście do przedmiotów i przejście z siadu do chodu |
 | Nowy klip | `PetAnimator.CLIPS`, ewentualnie graf przejść, manifest i sytuacja uruchamiająca klip |
 | Nowa komenda lub potrzeba | Model, odpowiedni system, sesja, UI i migracja istniejącego zapisu |
 
@@ -95,7 +95,7 @@ Po zmianie uruchamiaj zestawy powiązane z danym obszarem. Aktualizacja samego o
 | Nowy PNG nie jest znajdowany | Poczekaj na import Godota; sprawdź nazwę i ścieżkę `res://assets/` |
 | Importer zgłasza brak plików z przykładu | `manifest.example.json` pokazuje przyszłe nazwy; w `manifest.json` pozostaw dostarczone klipy |
 | Pakiet już istnieje | Użyj `--replace` przy świadomej przebudowie całego pakietu |
-| Nowe klatki nie pojawiają się w grze | Uruchom grę ponownie, wybierz właściwy styl i sprawdź, czy ręczne `frames` nie ma pierwszeństwa |
+| Nowe klatki nie pojawiają się w grze | Uruchom grę ponownie i sprawdź `puppy_pixel.res` oraz czy ręczne `frames` nie ma pierwszeństwa |
 | Pies nie porusza łapami | Dla brakującego klipu nadal działa zastępcza ilustracja |
 | Łapa lub trening są niedostępne | Sprawdź opanowanie siadu, sytość, energię, zmęczenie i bieżącą czynność |
 | Postęp czeka na zapis | Sprawdź dostęp i wolne miejsce w katalogu `user://`; szczegół jest w `SaveSystem.last_error` |

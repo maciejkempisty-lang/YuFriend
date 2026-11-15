@@ -29,11 +29,9 @@ var command_button: Button
 var journal_list: VBoxContainer
 var selected_trick: String = "come"
 var selected_tab: String = "care"
-var applied_skin: String = ""
 var journal_count: int = -1
 var profile_dialog: AcceptDialog
 var name_edit: LineEdit
-var skin_choice: OptionButton
 var profile_traits: Label
 var text_dialog: AcceptDialog
 var command_edit: LineEdit
@@ -66,6 +64,11 @@ func _ready() -> void:
 	session.clip_requested.connect(room.play_clip)
 	session.destination_requested.connect(room.move_to)
 	session.performance_requested.connect(room.play_performance)
+	session.approach_requested.connect(room.approach_station)
+	session.place_requested.connect(room.place_at_station)
+	session.activity_cancelled.connect(room.cancel_activity)
+	session.attention_requested.connect(room.focus_pet)
+	room.station_reached.connect(session.arrive_at)
 	room.destination_reached.connect(session.destination_reached)
 	room.performance_finished.connect(session.performance_finished)
 	session.save_status.connect(func(_ok: bool): _refresh())
@@ -417,18 +420,10 @@ func _build_dialogs() -> void:
 	name_edit.max_length = 24
 	name_edit.custom_minimum_size.y = 40
 	box.add_child(name_edit)
-	box.add_child(_label("Wygląd pieska", 16))
-	skin_choice = OptionButton.new()
-	skin_choice.add_item("Miękka ilustracja 2D")
-	skin_choice.add_item("Pixel art")
-	skin_choice.custom_minimum_size.y = 40
-	box.add_child(skin_choice)
 	profile_traits = _label("", 15, MUTED)
 	# Explicit short lines keep the dialog minimum height stable before opening.
 	box.add_child(profile_traits)
-	profile_dialog.confirmed.connect(func():
-		session.rename_pet(name_edit.text)
-		session.change_skin("simple" if skin_choice.selected == 0 else "pixel"))
+	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
 	text_dialog = AcceptDialog.new()
 	text_dialog.title = "Napisz komendę"
 	text_dialog.ok_button_text = "Poproś"
@@ -488,6 +483,7 @@ func _fit_room() -> void:
 	else:
 		_place(header, Rect2(scene_inset, 20, scene_width - scene_inset * 2, 82))
 		_place(needs_row, Rect2(scene_inset - 4, 116, scene_width - scene_inset * 2 + 8, 62))
+	room.hud_bottom = 0.0 if layout_wide else needs_row.get_rect().end.y + 16
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
 	_place(navigation, Rect2(panel_x, nav_y, panel_width, 72))
 	var bubble_width := minf(scene_width - 48, 410)
@@ -514,7 +510,6 @@ func _reward(kind: String) -> void:
 func _show_profile() -> void:
 	if session.pet == null: return
 	name_edit.text = session.pet.pet_name
-	skin_choice.select(0 if session.pet.skin == "simple" else 1)
 	profile_traits.text = "Ciekawość %d%% · Cierpliwość %d%%\nTowarzyskość %d%% · Wrażliwość %d%%\nUlubiona nagroda: %s" % [
 		roundi(float(session.pet.traits.curiosity) * 100), roundi(float(session.pet.traits.patience) * 100),
 		roundi(float(session.pet.traits.sociability) * 100), roundi(float(session.pet.traits.sensitivity) * 100), REWARD_LABELS[session.pet.favorite_reward].to_lower()]
@@ -523,7 +518,7 @@ func _show_profile() -> void:
 	profile_traits.text += "\nNawyki: " + ("jeszcze się kształtują" if habits.is_empty() else "")
 	for index in habits.size():
 		profile_traits.text += ("\n" if index % 2 == 0 else " · ") + habits[index]
-	profile_dialog.popup_centered(Vector2i(336, 340 + 22 * (1 + ceili(habits.size() / 2.0))))
+	profile_dialog.popup_centered(Vector2i(336, 260 + 22 * (1 + ceili(habits.size() / 2.0))))
 	name_edit.grab_focus()
 
 func _show_command() -> void:
@@ -544,16 +539,17 @@ func _submit_command() -> void:
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
+	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = pet.pet_name
 	bond_label.text = "Szczeniak  ·  %s" % ("Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"))
 	bond_label.tooltip_text = "Wasza więź: %d%%" % roundi(pet.bond)
 	message_label.text = session.last_message
 	for key in needs_ui: needs_ui[key].value = float(pet.needs[key])
-	if applied_skin != pet.skin:
-		applied_skin = pet.skin
-		room.animator.set_skin(load("res://data/skins/puppy_%s.tres" % pet.skin))
+	# One production style. Legacy saves keep their skin field for compatibility;
+	# the presentation no longer replaces the puppy or resets its animation.
 	for key in care_buttons:
 		care_buttons[key].disabled = not session.writable or (key != "train" and (session.busy() or float(session.cooldowns.get(key, 0)) > 0 or (pet.resting and key != "rest")))
+		if key == "pet": care_buttons[key].disabled = not session.can_pet()
 		care_buttons[key].queue_redraw()
 	care_buttons.rest.caption = "Obudź" if pet.resting else "Drzemka"
 	care_buttons.rest.icon_name = "sun" if pet.resting else "moon"

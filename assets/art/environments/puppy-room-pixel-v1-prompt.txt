@@ -1,0 +1,13 @@
+Use case: stylized-concept.
+Asset type: production background bitmap for YuFriend, a cozy 2D golden-retriever-puppy care game built in Godot.
+Create ONE square 1024 x 1024 pixel-art empty room background. This is game art, NOT a screenshot, UI mockup, poster, or concept presentation.
+Art direction: restrained cozy 16-bit pixel art with chunky, clearly visible square pixels, as if drawn on a 128 x 128 logical grid and enlarged with nearest neighbor. Crisp stepped edges, limited palette, flat color clusters with 2-3 shades per material. No anti-aliasing, blur, gradients, painterly brushwork, tiny noisy textures, bloom or photographic rendering.
+Palette: warm ivory and pale sage walls (#f1efd9, #dce2c0), honey oak floor (#d9bb8b), warm brown trim, muted forest/sage greens, pale blue-green sky. Gentle sunny daytime, calm and inviting, enough contrast to support an orange-gold puppy with a dark-brown pixel outline.
+View: straight-on side-view game stage, ONE flat back wall meeting the floor along a horizontal baseboard at EXACTLY 60 percent of image height. Shallow visible wood-plank floor fills bottom 40 percent, restrained perspective. No room corner, no dollhouse, no isometric angle.
+Composition:
+- Upper 30 percent is very quiet light ivory/sage wall, almost empty, reserved for a game HUD added later.
+- A modest wooden-framed arched window in the middle-right, fully within x=60..79 percent and y=32..59 percent; pale blue sky and simple green landscape outside, a small cream curtain on its left. Pixel stair-step arch. Small wall paw-print picture, simple and without text, fully within x=24..34 percent, y=37..49 percent.
+- One small terracotta potted plant at x=21..29 percent around the wall-floor boundary. All important wall decoration stays within the central 64 percent of the canvas so the sides can be cropped on a phone.
+- The entire central and foreground floor is OPEN and uncluttered, where the puppy will be rendered separately. A subtle stepped patch of warm sunlight is allowed on the floor.
+- NO dog, NO people, NO animals. NO rug, NO dog bed, NO food bowl, NO ball, NO toys, NO furniture on the foreground floor: these are separately interactive objects rendered by the game.
+No text, letters, labels, numbers, buttons, HUD, border, watermark, or logo. Fill the entire square canvas with the room; opaque background. Make it charming, clean and simple, readable behind a large animated pixel puppy.

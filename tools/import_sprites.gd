@@ -5,8 +5,8 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	if args.size() < 2 or not args[0] in ["simple", "pixel"] or args.size() > 3 or (args.size() == 3 and args[2] != "--replace"):
-		fail("Użycie: --script res://tools/import_sprites.gd -- simple|pixel res://ścieżka/manifest.json [--replace]")
+	if args.size() < 2 or args[0] != "pixel" or args.size() > 3 or (args.size() == 3 and args[2] != "--replace"):
+		fail("Użycie: --script res://tools/import_sprites.gd -- pixel res://ścieżka/manifest.json [--replace]")
 		return
 	var source := FileAccess.open(args[1], FileAccess.READ)
 	if source == null:
@@ -36,7 +36,7 @@ func _run() -> void:
 	print("Gotowe: %s — %d klipów." % [destination, result.pack.frames.get_animation_names().size()])
 	if not result.missing.is_empty():
 		print("Grafiki zastępcze dla: " + ", ".join(result.missing))
-	print("Uruchom grę ponownie. W Profilu wybierz właściwy styl.")
+	print("Uruchom grę ponownie. Produkcyjny interfejs używa pakietu pixel.")
 	quit(0)
 
 func fail(message: String) -> void:

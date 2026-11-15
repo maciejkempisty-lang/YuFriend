@@ -46,8 +46,18 @@ func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:
 		var retained := _read(keep)
 		if retained.status == "ok" and retained.version == version and retained.pet.pet_id == pet_id:
 			return true
-		last_error = "Kopia starszego zapisu wymaga sprawdzenia. Dotychczasowe pliki zachowano."
-		return false
+		# A foreign snapshot belongs to its owner. Retain our source alongside it.
+		var source_hash := FileAccess.get_sha256(source)
+		if source_hash.is_empty():
+			last_error = "Nie udało się odczytać starszego zapisu do kopii."
+			return false
+		keep += "." + source_hash
+		if FileAccess.file_exists(keep):
+			var alternate := _read(keep)
+			if alternate.status == "ok" and alternate.version == version and alternate.pet.pet_id == pet_id and FileAccess.get_sha256(keep) == source_hash:
+				return true
+			last_error = "Nie udało się sprawdzić dodatkowej kopii. Dotychczasowe pliki zachowano."
+			return false
 	if DirAccess.dir_exists_absolute(keep):
 		last_error = "Nie udało się zabezpieczyć starszego zapisu. Dotychczasowy postęp zachowano."
 		return false

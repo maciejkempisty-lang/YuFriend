@@ -8,5 +8,8 @@ extends Resource
 @export var frame_height: float = 512.0
 @export var display_height: float = 245.0
 @export var pixel_art: bool = false
+@export var clip_layouts: Dictionary = {}
+## Rendering only: trim faint alpha fringes without rewriting source images.
+@export_range(0.0, 1.0) var alpha_cutoff: float = 0.0
 @export var standing: Texture2D
 @export var sitting: Texture2D

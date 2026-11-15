@@ -2,7 +2,7 @@
 
 [Mapa dokumentacji](README.md)
 
-Wartości poniżej opisują prototyp z 10 listopada 2026. Są parametrami do dalszego sprawdzenia w rozgrywce. Ich źródłami są [NeedsSystem](../scripts/systems/needs_system.gd), [TrainingSystem](../scripts/systems/training_system.gd), [GameSession](../scripts/systems/game_session.gd) i [PetState](../scripts/model/pet_state.gd).
+Wartości poniżej opisują prototyp z 14 listopada 2026. Są parametrami do dalszego sprawdzenia w rozgrywce. Ich źródłami są [NeedsSystem](../scripts/systems/needs_system.gd), [TrainingSystem](../scripts/systems/training_system.gd), [GameSession](../scripts/systems/game_session.gd) i [PetState](../scripts/model/pet_state.gd).
 
 ## Potrzeby
 
@@ -22,21 +22,36 @@ Podczas nieobecności symulowane jest najwyżej 8 godzin. Zasady czasu i wznowie
 
 ## Działania opiekuna
 
-Efekty opieki są naliczane przy zaakceptowaniu działania. Zwykła czynność blokuje kolejną przez 2 sekundy, a jej osobny czas ponownego użycia biegnie od rozpoczęcia. Obecny czas opieki jest stały; pełne dopasowanie do ruchów pyska i przedmiotów nastąpi przy integracji sprite’ów.
+Karmienie, odpoczynek i zabawa zaczynają się od dojścia do przedmiotu. Pies idzie do miski, zanim dostanie sytość; do legowiska, zanim zacznie regenerować energię; goni toczącą się piłkę, zanim dostanie efekt zabawy. Po dojściu jedzenie i zabawa trwają 2 sekundy, a wtedy zaczyna się ich czas ponownego użycia. Animator kończy aktualne przejście przed zmianą klipu. Czesanie działa w miejscu przez 2 sekundy. Przejście aplikacji w tło anuluje niedokończone dojście bez naliczania efektów.
 
-Ikony w zakładce Dom i dotknięcia psa, miski, piłki lub legowiska wywołują te same działania sesji. Korzystają z tych samych blokad i czasów ponownego użycia.
+Ikony w zakładce Dom i dotknięcia psa, miski, piłki lub legowiska wywołują te same działania sesji. Głaskanie od razu reaguje na kolejne dotknięcie, również podczas zwykłego spaceru lub zaproszenia psa. Przyrost bliskości, zabawy, więzi oraz zdarzenie w historii są naliczane najwyżej raz na 4 sekundy. Sama reakcja nie wymaga czekania na ten licznik; trening, posiłek i sen nadal mają pierwszeństwo.
 
 | Działanie | Klucz | Efekt | Ponowne użycie |
 |---|---|---|---:|
 | Jedzenie | `feed` | Sytość +22 | 10 s |
-| Głaskanie | `pet` | Bliskość +18, zabawa +3, więź +0,6 | 4 s |
+| Głaskanie | `pet` | Bliskość +18, zabawa +3, więź +0,6 | Reakcja od razu; efekty co 4 s |
 | Zabawa | `play` | Zabawa +24, bliskość +8, energia −5, czystość −3 | 8 s |
 | Czesanie | `clean` | Czystość +25, bliskość +5 | 12 s |
-| Odpoczynek / budzenie | `rest` | Przełącza trwałe pole `resting` | Bez osobnego czasu ponownego użycia |
+| Odpoczynek / budzenie | `rest` | Ustawia `resting` po dojściu do legowiska; budzenie kończy odpoczynek | Bez osobnego czasu ponownego użycia |
 
-W odpoczynku przyrost energii wynosi 0,8 punktu na sekundę aktywnej gry lub 18 punktów na godzinę nieobecności. W tym samym czasie działa zwykły pasywny ubytek energii. Pies pozostaje w odpoczynku do wybudzenia przez gracza, także po osiągnięciu pełnej energii.
+W odpoczynku przyrost energii wynosi 0,8 punktu na sekundę aktywnej gry lub 18 punktów na godzinę nieobecności. W tym samym czasie działa zwykły pasywny ubytek energii. Pies sam budzi się przy energii co najmniej 85 po minimum 6 sekundach aktywnej drzemki; można go też obudzić wcześniej. Przeliczenie nieobecności kończy sen po dojściu do 85 i liczy resztę czasu już na jawie. Przykład: z energią 20 pies po 5 godzinach osiąga 85, a po kolejnych 3 godzinach czuwania ma 70. Nieobecność nadal jest ograniczona do 8 godzin.
 
-Sesja odmawia czynności, gdy trwa trening, ruch lub inna aktywność. Śpiącego psa trzeba obudzić przed opieką i treningiem. Przy problemie z odczytem zapisu zmiany stanu są zablokowane.
+Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zaproszenia wynikające z potrzeb lub nawyków można od razu przerwać odpowiedzią gracza; głaskanie może przerwać zwykły spacer. Śpiącego psa trzeba obudzić przed opieką i treningiem. Przy problemie z odczytem zapisu zmiany stanu są zablokowane.
+
+## Stacje i oglądanie pokoju
+
+Pokój ma rozmiar 1440 × 480 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Do pieska” wznawia śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
+
+| Stacja | Reakcja | Efekt działania gracza |
+|---|---|---|
+| Legowisko | Dojście i sen | Regeneracja energii według zasad drzemki |
+| Miska | Jedzenie / prośba przy głodzie | Sytość +22 |
+| Piłka | Toczenie, pościg, ukłon | Standardowy efekt zabawy |
+| Kosz z zabawkami | Ukłon i zaproszenie do zabawy | Zabawa +6, bliskość +2 |
+| Okno | Zaciekawienie i obserwacja | Zabawa +3 |
+| Drzwi | Nasłuchiwanie / szczeknięcie | Bliskość +3 |
+
+Kosz, okno i drzwi mają 30 sekund przerwy między efektami gracza. Samodzielne wizyty pokazują zachowanie bez automatycznego naliczania tych efektów. To pierwsza scena z sześcioma stacjami; woda, nowe potrzeby oraz odblokowywanie przedmiotów nie zostały dodane do obecnego schematu danych.
 
 ## Temperament i zachowania samodzielne
 
@@ -51,7 +66,7 @@ Przy tworzeniu psa każda cecha jest losowana w zakresie 0,25–0,85 na podstawi
 
 Osobno losowana jest ulubiona nagroda: `treat`, `praise` albo `play`. Preferencja nie zmienia się w obecnej wersji.
 
-Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies rozpoczyna odpoczynek. W przeciwnym razie może pokazać zachowanie wynikające z nawyku albo wybrać spacer zależnie od ciekawości. Te decyzje nie przerywają opieki ani treningu.
+Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies idzie do legowiska i zasypia. Przy sytości poniżej 30 podchodzi do miski i szczeka; przy zabawie poniżej 30 podchodzi do piłki, trąca ją i robi ukłon. Każde z tych dwóch zaproszeń ma 60 sekund przerwy, bez samodzielnego naliczania jedzenia lub zabawy. Dopiero później wybiera nawyk lub eksplorację zależnie od ciekawości: podejście do okna/drzwi albo spacer w świecie. Nawyk Łobuziak prowadzi do kosza z zabawkami. Te decyzje nie przerywają opieki ani treningu.
 
 ## Warunki rozpoczęcia treningu
 
@@ -59,7 +74,7 @@ Trening wymaga obudzonego psa, energii co najmniej 25, sytości co najmniej 25 i
 
 | Komenda | Identyfikator | Prezentacja udanej próby |
 |---|---|---|
-| Przyjdź | `come` | Chód do logicznego celu `0,62`; widok mapuje go na pokój z marginesem na sylwetkę psa |
+| Przyjdź | `come` | Chód około 150 jednostek od aktualnej pozycji w świecie, z ograniczeniem do pasa podłogi |
 | Siad | `sit` | Przejście do siadu |
 | Podaj łapę | `paw` | Przejście do siadu, jeśli potrzebne, i `give_paw` |
 

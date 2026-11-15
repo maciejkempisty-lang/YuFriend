@@ -78,6 +78,6 @@ Odpowiedź musi mieć kształt wyniku `propose()`:
 ## Czego jeszcze nie ma
 
 - Cechy nadal wpływają na zachowanie tylko tak, jak opisują [mechaniki](mechaniki-gry.md); dryf zmienia więc głównie liczby, a widoczna jest warstwa nawyków.
-- Nawyki korzystają z klipów `tail_wag_stand`, `play_bow` i `sit_down`. Do czasu dostarczenia klatek pokazują je ilustracje zastępcze i komunikat.
+- Nawyki korzystają z klipów `tail_wag_stand`, `play_bow` i `sit_down`. Korzystają już z dostarczonych animacji pixel art oraz komunikatu.
 - Progi i tempo dryfu nie były sprawdzane w kilkudniowej rozgrywce.
 - Pogoda, lokalizacja i inne dane spoza gry nie są używane.

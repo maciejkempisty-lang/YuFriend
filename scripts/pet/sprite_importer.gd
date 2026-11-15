@@ -19,6 +19,7 @@ static func build(config: Dictionary) -> Dictionary:
 	if not definitions is Dictionary or definitions.is_empty():
 		return _fail("Dodaj co najmniej jeden klip w animations.")
 	var frames := SpriteFrames.new()
+	var layouts: Dictionary = {}
 	frames.remove_animation("default")
 	for clip in definitions:
 		if not PetAnimator.CLIPS.has(clip): return _fail("Nieznana animacja: %s." % clip)
@@ -34,21 +35,38 @@ static func build(config: Dictionary) -> Dictionary:
 			var source := _texture(spec.sheet)
 			if not source.ok: return _fail("%s: %s" % [clip, source.error])
 			var texture: Texture2D = source.texture
-			if not _whole(spec.get("columns"), 1, 4) or not _whole(spec.get("count"), 1, 64):
-				return _fail("%s: columns musi wynosić 1–4, a count 1–64." % clip)
-			var columns := int(spec.columns)
-			var count := int(spec.count)
-			if texture.get_width() != dimensions.x * columns or texture.get_height() % dimensions.y != 0:
-				return _fail("%s: arkusz nie pasuje do frame_size i columns." % clip)
-			if count > columns * (texture.get_height() / dimensions.y):
-				return _fail("%s: count przekracza liczbę pól arkusza." % clip)
-			for index in count:
+			var regions: Array[Rect2] = []
+			if spec.has("regions"):
+				if spec.has("columns") or spec.has("count"):
+					return _fail("%s: regions zastępuje columns i count." % clip)
+				if not spec.regions is Array or spec.regions.is_empty() or spec.regions.size() > 64:
+					return _fail("%s: regions musi zawierać od 1 do 64 prostokątów." % clip)
+				for rect in spec.regions:
+					if not rect is Array or rect.size() != 4 or not _whole(rect[0], 0, texture.get_width()) or not _whole(rect[1], 0, texture.get_height()) or not _whole(rect[2], 1, 4096) or not _whole(rect[3], 1, 4096):
+						return _fail("%s: region musi zawierać całkowite [x, y, szerokość, wysokość]." % clip)
+					var region := Rect2(rect[0], rect[1], rect[2], rect[3])
+					if not Rect2(Vector2.ZERO, texture.get_size()).encloses(region):
+						return _fail("%s: region wychodzi poza arkusz." % clip)
+					regions.append(region)
+			else:
+				if not _whole(spec.get("columns"), 1, 4) or not _whole(spec.get("count"), 1, 64):
+					return _fail("%s: columns musi wynosić 1–4, a count 1–64." % clip)
+				var columns := int(spec.columns)
+				var count := int(spec.count)
+				if texture.get_width() != dimensions.x * columns or texture.get_height() % dimensions.y != 0:
+					return _fail("%s: arkusz nie pasuje do frame_size i columns." % clip)
+				if count > columns * (texture.get_height() / dimensions.y):
+					return _fail("%s: count przekracza liczbę pól arkusza." % clip)
+				for index in count:
+					regions.append(Rect2((index % columns) * dimensions.x, (index / columns) * dimensions.y, dimensions.x, dimensions.y))
+			for rect in regions:
 				var region := AtlasTexture.new()
 				region.atlas = texture
-				region.region = Rect2((index % columns) * dimensions.x, (index / columns) * dimensions.y, dimensions.x, dimensions.y)
+				region.region = rect
 				region.filter_clip = true
 				textures.append(region)
 		else:
+			if spec.has("regions"): return _fail("%s: regions wymaga sheet." % clip)
 			var paths: Variant = spec.frames
 			if not paths is Array or paths.is_empty() or paths.size() > 64:
 				return _fail("%s: frames musi zawierać od 1 do 64 ścieżek PNG." % clip)
@@ -59,6 +77,22 @@ static func build(config: Dictionary) -> Dictionary:
 				if Vector2i(texture.get_size()) != dimensions:
 					return _fail("%s: wszystkie pliki muszą mieć rozmiar %s." % [clip, dimensions])
 				textures.append(texture)
+		var scale_value: Variant = spec.get("scale", 1.0)
+		if not _number(scale_value) or float(scale_value) < 0.1 or float(scale_value) > 8:
+			return _fail("%s: scale musi wynosić od 0,1 do 8." % clip)
+		var anchors: Array[Vector2] = []
+		var anchor_list: Variant = spec.get("anchors", [])
+		if not anchor_list is Array or (not anchor_list.is_empty() and anchor_list.size() != textures.size()):
+			return _fail("%s: anchors musi zawierać po jednym punkcie na klatkę." % clip)
+		if spec.has("regions") and anchor_list.is_empty():
+			return _fail("%s: nieregularny arkusz wymaga anchors." % clip)
+		for index in anchor_list.size():
+			var point: Variant = anchor_list[index]
+			if not _pair(point) or point[0] < 0 or point[1] < 0 or point[0] > textures[index].get_width() or point[1] > textures[index].get_height():
+				return _fail("%s: anchor wychodzi poza klatkę." % clip)
+			anchors.append(Vector2(point[0], point[1]))
+		if not anchors.is_empty() or float(scale_value) != 1.0:
+			layouts[clip] = {"anchors": anchors, "scale": float(scale_value)}
 		var durations: Variant = spec.get("durations", [])
 		if not durations is Array or (not durations.is_empty() and durations.size() != textures.size()):
 			return _fail("%s: durations musi mieć po jednym mnożniku czasu na klatkę." % clip)
@@ -75,6 +109,7 @@ static func build(config: Dictionary) -> Dictionary:
 	pack.frame_size = dimensions
 	pack.anchor = Vector2(float(anchor_value[0]), float(anchor_value[1]))
 	pack.display_height = float(height)
+	pack.clip_layouts = layouts
 	var missing: Array[String] = []
 	for clip in PetAnimator.CLIPS:
 		if not definitions.has(clip): missing.append(clip)

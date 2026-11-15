@@ -70,6 +70,19 @@ func _test_needs() -> void:
 	check(pet.needs.energy > 40 and pet.fatigue < 60, "rest restores energy and attention")
 	NeedsSystem.change(pet, {"fullness": 1000, "energy": -1000})
 	check(pet.needs.fullness == 100 and pet.needs.energy == 0, "effects clamp needs")
+	var sleeper := PetState.create(2, 10000)
+	sleeper.resting = true
+	sleeper.needs.energy = 20.0
+	NeedsSystem.catch_up(sleeper, 10000 + 8 * 3600)
+	check(not sleeper.resting and is_equal_approx(sleeper.needs.energy, 70), "offline sleep ends at 85 energy, then simulates the awake remainder")
+	var short_nap := PetState.create(2, 10000)
+	short_nap.resting = true
+	short_nap.needs.energy = 20.0
+	NeedsSystem.catch_up(short_nap, 10000 + 3600)
+	check(short_nap.resting and is_equal_approx(short_nap.needs.energy, 33), "short offline nap remains asleep with net recovery")
+	short_nap.needs.energy = 100.0
+	NeedsSystem.advance(short_nap, 3600, true)
+	check(not short_nap.resting and is_equal_approx(short_nap.needs.energy, 95), "fully rested legacy sleeper wakes before offline decay")
 
 func _test_training() -> void:
 	var pet := PetState.create(4, 1000)
@@ -257,6 +270,22 @@ func _test_migration() -> void:
 	var recovery := recovered.load_pet()
 	var recovered_saves := recovered.save_pet(recovery.pet) and recovered.save_pet(recovery.pet)
 	check(recovery.status == "recovered" and recovered_saves and FileAccess.file_exists(recovered.path + ".v1") and FileAccess.get_file_as_string(recovered.path + ".v1") == legacy, "legacy recovery backup survives subsequent backup rotation")
+	var collision := SaveSystem.new(directory + "/old/collision.json")
+	file = FileAccess.open(collision.path, FileAccess.WRITE)
+	file.store_string(legacy)
+	file.close()
+	var foreign := JSON.stringify({"schema_version": 1, "pet": PetState.create(99, 900).to_dict()})
+	file = FileAccess.open(collision.path + ".v1", FileAccess.WRITE)
+	file.store_string(foreign)
+	file.close()
+	var copy_path := collision.path + ".v1." + FileAccess.get_sha256(collision.path)
+	var migrated := collision.load_pet()
+	check(migrated.writable and migrated.pet.pet_id == old.pet_id, "foreign v1 snapshot no longer blocks migration")
+	check(FileAccess.get_file_as_string(collision.path + ".v1") == foreign and FileAccess.get_file_as_string(copy_path) == legacy, "colliding migration keeps both exact legacy originals")
+	var files_before := DirAccess.get_files_at(ProjectSettings.globalize_path(directory + "/old")).size()
+	collision.load_pet()
+	check(DirAccess.get_files_at(ProjectSettings.globalize_path(directory + "/old")).size() == files_before, "repeated migration reuses the same validated alternate snapshot")
+	check(collision.save_pet(migrated.pet) and collision.load_pet().writable and FileAccess.get_file_as_string(copy_path) == legacy, "migration with a foreign snapshot can save and reload normally")
 	var blocked := SaveSystem.new(directory + "/old/blocked.json")
 	file = FileAccess.open(blocked.path, FileAccess.WRITE)
 	file.store_string(legacy)

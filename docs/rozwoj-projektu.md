@@ -4,36 +4,38 @@
 
 ## Punkt wyjścia
 
-Podstawowa pętla opieki, nauki i zapisu działa w lokalnym prototypie. Najbliższym krokiem jest zastąpienie referencji właściwymi klatkami szczeniaka i ocena gry w kilku krótkich sesjach. Wygląd 2D i pixel art są dostępne do porównania; wybór głównego stylu pozostaje otwarty.
+Podstawowa pętla opieki, nauki i zapisu działa w lokalnym prototypie. 14 listopada 2026 wybrano pixel art i podłączono dostarczone 22 klipy / 142 klatki pakietu A+B. Następny krok to ocena gry w kilku krótkich sesjach i pierwszy eksport na telefon.
 
-Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze. Nadal potrzebne są test na telefonie, ocena czytelności pixel art przy rzeczywistym skalowaniu oraz dopasowanie oprawy pokoju do ostatecznych sprite’ów. Przed rozszerzaniem liczby klipów warto sprawdzić pierwsze `idle`, `walk` i `sit_down` w tym układzie.
+Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze z nowym psem. Pokój ma tło pixel art, stały świat 1440 × 480, sześć stacji, kamerę śledzącą i przesuwanie palcem. Głaskanie i trening przybliżają widok, a pies przechodzi przed i za przedmiotami. Nadal potrzebne są test na telefonie oraz ocena czytelności przy rzeczywistym skalowaniu. W dostawie pozostają drobne różnice proporcji między niezależnie narysowanymi klipami.
 
 ## Kolejność prac
 
 | Priorytet | Zakres | Warunek ukończenia |
 |---|---|---|
-| P0 | Integracja pakietu A — 8 klipów ruchu i treningu | Stanie, chód, siadanie, wstawanie, radość i łapa mają zgodne pozycje; nagroda czeka na wykonanie |
-| P1 | Pakiet B — 14 klipów opieki i reakcji | Pies poprawnie je, kładzie się, śpi, budzi i reaguje; miska oraz fazy czynności pasują do grafiki |
+| P0 | Ocena dostarczonego pakietu A+B w grze | Komplet jest podłączony; dopracować proporcje na styku klipów i fazy chodu |
+| Gotowe | Szeroki pokój i kamera | Jeden świat na około 2–3 ekrany, sześć stacji, ręczne przesuwanie, zbliżenia i płytka głębia |
+| Gotowe | Opieka w przestrzeni pokoju | Dojście do miski i legowiska, pościg za piłką, sygnalizowanie potrzeb i automatyczne budzenie |
 | P1 | Balans i czytelność | W kilku sesjach gracz rozumie potrzeby, odmowę próby, moment nagrody i różnicę po nauczeniu komendy |
 | P1 | Pierwszy eksport mobilny | Można zagrać na wybranym fizycznym telefonie, wznowić aplikację i zachować stan po restarcie |
-| P2 | Dźwięki i przedmioty | Szczeknięcie i efekty mają właściwy moment; przedmioty pasują do ruchów i kierunku postaci |
-| P2 | Rozszerzone zachowania i komendy | Nowe czynności mają reguły, grafikę, zapis postępu i testy bez psucia wcześniejszych danych |
+| P2 | Gesty, dźwięki i wibracje | Głaskanie przesunięciem palca, rzut piłki gestem, efekty przy animacjach i nagrodzie; weryfikacja na telefonie |
+| P2 | Głębszy trening i więź | Ocena momentu nagrody, stopniowe ograniczanie pomocy, sekwencje, „zostań” i odblokowania więzi |
+| P2 | Pierwsza sesja i powrót | Rytuał poznania i nadania imienia, zapowiedź nawyków, pora dnia w oknie; dopiero potem dobrowolne powiadomienia |
 | P2 | Opcjonalne AI | Polecenia spoza słownika są mapowane na dozwolone działania, a brak sieci nie blokuje podstawowej gry |
 | P3 | Dorastanie | Ten sam pies zmienia etap i wygląd, zachowując identyfikator, cechy, więź, wspomnienia i komendy |
 
 Priorytety określają kolejność prac, nie terminy ani obietnicę gotowego wydania. Pierwotne szacunki programowania znajdują się w [planie implementacji](plan-implementacji.md); po podpięciu rzeczywistych materiałów można oszacować pozostały zakres ponownie.
 
-## Pierwsza integracja animacji
+## Integracja animacji — wykonane i dalsze poprawki
 
-Użytkownik przygotowuje sprite’y według [briefu](lista-spriteow-szczeniaka.md). Po otrzymaniu pierwszej partii:
+Pakiet dostarczony według [briefu](lista-spriteow-szczeniaka.md) działa w grze. Przy aktualizacji kolejnych arkuszy:
 
 1. Sprawdzamy wspólne płótno, punkt podparcia, skalę i kierunek.
 2. Importujemy tylko dostępne klipy zgodnie z [instrukcją](integracja-spriteow.md).
 3. Dopasowujemy tempo przesunięcia do cyklu chodu i oglądamy przejścia między pozycjami.
 4. Sprawdzamy komendy z naprowadzaniem i bez niego, czas nagrody oraz przerwanie próby.
-5. Dopiero po zgodności pakietu A rozszerzamy opiekę i reakcje.
+5. Oglądamy również wejście/wyjście jedzenia, zasypianie i wybudzenie; zgodna liczba klatek nie gwarantuje zgodnych proporcji.
 
-Obecnie czas zwykłej opieki wynosi 2 sekundy i jest niezależny od ukończenia konkretnej animacji. Przy pakiecie B trzeba uzgodnić ten czas lub powiązać go z fazami ruchu. `bark_stand` i `treat_take_stand` są rozpoznawane przez animator, ale nie mają jeszcze osobnej sytuacji rozgrywki.
+Jedzenie i zabawa mają 2 sekundy po dojściu do przedmiotu; animator kończy bieżące przejście przed następnym. Głaskanie reaguje na ponowne dotknięcie od razu, z ograniczeniem jedynie przyrostów. Sen zaczyna się w legowisku i kończy automatycznie przy energii 85. Przerwanie dojścia nie przyznaje efektów. `bark_stand` to powitanie po nieobecności, a `treat_take_stand` pokazuje przyjęcie nagrody na stojąco.
 
 ## Rozbudowa bez utraty postępu
 
@@ -70,11 +72,10 @@ Przed implementacją trzeba ustalić, co wyzwala zmianę etapu: wspólnie spędz
 
 | Decyzja | Kiedy będzie potrzebna |
 |---|---|
-| Główny styl: prosta ilustracja czy pixel art | Po obejrzeniu pierwszych klipów w docelowym rozmiarze |
-| Docelowa siatka i paleta pixel art | Przed produkcją pełnego zestawu w tym stylu |
+| Docelowa siatka i paleta pixel art | Przed finalnym ręcznym dopracowaniem dostarczonych dużych arkuszy |
 | Pierwsza platforma mobilna | Przed konfiguracją eksportu i testem na urządzeniu |
 | Tempo potrzeb, regeneracji i nauki | Po kilku sesjach gry z czytelnymi animacjami |
 | Zakres AI i limit kosztów | Przed przygotowaniem backendu i dostępu do dostawcy |
 | Zasady dorastania | Przed zamówieniem kolejnych etapów grafiki i zmianą danych |
 
-Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie.
+Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie. W tej iteracji nie dodano jeszcze gestów przesuwania, dźwięku, wibracji, nowych zasad treningu ani powiadomień. Ich kolejność warto potwierdzić po krótkich sesjach z testerami.

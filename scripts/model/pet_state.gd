@@ -14,7 +14,8 @@ const MAX_EVENT_COUNT := 100000
 var pet_id: String = ""
 var pet_name: String = "Biszkopt"
 var life_stage: String = "puppy"
-var skin: String = "simple"
+## Legacy save field: retained for v1/v2 round trips. Runtime uses pixel art only.
+var skin: String = "pixel"
 var personality_seed: int = 0
 var traits: Dictionary = {}
 var favorite_reward: String = "praise"
