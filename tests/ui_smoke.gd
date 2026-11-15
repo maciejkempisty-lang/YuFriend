@@ -22,12 +22,14 @@ func check(condition: bool, label: String) -> void:
 func _run() -> void:
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = Vector2i(390, 844)
-	directory = "user://qa-integration-%s" % Time.get_ticks_usec()
+	var test_root := OS.get_environment("YUFRIEND_TEST_ROOT")
+	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-integration-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory + "/pet.json"
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.set_process(false)
+	game.initiatives_enabled = false # This suite drives autonomous behaviour explicitly.
 	game._brain_left = INF
 	app.room.set_process(false)
 	app.room.animator.set_process(false)
@@ -39,8 +41,11 @@ func _run() -> void:
 	_test_effects()
 	await capture("01-care.png")
 	check_pixel_grid("390 x 844")
-	check(app.room.render_rect.end.y <= app.bubble.position.y - 7, "the whole room fits above the message and action panel")
-	check(curtain_clears_needs(), "curtain rod stays below need labels with a safe margin")
+	check(app.room.content_bottom / app.size.y >= 0.74 and app.room.size == app.size, "home room fills the screen with at least 74 percent above care controls")
+	check(app.care_buttons.size() == 5 and app.needs_ui.fullness == app.care_buttons.feed, "one row owns both the need level and its action")
+	await _test_redesigned_ui()
+	await process_frame
+	await RenderingServer.frame_post_draw
 	var room_draws: int = app.room.backdrop.draw_count
 	step_game(0.5)
 	await process_frame
@@ -84,6 +89,7 @@ func _run() -> void:
 	check(game.training.phase == "reward" and not app.reward_buttons.praise.disabled, "reward controls activate at correct moment")
 	await capture("02-training-reward.png")
 	check(visible_above_navigation(app.reward_buttons.praise), "reward buttons fit above navigation without scrolling")
+	check(not app.bubble.visible and app.sheet.size.y <= 280, "training uses a compact panel without a duplicate bubble over the puppy")
 	app.reward_buttons.praise.pressed.emit()
 	check(float(game.pet.skills.sit.mastery) > 0, "reward button commits learning")
 	var learned: float = game.pet.skills.sit.mastery
@@ -123,6 +129,7 @@ func _run() -> void:
 	var ball_before: Vector2 = app.room.ball_world
 	await touch_at(app.room.ball_center())
 	check(game.activity == "approach", "touching the ball starts a chase")
+	check(float(app.room.prop_bounces.get("ball", 0)) > 0, "touching the ball starts a brief visual bounce")
 	step_game(0.4)
 	check(app.room.ball_world.distance_to(ball_before) > 10, "the ball rolls while the puppy follows it")
 	wait_for_arrival()
@@ -145,7 +152,8 @@ func _run() -> void:
 	await _test_living_room()
 	await _test_world_room()
 	app._show_profile()
-	check(app.profile_traits.text.contains("Przytulas"), "profile lists habits")
+	check(app.profile_badges.get_children().any(func(badge): return badge.text.contains("Ochota na pieszczoty")), "profile lists habits as badges")
+	check(app.profile_life.text.contains("Małe dziwactwa") and app.profile_life.text.contains(LifeSystem.mood_label(game.pet)), "profile includes quirks and daily mood")
 	await capture("05-profile.png")
 	check(app.profile_dialog.size.y <= root.size.y - 40 and app.profile_dialog.get_ok_button().get_global_rect().end.y <= app.profile_dialog.size.y, "profile dialog and save button fit on screen")
 	app.profile_dialog.hide()
@@ -153,6 +161,7 @@ func _run() -> void:
 	await capture("08-command.png")
 	check(app.text_dialog.size.y <= root.size.y - 40 and app.text_dialog.get_ok_button().get_global_rect().end.y <= app.text_dialog.size.y, "command dialog and submit button fit on screen")
 	app.text_dialog.hide()
+	await _test_life_ui()
 	app._select_tab("care")
 	var world_before_resize: Vector2 = app.room.pet_world
 	var ball_before_resize: Vector2 = app.room.ball_world
@@ -166,16 +175,24 @@ func _run() -> void:
 	var overflowing := []
 	_find_overflow(app, overflowing)
 	check(overflowing.is_empty(), "narrow controls stay inside viewport: " + str(overflowing))
-	check(visible_above_navigation(app.care_buttons.train), "narrow care actions fit above navigation")
+	check(visible_above_navigation(app.care_buttons.feed), "narrow care actions fit above navigation")
 	app._select_tab("training")
 	await capture("09-narrow-training.png")
 	check(visible_above_navigation(app.guided_button), "narrow training actions fit above navigation")
-	check(curtain_clears_needs(), "narrow training layout keeps the curtain below the HUD")
+	check(app.header.get_rect().end.y < app.sheet.position.y, "narrow training keeps space for the puppy below the HUD")
 	root.size = Vector2i(1080, 2340)
 	root.content_scale_size = Vector2i(390, 844)
 	app._select_tab("care")
 	await capture("20-phone-resolution.png")
 	check_pixel_grid("1080 x 2340 with fractional UI stretch")
+	var phone_safe := Rect2(32, 47, app.size.x - 60, app.size.y - 81)
+	app.safe_area_override = root.get_final_transform() * phone_safe
+	app._fit_room()
+	await process_frame
+	check(app.safe_rect.position.distance_to(phone_safe.position) < 0.01 and app.safe_rect.size.distance_to(phone_safe.size) < 0.01, "physical safe-area insets convert correctly through fractional high-DPI scaling")
+	check(app.header.position.x >= phone_safe.position.x and app.header.get_rect().end.x <= phone_safe.end.x and app.navigation.get_rect().end.x <= phone_safe.end.x and app.navigation.get_rect().end.y <= phone_safe.end.y, "left, right and bottom insets keep controls clear on a high-DPI phone")
+	app.safe_area_override = Rect2()
+	app._fit_room()
 	await _test_slow_pan()
 	# Exercise the actual stretch configuration, without changing the base viewport.
 	root.size = Vector2i(1100, 720)
@@ -184,7 +201,7 @@ func _run() -> void:
 	await capture("10-landscape.png")
 	check_pixel_grid("landscape")
 	check(app.layout_wide and app.room.size.x <= app.sheet.position.x, "wide window places controls beside the room")
-	check(visible_above_navigation(app.care_buttons.train), "wide action panel stays usable")
+	check(visible_above_navigation(app.care_buttons.feed), "wide action panel stays usable")
 	root.size = Vector2i(320, 640)
 	root.content_scale_size = Vector2i(390, 844)
 	app._select_tab("training")
@@ -193,10 +210,12 @@ func _run() -> void:
 	overflowing.clear()
 	_find_overflow(app, overflowing)
 	check(overflowing.is_empty() and visible_above_navigation(app.guided_button), "small training viewport keeps actions within bounds: " + str(overflowing))
-	check(curtain_clears_needs(), "short phone layout keeps curtain clear of need labels")
+	check(app.header.get_rect().end.y < app.sheet.position.y, "short phone keeps training below the HUD")
 	app.room.look_at_world(app.room.ball_world)
 	check(app.room.action_at(app.room.ball_center()) == "play", "foreground ball remains touchable in the compact room")
 	check(app.room.pet_world == world_before_resize and app.room.ball_world == ball_before_resize, "resizing and tab changes preserve puppy and ball world positions")
+	await _test_training_visibility()
+	await _test_room_overview()
 	# Save warnings must not cover the last action in the panel.
 	game.save_ok = false
 	app._refresh()
@@ -209,6 +228,45 @@ func _run() -> void:
 	_cleanup()
 	print("UI RESULTS: %d passed, %d failed" % [passed, failed])
 	quit(1 if failed else 0)
+
+func _test_life_ui() -> void:
+	var game: GameSession = app.session
+	var original_name := game.pet.pet_name
+	game.pet.pet_name = "Gloria"
+	game.pet.life.quirks = ["window_watch", "ball_guard"]
+	game.pet.life.discovered = []
+	game.pet.life.observations = {}
+	for index in 3:
+		game._approach("window", true)
+		wait_for_arrival()
+		step_game(3.1)
+	check(game.pet.life.discovered.has("window_watch") and game.pet.milestones.has("quirk_window_watch"), "visiting the window reveals the corresponding quirk through gameplay")
+	app._show_profile()
+	check(app.profile_life.text.contains("Patrol przy oknie") and app.profile_life.text.contains("Jeszcze nieznane"), "profile separates a discovered quirk from a hidden one")
+	await capture("22-life-profile.png")
+	app.profile_dialog.hide()
+	game.pet.life.mood = "sleepy"
+	app._refresh()
+	var slow: float = app.room.mood_walk_speed
+	game.pet.life.mood = "playful"
+	app._refresh()
+	check(slow < app.room.mood_walk_speed and app.care_status.text.contains("Ochota na psoty"), "daily mood reaches both care status and room movement")
+	game.suspend_session()
+	game.pet.last_seen_at = Time.get_unix_time_from_system() - 3600
+	game.pet.life.away_report = {}
+	game.resume_session()
+	check(app.reunion_dialog.visible and app.reunion_text.text.contains("Gloria") and app.reunion_text.text.contains("Albumie"), "return presents the dog-specific story")
+	await capture("23-life-reunion.png")
+	check(app.reunion_dialog.size.y <= root.size.y - 40, "return story fits the phone viewport")
+	app.reunion_dialog.hide()
+	app._select_tab("journal")
+	await capture("24-life-album.png")
+	check(game.pet.journal[0].title == "Kiedy Cię nie było" and app.journal_list.get_child_count() == game.pet.journal.size(), "return story is also available in the album")
+	game.suspend_session()
+	game.resume_session()
+	check(not app.reunion_dialog.visible, "a quick resume does not reopen the same story")
+	game.pet.pet_name = original_name
+	game._brain_left = INF
 
 func _test_living_room() -> void:
 	var game: GameSession = app.session
@@ -273,7 +331,7 @@ func _test_world_room() -> void:
 	room.focus_pet()
 	step_game(5)
 	var screens := RoomLayout.SIZE.x / (room._view_size.x * RoomLayout.PIXEL_SIZE)
-	check(screens >= 2 and screens <= 3.01 and RoomLayout.STATIONS.size() == 6, "one world spans two to three screens and holds six stations")
+	check(screens >= 2 and screens <= 10 and RoomLayout.STATIONS.size() == 6, "enlarged room retains its six stations and horizontal panorama")
 	var sample := Vector2(1090, 310)
 	check(room.screen_to_world(room.world_to_screen(sample)).distance_to(sample) < 0.01, "camera screen/world conversion round-trips away from the puppy")
 	var bond: float = game.pet.bond
@@ -282,9 +340,16 @@ func _test_world_room() -> void:
 	var header_before: Vector2 = app.header.position
 	var start := room.world_to_screen(room.pet_world - Vector2(0, 80) * room.presentation_scale)
 	await drag_touch(start, start + Vector2(150, 0))
-	check(room.camera_manual and room.camera_center().x < camera_before.x - 100, "horizontal touch drag pans the camera across the room")
+	check(room.camera_manual and room.camera_center().x < camera_before.x - 50, "horizontal touch drag pans the camera across the room")
 	check(game.pet.bond == bond and room.pet_world == pet_before and game.activity == "idle", "a drag beginning on the puppy does not pet it or issue a walk")
 	check(app.header.position == header_before, "panning leaves the HUD in place")
+	check(room.pan_hint_dismissed and not room.room_hint.visible, "first drag permanently dismisses the room hint")
+	var config := ConfigFile.new()
+	config.load(app.ui_settings_path)
+	check(config.get_value("tutorial", "room_dragged", false), "first-drag preference is saved for the next launch")
+	room.pan_hint_dismissed = false
+	app._load_ui_preferences()
+	check(room.pan_hint_dismissed and not room.room_hint.visible, "reloading UI preferences does not repeat the tutorial")
 	var manual_position: Vector2 = room.camera.position
 	step_game(1)
 	check(room.camera.position == manual_position and room.return_button.visible, "manual browsing stays put until follow is requested")
@@ -296,7 +361,7 @@ func _test_world_room() -> void:
 	game.act("pet")
 	step_game(1)
 	check(absf(room.ball_world.x - room.pet_world.x) >= 120, "interaction rolls the ball clear of the puppy's paws")
-	check(room.zoom_level == 2, "petting brings the camera closer")
+	check(room.focus_left > 0 and room.zoom_level == room._wanted_zoom(), "petting focuses the puppy without cropping it in the enlarged room")
 	await capture("14-petting-closeup.png")
 	check_pixel_grid("petting closeup")
 	step_game(4)
@@ -304,9 +369,11 @@ func _test_world_room() -> void:
 	room.look_at_world(Vector2(-10000, 240))
 	check(room.screen_to_world(room.render_rect.position).x >= -0.01, "manual pan cannot reveal space beyond the left wall")
 	await capture("15-left-room.png")
-	await touch_at(room.world_to_screen(Vector2(320, 310)))
-	await touch_at(room.world_to_screen(Vector2(370, 310)))
-	check(game.activity == "walk" and room.target_world.distance_to(Vector2(370, 310)) < 0.1, "second floor touch redirects an ongoing walk")
+	var floor_x := room.screen_to_world(room.render_rect.end).x - 30
+	var floor_y := room.screen_to_world(Vector2(0, room.content_bottom - 12)).y
+	await touch_at(room.world_to_screen(Vector2(floor_x - 30, floor_y)))
+	await touch_at(room.world_to_screen(Vector2(floor_x, floor_y)))
+	check(game.activity == "walk" and room.target_world.distance_to(RoomLayout.clamp_walk(Vector2(floor_x, floor_y))) < 0.1, "second floor touch redirects an ongoing walk")
 	game.act("pet")
 	step_game(4)
 	room.look_at_world(Vector2(10000, 240))
@@ -342,7 +409,7 @@ func _test_world_room() -> void:
 	while game.training.phase == "attempt" and remaining > 0:
 		step_game(0.02)
 		remaining -= 0.02
-	check(game.training.phase == "reward" and not room.moving and room.zoom_level == 2, "come reward waits for world-space arrival and keeps the closeup")
+	check(game.training.phase == "reward" and not room.moving and room.interaction_focus, "come reward waits for world-space arrival and keeps focus")
 	game.give_reward("praise")
 	step_game(6)
 
@@ -366,9 +433,6 @@ func wait_for_arrival() -> void:
 	while app.session.activity == "approach" and remaining > 0:
 		step_game(0.02)
 		remaining -= 0.02
-
-func curtain_clears_needs() -> bool:
-	return app.room.render_rect.position.y >= app.needs_row.get_rect().end.y + 15.9
 
 func click_at(point: Vector2) -> void:
 	var motion := InputEventMouseMotion.new()
@@ -434,6 +498,7 @@ func step_game(seconds: float) -> void:
 		app.session._process(delta)
 		app.room._process(delta)
 		app.room.animator._process(delta)
+		app._process(delta)
 		left -= delta
 
 func _find_overflow(node: Node, result: Array) -> void:
@@ -471,6 +536,13 @@ func check_pixel_grid(label: String) -> void:
 			if point.x < 0 or point.y < 0 or point.x + room.pixel_scale > shot.get_width() or point.y + room.pixel_scale > shot.get_height():
 				uniform = false
 				continue
+			var block := Rect2(Vector2(point), Vector2.ONE * room.pixel_scale)
+			var under_ui := false
+			for control in [app.header, app.sheet, app.navigation, app.bubble, app.gain_label, app.footer_label, room.return_button, room.room_hint] + room.prop_markers.values():
+				if control.is_visible_in_tree():
+					var ui_rect: Rect2 = root.get_final_transform() * control.get_global_rect().grow(24)
+					if ui_rect.intersects(block): under_ui = true
+			if under_ui: continue
 			var color := shot.get_pixelv(point)
 			for dy in room.pixel_scale:
 				for dx in room.pixel_scale:
@@ -499,7 +571,7 @@ func _test_slow_pan() -> void:
 	await process_frame
 	await RenderingServer.frame_post_draw
 	var before_image := root.get_texture().get_image()
-	var patch := Vector2i((root.get_final_transform() * room.world_to_screen(Vector2(740, 120))).round())
+	var patch := Vector2i((root.get_final_transform() * room.world_to_screen(Vector2(740, 195))).round())
 	room._pointer_move(start + Vector2(15 + 25 / physical_scale, 0), 12)
 	await process_frame
 	await RenderingServer.frame_post_draw
@@ -539,14 +611,14 @@ func _test_music() -> void:
 
 func _test_effects() -> void:
 	var loaded_count := 0
-	var valid_recordings: bool = app.effects.recordings.size() == 10
+	var valid_recordings: bool = app.effects.recordings.size() == 11
 	for id in SoundEffects.GROUPS:
 		var variants: Array = app.effects.recordings.get(id, [])
 		valid_recordings = valid_recordings and variants.size() == maxi(1, SoundEffects.GROUPS[id][1])
 		for recording in variants:
 			loaded_count += 1
 			valid_recordings = valid_recordings and recording is AudioStreamWAV and recording.mix_rate == 48000 and not recording.stereo and recording.loop_mode == AudioStreamWAV.LOOP_DISABLED and recording.get_length() > 0 and recording.get_length() <= 3
-	check(valid_recordings and loaded_count == 20, "all 20 production effects load in 10 groups as short mono 48 kHz one-shots")
+	check(valid_recordings and loaded_count == 22, "all 22 production effects load in 11 groups as short mono 48 kHz one-shots")
 	check(app.effects.recordings["step"].all(func(recording): return recording.get_length() <= 0.17), "footstep one-shots end before the next walking contact")
 	var heard: Array[String] = []
 	var game := GameSession.new()
@@ -566,7 +638,7 @@ func _test_effects() -> void:
 	check(heard == ["eat"], "petting a busy eating puppy does not play a misleading stroke")
 	game._process(3)
 	game.act("pet")
-	check(heard == ["eat", "pet"], "accepted petting requests its own sound")
+	check(heard == ["eat", "pet", "pet_happy"], "accepted petting requests a fur stroke and a happy puppy squeak")
 	heard.clear()
 	game.give_reward("treat")
 	game.training.phase = "reward"
@@ -630,3 +702,151 @@ func _test_effects() -> void:
 	check(not restored.enabled and not restored.play_effect("pet"), "effects mute persists independently when music is enabled again")
 	restored.free()
 	app.effects_toggle.button_pressed = true
+
+func _test_redesigned_ui() -> void:
+	var game: GameSession = app.session
+	var original := game.pet.needs.duplicate()
+	game.pet.needs.fullness = 21.0
+	app._refresh()
+	check(app.care_buttons.feed.need_value == 21 and app.care_buttons.feed.caption == "Głód", "low need has a readable percentage and a status caption")
+	check(NeedIndicator.level_color(35) != NeedIndicator.level_color(100) and NeedIndicator.level_color(20) != NeedIndicator.level_color(35), "critical, medium and satisfied needs use distinct colors")
+	game.cooldowns.feed = 6.0
+	app._refresh()
+	check(is_equal_approx(app.care_buttons.feed.cooldown_ratio, 0.6) and not app.care_buttons.feed.disabled, "cooldown drains the button fill while keeping explanation available")
+	app._care_action("feed")
+	check(app.bubble.visible and not app.message_label.text.is_empty(), "tapping a waiting action provides visible feedback")
+	game.cooldowns.clear()
+	game.pet.needs = original
+	app._show_feedback("Krótka wiadomość")
+	app._process(7)
+	check(not app.bubble.visible, "speech bubble expires without waiting for another action")
+	app._show_gain("feed", {"fullness": 5.5})
+	check(app.gain_label.text.contains("+6") and app.needs_ui.fullness.flash_left > 0, "actual capped care gain floats above the puppy and flashes its need")
+	app._process(2)
+	check(not app.gain_label.visible, "floating gain also expires")
+	check(app.room.ball_touch_rect().size.x >= 48 and app.room.station_touch_rect("food").size.y >= 48, "ball and bowl keep at least 48 point touch targets")
+	app.name_label.pressed.emit()
+	check(app.profile_dialog.visible and not app.settings_dialog.visible and not app.music_toggle.is_visible_in_tree(), "name opens the dog card without audio settings")
+	app.profile_dialog.hide()
+	app._show_settings()
+	check(app.settings_dialog.visible and app.music_toggle.is_visible_in_tree() and not app.name_edit.is_visible_in_tree(), "gear opens separate immediately saved settings")
+	await capture("22-settings.png")
+	app.settings_dialog.hide()
+	app._select_tab("journal")
+	check(app.sheet.size.y > app.size.y * 0.85 and not app.header.visible, "album uses a full-height card")
+	check(app._journal_icon("feed") != app._journal_icon("rest") and app._journal_icon("first_sit") == "spark", "album distinguishes care, sleep and learning events")
+	app._select_tab("training")
+	game.pet.milestones.erase("favorite_reward")
+	app._refresh()
+	check(not app.reward_buttons.values().any(func(button): return button.favorite), "undiscovered favorite does not bias any reward")
+	game.pet.milestones.append("favorite_reward")
+	app._refresh()
+	check(app.reward_buttons[game.pet.favorite_reward].favorite and app.reward_buttons.values().filter(func(button): return button.favorite).size() == 1, "exactly the discovered favorite is highlighted")
+	game.pet.milestones.erase("favorite_reward")
+	app.guidance_toggle.button_pressed = false
+	check(app.guided_button.text == "Powiedz komendę" and app.training_hint.text.contains("pamięta"), "guidance switch explains independent recall")
+	app.guidance_toggle.button_pressed = true
+	app._select_tab("care")
+	# Convert synthetic device insets through the same physical-to-UI transform.
+	var transform := root.get_final_transform()
+	app.safe_area_override = transform * Rect2(0, 47, app.size.x, app.size.y - 81)
+	app._fit_room()
+	await process_frame
+	check(app.header.position.y >= 47 and app.navigation.get_rect().end.y <= app.size.y - 34, "notch and home-indicator insets protect floating controls")
+	app._show_profile()
+	await process_frame
+	check(app.profile_dialog.position.y - 34 >= 47 and app.profile_dialog.position.y + app.profile_dialog.size.y <= app.size.y - 34, "dog card and its title fit inside the safe area")
+	app.profile_dialog.hide()
+	await capture("23-safe-area.png")
+	app.safe_area_override = Rect2()
+	app._fit_room()
+	app._refresh()
+	app.room.camera_manual = true
+	app.room.zoom_level = 2
+	app._fit_room()
+	check(app.room.zoom_level == 1 and app.room.pet_position().y < app.sheet.position.y - 20, "resizing a manually panned closeup reframes the puppy above care controls")
+	app.room.focus_pet()
+
+func _puppy_screen_bounds() -> Rect2:
+	var sprite: AnimatedSprite2D = app.room.animator.sprite
+	var texture: Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var used := Rect2(texture.get_image().get_used_rect())
+	if sprite.flip_h: used.position.x = texture.get_width() - used.end.x
+	var start: Vector2 = app.room.world_to_screen(sprite.to_global(used.position) * RoomLayout.PIXEL_SIZE)
+	var end: Vector2 = app.room.world_to_screen(sprite.to_global(used.end) * RoomLayout.PIXEL_SIZE)
+	return Rect2(start, end - start)
+
+func _test_training_visibility() -> void:
+	var game: GameSession = app.session
+	game._cancel_motion()
+	game.activity = "idle"
+	game.activity_left = 0
+	game.pet.resting = false
+	game.pet.fatigue = 0
+	game.training.trick = "sit"
+	app._select_tab("training")
+	for layout in [Vector2i(390, 844), Vector2i(360, 800), Vector2i(320, 640), Vector2i(1080, 2340)]:
+		root.size = layout
+		root.content_scale_size = Vector2i(390, 844) if layout.x in [320, 1080] else layout
+		await process_frame
+		await process_frame
+		if layout.x == 1080:
+			app.safe_area_override = root.get_final_transform() * Rect2(0, 47, app.size.x, app.size.y - 81)
+		app._fit_room()
+		for phase in ["idle", "attempt", "reward"]:
+			game.training.phase = phase
+			game.training.time_left = 2
+			game.training.reward_duration = 3
+			app._refresh()
+			app.room.update_placement()
+			app.room.look_at_world(app.room.pet_world)
+			app._show_feedback("Udało się! Teraz nagródź pieska.")
+			app._show_gain("pet", {"contact": 18})
+			await process_frame
+			var bounds := _puppy_screen_bounds()
+			check(not app.bubble.visible and not app.gain_label.visible and bounds.position.y >= app.header.get_rect().end.y + 12 and bounds.end.y <= app.sheet.position.y - 12, "training puppy remains fully clear of HUD, messages and panel: %s / %s" % [layout, phase])
+			check(app.sheet.size.y <= 280 and app.sheet.get_rect().end.y < app.navigation.position.y and (app.sheet.position.y - app.header.get_rect().end.y) / app.safe_rect.size.y >= 0.43, "training reserves space for the puppy and keeps controls above navigation: %s / %s" % [layout, phase])
+		await capture("training-clear-%d.png" % layout.x)
+		app.safe_area_override = Rect2()
+	game.training.phase = "idle"
+	app._show_feedback("Okazja minęła. Zrobimy kolejną próbę.")
+	app._refresh()
+	check(app.training_hint.text.contains("Okazja minęła") and not app.bubble.visible, "missed training feedback remains readable inside the panel")
+	app._process(5)
+	app._refresh()
+	check(not app.training_hint.text.contains("Okazja minęła"), "training outcome expires and restores the current instruction")
+	app._show_feedback("Krótki wynik próby")
+	app._select_tab("care")
+	check(not app.bubble.visible, "leaving training does not resurrect its old message over the puppy")
+	app._select_tab("training")
+
+func _test_room_overview() -> void:
+	app._select_tab("care")
+	app.session.pet.pet_name = "Gloria"
+	app.session.invitation = {"kind": "cuddle", "remaining": 30.0}
+	check(app._activity_status() == "Gloria zaprasza Cię do wspólnej chwili", "invitation caption accepts a Polish female name without a wrong case")
+	app.session._cancel_invitation()
+	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(1080, 2340)]:
+		root.size = layout
+		root.content_scale_size = Vector2i(390, 844)
+		await process_frame
+		app._fit_room()
+		app.room.overview_button.pressed.emit()
+		step_game(0.1)
+		await capture("room-overview-%d.png" % layout.x)
+		var room: RoomView = app.room
+		var all_visible := true
+		for id in RoomLayout.STATIONS:
+			var bounds := room._screen_rect(room.station_bounds(id))
+			all_visible = all_visible and room.render_rect.encloses(bounds)
+		check(room.overview and all_visible, "overview shows every station at " + str(layout))
+		check(room.render_rect.position.y >= room.hud_bottom + 44 and room.render_rect.end.y <= room.content_bottom, "overview fits between HUD and controls at " + str(layout))
+		var physical := room.screen_scale().x * room._render_pixel_size * root.get_final_transform().get_scale().x
+		check(absf(physical - roundf(physical)) < 0.001, "overview retains whole physical pixels at " + str(layout))
+		var target := room.world_to_screen(RoomLayout.STATIONS.toys.position)
+		await touch_at(target)
+		check(not room.overview and room.camera_manual and absf(room.camera_center().x - RoomLayout.STATIONS.toys.position.x) < 3, "overview tap opens selected part of the room at " + str(layout))
+		room.overview_button.pressed.emit()
+		room.overview_button.pressed.emit()
+		step_game(2)
+		check(not room.overview and not room.camera_manual, "overview button returns to following the dog at " + str(layout))

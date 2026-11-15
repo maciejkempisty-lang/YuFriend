@@ -10,7 +10,14 @@ const PART_KEYS := ["morning", "afternoon", "evening", "night"]
 const HABIT_KEYS := ["time_morning", "time_afternoon", "time_evening", "time_night", "cuddler", "playful", "student"]
 const MAX_HISTORY_DAYS := 14
 const MAX_MILESTONES := 200
+const MAX_RECENT_ENTRIES := 40
 const MAX_EVENT_COUNT := 100000
+const QUIRK_KEYS := ["sock_collector", "ball_guard", "window_watch", "door_listener", "toy_sorter", "bed_circles",
+	"happy_wiggle", "brush_lean", "meal_sniff", "sun_napper", "head_tilter", "dream_runner"]
+const MOOD_KEYS := ["calm", "playful", "cuddly", "sleepy", "curious"]
+const INITIATIVE_KEYS := ["ball", "tug", "cups", "cuddle"]
+const RESPONSE_KEYS := ["accepted", "declined", "ignored"]
+const PLAY_KEYS := ["ball", "tug", "cups"]
 var pet_id: String = ""
 var pet_name: String = "Biszkopt"
 var life_stage: String = "puppy"
@@ -31,6 +38,8 @@ var milestones: Array = []
 var history: Array = []
 var habits: Array = []
 var reflected_day: int = 0
+var life: Dictionary = {}
+var social: Dictionary = {}
 
 static func create(seed_value: int = 0, now: float = -1.0) -> PetState:
 	var pet := PetState.new()
@@ -39,6 +48,8 @@ static func create(seed_value: int = 0, now: float = -1.0) -> PetState:
 		rng.randomize()
 		seed_value = rng.randi_range(1, 2147483646)
 	pet.personality_seed = seed_value
+	pet.life = initial_life(seed_value)
+	pet.social = initial_social()
 	rng.seed = seed_value
 	pet.last_seen_at = Time.get_unix_time_from_system() if now < 0 else now
 	pet.pet_id = "%s-%s" % [int(pet.last_seen_at), seed_value]
@@ -59,15 +70,102 @@ static func base_traits(seed_value: int) -> Dictionary:
 		result[key] = rng.randf_range(0.25, 0.85)
 	return result
 
+# A separate random stream keeps the original traits and reward unchanged.
+static func initial_life(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value + 104729
+	var pool := QUIRK_KEYS.duplicate()
+	var quirks: Array = []
+	for index in rng.randi_range(2, 3):
+		var pick := rng.randi_range(0, pool.size() - 1)
+		quirks.append(pool.pop_at(pick))
+	return {"quirks": quirks, "discovered": [], "observations": {},
+		"mood": "calm", "mood_day": -1, "mood_reason": "Dopiero się poznajecie.", "away_report": {}}
+
+static func initial_social() -> Dictionary:
+	var responses := {}
+	for key in INITIATIVE_KEYS:
+		responses[key] = {"accepted": 0, "declined": 0, "ignored": 0, "interest": 0.5}
+	return {"responses": responses, "recent": [], "games": {"ball": 0, "tug": 0, "cups": 0},
+		"last_offer_at": 0.0, "last_reward_at": 0.0}
+
+static func valid_social(value: Variant) -> bool:
+	if not value is Dictionary: return false
+	for field in ["responses", "games"]:
+		if not value.get(field) is Dictionary: return false
+	for kind in INITIATIVE_KEYS:
+		var response: Variant = value.responses.get(kind)
+		if not response is Dictionary: return false
+		for key in RESPONSE_KEYS:
+			if not valid_count(response.get(key)): return false
+		if not valid_number(response.get("interest")) or response.interest < 0.15 or response.interest > 0.95: return false
+	for kind in PLAY_KEYS:
+		if not valid_count(value.games.get(kind)): return false
+	for field in ["last_offer_at", "last_reward_at"]:
+		if not valid_number(value.get(field)) or value[field] < 0: return false
+	if not value.get("recent") is Array or value.recent.size() > 12: return false
+	for entry in value.recent:
+		if not entry is Dictionary or not INITIATIVE_KEYS.has(entry.get("kind")) or not RESPONSE_KEYS.has(entry.get("response")): return false
+		if not valid_number(entry.get("at")) or entry.at < 0: return false
+	return true
+
+static func valid_count(value: Variant) -> bool:
+	return valid_number(value) and value >= 0 and value <= MAX_EVENT_COUNT and float(value) == floor(float(value))
+
+static func valid_life(value: Variant) -> bool:
+	if not value is Dictionary: return false
+	for field in ["quirks", "discovered"]:
+		if not value.get(field) is Array: return false
+		var seen: Array = []
+		for id in value[field]:
+			if not id is String or not QUIRK_KEYS.has(id) or seen.has(id): return false
+			seen.append(id)
+	if value.quirks.size() < 2 or value.quirks.size() > 3: return false
+	for id in value.discovered:
+		if not value.quirks.has(id): return false
+	if not value.get("observations") is Dictionary: return false
+	for id in value.observations:
+		var count: Variant = value.observations[id]
+		if not value.quirks.has(id) or not valid_number(count): return false
+		if count < 0 or count > 3 or float(count) != floor(float(count)): return false
+	if not value.get("mood") is String or not MOOD_KEYS.has(value.mood): return false
+	if not valid_number(value.get("mood_day")) or value.mood_day < -1 or float(value.mood_day) != floor(float(value.mood_day)): return false
+	if not value.get("mood_reason") is String or value.mood_reason.length() > 200: return false
+	var report: Variant = value.get("away_report")
+	if not report is Dictionary: return false
+	if not report.is_empty():
+		for field in ["from", "until"]:
+			if not valid_number(report.get(field)) or report[field] < 0: return false
+		if report.until <= report.from or not report.get("events") is Array: return false
+		if report.events.size() < 2 or report.events.size() > 3: return false
+		for entry in report.events:
+			if not entry is String or entry.is_empty() or entry.length() > 140: return false
+	return true
+
 func remember(key: String, title: String, detail: String, now: float = -1.0) -> bool:
 	if milestones.has(key):
 		return false
+	if milestones.size() >= MAX_MILESTONES: return false
 	milestones.append(key)
+	add_journal_entry(key, title, detail, now)
+	return true
+
+# Keep every milestone and only the latest 40 recurring entries.
+# Both groups remain in chronological order in the same album.
+func add_journal_entry(key: String, title: String, detail: String, now: float) -> void:
 	journal.push_front({"key": key, "title": title, "detail": detail,
 		"at": Time.get_unix_time_from_system() if now < 0 else now})
-	if journal.size() > 40:
-		journal.resize(40)
-	return true
+	var recent := 0
+	var seen: Array = []
+	var kept: Array = []
+	for entry in journal:
+		if seen.has(entry.key): continue
+		seen.append(entry.key)
+		if not milestones.has(entry.key):
+			recent += 1
+			if recent > MAX_RECENT_ENTRIES: continue
+		kept.append(entry)
+	journal = kept
 
 func to_dict() -> Dictionary:
 	return {"pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
@@ -76,7 +174,8 @@ func to_dict() -> Dictionary:
 		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
 		"resting": resting, "last_seen_at": last_seen_at,
 		"journal": journal.duplicate(true), "milestones": milestones.duplicate(),
-		"history": history.duplicate(true), "habits": habits.duplicate(), "reflected_day": reflected_day}
+		"history": history.duplicate(true), "habits": habits.duplicate(), "reflected_day": reflected_day,
+		"life": life.duplicate(true), "social": social.duplicate(true)}
 
 static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
@@ -84,6 +183,8 @@ static func valid_number(value: Variant) -> bool:
 static func from_dict(data: Dictionary) -> PetState:
 	# Required state is checked before any defaults are applied. A broken save is
 	# never silently replaced with a new animal.
+	if not valid_life(data.get("life")): return null
+	if not valid_social(data.get("social")): return null
 	for key in ["pet_id", "pet_name", "life_stage", "skin", "favorite_reward"]:
 		if not data.get(key) is String:
 			return null
@@ -118,7 +219,7 @@ static func from_dict(data: Dictionary) -> PetState:
 				return null
 	if not data.get("journal") is Array or not data.get("milestones") is Array:
 		return null
-	if data.journal.size() > 40 or data.milestones.size() > MAX_MILESTONES:
+	if data.journal.size() > MAX_MILESTONES + MAX_RECENT_ENTRIES or data.milestones.size() > MAX_MILESTONES:
 		return null
 	for entry in data.journal:
 		if not entry is Dictionary or not valid_number(entry.get("at")):
@@ -152,6 +253,12 @@ static func from_dict(data: Dictionary) -> PetState:
 				clean[group[0]][key] = mini(int(counts[key]), MAX_EVENT_COUNT)
 		clean_history.append(clean)
 	var pet := PetState.new()
+	pet.life = data.life.duplicate(true)
+	pet.social = data.social.duplicate(true)
+	for kind in INITIATIVE_KEYS:
+		for key in RESPONSE_KEYS: pet.social.responses[kind][key] = int(pet.social.responses[kind][key])
+		pet.social.responses[kind].interest = float(pet.social.responses[kind].interest)
+	for kind in PLAY_KEYS: pet.social.games[kind] = int(pet.social.games[kind])
 	pet.history = clean_history
 	pet.habits = data.habits.duplicate()
 	pet.reflected_day = int(data.reflected_day)

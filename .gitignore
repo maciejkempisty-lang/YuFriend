@@ -11,3 +11,9 @@ test-results/
 # Original delivery is kept locally; runtime copies live under assets/sprites/.
 /YuFriend-AB/
 /YuFriend-AB-v1.zip
+
+# Local source videos and Python caches.
+/video2.mp4
+/yu music.mp4
+__pycache__/
+*.py[cod]

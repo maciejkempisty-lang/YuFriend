@@ -413,6 +413,48 @@
       "fade_out_samples": 288,
       "format": "PCM16 mono 48000 Hz",
       "preserved_source": "assets/audio/sfx/source/ui_tap.wav"
+    },
+    "puppy_happy_01.wav": {
+      "source_file": "One_short_soft_happy_#1-1794750966169.wav",
+      "source_sha256": "5f258aaf0783fe528f8dfee5a6766293c2b283001ae6de75c48e1c8e9a39f2e2",
+      "source_channels": 2,
+      "source_duration_seconds": 1.0,
+      "source_mono_peak_dbfs": -6.738,
+      "source_mono_rms_dbfs": -24.306,
+      "output_sha256": "93d6f9c32fe3cf791f86373ea6b6a9ea6d773667ee4a08b15d57cef82f210d8f",
+      "output_duration_seconds": 0.8866041666666666,
+      "output_peak_dbfs": -3.0,
+      "output_rms_dbfs": -20.045,
+      "removed_dc": 3.1617482503255207e-06,
+      "gain_db": 3.738,
+      "trim_start_samples": 4897,
+      "trim_end_samples": 546,
+      "fade_in_samples": 48,
+      "fade_out_samples": 288,
+      "max_duration_seconds": null,
+      "format": "PCM16 mono 48000 Hz",
+      "preserved_source": "assets/audio/sfx/source/happy-petting-2026-11-15/One_short_soft_happy_#1-1794750966169.wav"
+    },
+    "puppy_happy_02.wav": {
+      "source_file": "One_short_soft_happy_#3-1794751002845.wav",
+      "source_sha256": "5de7e92247d5722953332fcac0626f099c938e1c12a75fe97d958518b854d00d",
+      "source_channels": 2,
+      "source_duration_seconds": 1.0,
+      "source_mono_peak_dbfs": -11.575,
+      "source_mono_rms_dbfs": -26.209,
+      "output_sha256": "f9f8b5bd690b82b5067199e97739888162f964ed38fe72cdc3d52b83b5950bd5",
+      "output_duration_seconds": 0.951,
+      "output_peak_dbfs": -3.0,
+      "output_rms_dbfs": -17.415,
+      "removed_dc": -4.205703735351563e-06,
+      "gain_db": 8.575,
+      "trim_start_samples": 2352,
+      "trim_end_samples": 0,
+      "fade_in_samples": 48,
+      "fade_out_samples": 288,
+      "max_duration_seconds": null,
+      "format": "PCM16 mono 48000 Hz",
+      "preserved_source": "assets/audio/sfx/source/happy-petting-2026-11-15/One_short_soft_happy_#3-1794751002845.wav"
     }
   }
 }

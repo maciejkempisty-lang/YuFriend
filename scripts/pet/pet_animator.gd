@@ -2,6 +2,7 @@ class_name PetAnimator
 extends Node2D
 
 signal request_completed(request_id: int)
+signal clip_started(clip: String)
 
 # start pose, end pose, seconds, loop. These IDs match the sprite brief.
 const CLIPS := {
@@ -111,6 +112,7 @@ func _start(name: String, request_id: int = 0) -> void:
 		sprite.sprite_frames = frames
 		sprite.play("default")
 	_apply_transform()
+	clip_started.emit(current)
 	if remaining <= 0 and current_id > 0:
 		var finished := current_id
 		current_id = 0

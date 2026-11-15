@@ -1,7 +1,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 2
+const VERSION := 4
 const MAX_BYTES := 1024 * 1024
 var path: String
 var last_error: String = ""
@@ -20,7 +20,7 @@ func _read(file_path: String) -> Dictionary:
 		return {"status": "invalid"}
 	var data: Dictionary = parsed.data
 	var version: Variant = data.get("schema_version")
-	if not PetState.valid_number(version) or (version != VERSION and version != 1):
+	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3):
 		return {"status": "unsupported"}
 	if not data.get("pet") is Dictionary:
 		return {"status": "invalid"}
@@ -35,8 +35,14 @@ static func migrate(pet_data: Dictionary, version: int) -> Dictionary:
 		return pet_data
 	var result := pet_data.duplicate(true)
 	# 1 → 2: dziennik zdarzeń, nawyki i znacznik przetworzonego dnia.
-	for field in [["history", []], ["habits", []], ["reflected_day", 0]]:
-		if not result.has(field[0]): result[field[0]] = field[1]
+	if version == 1:
+		for field in [["history", []], ["habits", []], ["reflected_day", 0]]:
+			if not result.has(field[0]): result[field[0]] = field[1]
+	# 2 → 3: deterministic quirks, discoveries, daily mood and the latest away report.
+	if version < 3 and not result.has("life") and PetState.valid_number(result.get("personality_seed")):
+		result.life = PetState.initial_life(int(result.personality_seed))
+	# 3 → 4: responses to invitations and touch-play history. Existing life stays intact.
+	if not result.has("social"): result.social = PetState.initial_social()
 	return result
 
 func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:

@@ -17,24 +17,24 @@ const MAX_NOTES := 4
 const PASSIVE_EVENTS := ["miss", "reward_missed", "train_tired"]
 
 const HABITS := {
-	"time_morning": {"label": "Ranny ptaszek", "detail": "Najczęściej jesteście razem rano, więc wtedy chętniej szuka wspólnych zajęć."},
-	"time_afternoon": {"label": "Popołudniowy towarzysz", "detail": "Najczęściej jesteście razem po południu, więc wtedy jest najżywszy."},
-	"time_evening": {"label": "Wieczorny towarzysz", "detail": "Najczęściej jesteście razem wieczorem, więc wtedy czeka na Ciebie najbardziej."},
-	"time_night": {"label": "Nocny marek", "detail": "Najczęściej jesteście razem późnym wieczorem, więc wtedy się ożywia."},
-	"cuddler": {"label": "Przytulas", "detail": "Często go głaszczesz, więc sam zaczął przychodzić po pieszczoty."},
-	"playful": {"label": "Łobuziak", "detail": "Dużo się bawicie, więc sam zaprasza do zabawy."},
-	"student": {"label": "Pilny uczeń", "detail": "Regularne ćwiczenia sprawiły, że sam siada i czeka na komendę."},
+	"time_morning": {"label": "Poranne spotkania", "detail": "Najczęściej jesteście razem rano, więc wtedy chętniej szuka wspólnych zajęć."},
+	"time_afternoon": {"label": "Popołudnia razem", "detail": "Najczęściej jesteście razem po południu, więc wtedy ma najwięcej energii."},
+	"time_evening": {"label": "Wieczory razem", "detail": "Najczęściej jesteście razem wieczorem, więc wtedy czeka na Ciebie najbardziej."},
+	"time_night": {"label": "Nocne spotkania", "detail": "Najczęściej jesteście razem późnym wieczorem, więc wtedy się ożywia."},
+	"cuddler": {"label": "Ochota na pieszczoty", "detail": "Częste głaskanie zachęca do przychodzenia po pieszczoty."},
+	"playful": {"label": "Małe psoty", "detail": "Dużo się bawicie, więc chętnie zaprasza do zabawy."},
+	"student": {"label": "Radość z nauki", "detail": "Regularne ćwiczenia sprawiły, że chętnie siada i czeka na komendę."},
 }
 
 const TRAIT_NOTES := {
-	"curiosity_up": ["Coraz ciekawszy świata", "Zabawa i samodzielne próby zachęcają go do odkrywania."],
-	"curiosity_down": ["Trochę ostrożniejszy", "Spokojne dni bez zabawy sprawiają, że rzadziej rusza na zwiady."],
-	"patience_up": ["Coraz cierpliwszy", "Nagrody w dobrym momencie uczą go spokojnie czekać."],
-	"patience_down": ["Bardziej niecierpliwy", "Spóźnione nagrody sprawiają, że trudniej mu czekać."],
-	"sociability_up": ["Coraz bardziej przytulny", "Częsty kontakt sprawia, że mocniej szuka Twojej bliskości."],
-	"sociability_down": ["Bardziej samodzielny", "Dni bez głaskania uczą go radzić sobie samemu."],
-	"sensitivity_up": ["Łatwiej się rozprasza", "Ćwiczenia mimo zmęczenia sprawiają, że trudniej mu się skupić."],
-	"sensitivity_down": ["Spokojniejszy przy nauce", "Odpoczynek we właściwym czasie pomaga mu się skupić."],
+	"curiosity_up": ["Coraz więcej ciekawości", "Zabawa i samodzielne próby zachęcają do odkrywania."],
+	"curiosity_down": ["Więcej ostrożności", "Spokojne dni bez zabawy sprawiają, że rzadziej rusza na zwiady."],
+	"patience_up": ["Coraz więcej cierpliwości", "Nagrody w dobrym momencie uczą spokojnego czekania."],
+	"patience_down": ["Trudniej zaczekać", "Spóźnione nagrody sprawiają, że czekanie staje się trudniejsze."],
+	"sociability_up": ["Coraz więcej bliskości", "Częsty kontakt sprawia, że mocniej szuka Twojej bliskości."],
+	"sociability_down": ["Więcej samodzielności", "Dni bez głaskania sprzyjają samodzielnym zajęciom."],
+	"sensitivity_up": ["Łatwiej się rozprasza", "Ćwiczenia mimo zmęczenia sprawiają, że trudniej utrzymać skupienie."],
+	"sensitivity_down": ["Więcej spokoju przy nauce", "Odpoczynek we właściwym czasie pomaga w skupieniu."],
 }
 
 static func local_now() -> float:

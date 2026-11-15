@@ -73,7 +73,8 @@ func _run() -> void:
 	invalid = irregular.duplicate(true)
 	invalid.animations.walk.scale = NAN
 	check(not SpriteImporter.build(invalid).ok, "nonfinite clip scale is rejected")
-	var path := "user://qa-sprites-%s.res" % Time.get_ticks_usec()
+	var test_root := OS.get_environment("YUFRIEND_TEST_ROOT")
+	var path := ("user://" if test_root.is_empty() else test_root).path_join("qa-sprites-%s.res" % Time.get_ticks_usec())
 	check(ResourceSaver.save(pack, path) == OK, "animation pack serializes")
 	var loaded: PetAnimationSet = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
 	check(loaded != null and loaded.frames.get_frame_count("give_paw") == 3 and loaded.anchor == pack.anchor, "saved pack reloads with frame metadata")

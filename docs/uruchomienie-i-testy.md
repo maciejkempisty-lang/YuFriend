@@ -38,19 +38,33 @@ Testy używają prostych skryptów `SceneTree` i nie wymagają zewnętrznego fra
 
 | Skrypt | Zakres | Ostatni odnotowany wynik |
 |---|---|---:|
-| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 104 poprawne sprawdzenia |
+| [test_runner.gd](../tests/test_runner.gd) | Temperament, dane, upływ czasu, trening, nagrody, zapis, kopia, słownik komend, osobowość, nawyki i migracja zapisu | 112 poprawnych sprawdzeń |
+| [test_life.gd](../tests/test_life.gd) | Dziwactwa, odkrywanie, nastrój o 05:00, cofnięcie zegara, relacje, powitania, migracja v2 i powrót do sesji | 46 poprawnych sprawdzeń |
+| [test_play.gd](../tests/test_play.gd) | Autonomiczne zaproszenia, pamięć reakcji, gesty, ograniczenie nagród, przerwania, trwałość i migracja v3 | 61 poprawnych sprawdzeń |
+| [ui_play.gd](../tests/ui_play.gd) | Karta zaproszenia, dotyk przycisku, rzut i pościg, lina, kubki, wznowienie oraz mały i szeroki ekran | 26 poprawnych sprawdzeń |
 | [test_sprites.gd](../tests/test_sprites.gd) | Manifest, nieregularne regiony, podparcie, skalowanie, kompletny pakiet 22/142, zasób `.res`, przejścia i ukończenie prezentacji | 38 poprawnych sprawdzeń |
-| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 132 poprawne sprawdzenia |
+| [ui_smoke.gd](../tests/ui_smoke.gd) | Opieka i trening, kliknięcia i dotyk w pokoju, zapis, wznowienie, nawyki, dialogi i układy ekranu | 208 poprawnych sprawdzeń |
 
-Wynik **274/274** pochodzi z weryfikacji prototypu 15 listopada 2026 w Godot 4.7.2 na macOS. Obejrzano także zrzuty ekranu, w tym trening, profil z nawykami oraz układy pionowy i poziomy. Regresje obejmują krótszą i dłuższą nieobecność, powtórzenie propozycji, limit wspomnień, zachowanie `.v1` po rotacji kopii i zablokowanie migracji przy błędzie zabezpieczenia oryginału. Nowe regresje obejmują obcą kopię `.v1`, wybudzanie także offline, dojście przed naliczeniem opieki, anulowanie dojścia, reakcję na kolejne głaskanie, sygnalizowanie potrzeb oraz brak przebudowy statycznego tła podczas ruchu. Audyt zachowania obejmuje też przerwanie spaceru opieką, zmianę celu, reakcję na potrzeby 100/99,9 i dotyk podczas jedzenia, bez naruszenia treningu. Przebudowa świata dodaje próby przesuwania kamery, rozróżnienia gestu i tapnięcia, granic, zbliżeń, przechodzenia za przedmiotami, sześciu stacji i niezmienności współrzędnych przy zmianie rozmiaru okna.
+Poprawki po audycie, 15 listopada 2026: **524/524** w siedmiu zestawach, w tym dodatkowe **33 sprawdzenia `test_audio.gd`**. Regresje obejmują 60 powrotów z zachowaniem pierwszego dnia i siadu po ponownym odczycie, osobne limity 200+40 wpisów, brak obserwacji dziwactw offline, rozkład 400 nowych psów (95 sennych), karmienie podczas zaproszenia do bliskości oraz pięciominutowy odstęp zaproszeń. UI sprawdza neutralny tekst dla Glorii oraz widok całego pokoju, wybór miejsca i powrót do psa w trzech pionowych rozdzielczościach. Zrzuty: `room-overview-390.png`, `room-overview-320.png`, `room-overview-1080.png`. Obejrzano widok 1080 × 2340 i zbliżenie; fizyczny iPhone nadal wymaga próby tych zmian.
+
+Etap 2, 15 listopada 2026: **467/467 sprawdzeń** w sześciu zestawach. Nowe testy korzystają z syntetycznej Glorii i osobnych zapisów, a zrzuty `30-invitation.png`–`40-play-1100.png` w `test-results/` pokazują nowe przepływy. Obejrzano zaproszenie, podgląd rzutu, linę, kubki, pamięć odpowiedzi i dialogi w oknach 320 × 640 oraz 1100 × 720. Test UI steruje ramkami i symuluje aktywny fokus, aby inne okna testowe nie wygaszały zaproszenia. Dotyk jest syntetyczny; fizyczny telefon wymaga osobnej próby.
+
+Poprawka widoczności treningu z 15 listopada 2026: **192/192 sprawdzenia UI**. Nowe regresje mierzą widoczną sylwetkę psa w fazach przygotowania, próby i nagrody w oknach 390 × 844, 360 × 800, 320 × 640 oraz 1080 × 2340 z symulowanymi marginesami urządzenia. Sprawdzają również komunikaty wewnątrz panelu i brak powracającego dymka po wyjściu z treningu. Obejrzano zrzuty z tych układów.
+
+Wcześniejszy wynik pełnego zestawu **355/355** pochodzi z weryfikacji 15 listopada 2026 w Godot 4.7.2 na macOS: 111 logiki i zapisu, 38 sprite’ów, 42 życia psa oraz 164 interfejsu. Nowe regresje sprawdzają przyrost po dojściu i ograniczeniu do 100%, odkrywanie ulubionej nagrody, jeden rząd potrzeb/akcji, wygasanie dymka, czas oczekiwania, rozdzielenie profilu i ustawień, pełny album, zapamiętanie pierwszego gestu oraz marginesy urządzenia przy zwykłym i ułamkowym skalowaniu. Obejrzano również zrzuty z opieki, treningu, profilu, ustawień, albumu i raportu powrotu. Fizycznego iPhone’a nie użyto do weryfikacji tej przebudowy.
 
 ```sh
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_runner.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_sprites.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_life.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_play.gd
 '/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_smoke.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_play.gd
 ```
 
-Dwa pierwsze skrypty działają bez okna. Trzeci potrzebuje sesji graficznej, otwiera okno i zapisuje obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640, 1100 × 720 i 1080 × 2340. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku (także przeciągnięciem) oraz kontrolowanym upływem czasu. Zapisuje też lewy i prawy koniec pokoju, zbliżenie, obie głębokości przy koszu i pełną panoramę świata w `19-panorama.png`. Dodatkowo mierzy rzeczywiste bloki koloru na zrzutach, a nie tylko parametry kamery: powiększenie pozostaje całkowite po uwzględnieniu transformacji całego okna. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
+Cztery pierwsze skrypty działają bez okna. Dwa ostatnie potrzebują sesji graficznej, otwierają okno i zapisują obrazy w `test-results/`. Sprawdza układy 390 × 844, 540 × 960 i 360 × 800 oraz skalowanie bazowego widoku w oknach 320 × 640, 1100 × 720 i 1080 × 2340. Steruje sygnałami przycisków, zdarzeniami myszy i dotyku (także przeciągnięciem) oraz kontrolowanym upływem czasu. Zapisuje też lewy i prawy koniec pokoju, zbliżenie, obie głębokości przy koszu i pełną panoramę świata w `19-panorama.png`. Dodatkowo mierzy rzeczywiste bloki koloru na zrzutach, a nie tylko parametry kamery: powiększenie pozostaje całkowite po uwzględnieniu transformacji całego okna. Fizyczny dotyk, klawiatura ekranowa i cykl życia telefonu wymagają osobnych prób na urządzeniu.
+
+Zmiennej `YUFRIEND_TEST_ROOT` można nadać istniejący katalog tymczasowy, np. `/tmp`, aby zapisy testowe powstały poza `user://`. Bez niej ścieżki pozostają dotychczasowe.
 
 Testy używają własnych tymczasowych danych i sprzątają je po normalnym zakończeniu. Nie nadpisują `user://pet.json` ani ręcznego zapisu `--qa`. Katalog `test-results/` jest pomijany przez Git i skaner zasobów Godota.
 
@@ -60,9 +74,12 @@ Uruchom grę z `--qa`. Wykonaj poniższe czynności również po większej zmian
 
 | Czynność | Oczekiwany rezultat |
 |---|---|
-| Otwórz Profil, zmień imię, zapisz | Zmiany pojawiają się w grze; przyciski dialogu mieszczą się w oknie |
+| Dotknij imienia, zmień je w karcie psa, wybierz „Zapisz imię” | Zmiany pojawiają się w grze; przyciski dialogu mieszczą się w oknie |
 | Kliknij lewą i prawą stronę pokoju | Pies zmienia kierunek i dochodzi do celu; po siadzie najpierw wstaje |
 | Nakarm, pogłaszcz, pobaw się i wyczesz | Pies idzie do miski, goni piłkę i odpowiada na kolejne dotknięcia; efekty i wspomnienia naliczają się tylko raz |
+| Poczekaj na zaproszenie, odpowiedz lub wybierz „Później” | Karta psa pokazuje reakcję w „Waszym rytmie”; ponowne uruchomienie zachowuje pamięć |
+| Otwórz „Pobaw się” i ukończ piłkę, linę oraz kubki | Gesty odpowiadają wskazówkom, wynik nalicza się raz, pomyłka przy kubkach nie daje kary |
+| Przerwij przeciąganie lub wyślij aplikację w tło podczas rundy | Nie ma dodatkowego rzutu, wyboru kubka ani nagrody po wznowieniu |
 | Włącz odpoczynek i poczekaj | Pies idzie do legowiska, energia rośnie i przy 85 pies sam wstaje; ręczne budzenie nadal działa |
 | Ćwicz siad z gestem i nagradzaj na czas | Opanowanie rośnie; po 25% dostępna staje się łapa |
 | Nagródź przed wykonaniem, po czasie i dwa razy | Żadna z tych dodatkowych prób nie przyznaje postępu |
@@ -78,6 +95,7 @@ Jakość rzeczywistych sprite’ów oceniamy osobno: stabilne łapy, zgodne pozy
 |---|---|
 | Tempo potrzeb lub odpoczynku | `NeedsSystem`; zaktualizuj mechaniki i sprawdź testy logiki |
 | Efekt opieki i czas ponownego użycia | `GameSession.act()`; sprawdź reguły oraz przepływ UI |
+| Własna inicjatywa i zabawy dotykiem | `InitiativeSystem`, `TouchPlaySystem`, sesja i widoki; uruchom `test_play.gd` oraz `ui_play.gd` |
 | Szansa wykonania i nagrody | `TrainingSystem`; sprawdź wczesne, podwójne i wygasłe nagrody |
 | Układ, napisy i dialogi | `scripts/ui/main.gd`; sprawdź układy pionowe i szeroki panel boczny |
 | Wygląd pokoju i ruch | `RoomView` i `RoomArtwork`; sprawdź cel, kierunek, dojście do przedmiotów i przejście z siadu do chodu |
@@ -103,6 +121,8 @@ Po zmianie uruchamiaj zestawy powiązane z danym obszarem. Aktualizacja samego o
 
 ## Wydanie na telefon
 
-Projekt nie ma jeszcze skonfigurowanego zestawu eksportowego ani potwierdzonego działania na fizycznym telefonie. Następny etap obejmuje wybór platformy, konfigurację eksportu, pakowanie zasobów, podpisanie aplikacji tam, gdzie jest wymagane, oraz test dotyku, bezpiecznych marginesów ekranu, klawiatury, wstrzymania i wznowienia. Kryteria opisuje [plan rozwoju](rozwoj-projektu.md).
+Projekt ma konfigurację iOS i wcześniejszą instalację testową opisaną w [teście iOS](test-ios.md). Przebudowany interfejs wymaga jeszcze eksportu i sprawdzenia na urządzeniu: dotyku, bezpiecznych marginesów, klawiatury, wstrzymania i wznowienia. Kryteria opisuje [plan rozwoju](rozwoj-projektu.md).
+
+Kontrola audio obejmuje 22 rzeczywiste nagrania, brak pętli efektów, wyzwalanie po przyjęciu czynności, ograniczenie jednoczesnego odtwarzania, zatrzymanie w tle i niezależne preferencje muzyki/efektów. `tests/test_audio.gd` działa bez okna i sprawdza szczekanie przy drzwiach/misce oraz pisk przy głaskaniu, jego odstępy, odmowy i wyciszenie. Odsłuch i balans na telefonie pozostają do oceny użytkownika.
 
 Wydzielony zakres audio przed publikacją sprawdzono osobno na bazie `c23df29`: **274/274** (104 logiki, 38 animacji, 132 UI). Obejmuje komplet 20 nagrań, kroki tylko podczas ruchu, limit 160 ms, brak dźwięku po odrzuconej opiece, zatrzymanie efektów w tle oraz niezależne wyciszenie. Te testy nie stanowią oceny naturalności nagrań.

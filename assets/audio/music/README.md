@@ -10,3 +10,7 @@
 - Muzyka pauzuje podczas zawieszenia aplikacji. Przełącznik „Muzyka w tle” w Profilu zapisuje ustawienie w `user://audio.cfg`, niezależnie od zapisu psa.
 
 Wideo jest wykluczone z eksportu. W aplikacji używany jest import audio, około 3,6 MB. Dokumentacja importu: https://docs.godotengine.org/en/4.7/tutorials/assets_pipeline/importing_audio_samples.html
+
+## Prawa do nagrania
+
+Źródłem technicznym jest wideo dostarczone przez użytkownika. Autor, tytuł utworu oraz licencja pozwalająca na dystrybucję w grze nie zostały dotąd potwierdzone. Przed wydaniem komercyjnym trzeba uzupełnić te informacje i dowód uprawnień albo zastąpić utwór nagraniem z potwierdzoną licencją.

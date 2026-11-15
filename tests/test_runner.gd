@@ -5,7 +5,8 @@ var failed: int = 0
 var directory: String
 
 func _initialize() -> void:
-	directory = "user://qa-domain-%s" % Time.get_ticks_usec()
+	var test_root := OS.get_environment("YUFRIEND_TEST_ROOT")
+	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-domain-%s" % Time.get_ticks_usec())
 	_test_personality()
 	_test_needs()
 	_test_training()
@@ -15,6 +16,7 @@ func _initialize() -> void:
 	_test_personality_edges()
 	_test_migration()
 	_test_session_interruptions()
+	_test_action_feedback()
 	_cleanup()
 	print("TEST RESULTS: %d passed, %d failed" % [passed, failed])
 	quit(1 if failed > 0 else 0)
@@ -49,7 +51,10 @@ func _test_personality() -> void:
 	check(not first.remember("welcome", "Duplicate", ""), "milestones are not duplicated")
 	for index in 60:
 		first.remember("event_%d" % index, "Event", "")
-	check(first.journal.size() == 40, "journal has bounded storage")
+	check(first.journal.size() == 61, "milestones are retained beyond forty album entries")
+	for index in 250: first.remember("limit_%d" % index, "Event", "")
+	for index in 60: first.add_journal_entry("away_%d" % index, "Report", "", 1000 + index)
+	check(first.journal.size() == PetState.MAX_MILESTONES + PetState.MAX_RECENT_ENTRIES and PetState.from_dict(first.to_dict()) != null, "permanent and recurring album entries have separate bounded budgets")
 
 func _test_needs() -> void:
 	var pet := PetState.create(1, 10000)
@@ -183,7 +188,7 @@ func _test_habits() -> void:
 	_fill(pet, 101, 19, {"pet": 5, "play": 4, "feed": 1})
 	PersonalitySystem.reflect(pet, 102 * DAY + 8 * 3600.0, 3000)
 	check(pet.habits.has("cuddler") and pet.habits.has("playful") and pet.habits.has("time_evening") and not pet.habits.has("student"), "repeated patterns on two days become habits")
-	check(pet.milestones.has("habit_cuddler") and PersonalitySystem.habit_labels(pet).has("Przytulas"), "new habit is named and remembered")
+	check(pet.milestones.has("habit_cuddler") and PersonalitySystem.habit_labels(pet).has("Ochota na pieszczoty"), "new habit is named and remembered")
 	var restored := PetState.from_dict(pet.to_dict())
 	check(restored != null and restored.habits == pet.habits and restored.history.size() == 2 and restored.reflected_day == 101, "personality data survives a roundtrip")
 	PersonalitySystem.reflect(pet, 160 * DAY, 4000)
@@ -250,7 +255,7 @@ func _test_migration() -> void:
 	old.pet_name = "Stary"
 	old.skills.sit.mastery = 55.0
 	var data := old.to_dict()
-	for field in ["history", "habits", "reflected_day"]: data.erase(field)
+	for field in ["history", "habits", "reflected_day", "life"]: data.erase(field)
 	var file := FileAccess.open(store.path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"schema_version": 1, "pet": data}))
 	file.close()
@@ -260,9 +265,9 @@ func _test_migration() -> void:
 	check(FileAccess.file_exists(store.path + ".v1"), "original version 1 file is kept")
 	check(store.save_pet(loaded.pet) and store.load_pet().pet.pet_name == "Stary", "migrated puppy saves in the current schema")
 	var parsed: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(store.path))
-	check(parsed.schema_version == SaveSystem.VERSION and parsed.pet.has("history"), "saved file uses schema version 2")
+	check(parsed.schema_version == SaveSystem.VERSION and parsed.pet.has("life"), "saved file uses the current schema")
 	var example: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://docs/przyklady/zapis-v2.json"))
-	check(example.schema_version == SaveSystem.VERSION and PetState.from_dict(example.pet) != null, "documented example save is valid")
+	check(example.schema_version == 2 and PetState.from_dict(SaveSystem.migrate(example.pet, 2)) != null, "documented legacy example migrates to valid state")
 	var legacy := JSON.stringify({"schema_version": 1, "pet": data})
 	var recovered := SaveSystem.new(directory + "/old/recovered.json")
 	file = FileAccess.open(recovered.path + ".bak", FileAccess.WRITE)
@@ -353,3 +358,36 @@ func _test_session_interruptions() -> void:
 	game.move_to(Vector2(600, 310))
 	check(not game.act("feed") and targets.size() == target_count and game.training.phase == "attempt", "care and floor taps preserve an ongoing training attempt")
 	game.free()
+
+func _test_action_feedback() -> void:
+	var game := GameSession.new()
+	game.pet = PetState.create(42)
+	game.pet.needs.fullness = 90.0
+	var received: Array = []
+	game.care_completed.connect(func(action: String, gains: Dictionary): received.append([action, gains]))
+	game.act("feed")
+	check(received.is_empty(), "care feedback waits for actual bowl arrival")
+	game.arrive_at(game._approach_token)
+	check(received.size() == 1 and received[0][0] == "feed" and received[0][1].fullness == 10.0, "care feedback reports the actual capped gain, not nominal 22")
+	game.arrive_at(game._approach_token)
+	check(received.size() == 1, "late duplicate arrival cannot repeat gain feedback")
+	game.activity = "idle"
+	game.activity_left = 0
+	game.act("pet")
+	game.act("pet")
+	check(received.size() == 2, "repeat petting reacts without inventing a second gain")
+	game.free()
+	var pet := PetState.create(42)
+	pet.favorite_reward = "play"
+	var train := TrainingSystem.new()
+	train.begin(pet, "sit", true)
+	train.reward(pet, "play")
+	check(not pet.milestones.has("favorite_reward"), "early favorite reward does not reveal the preference")
+	train.advance(train.time_left + 0.01)
+	train.reward(pet, "praise")
+	check(not pet.milestones.has("favorite_reward"), "a different reward does not reveal the preference")
+	train.begin(pet, "sit", true)
+	train.advance(train.time_left + 0.01)
+	train.reward(pet, "play")
+	var restored := PetState.from_dict(pet.to_dict())
+	check(restored.milestones.has("favorite_reward") and restored.favorite_reward == "play", "successful favorite discovery survives save roundtrip")

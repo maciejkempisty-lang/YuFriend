@@ -19,17 +19,15 @@ var reward_buttons: Dictionary = {}
 var trick_buttons: Dictionary = {}
 var tab_buttons: Dictionary = {}
 var panels: Dictionary = {}
-var name_label: Label
+var name_label: Button
 var bond_label: Label
 var message_label: Label
 var footer_label: Label
 var mastery_label: Label
 var mastery_bar: ProgressBar
-var reward_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
 var guided_button: Button
-var command_button: Button
 var journal_list: VBoxContainer
 var selected_trick: String = "come"
 var selected_tab: String = "care"
@@ -37,34 +35,64 @@ var journal_count: int = -1
 var profile_dialog: AcceptDialog
 var name_edit: LineEdit
 var profile_traits: Label
+var profile_bars: VBoxContainer
+var profile_badges: HFlowContainer
+var settings_dialog: AcceptDialog
+var profile_life: Label
+var profile_social: Label
+var reunion_dialog: AcceptDialog
+var reunion_text: Label
 var text_dialog: AcceptDialog
 var command_edit: LineEdit
 var save_path_override: String = ""
 var journal_signature: String = ""
-var header: HBoxContainer
-var needs_row: HBoxContainer
+var header: PanelContainer
 var sheet: PanelContainer
 var navigation: PanelContainer
 var bubble: PanelContainer
 var training_actions: HBoxContainer
 var rewards_row: HBoxContainer
-var training_stage: VBoxContainer
-var care_title: Label
-var suggestion_title: Label
-var suggestion_detail: Label
 var album_count: Label
 var bold_font: FontVariation
 var layout_wide: bool = false
+var bond_bar: ProgressBar
+var care_status: Label
+var guidance_toggle: CheckButton
+var training_steps: Array[IconActionButton] = []
+var bubble_icon: TextureRect
+var gain_label: Label
+var bubble_left := 0.0
+var gain_left := 0.0
+var training_feedback := ""
+var training_feedback_left := 0.0
+var safe_rect := Rect2()
+# Physical window coordinates; used by device-layout regression tests.
+var safe_area_override := Rect2()
+var ui_settings_path := ""
+var invitation_card: PanelContainer
+var invitation_label: Label
+var invitation_accept: Button
+var play_menu: AcceptDialog
+var play_dialog: AcceptDialog
+var play_view: TouchPlayView
+var play_hint: Label
+var play_again: Button
+var app_foreground := true
+const ACTION_NEEDS := {"feed": "fullness", "rest": "energy", "clean": "hygiene", "play": "play", "pet": "contact"}
+const ACTION_LABELS := {"feed": "Nakarm", "rest": "Drzemka", "clean": "Wyczesz", "play": "Pobaw się", "pet": "Pogłaszcz"}
+const LOW_LABELS := {"feed": "Głód", "rest": "Senność", "clean": "Czesanie", "play": "Nuda", "pet": "Tęskni"}
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
+	process_priority = 10 # Follow the room's updated camera in the same frame.
 	_build_theme()
 	_build_ui()
 	resized.connect(_fit_room)
 	_fit_room()
 	add_child(session)
 	session.changed.connect(_refresh)
-	session.feedback.connect(func(text: String): message_label.text = text)
+	session.feedback.connect(_show_feedback)
+	session.care_completed.connect(_show_gain)
 	session.clip_requested.connect(room.play_clip)
 	session.destination_requested.connect(room.move_to)
 	session.performance_requested.connect(room.play_performance)
@@ -77,10 +105,19 @@ func _ready() -> void:
 	room.performance_finished.connect(session.performance_finished)
 	session.save_status.connect(func(_ok: bool): _refresh())
 	room.floor_tapped.connect(session.move_to)
-	room.care_requested.connect(_care_action)
+	room.care_requested.connect(func(action: String): session.act(action))
+	room.ball_thrown.connect(session.throw_ball)
+	session.ball_throw_requested.connect(room.throw_ball)
+	session.initiative_requested.connect(room.present_invitation)
+	session.ball_aim_requested.connect(_aim_ball)
+	session.touch_game_opened.connect(_show_touch_game)
+	session.touch_game_closed.connect(func(): play_dialog.hide())
 	var path := "user://pet.json"
 	if OS.get_cmdline_user_args().has("--qa"): path = "user://qa-ui/pet.json"
 	if not save_path_override.is_empty(): path = save_path_override
+	ui_settings_path = path.get_base_dir().path_join("ui.cfg")
+	_load_ui_preferences()
+	room.first_pan.connect(_remember_pan)
 	add_child(music)
 	music.start(path.get_base_dir().path_join("audio.cfg"))
 	music_toggle.set_pressed_no_signal(music.enabled)
@@ -88,9 +125,11 @@ func _ready() -> void:
 	effects.start(path.get_base_dir().path_join("audio.cfg"))
 	effects_toggle.set_pressed_no_signal(effects.enabled)
 	session.sound_requested.connect(effects.play_effect)
+	session.away_report_ready.connect(_show_reunion)
 	room.sound_requested.connect(effects.play_effect)
 	session.start(path)
 	_refresh()
+	_show_feedback(session.last_message)
 
 func _build_theme() -> void:
 	var app_theme := Theme.new()
@@ -120,6 +159,7 @@ func _build_theme() -> void:
 		app_theme.set_stylebox("pressed", type, _style(GREEN, 12, 10))
 		app_theme.set_color("font_color", type, INK)
 		app_theme.set_color("font_hover_color", type, INK)
+		app_theme.set_color("font_focus_color", type, INK)
 		app_theme.set_color("font_pressed_color", type, CREAM)
 	var focus := _style(Color.TRANSPARENT, 12, 0)
 	focus.set_border_width_all(2)
@@ -211,50 +251,58 @@ func _build_ui() -> void:
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
 	add_child(room)
-	header = HBoxContainer.new()
-	header.add_theme_constant_override("separation", 12)
+	header = PanelContainer.new()
+	header.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 22, 12))
 	add_child(header)
+	var header_row := HBoxContainer.new()
+	header_row.add_theme_constant_override("separation", 12)
+	header.add_child(header_row)
 	var identity := VBoxContainer.new()
 	identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	identity.add_theme_constant_override("separation", -2)
-	header.add_child(identity)
-	identity.add_child(_label("yufriend.", 17, GREEN, true))
-	name_label = _label("Biszkopt", 34, INK, true)
+	identity.add_theme_constant_override("separation", 2)
+	header_row.add_child(identity)
+	name_label = _button("Biszkopt", _show_profile)
+	name_label.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.clip_text = true
+	name_label.tooltip_text = "Otwórz kartę pieska"
+	for state in ["normal", "hover"]: name_label.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	identity.add_child(name_label)
-	bond_label = _label("Szczeniak · Poznajecie się", 13, MUTED)
+	bond_label = _label("Poznajecie się · 0%", 12, MUTED)
 	identity.add_child(bond_label)
-	var profile := _icon_button("settings", "Profil pieska", _show_profile)
-	profile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	header.add_child(profile)
-	needs_row = HBoxContainer.new()
-	needs_row.add_theme_constant_override("separation", 8)
-	add_child(needs_row)
-	for key in PetState.NEED_KEYS:
-		var need := NeedIndicator.new()
-		need.caption = NEED_LABELS[key]
-		need.icon_name = NEED_ICONS[key]
-		needs_row.add_child(need)
-		needs_ui[key] = need
+	bond_bar = _bar(Color("779565"), 6)
+	identity.add_child(bond_bar)
+	var settings := _icon_button("settings", "Ustawienia dźwięku", _show_settings)
+	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_row.add_child(settings)
 	bubble = PanelContainer.new()
-	var bubble_style := _style(Color("fff9edee"), 17, 10)
-	bubble_style.content_margin_top = 6
-	bubble_style.content_margin_bottom = 6
-	bubble_style.shadow_color = Color(0.25, 0.30, 0.17, 0.06)
-	bubble_style.shadow_size = 10
-	bubble.add_theme_stylebox_override("panel", bubble_style)
+	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bubble)
-	message_label = _label("Witaj w Waszym małym domu.", 14)
+	var bubble_row := HBoxContainer.new()
+	bubble_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bubble_row.add_theme_constant_override("separation", 8)
+	bubble.add_child(bubble_row)
+	bubble_icon = TextureRect.new()
+	bubble_icon.texture = GameIcons.texture("heart")
+	bubble_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bubble_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	bubble_icon.custom_minimum_size = Vector2(24, 24)
+	bubble_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bubble_row.add_child(bubble_icon)
+	message_label = _label("", 14)
+	message_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	message_label.max_lines_visible = 2
-	message_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	bubble.add_child(message_label)
+	bubble_row.add_child(message_label)
+	bubble.hide()
+	gain_label = _label("", 21, GREEN, true)
+	gain_label.add_theme_stylebox_override("normal", _style(CREAM, 14, 8))
+	gain_label.hide()
+	add_child(gain_label)
 	sheet = PanelContainer.new()
-	var sheet_style := _style(CREAM, 26, 18)
+	var sheet_style := _style(Color("fff9edf5"), 24, 12)
 	sheet_style.shadow_color = Color(0.25, 0.30, 0.17, 0.07)
 	sheet_style.shadow_size = 16
 	sheet_style.shadow_offset = Vector2(0, -3)
@@ -282,114 +330,109 @@ func _build_ui() -> void:
 	footer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	footer_label.hide()
 	add_child(footer_label)
+	_build_invitation_card()
 	_build_dialogs()
+
+func _build_invitation_card() -> void:
+	invitation_card = PanelContainer.new()
+	invitation_card.add_theme_stylebox_override("panel", _style(CREAM, 20, 12))
+	add_child(invitation_card)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	invitation_card.add_child(box)
+	invitation_label = _label("", 14, INK, true)
+	invitation_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	invitation_label.custom_minimum_size.x = 280
+	box.add_child(invitation_label)
+	var row := HBoxContainer.new()
+	box.add_child(row)
+	invitation_accept = _button("Pobawmy się", func(): session.accept_invitation(), true)
+	row.add_child(invitation_accept)
+	row.add_child(_button("Później", session.decline_invitation))
+	invitation_card.hide()
 
 func _build_care() -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
-	var heading := HBoxContainer.new()
-	box.add_child(heading)
-	care_title = _label("Wasza chwila", 19, INK, true)
-	care_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	heading.add_child(care_title)
-	heading.add_child(_label("MAŁE RYTUAŁY", 10, MUTED, true))
+	box.add_theme_constant_override("separation", 5)
+	care_status = _label("Małe rytuały, wspólny dzień", 12, MUTED)
+	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(care_status)
 	var actions := HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 3)
+	actions.add_theme_constant_override("separation", 2)
 	box.add_child(actions)
-	var labels := {"feed": "Jedzenie", "pet": "Głaskanie", "play": "Zabawa", "clean": "Czesanie", "rest": "Drzemka"}
-	var icons := {"feed": "bowl", "pet": "heart", "play": "ball", "clean": "brush", "rest": "moon"}
 	var colors := {"feed": Color("f6ddb0"), "pet": Color("f3d7c8"), "play": Color("e2e9bd"), "clean": Color("d5e6dc"), "rest": Color("e0def0")}
-	for key in ["feed", "pet", "play", "clean", "rest"]:
-		var button := _action(icons[key], labels[key], colors[key], _care_action.bind(key))
+	for key in ACTION_NEEDS:
+		var need: String = ACTION_NEEDS[key]
+		var button := _action(NEED_ICONS[need], ACTION_LABELS[key], colors[key], _care_action.bind(key))
+		button.need_value = 100
 		actions.add_child(button)
 		care_buttons[key] = button
-	var suggestion := _button("", _care_action.bind("train"), true)
-	suggestion.custom_minimum_size.y = 58
-	box.add_child(suggestion)
-	care_buttons.train = suggestion
-	suggestion.accessibility_name = "Poćwiczmy razem"
-	var content := HBoxContainer.new()
-	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	content.offset_left = 14
-	content.offset_right = -14
-	content.add_theme_constant_override("separation", 12)
-	suggestion.add_child(content)
-	var icon := TextureRect.new()
-	icon.texture = GameIcons.texture("spark", Color("e9d69c"))
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size.x = 28
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(icon)
-	var titles := VBoxContainer.new()
-	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	titles.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	titles.add_theme_constant_override("separation", 0)
-	titles.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	content.add_child(titles)
-	suggestion_title = _label("Nauczmy się czegoś", 16, CREAM, true)
-	titles.add_child(suggestion_title)
-	suggestion_detail = _label("Mały gest. Pierwszy wspólny sukces.", 11, Color("cfddbf"))
-	titles.add_child(suggestion_detail)
-	var arrow := _label("→", 24, Color("e9d69c"))
-	arrow.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	content.add_child(arrow)
+		needs_ui[need] = button
 	return box
 
 func _build_training() -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	var heading := HBoxContainer.new()
-	box.add_child(heading)
-	var title := _label("Wspólne ćwiczenia", 19, INK, true)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	heading.add_child(title)
-	var text_button := _icon_button("keyboard", "Wpisz komendę", _show_command)
-	text_button.custom_minimum_size = Vector2(36, 30)
-	text_button.add_theme_stylebox_override("normal", _style(Color.TRANSPARENT, 8, 4))
-	heading.add_child(text_button)
+	box.add_theme_constant_override("separation", 6)
 	var choices := HBoxContainer.new()
-	choices.add_theme_constant_override("separation", 6)
+	choices.add_theme_constant_override("separation", 4)
 	box.add_child(choices)
 	for key in PetState.TRICK_KEYS:
 		var button := _button(TrainingSystem.LABELS[key], _choose_trick.bind(key))
-		button.add_theme_font_size_override("font_size", 14)
+		button.add_theme_font_size_override("font_size", 13)
 		choices.add_child(button)
 		trick_buttons[key] = button
-	var progress := VBoxContainer.new()
-	progress.add_theme_constant_override("separation", 4)
-	box.add_child(progress)
-	mastery_label = _label("Poznaje pierwszą komendę", 13, MUTED)
-	progress.add_child(mastery_label)
+	choices.add_child(_icon_button("keyboard", "Wpisz komendę", _show_command))
+	var progress_row := HBoxContainer.new()
+	box.add_child(progress_row)
+	mastery_label = _label("", 12, MUTED)
+	mastery_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	progress_row.add_child(mastery_label)
+	training_footer = _label("", 12, MUTED)
+	progress_row.add_child(training_footer)
 	mastery_bar = _bar(Color("91a871"), 5)
-	progress.add_child(mastery_bar)
-	training_stage = VBoxContainer.new()
-	training_stage.add_theme_constant_override("separation", 6)
-	box.add_child(training_stage)
-	training_hint = _label("Pokaż gest, poczekaj i nagródź.", 14)
+	box.add_child(mastery_bar)
+	var steps := HBoxContainer.new()
+	box.add_child(steps)
+	for entry in [["gesture", "1. Gest"], ["clock", "2. Czekaj"], ["heart", "3. Nagroda"]]:
+		var step := _action(entry[0], entry[1], Color.TRANSPARENT, func(): pass)
+		step.navigation = true
+		step.compact = true
+		step.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		step.focus_mode = Control.FOCUS_NONE
+		steps.add_child(step)
+		training_steps.append(step)
+	training_hint = _label("", 13)
 	training_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	training_hint.custom_minimum_size.y = 36
 	training_hint.max_lines_visible = 2
-	training_stage.add_child(training_hint)
-	reward_bar = _bar(Color("daab59"), 6)
-	training_stage.add_child(reward_bar)
+	training_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	box.add_child(training_hint)
 	training_actions = HBoxContainer.new()
-	training_actions.add_theme_constant_override("separation", 8)
-	training_stage.add_child(training_actions)
-	guided_button = _button("Pokaż gest", _train.bind(true), true)
-	command_button = _button("Samodzielnie", _train.bind(false))
+	training_actions.custom_minimum_size.y = 88
+	training_actions.add_theme_constant_override("separation", 6)
+	box.add_child(training_actions)
+	guidance_toggle = CheckButton.new()
+	guidance_toggle.text = "Z podpowiedzią"
+	guidance_toggle.button_pressed = true
+	guidance_toggle.add_theme_font_size_override("font_size", 13)
+	guidance_toggle.custom_minimum_size.y = 44
+	guidance_toggle.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	guidance_toggle.toggled.connect(func(value: bool):
+		guidance_toggle.text = "Z podpowiedzią" if value else "Bez podpowiedzi"
+		training_feedback_left = 0
+		_refresh())
+	training_actions.add_child(guidance_toggle)
+	guided_button = _button("Pokaż gest", func(): _train(guidance_toggle.button_pressed), true)
+	guided_button.add_theme_font_size_override("font_size", 13)
+	guided_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	training_actions.add_child(guided_button)
-	training_actions.add_child(command_button)
 	rewards_row = HBoxContainer.new()
 	rewards_row.add_theme_constant_override("separation", 8)
-	training_stage.add_child(rewards_row)
+	box.add_child(rewards_row)
 	for key in TrainingSystem.REWARDS:
-		var button := _button(REWARD_LABELS[key], _reward.bind(key), key == "treat")
-		button.add_theme_font_size_override("font_size", 13)
+		var button := _action({"treat": "treat", "praise": "heart", "play": "ball"}[key], REWARD_LABELS[key], Color("ecebd7"), _reward.bind(key))
 		rewards_row.add_child(button)
 		reward_buttons[key] = button
-	training_footer = _label("", 12, MUTED)
-	box.add_child(training_footer)
 	return box
 
 func _build_journal() -> VBoxContainer:
@@ -422,32 +465,77 @@ func _build_dialogs() -> void:
 	profile_dialog = AcceptDialog.new()
 	profile_dialog.title = "Twój mały przyjaciel"
 	profile_dialog.ok_button_text = "Zapisz"
-	profile_dialog.min_size = Vector2i(320, 300)
+	profile_dialog.min_size = Vector2i(280, 340)
+	profile_dialog.ok_button_text = "Zapisz imię"
 	add_child(profile_dialog)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	profile_dialog.add_child(scroll)
 	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 12)
-	profile_dialog.add_child(box)
-	box.add_child(_label("Jak ma na imię?", 18))
+	scroll.add_child(box)
+	box.add_child(_label("Imię pieska", 16, INK, true))
 	name_edit = LineEdit.new()
 	name_edit.max_length = 24
-	name_edit.custom_minimum_size.y = 40
+	name_edit.custom_minimum_size.y = 44
 	box.add_child(name_edit)
-	profile_traits = _label("", 15, MUTED)
-	# Explicit short lines keep the dialog minimum height stable before opening.
+	profile_bars = VBoxContainer.new()
+	profile_bars.add_theme_constant_override("separation", 9)
+	box.add_child(profile_bars)
+	profile_traits = _label("", 13, MUTED)
+	profile_traits.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(profile_traits)
+	box.add_child(_label("Nasze nawyki", 16, INK, true))
+	profile_badges = HFlowContainer.new()
+	profile_badges.add_theme_constant_override("h_separation", 6)
+	profile_badges.add_theme_constant_override("v_separation", 6)
+	box.add_child(profile_badges)
+	profile_life = _label("", 13, MUTED)
+	profile_life.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(profile_life)
+	profile_social = _label("", 13, MUTED)
+	profile_social.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(profile_social)
+	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
+	settings_dialog = AcceptDialog.new()
+	settings_dialog.title = "Ustawienia"
+	settings_dialog.ok_button_text = "Gotowe"
+	settings_dialog.min_size = Vector2i(280, 210)
+	add_child(settings_dialog)
+	var settings_box := VBoxContainer.new()
+	settings_box.add_theme_constant_override("separation", 12)
+	settings_dialog.add_child(settings_box)
 	music_toggle = CheckButton.new()
 	music_toggle.text = "Muzyka w tle"
+	music_toggle.custom_minimum_size.y = 44
 	music_toggle.toggled.connect(music.set_enabled)
-	box.add_child(music_toggle)
+	settings_box.add_child(music_toggle)
 	effects_toggle = CheckButton.new()
 	effects_toggle.text = "Efekty dźwiękowe"
+	effects_toggle.custom_minimum_size.y = 44
 	effects_toggle.toggled.connect(effects.set_enabled)
-	box.add_child(effects_toggle)
-	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
+	settings_box.add_child(effects_toggle)
+	settings_box.add_child(_label("Zmiany zapisują się od razu.", 12, MUTED))
+	reunion_dialog = AcceptDialog.new()
+	reunion_dialog.title = "Znów razem"
+	reunion_dialog.ok_button_text = "Miło wrócić"
+	reunion_dialog.min_size = Vector2i(280, 220)
+	add_child(reunion_dialog)
+	var reunion_scroll := ScrollContainer.new()
+	reunion_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	reunion_dialog.add_child(reunion_scroll)
+	var reunion_box := VBoxContainer.new()
+	reunion_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reunion_scroll.add_child(reunion_box)
+	reunion_text = _label("", 15)
+	reunion_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reunion_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	reunion_box.add_child(reunion_text)
 	text_dialog = AcceptDialog.new()
 	text_dialog.title = "Napisz komendę"
 	text_dialog.ok_button_text = "Poproś"
-	text_dialog.min_size = Vector2i(320, 150)
+	text_dialog.min_size = Vector2i(280, 150)
 	add_child(text_dialog)
 	var command_box := VBoxContainer.new()
 	command_box.add_theme_constant_override("separation", 10)
@@ -462,12 +550,98 @@ func _build_dialogs() -> void:
 	command_edit.text_submitted.connect(func(_text: String):
 		text_dialog.hide()
 		_submit_command())
-	var update_shade := func(): shade.visible = profile_dialog.visible or text_dialog.visible
+	_build_play_dialogs()
+	var update_shade := func():
+		shade.visible = _dialog_open()
+		_update_attention()
+	settings_dialog.visibility_changed.connect(update_shade)
 	profile_dialog.visibility_changed.connect(update_shade)
 	text_dialog.visibility_changed.connect(update_shade)
+	reunion_dialog.visibility_changed.connect(update_shade)
+	play_menu.visibility_changed.connect(update_shade)
+	play_dialog.visibility_changed.connect(update_shade)
+
+func _build_play_dialogs() -> void:
+	play_menu = AcceptDialog.new()
+	play_menu.title = "Pobawmy się"
+	play_menu.ok_button_text = "Zamknij"
+	play_menu.min_size = Vector2i(280, 300)
+	add_child(play_menu)
+	var choices := VBoxContainer.new()
+	choices.add_theme_constant_override("separation", 12)
+	play_menu.add_child(choices)
+	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · gdzie smakołyk?"]]:
+		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
+	play_dialog = AcceptDialog.new()
+	play_dialog.title = "Wspólna zabawa"
+	play_dialog.ok_button_text = "Zakończ"
+	play_dialog.min_size = Vector2i(280, 350)
+	add_child(play_dialog)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	play_dialog.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 10)
+	scroll.add_child(box)
+	play_hint = _label("", 15, INK, true)
+	play_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(play_hint)
+	play_view = TouchPlayView.new()
+	play_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	play_view.model = session.play
+	box.add_child(play_view)
+	play_view.pressed_at.connect(session.play_press)
+	play_view.moved_to.connect(session.play_move)
+	play_view.released_at.connect(session.play_release)
+	play_again = _button("Jeszcze raz", func(): session.start_touch_game(session.play.kind))
+	box.add_child(play_again)
+	box.add_child(_label("Możesz zakończyć w dowolnej chwili.", 12, MUTED))
+	play_dialog.visibility_changed.connect(func():
+		if not play_dialog.visible: session.cancel_touch_game())
+
+func _dialog_open() -> bool:
+	for dialog in [profile_dialog, settings_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
+		if dialog != null and dialog.visible: return true
+	return false
+
+func _update_attention() -> void:
+	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open()
+	if invitation_card != null:
+		invitation_card.visible = session.attention_available and not session.invitation.is_empty() and not session.suspended
+
+func _show_play_menu() -> void:
+	var reason := session.play_readiness()
+	if not reason.is_empty():
+		session.say(reason)
+		return
+	play_menu.popup()
+	_position_dialog(play_menu, Vector2i(336, 310))
+
+func _choose_play(kind: String) -> void:
+	play_menu.hide()
+	if kind == "ball": _aim_ball()
+	else: session.start_touch_game(kind)
+
+func _aim_ball() -> void:
+	_select_tab("care")
+	room.focus_left = 0
+	room.look_at_world(room.ball_world)
+	session.say("Przeciągnij piłkę w lewo lub w prawo i puść. Linia pokaże rzut.")
+
+func _show_touch_game(kind: String) -> void:
+	play_menu.hide()
+	play_dialog.title = InitiativeSystem.LABELS[kind]
+	play_hint.text = session.play.hint()
+	play_dialog.popup()
+	_position_dialog(play_dialog, Vector2i(350, 440))
 
 func _select_tab(key: String) -> void:
-	if key != selected_tab: effects.play_effect("ui")
+	if key != selected_tab:
+		effects.play_effect("ui")
+		bubble_left = 0
+		training_feedback_left = 0
 	selected_tab = key
 	for tab in panels:
 		panels[tab].visible = tab == key
@@ -481,69 +655,127 @@ func _place(control: Control, rect: Rect2) -> void:
 
 func _fit_room() -> void:
 	if sheet == null: return
-	layout_wide = size.x >= 760 and size.x > size.y * 1.2
-	var rail := clampf(size.x * 0.38, 350, 420) if layout_wide else size.x
-	var scene_width := size.x - rail if layout_wide else size.x
-	var inset := 24.0 if size.x >= 390 else 16.0
-	var scene_inset := maxf(inset, (scene_width - 540) / 2)
-	var panel_height := 214.0 if selected_tab == "care" else 270.0
-	if selected_tab == "journal": panel_height = 284.0
-	var panel_x := scene_width + 12 if layout_wide else 12.0
-	var panel_width := rail - 24
-	var nav_y := size.y - 86
-	var warning_space := 44.0 if footer_label.visible else 0.0
-	var panel_top := nav_y - panel_height - 12 - warning_space
-	var rail_top := maxf(24, (size.y - panel_height - 266 - warning_space) / 2)
-	if layout_wide:
-		panel_top = rail_top + 182
-		nav_y = panel_top + panel_height + 12 + warning_space
-	_place(room, Rect2(0, 0, scene_width, size.y - 102 if layout_wide else panel_top - 72))
-	if layout_wide:
-		_place(header, Rect2(panel_x + 12, rail_top, panel_width - 24, 82))
-		_place(needs_row, Rect2(panel_x + 8, rail_top + 96, panel_width - 16, 62))
-	else:
-		_place(header, Rect2(scene_inset, 20, scene_width - scene_inset * 2, 82))
-		_place(needs_row, Rect2(scene_inset - 4, 116, scene_width - scene_inset * 2 + 8, 62))
-	room.hud_bottom = 0.0 if layout_wide else needs_row.get_rect().end.y + 16
+	safe_rect = _safe_content_rect()
+	layout_wide = safe_rect.size.x >= 760 and safe_rect.size.x > safe_rect.size.y * 1.2
+	var rail := clampf(safe_rect.size.x * 0.36, 350, 420) if layout_wide else safe_rect.size.x
+	var panel_width := minf(rail - 24, 540)
+	var panel_x := safe_rect.end.x - rail + (rail - panel_width) / 2
+	var nav_y := safe_rect.end.y - 68
+	var warning_space := 46.0 if footer_label.visible else 0.0
+	var panel_height := 134.0 if selected_tab == "care" else 274.0
+	var panel_top := nav_y - panel_height - 8 - warning_space
+	if selected_tab == "journal":
+		panel_x = safe_rect.position.x + 12
+		panel_width = safe_rect.size.x - 24
+		panel_top = safe_rect.position.y + 8
+		panel_height = nav_y - panel_top - 8 - warning_space
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
-	_place(navigation, Rect2(panel_x, nav_y, panel_width, 72))
-	var bubble_width := minf(scene_width - 48, 410)
-	var bubble_y := size.y - 94 if layout_wide else panel_top - 64
-	_place(bubble, Rect2((scene_width - bubble_width) / 2, bubble_y, bubble_width, 54))
-	_place(footer_label, Rect2(panel_x + 10, nav_y - 42, panel_width - 20, 40))
+	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
+	var scene_width := safe_rect.end.x - rail if layout_wide else size.x
+	_place(room, Rect2(0, 0, scene_width, size.y))
+	var header_x := safe_rect.position.x + 12
+	var header_width := minf(minf(scene_width, safe_rect.end.x) - header_x - 12, 420)
+	var training_open := selected_tab == "training"
+	bond_label.visible = not training_open
+	bond_bar.visible = not training_open
+	name_label.add_theme_font_size_override("font_size", 22 if training_open else 27)
+	_place(header, Rect2(header_x, safe_rect.position.y + 8, header_width, 68 if training_open else 100))
+	header.visible = selected_tab != "journal"
+	room.visible = selected_tab != "journal"
+	room.hud_bottom = header.get_rect().end.y + 10
+	room.content_bottom = safe_rect.end.y - 16 if layout_wide else panel_top
+	room.overlay_left = header_x
+	room.overlay_right = minf(scene_width - 12, safe_rect.end.x - 12)
+	_place(footer_label, Rect2(panel_x + 8, nav_y - 44, panel_width - 16, 42))
 	room.update_placement()
+	_position_feedback()
+	_position_invitation()
+	for dialog in [profile_dialog, settings_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
+		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
+
+func _safe_content_rect() -> Rect2:
+	var full := Rect2(Vector2.ZERO, size)
+	var physical := safe_area_override
+	if not physical.has_area():
+		if not OS.has_feature("mobile"): return full
+		physical = Rect2(DisplayServer.get_display_safe_area())
+		physical.position -= Vector2(DisplayServer.window_get_position() - DisplayServer.screen_get_position())
+	if not physical.has_area(): return full
+	var inverse := (get_viewport().get_final_transform() * get_global_transform_with_canvas()).affine_inverse()
+	var local := Rect2(inverse * physical.position, inverse.basis_xform(physical.size))
+	return full.intersection(local) if full.intersects(local) else full
+
+func _position_dialog(dialog: AcceptDialog, wanted: Vector2i) -> void:
+	var available := Vector2i(safe_rect.size - Vector2(24, 64))
+	dialog.size = wanted.min(available)
+	dialog.position = Vector2i(safe_rect.position + (safe_rect.size - Vector2(dialog.size)) / 2 + Vector2(0, 12))
 
 func _choose_trick(key: String) -> void:
 	if session.training.phase != "idle": return
 	selected_trick = key
+	training_feedback_left = 0
 	_refresh()
 
 func _care_action(key: String) -> void:
 	if key == "train": _select_tab("training")
+	elif key == "play": _show_play_menu()
 	else: session.act(key)
 
 func _train(guided: bool) -> void:
 	session.begin_training(selected_trick, guided)
 
 func _reward(kind: String) -> void:
-	session.give_reward(kind)
+	var before: float = session.pet.skills[selected_trick].mastery
+	if session.give_reward(kind):
+		gain_label.text = "+%d  %s" % [roundi(session.pet.skills[selected_trick].mastery - before), TrainingSystem.LABELS[selected_trick]]
+		gain_left = 1.8
+		if selected_tab == "training":
+			training_feedback = gain_label.text + " · " + session.last_message
+			training_feedback_left = 4.0
+			_refresh()
+		_position_feedback()
 
 func _show_profile() -> void:
 	if session.pet == null: return
 	name_edit.text = session.pet.pet_name
-	profile_traits.text = "Ciekawość %d%% · Cierpliwość %d%%\nTowarzyskość %d%% · Wrażliwość %d%%\nUlubiona nagroda: %s" % [
-		roundi(float(session.pet.traits.curiosity) * 100), roundi(float(session.pet.traits.patience) * 100),
-		roundi(float(session.pet.traits.sociability) * 100), roundi(float(session.pet.traits.sensitivity) * 100), REWARD_LABELS[session.pet.favorite_reward].to_lower()]
-	# Nawyki w krótkich wierszach po dwa, żeby okno nie rosło na szerokość.
+	for container in [profile_bars, profile_badges]:
+		for child in container.get_children():
+			container.remove_child(child)
+			child.queue_free()
+	var labels := {"curiosity": "Ciekawość", "patience": "Cierpliwość", "sociability": "Towarzyskość", "sensitivity": "Wrażliwość"}
+	for key in labels:
+		var value := roundi(float(session.pet.traits[key]) * 100)
+		profile_bars.add_child(_label("%s · %d%%" % [labels[key], value], 13))
+		var bar := _bar(Color("8ea273"), 8)
+		bar.value = value
+		profile_bars.add_child(bar)
+	profile_traits.text = "Ulubiona nagroda: " + (REWARD_LABELS[session.pet.favorite_reward] if session.pet.milestones.has("favorite_reward") else "odkryjecie ją podczas ćwiczeń")
+	profile_life.text = "%s\n%s\n\nMałe dziwactwa\n%s" % [LifeSystem.mood_label(session.pet), session.pet.life.mood_reason, "\n".join(PackedStringArray(LifeSystem.quirk_lines(session.pet)))]
+	profile_social.text = "Wasz rytm\n" + InitiativeSystem.profile_text(session.pet)
 	var habits := PersonalitySystem.habit_labels(session.pet)
-	profile_traits.text += "\nNawyki: " + ("jeszcze się kształtują" if habits.is_empty() else "")
-	for index in habits.size():
-		profile_traits.text += ("\n" if index % 2 == 0 else " · ") + habits[index]
-	profile_dialog.popup_centered(Vector2i(336, 300 + 22 * (1 + ceili(habits.size() / 2.0))))
-	name_edit.grab_focus()
+	if habits.is_empty(): habits.append("Dopiero się poznajemy")
+	for habit in habits:
+		var badge := _label("♥ " + habit, 12, GREEN)
+		badge.add_theme_stylebox_override("normal", _style(Color("e3ead6"), 12, 8))
+		profile_badges.add_child(badge)
+	profile_dialog.popup()
+	_position_dialog(profile_dialog, Vector2i(350, 520))
+	profile_dialog.get_ok_button().grab_focus()
+
+func _show_settings() -> void:
+	settings_dialog.popup()
+	_position_dialog(settings_dialog, Vector2i(330, 230))
+
+func _show_reunion() -> void:
+	var report: Dictionary = session.pet.life.away_report
+	if report.is_empty(): return
+	reunion_text.text = session.last_message + "\n\n" + "\n\n".join(PackedStringArray(report.events)) + "\n\nTa chwila zostaje w Albumie."
+	reunion_dialog.popup()
+	_position_dialog(reunion_dialog, Vector2i(336, 440))
 
 func _show_command() -> void:
-	text_dialog.popup_centered(Vector2i(336, 170))
+	text_dialog.popup()
+	_position_dialog(text_dialog, Vector2i(336, 180))
 	command_edit.grab_focus()
 
 func _submit_command() -> void:
@@ -560,30 +792,40 @@ func _submit_command() -> void:
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
+	_update_attention()
+	room.ball_throw_enabled = session.play_readiness().is_empty()
+	if not session.invitation.is_empty():
+		invitation_label.text = InitiativeSystem.invitation_text(pet, session.invitation.kind)
+		invitation_accept.text = {"ball": "Rzuć piłkę", "tug": "Chwyć linę", "cups": "Szukamy!", "cuddle": "Pogłaszcz"}[session.invitation.kind]
+	play_hint.text = session.play.hint()
+	play_again.disabled = session.play.phase != "result" or session.busy()
+	_position_invitation()
+	room.mood_walk_speed = LifeSystem.walk_speed(pet)
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = pet.pet_name
-	bond_label.text = "Szczeniak  ·  %s" % ("Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"))
-	bond_label.tooltip_text = "Wasza więź: %d%%" % roundi(pet.bond)
-	message_label.text = session.last_message
-	for key in needs_ui: needs_ui[key].value = float(pet.needs[key])
-	# One production style. Legacy saves keep their skin field for compatibility;
-	# the presentation no longer replaces the puppy or resets its animation.
+	bond_label.text = "%s · %d%%" % ["Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"), roundi(pet.bond)]
+	bond_bar.value = pet.bond
 	for key in care_buttons:
-		care_buttons[key].disabled = not session.writable or (key != "train" and (session.busy() or float(session.cooldowns.get(key, 0)) > 0 or (pet.resting and key != "rest")))
-		if key == "pet": care_buttons[key].disabled = not session.can_pet()
-		care_buttons[key].queue_redraw()
-	care_buttons.rest.caption = "Obudź" if pet.resting else "Drzemka"
+		var button: IconActionButton = care_buttons[key]
+		var need: String = ACTION_NEEDS[key]
+		button.need_value = float(pet.needs[need])
+		button.caption = LOW_LABELS[key] if button.need_value < 30 else ACTION_LABELS[key]
+		# An unavailable action stays tappable so the session can explain why.
+		button.disabled = not session.writable
+		button.cooldown_left = float(session.cooldowns.get(key, 0))
+		button.cooldown_ratio = clampf(button.cooldown_left / float(GameSession.CARE_COOLDOWNS.get(key, 1)), 0, 1)
+		button.accessibility_name = "%s. %s %d procent.%s" % [ACTION_LABELS[key], NEED_LABELS[need], roundi(button.need_value), " Kolejny przyrost za %d sekund." % ceili(button.cooldown_left) if button.cooldown_left > 0 else ""]
+		button.queue_redraw()
+	care_buttons.rest.caption = "Obudź" if pet.resting else ("Senność" if float(pet.needs.energy) < 30 else "Drzemka")
 	care_buttons.rest.icon_name = "sun" if pet.resting else "moon"
-	care_title.text = "Czas na spokojny sen" if pet.resting else "Wasza chwila"
-	suggestion_title.text = "Poćwiczmy razem"
-	suggestion_detail.text = "%s · opanowanie %d%%" % [TrainingSystem.LABELS[selected_trick], roundi(pet.skills[selected_trick].mastery)]
+	care_status.text = _activity_status()
 	var mastery: float = pet.skills[selected_trick].mastery
-	var level := "Poznaje gest" if mastery < 25 else ("Ćwiczy z Tobą" if mastery < 75 else "Coraz pewniej")
-	mastery_label.text = "%s   ·   %d%% opanowania" % [level, roundi(mastery)]
+	mastery_label.text = "Opanowanie %d%%" % roundi(mastery)
 	mastery_bar.value = mastery
 	var reason := session.training.readiness(pet, selected_trick)
 	guided_button.disabled = not session.writable or session.busy() or not reason.is_empty()
-	command_button.disabled = guided_button.disabled
+	guidance_toggle.disabled = session.training.phase != "idle"
+	guided_button.text = "Pokaż gest" if guidance_toggle.button_pressed else "Powiedz komendę"
 	for key in trick_buttons:
 		trick_buttons[key].disabled = session.training.phase != "idle"
 		trick_buttons[key].add_theme_stylebox_override("normal", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
@@ -593,15 +835,25 @@ func _refresh() -> void:
 	var attempting := session.training.phase == "attempt"
 	training_actions.visible = not rewarding and not attempting
 	rewards_row.visible = rewarding or attempting
-	reward_bar.visible = rewarding or attempting
-	reward_bar.value = maxf(0, session.training.time_left / session.training.reward_duration * 100) if rewarding else 0
-	for key in reward_buttons: reward_buttons[key].disabled = not rewarding or not session.writable
-	if rewarding: training_hint.text = "Świetnie! Nagroda teraz — %.1f s" % session.training.time_left
-	elif attempting: training_hint.text = "Patrz na pieska… zaraz czas na nagrodę."
+	for index in training_steps.size():
+		training_steps[index].selected = index == (2 if rewarding else (1 if attempting else 0))
+	training_steps[0].caption = "1. Gest" if guidance_toggle.button_pressed else "1. Komenda"
+	for key in reward_buttons:
+		var button: IconActionButton = reward_buttons[key]
+		button.disabled = not rewarding or not session.writable
+		button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1) if rewarding else 0.0
+		button.favorite = pet.milestones.has("favorite_reward") and pet.favorite_reward == key
+		button.accent = Color("dce8cb") if button.favorite else Color("ecebd7")
+		button.accessibility_name = REWARD_LABELS[key] + (", ulubiona nagroda" if button.favorite else "") + (", nagródź teraz" if rewarding else ", czekaj na wykonanie")
+		button.queue_redraw()
+	if rewarding: training_hint.text = "Udało się! Wybierz nagrodę, zanim zniknie obwódka."
+	elif attempting: training_hint.text = "Poczekaj, aż piesek skończy ruch."
+	elif training_feedback_left > 0: training_hint.text = training_feedback
 	elif not reason.is_empty(): training_hint.text = reason
-	else: training_hint.text = "Pokaż gest. Poczekaj na wykonanie. Nagrodź."
+	elif session.busy(): training_hint.text = _activity_status()
+	else: training_hint.text = "Gest pomaga się uczyć." if guidance_toggle.button_pressed else "Sama komenda sprawdza, co już pamięta."
 	training_hint.add_theme_color_override("font_color", Color("8a5f24") if rewarding else INK)
-	training_footer.text = "Skupienie %d%%  ·  Krótkie ćwiczenia, dużo radości" % roundi(100 - pet.fatigue)
+	training_footer.text = "Skupienie %d%%" % roundi(100 - pet.fatigue)
 	var had_warning := footer_label.visible
 	footer_label.visible = not session.writable or not session.save_ok
 	if had_warning != footer_label.visible: _fit_room()
@@ -625,10 +877,10 @@ func _refresh() -> void:
 			item.add_theme_constant_override("separation", 12)
 			journal_list.add_child(item)
 			var mark := TextureRect.new()
-			mark.texture = GameIcons.texture("paw", Color("9ca97b"))
+			mark.texture = GameIcons.texture(_journal_icon(str(entry.key)), Color("779265"))
 			mark.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			mark.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			mark.custom_minimum_size = Vector2(25, 25)
+			mark.custom_minimum_size = Vector2(38, 38)
 			mark.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 			item.add_child(mark)
 			var words := VBoxContainer.new()
@@ -653,9 +905,132 @@ func _notification(what: int) -> void:
 		music.set_backgrounded(true)
 		effects.set_backgrounded(true)
 		session.suspend_session()
+		play_menu.hide()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		session.resume_session()
 		music.set_backgrounded(false)
 		effects.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		app_foreground = false
+		_update_attention()
 		session.flush()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		app_foreground = true
+		_update_attention()
+
+func _activity_status() -> String:
+	if session.play.running(): return "Wspólna zabawa · " + InitiativeSystem.LABELS[session.play.kind]
+	if not session.invitation.is_empty(): return session.pet.pet_name + " zaprasza Cię do wspólnej chwili"
+	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
+	if session.training.phase == "attempt": return "Wykonuje komendę · otwórz Trening"
+	if session.pet.resting: return "Odpoczywa · dotknij słońca, aby obudzić"
+	if session.activity == "approach":
+		return {"feed": "Idzie do miski…", "rest": "Idzie do legowiska…", "play": "Łapie piłkę…"}.get(session._pending_action, "Odkrywa pokój…")
+	if session.activity_left > 0 and session.activity in ["feed", "clean", "play", "happy"]:
+		return "%s · jeszcze %d s" % [{"feed": "Zajada", "clean": "Czesanie", "play": "Bawi się", "happy": "Cieszy się z nagrody"}[session.activity], ceili(session.activity_left)]
+	return LifeSystem.mood_label(session.pet) + " · dotknij, by zadbać"
+
+func _show_feedback(text: String) -> void:
+	if selected_tab == "training":
+		# Keep instructions and outcomes in one place, clear of the puppy.
+		training_feedback = text
+		training_feedback_left = 4.0
+		bubble_left = 0
+		_refresh()
+		_position_feedback()
+		return
+	var action := session._pending_action if not session._pending_action.is_empty() else session.activity
+	var icon: String = NEED_ICONS.get(ACTION_NEEDS.get(action, ""), "heart")
+	if action == "sleep": icon = "moon"
+	if session.training.phase != "idle": icon = "spark"
+	bubble_icon.texture = GameIcons.texture(icon)
+	var short := text
+	for entry in [
+		["Już idzie do miski", "Idę do miski!"], ["Mała porcja", "Mniam!"],
+		["Czas na drzemkę", "Czas na sen…"], ["Miękkie legowisko", "Dobranoc…"],
+		["Piłka w ruch", "Łapię!"], ["Piłka złapana", "Jeszcze raz!"],
+		["Przymyka oczy", "Lubię być blisko"], ["Kilka ruchów szczotką", "Ale przyjemnie!"],
+		["Już idę!", "Już idę!"], ["Koniec drzemki", "Czas na nowy dzień!"]]:
+		if text.begins_with(entry[0]):
+			short = entry[1]
+			break
+	message_label.text = short
+	bubble_left = 3.5 if short.length() < 35 else 6.0
+	bubble.size = Vector2(minf(330, room.size.x - 32) if short.length() > 35 else minf(250, maxf(150, short.length() * 7 + 55)), 0)
+	_position_feedback()
+
+func _show_gain(action: String, gains: Dictionary) -> void:
+	var need: String = ACTION_NEEDS.get(action, "play")
+	if not gains.has(need):
+		if gains.is_empty(): return
+		need = str(gains.keys()[0])
+	var amount := float(gains[need])
+	var amount_text := str(roundi(amount)) if amount >= 1 else ("<0,1" if amount < 0.1 else ("%.1f" % amount).replace(".", ","))
+	gain_label.text = "+%s  %s" % [amount_text, NEED_LABELS[need]]
+	gain_left = 1.8
+	for key in gains:
+		if needs_ui.has(key): needs_ui[key].flash_left = 1.2
+	_position_feedback()
+
+func _process(delta: float) -> void:
+	_update_attention()
+	_position_invitation()
+	bubble_left = maxf(0, bubble_left - delta)
+	gain_left = maxf(0, gain_left - delta)
+	training_feedback_left = maxf(0, training_feedback_left - delta)
+	if session.active:
+		for key in care_buttons:
+			var button: IconActionButton = care_buttons[key]
+			var left := float(session.cooldowns.get(key, 0))
+			if button.cooldown_left != left:
+				button.cooldown_left = left
+				button.cooldown_ratio = clampf(left / float(GameSession.CARE_COOLDOWNS.get(key, 1)), 0, 1)
+				button.queue_redraw()
+		if session.training.phase == "reward":
+			for button in reward_buttons.values():
+				button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1)
+				button.queue_redraw()
+	_position_feedback()
+
+func _position_invitation() -> void:
+	if invitation_card == null or header == null: return
+	var width := minf(350, minf(room.size.x, safe_rect.end.x) - safe_rect.position.x - 24)
+	invitation_label.custom_minimum_size.x = width - 24
+	invitation_card.size = Vector2(width, 0)
+	invitation_card.position = Vector2(header.position.x, header.get_rect().end.y + 10)
+
+func _position_feedback() -> void:
+	if bubble == null or header == null: return
+	# Wrapping is recalculated by the container after its width changes. Shrink
+	# again on the next frame instead of retaining the first narrow-width height.
+	bubble.size.y = 0
+	var pet_point := room.pet_position()
+	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
+	bubble.visible = bubble_left > 0 and on_screen and not invitation_card.visible
+	gain_label.visible = gain_left > 0 and on_screen
+	var head := room.world_to_screen(room.pet_world - Vector2(0, 178) * room.presentation_scale)
+	var left := maxf(12, safe_rect.position.x + 8)
+	var right := minf(room.size.x - 12, safe_rect.end.x - 8)
+	var top := header.get_rect().end.y + 8
+	bubble.position = Vector2(clampf(head.x - bubble.size.x / 2, left, maxf(left, right - bubble.size.x)), maxf(top, head.y - bubble.size.y - 12))
+	bubble.modulate.a = minf(1, bubble_left * 3)
+	gain_label.reset_size()
+	gain_label.position = Vector2(clampf(head.x - gain_label.size.x / 2, left, maxf(left, right - gain_label.size.x)), maxf(top, head.y + 4 - (1.8 - gain_left) * 20))
+	gain_label.modulate.a = minf(1, gain_left * 2)
+
+func _load_ui_preferences() -> void:
+	var config := ConfigFile.new()
+	if config.load(ui_settings_path) == OK:
+		room.pan_hint_dismissed = config.get_value("tutorial", "room_dragged", false) == true
+	room.room_hint.visible = not room.pan_hint_dismissed
+
+func _remember_pan() -> void:
+	var config := ConfigFile.new()
+	config.load(ui_settings_path)
+	config.set_value("tutorial", "room_dragged", true)
+	if config.save(ui_settings_path) != OK: push_warning("Could not save room tutorial preference.")
+
+func _journal_icon(key: String) -> String:
+	if key.begins_with("first_") or key.begins_with("learned_"): return "spark"
+	if key.begins_with("habit_"): return "paw"
+	return {"welcome": "home", "feed": "bowl", "rest": "moon", "play": "ball", "pet": "heart", "clean": "brush", "favorite_reward": "treat"}.get(key, "book")

@@ -1,10 +1,12 @@
 # Dokumentacja projektu YuFriend
 
-YuFriend to gra o opiece nad szczeniakiem golden retrievera, budowaniu więzi i uczeniu komend. Ten zestaw opisuje działający prototyp Godot oraz kolejne kroki jego rozwoju. Stan dokumentacji: **10 listopada 2026**.
+YuFriend to gra o opiece nad szczeniakiem golden retrievera, budowaniu więzi i uczeniu komend. Ten zestaw opisuje działający prototyp Godot oraz kolejne kroki jego rozwoju. Stan dokumentacji: **15 listopada 2026**.
 
-Pierwsza wersja działa lokalnie na Macu. Ma potrzeby, temperament, trening, wspomnienia i zapis. Dostarczony pakiet A+B obejmuje 22 klipy i 142 klatki; gra używa pixel art. Integrację i ograniczenia jakości opisuje [instrukcja sprite’ów](integracja-spriteow.md). AI, dorastanie i wydanie na telefon należą do dalszego zakresu.
+Pierwsza wersja działa lokalnie na Macu. Ma potrzeby, temperament, trening, wspomnienia i zapis. Dostarczony pakiet A+B obejmuje 22 klipy i 142 klatki; gra używa pixel art. Integrację i ograniczenia jakości opisuje [instrukcja sprite’ów](integracja-spriteow.md). Wersja testowa jest zainstalowana na iPhonie; AI, dorastanie i wydanie sklepowe należą do dalszego zakresu.
 
-Aktualizacja interfejsu: większy pokój z interaktywnym psem i przedmiotami, okrągłe wskaźniki potrzeb, stała nawigacja **Dom / Trening / Album**, kontekstowe nagrody oraz panel boczny w szerokim oknie. Sterowanie opisuje [opis projektu](opis-projektu.md#ekrany-i-sterowanie), a zakres weryfikacji — [uruchomienie i testy](uruchomienie-i-testy.md#testy-automatyczne).
+Aktualizacja interfejsu: pokój na całą wysokość, jeden rząd przycisków łączących opiekę z poziomami potrzeb, widoczna więź, znikające dymki i przyrosty, trening prowadzony ikonami, karta psa pod imieniem oraz osobne ustawienia pod zębatką. Album zajmuje pełny ekran. Sterowanie opisuje [opis projektu](opis-projektu.md#ekrany-i-sterowanie), a zakres weryfikacji — [uruchomienie i testy](uruchomienie-i-testy.md#testy-automatyczne).
+
+Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy dotykiem: piłkę, linę i kubki. [Zasady zabaw](mechaniki-gry.md#zabawy-dotykiem) i [pamięć reakcji](osobowosc.md#własna-inicjatywa-i-pamięć-reakcji--etap-2) opisują bieżący zakres.
 
 ## Mapa dokumentacji
 

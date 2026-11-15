@@ -8,7 +8,7 @@
 
 Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpitu ma domyślnie 430 × 930. Skalowanie to `canvas_items` z aspektem `expand`. Nie ma autoloadów, bazy danych, backendu ani dodatkowego frameworka aplikacji.
 
-`Main._fit_room()` układa pokój, nagłówek, wskaźniki potrzeb, aktywny panel i nawigację. Cały ekran nie przewija się; przewijany jest album. Szeroki układ przenosi sterowanie obok pokoju. `GameIcons` współdzieli własne ikony, `IconActionButton` rysuje akcje i nawigację, a `NeedIndicator` pokazuje poziomy potrzeb. Font Nunito jest dołączony wraz z licencją w `assets/fonts/`.
+`Main._fit_room()` układa pełną wysokość pokoju i pływające kontrolki w bezpiecznym obszarze. [`DisplayServer.get_display_safe_area()`](https://docs.godotengine.org/en/stable/classes/class_displayserver.html#class-displayserver-method-get-display-safe-area) jest przeliczane z fizycznych pikseli na współrzędne UI; na pulpicie używany jest obszar okna, a testy mogą podać symulowane marginesy. `IconActionButton` łączy akcję, poziom potrzeby, procent i czas oczekiwania. `NeedIndicator.level_color()` współdzieli progi kolorów. Nagłówek pokazuje imię i więź, karta psa jest oddzielona od ustawień, a album ma pełną wysokość. Profil i raport powrotu przewijają zawartość wewnątrz ograniczonego dialogu. Font Nunito jest dołączony wraz z licencją w `assets/fonts/`.
 
 Pokój jest osobnym światem 2D w `SubViewport`, wyświetlanym przez `Sprite2D` pod HUD-em. `Camera2D` przesuwa tylko świat; zbliżenie realizuje całkowite powiększenie tekstury pokoju, a potrzeby, panele i komunikat pozostają w interfejsie. [RoomLayout](../scripts/model/room_layout.gd) określa wymiary 1440 × 360, płytki pas chodzenia oraz sześć stacji. Ich pozycje nie zmieniają się wraz z wielkością okna.
 
@@ -22,6 +22,7 @@ flowchart TD
     Session --> Needs["NeedsSystem — potrzeby i czas"]
     Session --> Training["TrainingSystem — próby i nagrody"]
     Session --> Personality["PersonalitySystem — historia, dryf i nawyki"]
+    Session --> Life["LifeSystem — dziwactwa, nastrój i relacje po powrocie"]
     Session --> Save["SaveSystem — zapis i odzyskiwanie"]
     Main --> Commands["LocalCommands — rozpoznawanie zwrotów"]
     Room --> Artwork["RoomArtwork — statyczne tło i osobne przedmioty"]
@@ -42,6 +43,10 @@ flowchart TD
 | [NeedsSystem](../scripts/systems/needs_system.gd) | Zmiany potrzeb i zmęczenia w czasie oraz jednorazowe efekty działań |
 | [TrainingSystem](../scripts/systems/training_system.gd) | Warunki rozpoczęcia, wynik próby, czas nagrody i naliczanie postępu |
 | [PersonalitySystem](../scripts/systems/personality_system.gd) | Dziennik zdarzeń, dryf cech, nawyki i sprawdzanie propozycji zmian osobowości |
+| [LifeSystem](../scripts/systems/life_system.gd) | Odkrywanie dziwactw, stały nastrój dnia, symulowane relacje z nieobecności i powitania; bez nagradzania fikcyjnej aktywności gracza |
+| [InitiativeSystem](../scripts/systems/initiative_system.gd) | Dobór zaproszeń według temperamentu, nastroju i zapamiętanych odpowiedzi; ograniczona historia reakcji |
+| [TouchPlaySystem](../scripts/systems/touch_play_system.gd) | Fazy liny, kubków i złapania piłki; czyste reguły gestów bez zależności od widoku |
+| [TouchPlayView](../scripts/ui/touch_play_view.gd) | Rysuje linę i kubki, pokazuje psa, obsługuje jeden palec lub mysz i przekazuje znormalizowane współrzędne |
 | [SaveSystem](../scripts/systems/save_system.gd) | Odczyt, walidowany zapis do pliku tymczasowego i odzyskiwanie kopii |
 | [LocalCommands](../scripts/services/local_commands.gd) | Normalizuje wpisany tekst i zwraca identyfikator istniejącej komendy |
 | [RoomView](../scripts/ui/room_view.gd) | Tworzy świat i kamerę, odróżnia tapnięcie od przesuwania, przelicza ekran/świat, prowadzi ruch i zbliżenia |
@@ -71,7 +76,9 @@ Połączenia są tworzone w `Main._ready()`.
 | Sygnał | Odbiorca i znaczenie |
 |---|---|
 | `GameSession.changed` | `Main._refresh()` odświeża dane i dostępność przycisków |
-| `feedback(text)` | Aktualizuje komunikat dla gracza |
+| `feedback(text)` | Pokazuje dymek przy psie na 3,5–6 sekund; zwykły refresh nie przedłuża jego życia |
+| `care_completed(action, gains)` | Pokazuje rzeczywiście naliczone dodatnie przyrosty i błysk obwódki; nie jest emitowany ponownie za to samo dojście |
+| `RoomView.first_pan` | Zapisuje zamknięcie wskazówki przesuwania w `ui.cfg` obok zapisu psa |
 | `save_status(ok)` | Odświeża informację o zapisie |
 | `clip_requested(clip)` | `RoomView.play_clip()` uruchamia zwykłą reakcję lub pozycję |
 | `destination_requested(world_position)` | `RoomView.move_to()` ustawia cel `Vector2` we współrzędnych świata |
@@ -87,6 +94,14 @@ Połączenia są tworzone w `Main._ready()`.
 | `performance_finished(trial_id)` | Zgłasza ukończenie prezentacji próby do sesji |
 
 Cele ruchu to `Vector2` we współrzędnych świata. `RoomLayout.clamp_walk()` ogranicza je do prostokąta od (95, 286) do (1345, 328). Podstawowy chód ma 38,4 jednostki świata na sekundę (12,8 piksela logicznego). Klip gra w oryginalnym tempie 1×, także przy podążaniu za piłką. Szybszy pościg wymaga osobnego klipu biegu i pomiaru długości kroku. Ruch zaczyna się dopiero po przejściu animatora do `walk`. Dla „przyjdź” widok wyznacza cel około 150 jednostek od obecnego położenia, zamiast dawnego ułamka szerokości ekranu.
+
+## Zaproszenia i zabawy
+
+`GameSession` utrzymuje jedno tymczasowe zaproszenie. `Main` przekazuje dostępność uwagi na podstawie fokusu, zakładki i dialogów, a karta zaproszenia daje odpowiedź lub „Później”. `initiative_requested(kind)` uruchamia prezentację w pokoju; samodzielne podejście korzysta z istniejącego tokenu stacji i można je przerwać odpowiedzią.
+
+`ball_aim_requested` kieruje kamerę do piłki. Gest w `RoomView` emituje `ball_thrown(target)`, a sesja po walidacji wysyła `ball_throw_requested(target, token)`. Widok odtwarza lot oraz pościg i potwierdza aktualny token dopiero po lądowaniu i dojściu. Sesja rozlicza wynik dokładnie raz. Anulowanie unieważnia token, gest i lot.
+
+`touch_game_opened(kind)` otwiera scenę liny lub kubków; `TouchPlayView` wysyła `pressed_at`, `moved_to`, `released_at` do sesji. `TouchPlaySystem` decyduje o wyniku. Wyłącznie sesja przyznaje efekty z trwałym odstępem 30 sekund. Zamknięcie dialogu lub wstrzymanie resetuje model i uchwyt palca, a `touch_game_closed` zamyka widok. Stan rund nie jest zapisywany; pamięć reakcji i liczników znajduje się w `PetState.social` schematu v4.
 
 ## Synchronizacja treningu
 
@@ -135,7 +150,9 @@ Przy rozbudowie reguły opieki i treningu powinny pozostać w systemach, a inter
 
 Sesja zleca dojście z tokenem. `RoomView` odczytuje punkt stacji z `RoomLayout`; dojście uruchamia efekt opieki w sesji. Pozycja piłki jest zmienna, pozostałe stacje mają stałe współrzędne. Przy podmianie grafiki można zachować ich kontrakt z logiką.
 
-Obszar wyświetlania zaczyna się 16 jednostek poniżej wiersza potrzeb (w szerokim układzie HUD jest obok). Pokój kończy się nad dymkiem i panelem. Świat ma 480 × 120 pikseli logicznych (1 piksel = 3 jednostki świata). Kamera łagodnie śledzi psa, a początek rasteryzacji jest przyciągany do siatki. Viewport ma dodatkowy piksel marginesu z każdej strony; shader `room_scroll.gdshader` przesuwa próbkowanie o pozostałą część ruchu, zaokrągloną do fizycznego piksela ekranu. Dzięki temu wolny gest nie przeskakuje o cały powiększony piksel grafiki. Przeliczenia dotyku uwzględniają oba etapy. `Camera2D.zoom` pozostaje 1; zbliżenie 2× zwiększa całkowite powiększenie gotowej tekstury i zmniejsza widoczny fragment świata. Przy za małej wysokości pozostaje widok podstawowy, aby nie uciąć psa. Rozmiar i pozycja `Sprite2D` uwzględniają transformację końcową viewportu oraz `canvas_items`, dzięki czemu piksele nie stają się nierówne po zmianie rozmiaru okna. `Sprite2D` omija zaokrąglanie pozycji kontrolek przed skalowaniem UI. Transformacja korzysta z [metod Viewport](https://docs.godotengine.org/en/stable/classes/class_viewport.html#class-viewport-method-get-final-transform). Pozostałe miejsce wypełnia kolor ściany. Głaskanie utrzymuje zbliżenie przez 3,5 sekundy; trening przez próbę, okno nagrody i reakcję na nią. Granice kamery zapobiegają odsłanianiu pustki poza pokojem.
+Pokój jest rysowany na całą wysokość. `content_bottom` wyznacza dół sceny nad sterowaniem; kamera zostawia pod nim dodatkową podłogę, żeby łapy psa nie chowały się pod przyciskami. Współrzędne rozgrywki nadal wynoszą 1440 × 360, a siatka ma 3 jednostki świata na piksel logiczny. Powiększenie uwzględnia szerokość oraz wysokość dostępnej sceny, więc portret pokazuje większego psa i węższy fragment panoramy. Dodatkowe 2× wymaga miejsca także w poziomie.
+
+Kamera łagodnie śledzi psa. Viewport ma po pikselu marginesu; shader `room_scroll.gdshader` przesuwa próbkowanie o pozostałą część ruchu zaokrągloną do fizycznego piksela. Wolny gest nie przeskakuje o cały powiększony piksel grafiki. `Camera2D.zoom` pozostaje 1. Rozmiar i pozycja `Sprite2D` uwzględniają transformację końcową viewportu oraz `canvas_items`, zachowując równe piksele również przy ułamkowym skalowaniu. Dymek i przyrost są elementami UI przeliczanymi z pozycji psa w każdej klatce. Wskazówka gestu nie wraca po zapisaniu `tutorial/room_dragged` w `ui.cfg`.
 
 Dotknięcie jest rozpoznawane po puszczeniu palca. Ruch o co najmniej 9 jednostek uruchamia przesuwanie widoku i wyklucza akcję dotknięcia. Ręcznie ustawiona kamera pozostaje na miejscu do użycia „Do pieska” lub rozpoczęcia nowej czynności. `world_to_screen()` i `screen_to_world()` obsługują wszystkie strefy kliknięcia po panoramowaniu i zoomie. Maski alfa psa powstają dopiero przy dotknięciu danej klatki; na pierwszym planie pierwszeństwo mają piłka i przedmioty zasłaniające psa.
 
@@ -146,3 +163,7 @@ Zmiana rozmiaru okna przelicza wyłącznie widok i kamerę — nie pozycje psa i
 `GameSession.sound_requested` zgłasza przyjęte czynności (jedzenie, głaskanie, czesanie, nagroda i głód przy misce). `RoomView.sound_requested` zgłasza kroki po przebytej odległości i początek toczenia piłki. `Main` przekazuje oba sygnały do `SoundEffects`. System ładuje 20 lokalnych WAV w 10 grupach, losuje warianty, ogranicza odtwarzanie do czterech głosów i zatrzymuje efekty w tle. Muzyka i efekty współdzielą `audio.cfg`, zachowując niezależne przełączniki. Źródła i archiwalne próbki są wyłączone z eksportu.
 
 Przypisanie zdarzenia nie gwarantuje poprawnej treści nagrania: po zgłoszeniu szczekania w krokach podmieniono 11 próbek. Kroki mają 160 ms. Szczegóły generowania, kontrola i ograniczenia są w [dokumentacji audio](../assets/audio/sfx/README.md).
+
+### Dwa kadry pokoju
+
+`RoomView.show_overview()` mieści całą panoramę pomiędzy nagłówkiem i panelem. Na wyjściu węższym niż 480 pikseli używa siatki przeglądowej 6 jednostek świata zamiast 3; powiększenie gotowej tekstury nadal jest całkowite. Geometria, pozycje psa i stacji pozostają niezmienne. Dotknięcie panoramy wyłącznie wybiera miejsce zbliżenia. `focus_pet()` przywraca szczegółowy widok i śledzenie; czynności opieki również przywołują psa do kadru.

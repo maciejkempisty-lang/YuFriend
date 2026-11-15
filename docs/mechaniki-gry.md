@@ -24,7 +24,7 @@ Podczas nieobecności symulowane jest najwyżej 8 godzin. Zasady czasu i wznowie
 
 Karmienie, odpoczynek i zabawa zaczynają się od dojścia do przedmiotu. Pies idzie do miski, zanim dostanie sytość; do legowiska, zanim zacznie regenerować energię; goni toczącą się piłkę, zanim dostanie efekt zabawy. Po dojściu jedzenie i zabawa trwają 2 sekundy, a wtedy zaczyna się ich czas ponownego użycia. Animator kończy aktualne przejście przed zmianą klipu. Czesanie działa w miejscu przez 2 sekundy. Przejście aplikacji w tło anuluje niedokończone dojście bez naliczania efektów.
 
-Ikony w zakładce Dom i dotknięcia psa, miski, piłki lub legowiska wywołują te same działania sesji. Głaskanie od razu reaguje na kolejne dotknięcie, również podczas zwykłego spaceru lub zaproszenia psa. Przyrost bliskości, zabawy, więzi oraz zdarzenie w historii są naliczane najwyżej raz na 4 sekundy. Sama reakcja nie wymaga czekania na ten licznik; trening, posiłek i sen nadal mają pierwszeństwo.
+Ikony opieki w zakładce Dom i dotknięcia przedmiotów korzystają z reguł sesji. „Pobaw się” otwiera wybór trzech zabaw dotykowych; krótkie stuknięcie piłki w pokoju zachowuje prosty pościg opisany w tabeli. Głaskanie od razu reaguje na kolejne dotknięcie, również podczas zwykłego spaceru lub zaproszenia psa. Przyrost bliskości, zabawy, więzi oraz zdarzenie w historii są naliczane najwyżej raz na 4 sekundy. Sama reakcja nie wymaga czekania na ten licznik; trening, posiłek i sen nadal mają pierwszeństwo.
 
 | Działanie | Klucz | Efekt | Ponowne użycie |
 |---|---|---|---:|
@@ -40,9 +40,25 @@ Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zapros
 
 Przy sytości, zabawie lub czystości co najmniej 95 odpowiadająca opieka daje komunikat o zaspokojeniu potrzeby, bez dojścia, efektów ani wpisu do historii. Dotyczy to także zabawy przy koszu. Głaskanie nie ma takiego progu. Dotknięcie psa podczas jedzenia wyjaśnia, że właśnie je, i nie przerywa posiłku. Przy zbliżeniu piłka odsuwa się poza obszar łap.
 
+## Zabawy dotykiem
+
+Przycisk **Pobaw się** otwiera wybór trzech gier. Każda działa palcem i myszą. Wymagają obudzonego psa, energii co najmniej 28, zmęczenia poniżej 85 i braku innej trwającej czynności. Można bawić się także przy pełnej potrzebie zabawy.
+
+| Zabawa | Sterowanie i ukończenie |
+|---|---|
+| Piłka | Przeciągnij piłkę w pokoju w lewo lub prawo i puść. Łuk pokazuje cel; pies idzie do miejsca lądowania. Dopiero dogonienie piłki kończy rundę. Krótkie stuknięcie zachowuje prosty pościg. |
+| Przeciąganie liny | Chwyć widoczny węzeł i wykonaj sześć wyraźnych ruchów naprzemiennie w lewo i prawo, zgodnie ze strzałką. Samo trzymanie i drobne drżenie palca nie liczą się. |
+| Szukanie smakołyka | Zapamiętaj kubek ze smakołykiem, obserwuj trzy zamiany miejsc i dotknij wybranego kubka. Pomyłka odsłania odpowiedź i pozwala spróbować ponownie. |
+
+Udana runda zwiększa zabawę o 18, bliskość o 6 i więź o 0,35, zużywając 3 energii i 1 czystości. Te przyrosty mają wspólny odstęp **30 sekund**, zachowywany po restarcie. W tym czasie nadal można grać kolejne rundy. Przyrosty trafiają do historii jako `play` i mogą odkrywać dziwactwa. Nieudana odpowiedź przy kubkach nie przyznaje nagrody ani kary. Pierwsza ukończona runda każdego rodzaju trafia do Albumu.
+
+Lina i kubki mają przyciski „Jeszcze raz” i „Zakończ”. Zamknięcie sceny lub wstrzymanie aplikacji anuluje niedokończoną zabawę. Drugi palec nie przejmuje gestu, a anulowany dotyk nie rzuca piłki ani nie wybiera kubka. Przeciąganie rozpoczęte na piłce steruje rzutem; poza piłką nadal przesuwa pokój.
+
+Gloria sama proponuje te zabawy lub bliskość i zapamiętuje reakcje. Dokładne zasady wyboru, odstępów oraz sekcji „Wasz rytm” opisuje [własna inicjatywa](osobowosc.md#własna-inicjatywa-i-pamięć-reakcji--etap-2).
+
 ## Stacje i oglądanie pokoju
 
-Pokój ma rozmiar 1440 × 360 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Do pieska” wznawia śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
+Pokój ma rozmiar 1440 × 360 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Cały pokój” pokazuje wszystkie stacje naraz; dotknięcie miejsca na panoramie przybliża ten fragment bez uruchamiania czynności. „Do pieska” przywraca śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
 
 | Stacja | Reakcja | Efekt działania gracza |
 |---|---|---|
@@ -66,9 +82,9 @@ Przy tworzeniu psa każda cecha jest losowana w zakresie 0,25–0,85 na podstawi
 | `sociability` — towarzyskość | Tempo spadku zaspokojenia potrzeby bliskości |
 | `sensitivity` — wrażliwość | Siła rozproszenia powodowanego zmęczeniem przy samodzielnej próbie |
 
-Osobno losowana jest ulubiona nagroda: `treat`, `praise` albo `play`. Preferencja nie zmienia się w obecnej wersji.
+Osobno losowana jest ulubiona nagroda: `treat`, `praise` albo `play`. Preferencja nie zmienia się w obecnej wersji. Interfejs ujawnia ją dopiero po poprawnej próbie nagrodzonej tym sposobem; `favorite_reward` w `milestones` zachowuje odkrycie po restarcie i wyróżnia właściwy przycisk nagrody.
 
-Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies idzie do legowiska i zasypia. Przy sytości poniżej 30 podchodzi do miski i szczeka; przy zabawie poniżej 30 podchodzi do piłki, trąca ją i robi ukłon. Każde z tych dwóch zaproszeń ma 60 sekund przerwy, bez samodzielnego naliczania jedzenia lub zabawy. Dopiero później wybiera nawyk lub eksplorację zależnie od ciekawości: podejście do okna/drzwi albo spacer w świecie. Nawyk Łobuziak prowadzi do kosza z zabawkami. Te decyzje nie przerywają opieki ani treningu.
+Pierwsza decyzja o samodzielnej aktywności następuje po 8 sekundach bezczynności, kolejne co 9–15 sekund bezczynności. Gdy energia jest poniżej 28, pies idzie do legowiska i zasypia. Przy sytości poniżej 30 podchodzi do miski i szczeka; przy zabawie poniżej 30 podchodzi do piłki, trąca ją i robi ukłon. Każde z tych dwóch zaproszeń ma 60 sekund przerwy, bez samodzielnego naliczania jedzenia lub zabawy. Po pilnych potrzebach może wystawić nowe zaproszenie zgodnie z zasadami pamięci reakcji. Gdy nie ma okazji do takiej propozycji, wybiera nawyk lub eksplorację zależnie od ciekawości: podejście do okna/drzwi albo spacer w świecie. Nawyk Łobuziak prowadzi do kosza z zabawkami. Te decyzje nie przerywają opieki ani treningu.
 
 ## Warunki rozpoczęcia treningu
 
@@ -128,4 +144,4 @@ Więź zaczyna się od 12. Rosną ją głaskanie i nagrody; obecna wersja nie zm
 
 Wpisanie zwrotu uruchamia samodzielną próbę z tymi samymi warunkami co przycisk. Dłuższa swobodna wypowiedź, np. „proszę, usiądź obok mnie”, nie jest obecnie interpretowana.
 
-Dziennik obejmuje powitanie, pierwsze czynności opieki, pierwsze nagrodzone próby i osiągnięcia 75%. Przechowuje maksymalnie 40 wpisów, od najnowszego. Identyfikatory osiągnięć w `milestones` zapobiegają powtórzeniu wpisu nawet po usunięciu go z krótszego dziennika.
+Dziennik obejmuje powitanie, pierwsze czynności opieki, pierwsze nagrodzone próby i osiągnięcia 75%. Zachowuje do 200 trwałych osiągnięć i 40 najnowszych wpisów powtarzalnych, we wspólnym porządku od najnowszego. Identyfikatory w `milestones` zapobiegają duplikatom i chronią wspomnienia przed wyparciem przez relacje z nieobecności.

@@ -8,7 +8,22 @@ Podstawowa pętla opieki, nauki i zapisu działa w lokalnym prototypie. 14 listo
 
 Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układy pionowe i szeroki panel boczny na komputerze z nowym psem. Pokój ma tło pixel art, stały świat 1440 × 360, sześć stacji, kamerę śledzącą i przesuwanie palcem. Głaskanie i trening przybliżają widok, a pies przechodzi przed i za przedmiotami. Nadal potrzebne są test na telefonie oraz ocena czytelności przy rzeczywistym skalowaniu. W dostawie pozostają drobne różnice proporcji między niezależnie narysowanymi klipami.
 
-## Kolejność prac
+## Kierunek: poznawanie Glorii (15 listopada 2026)
+
+Główny wyróżnik: pies ma własne życie i pamięć, a gracz stopniowo go poznaje. Gloria jest imieniem psa w obecnym teście iOS; systemy zawsze używają imienia z zapisu.
+
+1. **Etap 1 — zaimplementowany:** dwa lub trzy odkrywane dziwactwa, pięć nastrojów dnia, tekstowe relacje „Kiedy Cię nie było” oraz różne powitania. [Reguły i ograniczenia](osobowosc.md#własne-życie--etap-1-15-listopada-2026). Relacje korzystają z obecnych animacji; nie dodano jeszcze graficznych śladów w pokoju.
+2. **Etap 2 — zaimplementowany:** cztery rodzaje zaproszeń, pamięć przyjęcia, odłożenia i braku odpowiedzi, wpływ reakcji na kolejne propozycje oraz sekcja „Wasz rytm”. Działają rzut piłki przeciągnięciem, lina i kubki ze smakołykiem. [Reguły zabaw](mechaniki-gry.md#zabawy-dotykiem). Preferencje miejsca snu i smaku pozostają do rozbudowy; obecnie kształtuje się zainteresowanie wspólnymi aktywnościami.
+3. **Nowe sceny i grafika:** krótki spacer za drzwiami, węszenie, spotkania i znaleziska; kąpiel po spacerze, brud, otrząsanie i chlapanie. Potem miska z wodą, różne smakołyki, sekwencje sztuczek i zdjęcia do Albumu z udostępnianiem.
+4. **Integracje mobilne:** lokalne powiadomienia i widget. Pierwszy eksport iOS już istnieje; te funkcje nadal wymagają osobnej integracji natywnej i prób na urządzeniu. Priorytetem pozostaje ukończenie oraz ocena zachowania psa.
+
+Powiadomienia: planowanie progów potrzeb lokalnie przy wyjściu, głos dopasowany do charakteru, maksymalnie dwa dziennie, cisza nocna i ulubiona pora wynikająca z nawyków. Tematem mogą być odkrycia i drobne zdarzenia. Bez zawstydzania za nieobecność, choroby ani śmierci psa.
+
+Widget: mały pokazuje pozę i najpilniejszą potrzebę, średni dodatkowo pięć potrzeb, nastrój i krótką czynność, a ekran blokady ikonę nastroju. Docelowo osobny widok natywny czyta niewielki stan ze znacznikiem czasu i przelicza wartości. Widgetu nie renderuje Godot. Dobór rozszerzenia iOS/Android, współdzielonego kontenera i wtyczki powiadomień należy zweryfikować przy implementacji.
+
+Dalsze pomysły: pora dnia i pogoda za oknem, kolekcja prezentów ze spacerów, poziomy więzi odblokowujące zabawki, dekoracje i sztuczki oraz dorastanie wymagające kolejnego zestawu sprite’ów. Przyszłe AI może urozmaicać relacje w granicach zapisanych faktów i dozwolonych zachowań.
+
+## Pozostałe prace i wcześniejsze priorytety
 
 | Priorytet | Zakres | Warunek ukończenia |
 |---|---|---|
@@ -19,7 +34,7 @@ Odświeżony interfejs i dotykanie przedmiotów są wdrożone. Sprawdzono układ
 | Gotowe | Opieka w przestrzeni pokoju | Dojście do miski i legowiska, pościg za piłką, sygnalizowanie potrzeb i automatyczne budzenie |
 | P1 | Balans i czytelność | W kilku sesjach gracz rozumie potrzeby, odmowę próby, moment nagrody i różnicę po nauczeniu komendy |
 | P1 | Pierwszy eksport mobilny | Można zagrać na wybranym fizycznym telefonie, wznowić aplikację i zachować stan po restarcie |
-| P2 | Gesty, dźwięki i wibracje | Głaskanie przesunięciem palca, rzut piłki gestem, efekty przy animacjach i nagrodzie; weryfikacja na telefonie |
+| P2 | Gesty, dźwięki i wibracje | Rzut piłki gestem, lina, kubki i efekty audio są wdrożone; pozostają głaskanie przesunięciem, wibracje i weryfikacja na telefonie |
 | P2 | Głębszy trening i więź | Ocena momentu nagrody, stopniowe ograniczanie pomocy, sekwencje, „zostań” i odblokowania więzi |
 | P2 | Pierwsza sesja i powrót | Rytuał poznania i nadania imienia, zapowiedź nawyków, pora dnia w oknie; dopiero potem dobrowolne powiadomienia |
 | P2 | Opcjonalne AI | Polecenia spoza słownika są mapowane na dozwolone działania, a brak sieci nie blokuje podstawowej gry |
@@ -37,7 +52,7 @@ Pakiet dostarczony według [briefu](lista-spriteow-szczeniaka.md) działa w grze
 4. Sprawdzamy komendy z naprowadzaniem i bez niego, czas nagrody oraz przerwanie próby.
 5. Oglądamy również wejście/wyjście jedzenia, zasypianie i wybudzenie; zgodna liczba klatek nie gwarantuje zgodnych proporcji.
 
-Jedzenie i zabawa mają 2 sekundy po dojściu do przedmiotu; animator kończy bieżące przejście przed następnym. Głaskanie reaguje na ponowne dotknięcie od razu, z ograniczeniem jedynie przyrostów. Sen zaczyna się w legowisku i kończy automatycznie przy energii 85. Przerwanie dojścia nie przyznaje efektów. `bark_stand` to powitanie po nieobecności, a `treat_take_stand` pokazuje przyjęcie nagrody na stojąco.
+Jedzenie i zabawa mają 2 sekundy po dojściu do przedmiotu; animator kończy bieżące przejście przed następnym. Głaskanie reaguje na ponowne dotknięcie od razu, z ograniczeniem jedynie przyrostów. Sen zaczyna się w legowisku i kończy automatycznie przy energii 85. Przerwanie dojścia nie przyznaje efektów. Powitanie po nieobecności dobiera `LifeSystem`: przechylenie głowy lub merdanie ogonem. `bark_stand` nadal sygnalizuje głód przy misce, a `treat_take_stand` pokazuje przyjęcie nagrody na stojąco.
 
 ## Rozbudowa bez utraty postępu
 
@@ -80,4 +95,4 @@ Przed implementacją trzeba ustalić, co wyzwala zmianę etapu: wspólnie spędz
 | Zakres AI i limit kosztów | Przed przygotowaniem backendu i dostępu do dostawcy |
 | Zasady dorastania | Przed zamówieniem kolejnych etapów grafiki i zmianą danych |
 
-Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie. W tej iteracji nie dodano jeszcze gestów przesuwania, dźwięku, wibracji, nowych zasad treningu ani powiadomień. Ich kolejność warto potwierdzić po krótkich sesjach z testerami.
+Konta, synchronizacja, wiele zwierząt, rozbudowa domu, sterowanie głosem i monetyzacja pozostają poza obecnym prototypem. Wymagają osobnej decyzji o zakresie. Gesty zabawy i dźwięk są już wdrożone. Wibracje, nowe zasady treningu i powiadomienia pozostają do wykonania. Ich kolejność warto potwierdzić po krótkich sesjach z testerami.

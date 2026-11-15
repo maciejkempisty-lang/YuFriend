@@ -2,6 +2,7 @@ class_name RoomArtwork
 extends Node2D
 
 const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-v1.png")
+const PORTRAIT_PUPPY = preload("res://assets/sprites/puppy/pixel/sheets/sit_idle.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
 var kind := "room"
 var area := Vector2.ZERO
@@ -34,6 +35,7 @@ func _draw_room() -> void:
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(901.6, 0, area.x - 901.6, 260), Rect2(1253, 186, 1, 650))
 	var wall_source := Rect2(0, 186, 1254, 650)
 	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(400, 0, 501.6, 260), wall_source)
+	_draw_window()
 	var floor_source := Rect2(0, 900, 600, 354)
 	var tile := floor_source.size * texture_scale
 	var y := RoomLayout.FLOOR_Y
@@ -55,6 +57,11 @@ func _draw_room() -> void:
 	_pixel_ellipse(rug, Vector2(256, 30), Color("7c9064"))
 	_pixel_ellipse(rug - Vector2(0, 3), Vector2(247, 27), Color("a9b582"))
 	_pixel_ellipse(rug - Vector2(0, 3), Vector2(231, 21), Color("c9cc9c"))
+	_draw_wall_panels()
+	_draw_portrait()
+	_draw_lamp(Vector2(870, 270))
+	_draw_music_corner()
+	_draw_sleep_corner()
 	# A quiet corner above the bed, using the same three-unit prop grid.
 	_pixel_rect(Rect2(138, 93, 78, 84), Color("805733"))
 	_pixel_rect(Rect2(144, 99, 66, 72), Color("f4d8a7"))
@@ -69,6 +76,284 @@ func _draw_room() -> void:
 	_pixel_rect(Rect2(321, 111, 21, 15), Color("ad7350"))
 	_pixel_ellipse(Vector2(330, 102), Vector2(15, 15), Color("718960"))
 	_pixel_ellipse(Vector2(336, 96), Vector2(10, 13), Color("9db37b"))
+
+func _draw_window() -> void:
+	# Replace the baked curtain/window locally with art on the room's actual pixel grid.
+	# A clean column at the same source height preserves the two-tone wall behind it.
+	draw_texture_rect_region(ROOM_BACKGROUND, Rect2(654, 66, 174, 174), Rect2(1080, 351, 1, 435))
+	_pixel_arch(Rect2(678, 93, 138, 141), Color(0.37, 0.31, 0.20, 0.16))
+	_pixel_arch(Rect2(672, 87, 138, 141), Color("795336"))
+	_pixel_arch(Rect2(675, 90, 132, 135), Color("bd8b55"))
+	_pixel_arch(Rect2(681, 96, 120, 126), Color("e0b47a"))
+	_pixel_arch(Rect2(684, 99, 114, 120), Color("9fc6b5"))
+	# Quiet sky and garden, with the same clear central cross as the original window.
+	_pixel_rect(Rect2(711, 123, 12, 6), Color("edf0d1"))
+	_pixel_rect(Rect2(705, 129, 30, 6), Color("edf0d1"))
+	_pixel_rect(Rect2(702, 135, 36, 3), Color("edf0d1"))
+	_pixel_rect(Rect2(768, 144, 12, 6), Color("edf0d1"))
+	_pixel_rect(Rect2(762, 150, 30, 6), Color("edf0d1"))
+	_pixel_rect(Rect2(684, 195, 114, 24), Color("aabd79"))
+	for bush in [Vector2(696, 192), Vector2(711, 183), Vector2(726, 195), Vector2(765, 192), Vector2(783, 183)]:
+		_pixel_ellipse(bush, Vector2(12, 15), Color("7f9d68"))
+		_pixel_rect(Rect2(bush + Vector2(-9, 0), Vector2(21, 18)), Color("7f9d68"))
+	_pixel_rect(Rect2(684, 207, 114, 12), Color("b6c77d"))
+	_pixel_rect(Rect2(735, 102, 9, 120), Color("936642"))
+	_pixel_rect(Rect2(735, 102, 3, 117), Color("c89a61"))
+	_pixel_rect(Rect2(684, 159, 114, 9), Color("936642"))
+	_pixel_rect(Rect2(684, 159, 114, 3), Color("c89a61"))
+	_pixel_rect(Rect2(669, 219, 144, 9), Color("97653e"))
+	_pixel_rect(Rect2(663, 225, 156, 9), Color("805733"))
+	_pixel_rect(Rect2(666, 225, 150, 3), Color("e1b277"))
+	_pixel_rect(Rect2(669, 228, 144, 3), Color("c4925b"))
+	# Both panels hang from rings; the curved folds gather at sage tiebacks.
+	_pixel_rect(Rect2(654, 75, 174, 6), Color("815c3c"))
+	_pixel_rect(Rect2(654, 75, 174, 3), Color("c39863"))
+	for x in [651, 831]:
+		_pixel_ellipse(Vector2(x, 78), Vector2(6, 6), Color("986d45"))
+		_pixel_rect(Rect2(x - 3, 75, 3, 3), Color("d1a971"))
+	_draw_curtain(Vector2(660, 84), 1)
+	_draw_curtain(Vector2(822, 84), -1)
+
+func _draw_curtain(top: Vector2, direction: int) -> void:
+	# All coordinates are local; mirroring keeps the gathered panels balanced.
+	var silhouette := PackedVector2Array([
+		Vector2(0, 0), Vector2(54, 0), Vector2(54, 9), Vector2(48, 33),
+		Vector2(39, 54), Vector2(27, 75), Vector2(24, 84), Vector2(30, 108),
+		Vector2(36, 138), Vector2(30, 144), Vector2(21, 141), Vector2(12, 147),
+		Vector2(0, 144), Vector2(-3, 138), Vector2(3, 108), Vector2(9, 84),
+		Vector2(6, 63), Vector2(0, 30)])
+	_curtain_polygon(top, direction, silhouette, Color("c2b898"))
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(3, 3), Vector2(51, 3), Vector2(48, 21), Vector2(42, 39),
+		Vector2(33, 60), Vector2(21, 81), Vector2(24, 99), Vector2(30, 126),
+		Vector2(33, 138), Vector2(24, 138), Vector2(15, 144), Vector2(3, 141),
+		Vector2(0, 135), Vector2(6, 105), Vector2(12, 84), Vector2(9, 60),
+		Vector2(3, 27)]), Color("f7f2db"))
+	# Broad tapered folds read as fabric, instead of a jagged diagonal stripe.
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(12, 3), Vector2(18, 3), Vector2(18, 27), Vector2(21, 48),
+		Vector2(18, 75), Vector2(15, 75), Vector2(15, 51), Vector2(12, 27)]), Color("dfd5b5"))
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(33, 3), Vector2(39, 3), Vector2(36, 27), Vector2(30, 48),
+		Vector2(21, 72), Vector2(21, 54), Vector2(27, 27)]), Color("dfd5b5"))
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(21, 3), Vector2(30, 3), Vector2(27, 30), Vector2(21, 51),
+		Vector2(18, 60), Vector2(21, 27)]), Color("fffbee"))
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(15, 93), Vector2(18, 93), Vector2(15, 114), Vector2(12, 141),
+		Vector2(6, 138), Vector2(12, 111)]), Color("dfd5b5"))
+	_curtain_polygon(top, direction, PackedVector2Array([
+		Vector2(21, 96), Vector2(24, 105), Vector2(30, 135), Vector2(24, 138),
+		Vector2(21, 117)]), Color("e5dcc0"))
+	for x in [6, 21, 36, 48]:
+		_pixel_rect(Rect2(top + Vector2(x * direction - 3, -9), Vector2(3, 12)), Color("b79d70"))
+		_pixel_rect(Rect2(top + Vector2(x * direction, -6), Vector2(3, 6)), Color("eee0b7"))
+	var tie_x := top.x + (6 if direction > 0 else -27)
+	_pixel_rect(Rect2(tie_x, top.y + 81, 24, 9), Color("7b9068"))
+	_pixel_rect(Rect2(tie_x, top.y + 81, 21, 3), Color("abb68a"))
+	_pixel_rect(Rect2(top + Vector2(27 * direction, 87), Vector2(6, 6)), Color("637b55"))
+	_pixel_rect(Rect2(top + Vector2(30 * direction, 93), Vector2(3, 12)), Color("7b9068"))
+
+func _curtain_polygon(origin: Vector2, direction: int, points: PackedVector2Array, color: Color) -> void:
+	var vertices := PackedVector2Array()
+	for point in points:
+		vertices.append(((origin + Vector2(point.x * direction, point.y)) / PIXEL).round() * PIXEL)
+	draw_colored_polygon(vertices, color)
+
+func _pixel_arch(rect: Rect2, color: Color) -> void:
+	var radius := rect.size.x * 0.5
+	var center := rect.position + Vector2(radius, radius)
+	for y in range(int(rect.position.y), int(center.y), int(PIXEL)):
+		var distance := center.y - (y + PIXEL * 0.5)
+		var half_width := sqrt(maxf(0, radius * radius - distance * distance))
+		_pixel_rect(Rect2(center.x - half_width, y, half_width * 2, PIXEL), color)
+	_pixel_rect(Rect2(rect.position.x, center.y, rect.size.x, rect.end.y - center.y), color)
+
+func _draw_wall_panels() -> void:
+	# Decor stays on the back wall, behind the walkable strip and all care props.
+	for span in [Vector2(0, 399), Vector2(903, 1440)]:
+		_pixel_rect(Rect2(span.x, 207, span.y - span.x, 51), Color("c7cba6"))
+		_pixel_rect(Rect2(span.x, 201, span.y - span.x, 6), Color("a7af88"))
+		_pixel_rect(Rect2(span.x, 201, span.y - span.x, 3), Color("e3e1bd"))
+		for x in range(int(span.x) + 18, int(span.y), 72):
+			_pixel_rect(Rect2(x, 210, 3, 48), Color("b4bd97"))
+			_pixel_rect(Rect2(x + 3, 210, 3, 48), Color("d6d8b3"))
+
+func _draw_portrait() -> void:
+	# The sitting sprite is already shipped with the game; no separate portrait atlas.
+	# The frame also covers the small paw picture baked into the original background.
+	_pixel_rect(Rect2(516, 99, 111, 126), Color(0.36, 0.29, 0.19, 0.18))
+	_pixel_rect(Rect2(510, 93, 111, 126), Color("684d35"))
+	_pixel_rect(Rect2(513, 96, 105, 120), Color("bc8a53"))
+	_pixel_rect(Rect2(516, 99, 99, 3), Color("edc58b"))
+	_pixel_rect(Rect2(516, 102, 3, 108), Color("d8ac71"))
+	_pixel_rect(Rect2(519, 102, 93, 108), Color("815a3d"))
+	_pixel_rect(Rect2(522, 105, 87, 102), Color("f5e7bd"))
+	_pixel_rect(Rect2(528, 111, 75, 84), Color("a8b999"))
+	_pixel_ellipse(Vector2(564, 153), Vector2(30, 36), Color("c8d2ac"))
+	_pixel_ellipse(Vector2(564, 186), Vector2(30, 6), Color("91a17f"))
+	draw_texture_rect_region(PORTRAIT_PUPPY, Rect2(525, 111, 81, 81), Rect2(0, 0, 627, 627))
+	_pixel_rect(Rect2(552, 198, 27, 6), Color("bf945b"))
+	_pixel_rect(Rect2(558, 198, 15, 3), Color("efd49a"))
+
+func _draw_lamp(base: Vector2) -> void:
+	# Stepped translucent pools keep the warm light on the same pixel grid as the room.
+	_pixel_ellipse(base + Vector2(0, -102), Vector2(69, 87), Color(1.0, 0.90, 0.59, 0.09))
+	_pixel_ellipse(base + Vector2(0, -102), Vector2(51, 66), Color(1.0, 0.91, 0.62, 0.12))
+	_pixel_ellipse(base + Vector2(0, 3), Vector2(63, 15), Color(1.0, 0.91, 0.64, 0.24))
+	_pixel_ellipse(base + Vector2(3, 0), Vector2(30, 6), Color("ac9369"))
+	_pixel_ellipse(base + Vector2(0, -3), Vector2(24, 6), Color("665a43"))
+	_pixel_ellipse(base + Vector2(-3, -6), Vector2(18, 3), Color("b39860"))
+	_pixel_rect(Rect2(base + Vector2(-3, -108), Vector2(6, 102)), Color("796647"))
+	_pixel_rect(Rect2(base + Vector2(-3, -108), Vector2(3, 99)), Color("cbb579"))
+	_pixel_rect(Rect2(base + Vector2(-3, -147), Vector2(6, 12)), Color("8a714b"))
+	for row in range(0, 39, 3):
+		var half_width := 24 + floori(row / 9.0) * 3
+		_pixel_rect(Rect2(base + Vector2(-half_width, -138 + row), Vector2(half_width * 2, 3)), Color("99754b"))
+		_pixel_rect(Rect2(base + Vector2(-half_width + 3, -138 + row), Vector2(half_width * 2 - 6, 3)), Color("f3d69a"))
+		_pixel_rect(Rect2(base + Vector2(-12, -138 + row), Vector2(21, 3)), Color("fff0be"))
+	_pixel_rect(Rect2(base + Vector2(-36, -102), Vector2(72, 6)), Color("bf985e"))
+	_pixel_rect(Rect2(base + Vector2(-30, -99), Vector2(60, 3)), Color("ffe9a8"))
+	_pixel_rect(Rect2(base + Vector2(21, -96), Vector2(3, 21)), Color("9a7d50"))
+	_pixel_ellipse(base + Vector2(21, -72), Vector2(3, 3), Color("bf985e"))
+
+func _draw_music_corner() -> void:
+	# Low oak cabinet, a record player and a few books make a lived-in music corner.
+	_pixel_ellipse(Vector2(1002, 270), Vector2(78, 9), Color("b79364"))
+	for x in [942, 1050]:
+		_pixel_rect(Rect2(x, 246, 9, 24), Color("75543a"))
+	_pixel_rect(Rect2(933, 198, 135, 57), Color("78583b"))
+	_pixel_rect(Rect2(939, 204, 123, 45), Color("b88c57"))
+	_pixel_rect(Rect2(945, 210, 51, 33), Color("d2a66c"))
+	_pixel_rect(Rect2(1002, 210, 54, 33), Color("967048"))
+	for i in 5:
+		var x := 1008 + i * 9
+		_pixel_rect(Rect2(x, 216 + (i % 2) * 3, 6, 27 - (i % 2) * 3), [Color("8fa18a"), Color("d9bd83"), Color("b77556"), Color("e9d6a6"), Color("677f78")][i])
+		_pixel_rect(Rect2(x, 222, 6, 3), Color("eddbb3"))
+	_pixel_rect(Rect2(963, 222, 12, 3), Color("805e3f"))
+	_pixel_rect(Rect2(927, 192, 147, 9), Color("805733"))
+	_pixel_rect(Rect2(927, 192, 147, 3), Color("e0b77a"))
+	# Open turntable lid, platter and tonearm.
+	_pixel_rect(Rect2(942, 165, 78, 21), Color("7b5e46"))
+	_pixel_rect(Rect2(948, 168, 66, 15), Color("a7815a"))
+	_pixel_rect(Rect2(939, 180, 84, 12), Color("614f3e"))
+	_pixel_rect(Rect2(942, 180, 78, 6), Color("c49b68"))
+	_pixel_ellipse(Vector2(972, 180), Vector2(24, 6), Color("43524a"))
+	_pixel_ellipse(Vector2(972, 180), Vector2(6, 3), Color("ce9e69"))
+	_pixel_rect(Rect2(1008, 174, 3, 9), Color("e1c894"))
+	_pixel_rect(Rect2(996, 180, 15, 3), Color("e1c894"))
+	_draw_planter(Vector2(1047, 192), 0.6)
+	# A short display shelf above the cabinet, with one record sleeve and trailing ivy.
+	_pixel_rect(Rect2(930, 135, 186, 9), Color("805733"))
+	_pixel_rect(Rect2(930, 135, 186, 3), Color("d9b17a"))
+	for x in [945, 1095]:
+		_pixel_rect(Rect2(x, 144, 6, 12), Color("9e7b52"))
+	_pixel_rect(Rect2(948, 84, 45, 51), Color("687f77"))
+	_pixel_rect(Rect2(951, 87, 39, 45), Color("adc0a5"))
+	_pixel_ellipse(Vector2(972, 108), Vector2(15, 15), Color("53685f"))
+	_pixel_ellipse(Vector2(972, 108), Vector2(6, 6), Color("e3c48b"))
+	for i in 4:
+		_pixel_rect(Rect2(1005 + i * 12, 99 - (i % 2) * 6, 9, 36 + (i % 2) * 6), [Color("bd835e"), Color("d4ba87"), Color("7e9380"), Color("a8af91")][i])
+		_pixel_rect(Rect2(1005 + i * 12, 123, 9, 3), Color("ecd9ac"))
+	_draw_planter(Vector2(1092, 135), 0.6)
+	_draw_trailing_vine(Vector2(1104, 123), 57)
+	_draw_guitar(Vector2(1182, 267))
+	# A small wall clock balances the tall guitar next to the doorway.
+	_pixel_ellipse(Vector2(1179, 78), Vector2(27, 27), Color("84613e"))
+	_pixel_ellipse(Vector2(1179, 78), Vector2(24, 24), Color("d5b17b"))
+	_pixel_ellipse(Vector2(1179, 78), Vector2(21, 21), Color("f3e6bc"))
+	for offset in [Vector2(0, -15), Vector2(15, 0), Vector2(0, 15), Vector2(-15, 0)]:
+		_pixel_rect(Rect2(Vector2(1179, 78) + offset, Vector2(3, 3)), Color("aa8f63"))
+	_pixel_rect(Rect2(1179, 66, 3, 15), Color("657860"))
+	_pixel_rect(Rect2(1170, 78, 12, 3), Color("657860"))
+
+func _draw_guitar(base: Vector2) -> void:
+	_pixel_ellipse(base + Vector2(3, 3), Vector2(42, 9), Color("ae9266"))
+	# Authored scanlines give an acoustic body two distinct bouts and a narrow waist.
+	var half_widths := [9, 15, 21, 27, 30, 30, 30, 30, 27, 24, 21, 21, 21, 24, 27,
+		30, 33, 36, 39, 39, 39, 39, 39, 36, 33, 30, 27, 21, 15, 9]
+	for row in half_widths.size():
+		var half: float = half_widths[row]
+		var y := -90 + row * 3
+		_pixel_rect(Rect2(base + Vector2(-half, y), Vector2(half * 2, 3)), Color("684731"))
+		_pixel_rect(Rect2(base + Vector2(-half + 3, y), Vector2(half * 2 - 6, 3)), Color("f1cd8b"))
+		if row > 1 and row < half_widths.size() - 2:
+			_pixel_rect(Rect2(base + Vector2(-half + 6, y), Vector2(half * 2 - 12, 3)), Color("dfa15d"))
+			_pixel_rect(Rect2(base + Vector2(-half + 6, y), Vector2(3, 3)), Color("edbb76"))
+			_pixel_rect(Rect2(base + Vector2(half - 9, y), Vector2(3, 3)), Color("c08447"))
+	# Straight dark fingerboard, with frets across it rather than a zigzag neck.
+	_pixel_rect(Rect2(base + Vector2(-6, -135), Vector2(12, 66)), Color("624733"))
+	_pixel_rect(Rect2(base + Vector2(-3, -132), Vector2(6, 60)), Color("846044"))
+	for y in [-123, -114, -105, -96, -87, -78]:
+		_pixel_rect(Rect2(base + Vector2(-3, y), Vector2(6, 3)), Color("c9ae7c"))
+	# Tapered headstock and three separate tuning keys on each side.
+	_pixel_rect(Rect2(base + Vector2(-9, -156), Vector2(18, 24)), Color("624733"))
+	_pixel_rect(Rect2(base + Vector2(-6, -153), Vector2(12, 21)), Color("a67547"))
+	_pixel_rect(Rect2(base + Vector2(-6, -132), Vector2(12, 3)), Color("eddbab"))
+	for y in [-153, -144, -135]:
+		for side in [-1, 1]:
+			_pixel_rect(Rect2(base + Vector2(-15 if side < 0 else 9, y + 3), Vector2(6, 3)), Color("8e8b70"))
+			_pixel_rect(Rect2(base + Vector2(-21 if side < 0 else 15, y), Vector2(6, 6)), Color("676e62"))
+			_pixel_rect(Rect2(base + Vector2(-21 if side < 0 else 15, y), Vector2(6, 3)), Color("cbd0b5"))
+		_pixel_rect(Rect2(base + Vector2(-3, y + 3), Vector2(6, 3)), Color("664831"))
+	# Rosette, dark soundhole and tortoiseshell pickguard stay legible at native size.
+	_pixel_ellipse(base + Vector2(0, -57), Vector2(15, 15), Color("805238"))
+	_pixel_ellipse(base + Vector2(0, -57), Vector2(12, 12), Color("f4d89f"))
+	_pixel_ellipse(base + Vector2(0, -57), Vector2(9, 9), Color("433b2d"))
+	_pixel_rect(Rect2(base + Vector2(12, -51), Vector2(6, 15)), Color("98613d"))
+	_pixel_rect(Rect2(base + Vector2(9, -39), Vector2(6, 6)), Color("98613d"))
+	_pixel_rect(Rect2(base + Vector2(-15, -24), Vector2(30, 9)), Color("624733"))
+	_pixel_rect(Rect2(base + Vector2(-9, -24), Vector2(18, 3)), Color("f0dfae"))
+	for x in [-3, 3]:
+		_pixel_rect(Rect2(base + Vector2(x, -129), Vector2(3, 105)), Color(0.98, 0.90, 0.72, 0.32))
+	# A low stand supports the lower bout without obscuring its outline.
+	for x in [-24, 18]:
+		_pixel_rect(Rect2(base + Vector2(x, -9), Vector2(6, 12)), Color("58634e"))
+
+func _draw_sleep_corner() -> void:
+	_draw_planter(Vector2(66, 270), 1.5)
+	_pixel_ellipse(Vector2(357, 270), Vector2(66, 9), Color("b79364"))
+	_pixel_rect(Rect2(309, 225, 99, 42), Color("896442"))
+	_pixel_rect(Rect2(315, 231, 87, 30), Color("c49a62"))
+	for y in [237, 249]:
+		_pixel_rect(Rect2(315, y, 87, 3), Color("ad814e"))
+	_pixel_rect(Rect2(303, 219, 111, 12), Color("a7794d"))
+	_pixel_rect(Rect2(306, 219, 105, 3), Color("dfb77b"))
+	_pixel_rect(Rect2(324, 216, 45, 30), Color("799088"))
+	_pixel_rect(Rect2(327, 216, 6, 30), Color("abc0ab"))
+	_pixel_rect(Rect2(357, 216, 6, 30), Color("abc0ab"))
+	for y in [222, 237]:
+		_pixel_rect(Rect2(324, y, 45, 3), Color("c7d0b3"))
+	for x in range(327, 369, 9):
+		_pixel_rect(Rect2(x, 246, 3, 6), Color("ded8b2"))
+	# Suspended planter fills the gap between the reading shelf and feeding area.
+	_pixel_rect(Rect2(390, 48, 3, 36), Color("af9468"))
+	for row in range(0, 24, 3):
+		_pixel_rect(Rect2(390 - row * 0.5, 81 + row, 3, 3), Color("af9468"))
+		_pixel_rect(Rect2(390 + row * 0.5, 81 + row, 3, 3), Color("af9468"))
+	_draw_planter(Vector2(390, 120), 0.8)
+	_draw_trailing_vine(Vector2(399, 102), 63)
+
+func _draw_planter(base: Vector2, prop_scale: float) -> void:
+	# Scaled offsets still snap to the room grid in the pixel drawing helpers.
+	var dark := Color("60784f")
+	var green := Color("88a46a")
+	_pixel_rect(Rect2(base + Vector2(-3, -57) * prop_scale, Vector2(6, 39) * prop_scale), dark)
+	for leaf in [Vector2(-15, -48), Vector2(12, -60), Vector2(15, -36), Vector2(-12, -30)]:
+		_pixel_ellipse(base + leaf * prop_scale, Vector2(15, 9) * prop_scale, dark)
+		_pixel_ellipse(base + (leaf + Vector2(0, -3)) * prop_scale, Vector2(12, 6) * prop_scale, green)
+	_pixel_rect(Rect2(base + Vector2(-18, -24) * prop_scale, Vector2(36, 24) * prop_scale), Color("956242"))
+	_pixel_rect(Rect2(base + Vector2(-12, -18) * prop_scale, Vector2(27, 18) * prop_scale), Color("c68e5e"))
+	_pixel_rect(Rect2(base + Vector2(-21, -27) * prop_scale, Vector2(42, 6) * prop_scale), Color("dfae76"))
+	_pixel_rect(Rect2(base + Vector2(-9, -15) * prop_scale, Vector2(6, 12) * prop_scale), Color("dba46f"))
+
+func _draw_trailing_vine(start: Vector2, length: int) -> void:
+	for row in range(0, length, 3):
+		var bend := roundf(sin(float(row) / 18.0) * 2) * 3
+		_pixel_rect(Rect2(start + Vector2(bend, row), Vector2(3, 6)), Color("74885b"))
+		if row % 12 == 0:
+			var side := -1 if row % 24 == 0 else 1
+			_pixel_ellipse(start + Vector2(bend + side * 6, row + 3), Vector2(9, 6), Color("8fa774"))
 
 func _draw_bed() -> void:
 	var center := Vector2(0, -20)

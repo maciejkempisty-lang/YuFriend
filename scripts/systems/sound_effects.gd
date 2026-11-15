@@ -9,6 +9,7 @@ const GROUPS := {
 	"eat": ["kibble", 2, -18.0, 0.5],
 	"treat": ["treat", 1, -17.0, 0.5],
 	"pet": ["pet_stroke", 2, -20.0, 0.4],
+	"pet_happy": ["puppy_happy", 2, -16.0, 1.2],
 	"brush": ["brush", 2, -20.0, 0.5],
 	"ball_bounce": ["ball_bounce", 3, -20.0, 0.15],
 	"ball_roll": ["ball_roll", 1, -20.0, 0.5],

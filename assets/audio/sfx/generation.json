@@ -175,5 +175,34 @@
       }
     ],
     "notes": "11 runtime files replaced. Kibble, bark, UI and unused ball bounces unchanged. New kibble candidates 1/2 rejected; old kibble retained. Ball roll classifier remains ambiguous, requires listening. Download filenames and SHA256 in processing.json. Original generation records above describe v1 and are superseded for these outputs."
+  },
+  "happy_petting_2026_11_15": {
+    "provider": "ElevenLabs Sound Effects",
+    "model": "v3",
+    "history_url": "https://elevenlabs.io/app/sound-effects/history",
+    "prompt": "One short soft happy squeak from a contented young puppy enjoying gentle petting. A sweet tender high-pitched little vocal chirrup, relaxed and affectionate, a small breathy rising then falling coo of delight. Natural puppy voice, quiet and warm, close dry recording isolated on silence. Under one second. No barking, no growling, no crying, no distressed whimper, no pain yelp, no toy squeak, no human voice, no music, no ambience or reverb.",
+    "requested_duration_seconds": 1.0,
+    "prompt_influence": 1.0,
+    "prompt_enhancement_enabled": false,
+    "loop": false,
+    "download_format": "WAV 48kHz",
+    "downloaded_variants": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "runtime_variants": [
+      1,
+      3
+    ],
+    "outputs": [
+      "puppy_happy_01.wav",
+      "puppy_happy_02.wav"
+    ],
+    "credits_displayed_before": 39845,
+    "credits_displayed_after": 39832,
+    "generation_quote_credits": 12,
+    "notes": "One generation. All four originals preserved under source/happy-petting-2026-11-15. Chosen variants 1 and 3 avoid the strongest dog-bark match (variant 4); Apple SoundAnalysis is only a heuristic and cannot assess joy versus distress. No listening-quality claim; review final tone and balance on device. Existing sharing setting unchanged."
   }
 }

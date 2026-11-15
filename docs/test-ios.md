@@ -51,3 +51,11 @@ Po zgłoszeniu szczekania podczas spaceru wymieniono 11 nagrań, w tym wszystkie
 Wersja telefonu (5) zawierała również równoległe lokalne zmiany interfejsu i życia psa. Wynik 164 dotyczy tamtego pełnego katalogu; publikacja audio wydziela tylko obsługę i nagrania dźwięków. Zapis Glorii na telefonie ma po tych równoległych zmianach wersję 3, podczas gdy sam commit audio nie zmienia schematu zapisu. Nie instaluj starszego schematu na tej Glorii bez zgodnej obsługi migracji.
 
 Wydzielony zakres audio przed publikacją sprawdzono osobno na bazie `c23df29`: **274/274** (104 logiki, 38 animacji, 132 UI). Obejmuje komplet 20 nagrań, kroki tylko podczas ruchu, limit 160 ms, brak dźwięku po odrzuconej opiece, zatrzymanie efektów w tle oraz niezależne wyciszenie. Te testy nie stanowią oceny naturalności nagrań.
+
+## Aktualizacja 0.1.0 (6) — szczekanie i pisk przy głaskaniu
+
+15 listopada 2026 zainstalowano i uruchomiono wersję (6) na iPhonie 15 Pro Max „MagicPhone”, jako aktualizację tego samego bundle ID i zespołu. Szczek jest związany z początkiem animacji `bark_stand`, również przy drzwiach. Przyjęte głaskanie odtwarza szelest sierści oraz jeden z dwóch nowych pisków ElevenLabs, z odstępem co najmniej 1,2 s. Wyciszenie efektów i zatrzymanie w tle nadal obowiązują.
+
+Przed instalacją zachowano pełny kontener w `exports/iphone-backups/2026-11-15-before-v6/`. Odczyt `Documents` po uruchomieniu, w `exports/iphone-backups/2026-11-15-after-v6/`, potwierdził zachowanie identyfikatora, imienia Glorii, osobowości i wszystkich umiejętności. Aktualizacja zawiera bieżące lokalne zmiany gry, w tym migrację zapisu 3 → 4; oryginalny zapis pozostaje również na telefonie jako `pet.json.v3`. Migrację rzeczywistej kopii Glorii sprawdzono przed instalacją.
+
+Eksport w `exports/ios-audio-v6/`, kompilacja Xcode i kontrola podpisu zakończyły się powodzeniem. Zainstalowana aplikacja zgłasza build 6 i pozostała uruchomiona po kontroli. Pakiet aplikacji ma tę samą sumę SHA-256 co sprawdzony eksport, zawierający komplet 22 efektów (trzy szczeki i dwa piski). Przeszły **282 sprawdzenia bez okna**: 111 logiki/zapisu, 42 życia psa, 58 zabaw, 38 animacji i 33 audio. Wyniki i potwierdzenia instalacji zapisano w `exports/ios-audio-v6/evidence/`. Odsłuch pisków, szczekania i ich balansu na głośniku telefonu pozostaje próbą użytkownika.

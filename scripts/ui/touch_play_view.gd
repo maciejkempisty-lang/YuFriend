@@ -1,0 +1,121 @@
+class_name TouchPlayView
+extends Control
+
+signal pressed_at(point: Vector2)
+signal moved_to(point: Vector2)
+signal released_at(point: Vector2, cancelled: bool)
+
+var model: TouchPlaySystem
+var puppy := PetAnimator.new()
+var _pointer := -1
+var _last_phase := ""
+var _mat := StyleBoxFlat.new()
+
+func _ready() -> void:
+	custom_minimum_size = Vector2(240, 220)
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_mat.bg_color = Color("e7ecd9")
+	_mat.set_corner_radius_all(20)
+	add_child(puppy)
+	puppy.set_skin(load("res://data/skins/puppy_pixel.tres"))
+	puppy.request_clip("play_bow")
+	gui_input.connect(_on_input)
+	visibility_changed.connect(func():
+		if not is_visible_in_tree():
+			_pointer = -1
+			if model != null: model.release(Vector2.ZERO, true))
+
+func _process(_delta: float) -> void:
+	if model == null: return
+	puppy.visible = model.kind == "tug"
+	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
+	puppy.position = Vector2(size.x * 0.19 + (model.tug_handle.x - 0.65) * 12, size.y * 0.67)
+	if _last_phase != model.phase:
+		_last_phase = model.phase
+		puppy.request_clip("tail_wag_stand" if model.phase == "result" else "play_bow")
+	queue_redraw()
+
+func _on_input(event: InputEvent) -> void:
+	if model == null or event.device == InputEvent.DEVICE_ID_EMULATION: return
+	if event is InputEventScreenTouch:
+		if event.pressed: _down(event.position, event.index)
+		else: _up(event.position, event.index, event.canceled)
+		accept_event()
+	elif event is InputEventScreenDrag:
+		_move(event.position, event.index)
+		accept_event()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed: _down(event.position, -2)
+		else: _up(event.position, -2)
+		accept_event()
+	elif event is InputEventMouseMotion and _pointer == -2:
+		_move(event.position, -2)
+		accept_event()
+
+func _down(point: Vector2, id: int) -> void:
+	if _pointer != -1: return
+	_pointer = id
+	pressed_at.emit(point / size)
+
+func _move(point: Vector2, id: int) -> void:
+	if _pointer == id: moved_to.emit(point / size)
+
+func _up(point: Vector2, id: int, cancelled: bool = false) -> void:
+	if _pointer != id: return
+	_pointer = -1
+	released_at.emit(point / size, cancelled)
+
+func _draw() -> void:
+	draw_style_box(_mat, Rect2(Vector2.ZERO, size))
+	if model == null: return
+	if model.kind == "tug": _draw_rope()
+	elif model.kind == "cups": _draw_cups()
+
+func _draw_rope() -> void:
+	var start := Vector2(size.x * 0.25, size.y * 0.49)
+	var end := model.tug_handle * size
+	var points := PackedVector2Array()
+	for index in 21:
+		var t := index / 20.0
+		points.append(start.lerp(end, t) + Vector2(0, sin(t * PI) * (5 if model.held else 18)))
+	draw_polyline(points, Color("8b6545"), 12, true)
+	draw_polyline(points, Color("d4aa70"), 6, true)
+	for index in range(2, 20, 2):
+		draw_line(points[index] + Vector2(-2, -4), points[index] + Vector2(2, 4), Color("b38758"), 2, true)
+	draw_circle(end + Vector2(0, 3), 24, Color("b8c2a9"))
+	draw_circle(end, 24, Color("ddb778"))
+	draw_circle(end, 15, Color("efcf93"))
+	draw_arc(end, 18, 0, TAU, 24, Color("9a7246"), 3, true)
+	var font := get_theme_default_font()
+	draw_string(font, Vector2(size.x * 0.1, size.y * 0.87), "Raz Ty, raz ja", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("315d49"))
+	var direction := -1.0 if model.tug_direction < 0 else 1.0
+	var arrow := end + Vector2(direction * 44, 0)
+	draw_line(arrow - Vector2(direction * 10, 0), arrow, Color("315d49"), 3, true)
+	draw_line(arrow, arrow - Vector2(direction * 6, 5), Color("315d49"), 3, true)
+	draw_line(arrow, arrow - Vector2(direction * 6, -5), Color("315d49"), 3, true)
+
+func _draw_cups() -> void:
+	var font := get_theme_default_font()
+	for id in 3:
+		var base := model.cup_point(id) * size
+		draw_ellipse_shadow(base)
+		var reveal := model.phase == "reveal" or (model.phase == "result" and (id == model.treat_cup or id == model.selected_cup))
+		if id == model.treat_cup and reveal:
+			var treat := Rect2(base - Vector2(14, 13), Vector2(28, 28))
+			draw_texture_rect(GameIcons.texture("treat", Color("a56f39")), treat, false)
+		var lift := size.y * 0.20 if reveal else 0.0
+		var width := size.x * 0.20
+		var height := size.y * 0.25
+		var bottom := base - Vector2(0, lift)
+		var shape := PackedVector2Array([bottom + Vector2(-width / 2, 0), bottom + Vector2(-width * 0.34, -height), bottom + Vector2(width * 0.34, -height), bottom + Vector2(width / 2, 0)])
+		draw_colored_polygon(shape, Color("d9b67c") if id == model.selected_cup else Color("819c77"))
+		draw_polyline(PackedVector2Array([shape[0], shape[1], shape[2], shape[3], shape[0]]), Color("42634d"), 3, true)
+		draw_line(bottom + Vector2(-width * 0.4, -height * 0.3), bottom + Vector2(width * 0.4, -height * 0.3), Color("edf1dd"), 7, true)
+		if model.phase in ["guess", "result"]:
+			draw_string(font, base + Vector2(-5, 38), str(int(model.cups[id]) + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("315d49"))
+
+func draw_ellipse_shadow(base: Vector2) -> void:
+	draw_set_transform(base + Vector2(0, 4), 0, Vector2(1, 0.2))
+	draw_circle(Vector2.ZERO, size.x * 0.12, Color("c6cfb8"))
+	draw_set_transform(Vector2.ZERO)

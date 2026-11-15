@@ -70,6 +70,8 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 	# Consume eligibility before mutating any persistent data (one reward per trial).
 	phase = "idle"
 	var favorite := kind == pet.favorite_reward
+	if favorite:
+		pet.remember("favorite_reward", "Ulubiona nagroda", "Już wiesz, co najbardziej cieszy Twojego pieska: %s." % {"treat": "smakołyk", "praise": "pochwała", "play": "zabawa"}[kind])
 	var gain := (8.0 if guided else 12.0) + (2.0 if favorite else 0.0)
 	var before: float = pet.skills[trick].mastery
 	pet.skills[trick].mastery = minf(100, before + gain)
@@ -82,7 +84,7 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 	if before < 75 and float(pet.skills[trick].mastery) >= 75:
 		pet.remember("learned_" + trick, "Coraz pewniejsze „%s”" % LABELS[trick], "Wspólne ćwiczenia przynoszą efekty.")
 	return {"ok": true, "gain": float(pet.skills[trick].mastery) - before,
-		"message": "To jego ulubiona nagroda!" if favorite else "Dobrze wyczuty moment. Zapamiętuje!"}
+		"message": "To ulubiona nagroda!" if favorite else "Dobrze wyczuty moment. Zapamiętuje!"}
 
 func cancel() -> void:
 	phase = "idle"
