@@ -35,6 +35,7 @@ func _run() -> void:
 	await process_frame
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
 	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 22, "new puppy uses the complete pixel animation pack")
+	await _test_music()
 	await capture("01-care.png")
 	check_pixel_grid("390 x 844")
 	check(app.room.render_rect.end.y <= app.bubble.position.y - 7, "the whole room fits above the message and action panel")
@@ -514,3 +515,23 @@ func _test_slow_pan() -> void:
 	check(absf(room.world_to_screen(Vector2(700, 300)).x - previous) < 0.01, "releasing a slow drag does not snap the camera back")
 	await capture("21-smooth-pan.png")
 	check_pixel_grid("subpixel camera phase")
+
+func _test_music() -> void:
+	check(app.music.stream.get_length() > 107 and app.music.stream.get_length() < 108 and app.music.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "provided video2 audio is imported at full length with looping")
+	app.music.seek(app.music.stream.get_length() - 0.1)
+	await create_timer(0.4).timeout
+	check(app.music.playing and app.music.get_playback_position() < 2, "music crosses the loop boundary without stopping")
+	app._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	check(app.music.stream_paused, "backgrounding the app pauses its music")
+	app._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	check(not app.music.stream_paused, "returning to the app resumes enabled music")
+	app.music_toggle.button_pressed = false
+	var restored := BackgroundMusic.new()
+	root.add_child(restored)
+	restored.start(app.music.settings_path)
+	check(not restored.enabled and restored.stream_paused, "profile music switch persists across reloads")
+	restored.free()
+	app._notification(Node.NOTIFICATION_APPLICATION_PAUSED)
+	app._notification(Node.NOTIFICATION_APPLICATION_RESUMED)
+	check(app.music.stream_paused, "returning to the app respects music disabled in profile")
+	app.music_toggle.button_pressed = true

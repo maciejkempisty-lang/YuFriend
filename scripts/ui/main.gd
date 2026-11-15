@@ -8,6 +8,8 @@ const NEED_LABELS := {"fullness": "Sytość", "energy": "Energia", "hygiene": "C
 const REWARD_LABELS := {"treat": "Smakołyk", "praise": "Pochwała", "play": "Zabawa"}
 const NEED_ICONS := {"fullness": "bowl", "energy": "moon", "hygiene": "brush", "play": "ball", "contact": "heart"}
 var session := GameSession.new()
+var music := BackgroundMusic.new()
+var music_toggle: CheckButton
 var room := RoomView.new()
 var needs_ui: Dictionary = {}
 var care_buttons: Dictionary = {}
@@ -78,6 +80,9 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--qa"): path = "user://qa-ui/pet.json"
 	if not save_path_override.is_empty(): path = save_path_override
 	session.start(path)
+	add_child(music)
+	music.start(path.get_base_dir().path_join("audio.cfg"))
+	music_toggle.set_pressed_no_signal(music.enabled)
 	_refresh()
 
 func _build_theme() -> void:
@@ -423,6 +428,10 @@ func _build_dialogs() -> void:
 	profile_traits = _label("", 15, MUTED)
 	# Explicit short lines keep the dialog minimum height stable before opening.
 	box.add_child(profile_traits)
+	music_toggle = CheckButton.new()
+	music_toggle.text = "Muzyka w tle"
+	music_toggle.toggled.connect(music.set_enabled)
+	box.add_child(music_toggle)
 	profile_dialog.confirmed.connect(func(): session.rename_pet(name_edit.text))
 	text_dialog = AcceptDialog.new()
 	text_dialog.title = "Napisz komendę"
@@ -518,7 +527,7 @@ func _show_profile() -> void:
 	profile_traits.text += "\nNawyki: " + ("jeszcze się kształtują" if habits.is_empty() else "")
 	for index in habits.size():
 		profile_traits.text += ("\n" if index % 2 == 0 else " · ") + habits[index]
-	profile_dialog.popup_centered(Vector2i(336, 260 + 22 * (1 + ceili(habits.size() / 2.0))))
+	profile_dialog.popup_centered(Vector2i(336, 300 + 22 * (1 + ceili(habits.size() / 2.0))))
 	name_edit.grab_focus()
 
 func _show_command() -> void:
@@ -629,8 +638,10 @@ func _notification(what: int) -> void:
 		session.flush()
 		get_tree().quit()
 	elif what == NOTIFICATION_APPLICATION_PAUSED:
+		music.set_backgrounded(true)
 		session.suspend_session()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		session.resume_session()
+		music.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		session.flush()

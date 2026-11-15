@@ -29,3 +29,9 @@ Poprawka usuwa przesuwanie kamery co cały powiększony piksel grafiki. `RoomVie
 Test pulpitu przy 1080 × 2340 obejmuje wolny gest, brak skoku po puszczeniu palca, porównanie przesunięcia tła o jeden piksel między wyrenderowanymi klatkami oraz równe bloki kolorów przy przesuniętej kamerze. Wynik: 109 sprawdzeń UI i 38 importu/animacji. Subiektywna płynność na iPhonie wymaga potwierdzenia użytkownika po aktualizacji. Przed aktualizacją wykonano kopię zapisu Glorii.
 
 Aktualizacja (2) została zainstalowana i uruchomiona na iPhonie. Odczyt zapisu po aktualizacji potwierdził ten sam identyfikator Glorii.
+
+## Aktualizacja 0.1.0 (3) — muzyka
+
+Dodano ścieżkę z `video2.mp4`, ciche odtwarzanie w pętli, pauzę po zawieszeniu aplikacji i zapamiętywany przełącznik w Profilu. Źródła opisuje [katalog muzyki](../assets/audio/music/README.md). 115 sprawdzeń UI obejmuje pełną długość nagrania, przejście przez punkt pętli, pauzę/wznowienie oraz zachowanie wyciszenia po ponownym uruchomieniu. Odsłuch na telefonie pozostaje do oceny użytkownika.
+
+Wersja (3) została zainstalowana i uruchomiona na iPhonie; odczyt kontenera potwierdził zachowanie identyfikatora Glorii i jej umiejętności.
