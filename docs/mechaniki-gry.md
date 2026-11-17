@@ -350,3 +350,13 @@ Reakcja korzysta z istniejącej ciekawości, cierpliwości, towarzyskości i wra
 Na czas spotkania „Spokojnie” i „Przyjdź” zastępują pozostałe akcje obok przycisku Dom. Kamera pokazuje płot, znaczniki miejsc nie zasłaniają gości. Ptaki podskakują, motyle poruszają skrzydłami, kot macha ogonem; grafika jest rysowana w kodzie, z dotychczasowymi animacjami psa. Powrót do domu, tło aplikacji, noc i spadek energii poniżej 28 kończą wizytę. Nocny powrót i odpoczynek nadal działają.
 
 `YardVisitors` obsługuje stan spotkania, a `FenceVisitorView` animuje gości bez ciągłego przerysowywania tła. Stan wizyt istnieje tylko w pamięci. Schemat pozostaje v14; brak nowych pól, migracji i zmian wcześniejszych postępów. Testy: `test_visitors.gd` i `ui_visitors.gd`.
+
+## Pamięć gości i ilustracja Albumu — kod po buildzie 21
+
+Pierwsza wizyta ptaka, motyla i kota dodaje osobną pamiątkę do Albumu. Następne wizyty rozpoznają tego samego gościa. Ukończone uspokojenie albo rzeczywiste dojście po przywołaniu zapisuje spokojny dzień znajomości, maksymalnie raz dziennie dla każdego gościa. Trzy różne dni dają pełne oswojenie. Cofnięta data nie daje kolejnego punktu; przerwanie, ignorowanie, wyjście do domu, noc i zmęczenie nie zaliczają spokojnego spotkania i nie odbierają wcześniejszej znajomości. Powtórzenia po trzecim dniu nie mnożą wpisów.
+
+Znajomość łagodzi reakcję na konkretnego gościa bez zmieniania cech osobowości. Ostrożny pies po pierwszym spokojnym dniu obserwuje zamiast się cofać. Po kolejnych dniach może reagować spokojnie; pies o skrajnej wrażliwości nadal zachowuje ostrożność. Pobudliwy pies ma mniejszą skłonność do szczekania, ale nie każda osobowość zareaguje identycznie. Brak nagród więzi, kosztów potrzeb i osobnego zaliczenia sztuczki.
+
+Album zawiera ilustrację trzech gości oraz statusy od „Jeszcze się nie poznali” do „Dobrze znany gość · 3/3”. Grafika i pełny prompt znajdują się w `assets/art/visitors/`; wygenerowano ją wbudowanym image_gen. Animacje gości na płocie pozostają rysowane w kodzie.
+
+`VisitorMemory` zapisuje najwyżej 12 zwykłych pamiątek: pierwsze spotkanie i trzy spokojne dni na gościa. Dzień lokalny jest częścią klucza pamiątki, a jej data pozostaje rzeczywistym czasem UTC. Istniejący model journal/milestones zachowuje te wpisy i rozumie je także build 21. Nie dodano pól ani migracji: schemat nadal v14. Błąd zapisu cofa nowe wpisy w pamięci. Stare postępy, historia, cechy i kolekcje pozostają zachowane.

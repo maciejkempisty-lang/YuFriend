@@ -1,0 +1,6 @@
+# Znajomi przy płocie
+
+`fence-friends-v1.png`: ilustracja nagłówka kolekcji znajomych w Albumie, wygenerowana wbudowanym image_gen 17.11.2026. Oryginał zachowany; ilustracja nie zastępuje animowanych postaci rysowanych w `FenceVisitorView`.
+
+Prompt:
+> Use case: stylized-concept. Asset type: horizontal album illustration for a cozy pixel-art puppy care game YuFriend. Create one cohesive landscape pixel art illustration, wide 3:2 composition, depicting three friendly backyard visitors together on a warm cream wooden garden fence: a small dusty blue bird with pale cream belly on the left, a golden orange butterfly fluttering over the center, and a small seated warm gray cat with cream chest and green eyes on the right. Soft sage green garden, muted mint foliage and pale ivory sky. Chunky clearly deliberate pixel clusters, restrained warm palette, no gradients, no realistic textures, no text, no letters, no watermark, no dog. Friendly calm understated expressions, clean silhouettes, suitable for a collectible album card shown at 280px wide on a mobile screen. Keep all animals completely within the frame with generous space. This is one unified illustration, not a sprite sheet or labeled panels.

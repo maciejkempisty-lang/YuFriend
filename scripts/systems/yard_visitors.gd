@@ -1,7 +1,7 @@
 class_name YardVisitors
 extends RefCounted
 
-# Encounters belong to the current outing, not to the save file.
+# Runtime encounters are temporary; VisitorMemory stores bounded album milestones.
 const KINDS := ["bird", "butterfly", "cat"]
 const LABELS := {"bird": "Ptak przy płocie", "butterfly": "Motyl przy płocie", "cat": "Kot sąsiada"}
 const FENCE := Vector2(1010, 205)
@@ -9,6 +9,7 @@ const SAFE_SPOT := Vector2(810, 310)
 var kind := ""
 var phase := ""
 var reaction := ""
+var familiar := false
 var remaining := 0.0
 var response_left := 0.0
 var wait_left := 35.0
@@ -17,10 +18,12 @@ var next_guest := 0
 func active() -> bool:
 	return not kind.is_empty()
 
-static func reaction_for(traits: Dictionary, guest: String) -> String:
+static func reaction_for(traits: Dictionary, guest: String, familiarity: int = 0) -> String:
+	var comfort := clampi(familiarity, 0, VisitorMemory.LIMIT)
 	var stimulus: float = {"bird": 0.8, "butterfly": 0.55, "cat": 1.0}.get(guest, 0.8)
-	if float(traits.sensitivity) * stimulus - float(traits.sociability) * 0.2 > 0.52: return "shy"
-	if float(traits.curiosity) * 0.7 + float(traits.sociability) * 0.3 - float(traits.patience) * 0.25 > 0.55: return "bark"
+	if float(traits.sensitivity) * stimulus - float(traits.sociability) * 0.2 - comfort * 0.11 > 0.52:
+		return "wary" if comfort > 0 else "shy"
+	if float(traits.curiosity) * 0.7 + float(traits.sociability) * 0.3 - float(traits.patience) * 0.25 > 0.55 + comfort * 0.04: return "bark"
 	return "curious" if float(traits.curiosity) >= 0.5 else "calm"
 
 func available(s: GameSession) -> bool:
@@ -33,7 +36,9 @@ func start(s: GameSession, guest: String) -> bool:
 	s._follow_target = Vector2.INF
 	kind = guest
 	phase = "watch"
-	reaction = reaction_for(s.pet.traits, guest)
+	familiar = VisitorMemory.known(s.pet, guest)
+	reaction = reaction_for(s.pet.traits, guest, VisitorMemory.level(s.pet, guest))
+	VisitorMemory.record(s, guest, false)
 	remaining = 30
 	s.activity = "visitor"
 	s.activity_left = 0
@@ -43,7 +48,7 @@ func start(s: GameSession, guest: String) -> bool:
 		s.destination_requested.emit(SAFE_SPOT if reaction == "shy" else Vector2(980, 310))
 		s.clip_requested.emit("walk")
 	else:
-		s.clip_requested.emit("bark_stand" if reaction == "bark" else "tail_wag_stand")
+		s.clip_requested.emit("bark_stand" if reaction == "bark" else ("head_tilt_stand" if reaction == "wary" else "tail_wag_stand"))
 	s.say(hint())
 	s.visitor_appeared.emit()
 	s.changed.emit()
@@ -53,8 +58,8 @@ func hint() -> String:
 	if not active(): return ""
 	if phase == "recall": return "Wraca do Ciebie… spokojnie czekamy."
 	if phase == "soothe": return "Spokojnie, jestem przy Tobie…"
-	var text: String = {"shy": "Cofa się niepewnie", "bark": "Szczeka z emocji", "curious": "Podchodzi zaciekawiona", "calm": "Spokojnie obserwuje"}[reaction]
-	return "%s · %s" % [LABELS[kind], text]
+	var text: String = {"wary": "Zna ten zapach, obserwuje ostrożnie", "shy": "Cofa się niepewnie", "bark": "Szczeka z emocji", "curious": "Podchodzi zaciekawiona", "calm": "Spokojnie obserwuje"}[reaction]
+	return "%s · %s%s" % [LABELS[kind], "Znowu razem! " if familiar else "", text]
 
 func respond(s: GameSession, choice: String) -> bool:
 	if not active() or phase in ["soothe", "recall"] or choice not in ["soothe", "recall"] or s.suspended or not s.writable: return false
@@ -74,7 +79,7 @@ func respond(s: GameSession, choice: String) -> bool:
 
 func arrived(s: GameSession) -> void:
 	if phase == "recall":
-		finish(s, "Już przy Tobie. Gość rusza dalej.")
+		finish(s, "Już przy Tobie. Gość rusza dalej.", true)
 	elif phase == "approach":
 		phase = "watch"
 		s.clip_requested.emit("head_tilt_stand" if reaction == "shy" else "sniff")
@@ -88,7 +93,7 @@ func advance(s: GameSession, delta: float) -> void:
 		if phase == "soothe":
 			response_left -= delta
 			if response_left <= 0:
-				finish(s, "Spokojniej. Gość rusza dalej.")
+				finish(s, "Spokojniej. Gość rusza dalej.", true)
 				return
 		if remaining <= 0: finish(s, "Gość rusza dalej. Znowu spokojne podwórko.")
 		return
@@ -107,7 +112,10 @@ func cancel() -> void:
 	response_left = 0
 	wait_left = 100
 
-func finish(s: GameSession, message: String) -> void:
+func finish(s: GameSession, message: String, peaceful: bool = false) -> void:
+	if peaceful and active() and s.in_yard and not s.suspended and float(s.pet.needs.energy) >= 28 and DailyRhythm.phase(s.pet, s._local_now()) != "night":
+		if VisitorMemory.record(s, kind, true): message += " Pamiątka czeka w Albumie."
+		elif not s.save_ok: message += " Nie udało się zapisać pamiątki."
 	cancel()
 	s._cancel_motion()
 	s.activity = "idle"

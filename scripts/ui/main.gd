@@ -47,6 +47,7 @@ var mastery_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
 var guided_button: Button
+var visitor_album_status: Label
 var journal_list: VBoxContainer
 var selected_trick: String = "come"
 var selected_tab: String = "care"
@@ -571,6 +572,16 @@ func _build_journal() -> VBoxContainer:
 	photos_list = VBoxContainer.new()
 	photos_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_child(photos_list)
+	var visitors_art := TextureRect.new()
+	visitors_art.texture = load("res://assets/art/visitors/fence-friends-v1.png")
+	visitors_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	visitors_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	visitors_art.custom_minimum_size = Vector2(0, 160)
+	content.add_child(visitors_art)
+	content.add_child(_label("Znajomi przy płocie", 18, INK, true))
+	visitor_album_status = _label("", 13, MUTED)
+	visitor_album_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	content.add_child(visitor_album_status)
 	journal_list = VBoxContainer.new()
 	journal_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	journal_list.add_theme_constant_override("separation", 10)
@@ -1181,6 +1192,10 @@ func _refresh() -> void:
 	if had_warning != footer_label.visible: _fit_room()
 	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
 	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
+	var visitor_lines: PackedStringArray = []
+	for guest in YardVisitors.KINDS:
+		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
+	visitor_album_status.text = "\n\n".join(visitor_lines)
 	var signature := str(pet.journal.size()) + (str(pet.journal[0].key) if not pet.journal.is_empty() else "")
 	if journal_signature != signature:
 		journal_signature = signature
