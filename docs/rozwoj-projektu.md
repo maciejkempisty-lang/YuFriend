@@ -2,7 +2,49 @@
 
 [Mapa dokumentacji](README.md)
 
-## Aktualny plan po audycie i feedbacku — 17 listopada 2026
+## Dalsze kroki po buildzie 28 — 17 listopada 2026
+
+Bieżący punkt odniesienia: **build 28 zainstalowany i uruchomiony na iPhonie**, zapis **v15**, źródła opublikowane na `main`. Działają już ogródek, poziomy więzi, kopanie, komendy w zabawach, goście i ich pamięć, małe przygody dnia, pogoda, woda, tor przeszkód oraz [odpoczynek z animacją picia](odpoczynek-na-podworku.md). Szczegóły zachowania danych i granice weryfikacji są w [raporcie iOS](test-ios.md).
+
+Poniżej zapisano uzgodniony kierunek dalszej rozbudowy, **nie deklarację wdrożenia**. Najbliższy pakiet łączy ulubione miejsca i zabawy ze spokojnymi chwilami razem. Rozbudowujemy osobowość Glorii i wykorzystanie istniejących miejsc. Testy z graczami mają odbywać się równolegle z rozbudową; zakończenie tygodnia prób nie blokuje dalszych prac.
+
+### Kolejność pakietów
+
+| Kolejność | Pakiet | Pierwszy zakres | Warunek akceptacji |
+|---|---|---|---|
+| 1 | Ulubione miejsca i zabawy | Pamięć ulubionego krzaka, miejsca odpoczynku oraz aktywności, rozwijana na podstawie wspólnych sesji. Okazjonalne przyniesienie piłki albo oczekiwanie przy wybranym miejscu. | Wybory stopniowo wpływają na preferencje; restart ich nie usuwa. Zaproszenie można przyjąć lub pominąć bez kary i bez blokowania innej czynności. |
+| 2 | Spokojne chwile razem | Głaskanie leżącej Glorii, przeciąganie po drzemce i krótkie powitanie po powrocie. Nowe animacje przeciągania i spokojnego merdania na leżąco. | Przejścia między leżeniem, snem i wstawaniem są płynne; czynności szanują sen oraz zmęczenie, można je przerwać. Nie powstaje nowy wskaźnik potrzeby. |
+| 3 | Pory roku — najpierw jesień | Jedna kupka liści, przebieganie przez nią, kilka sezonowych znalezisk i dekoracja do pokoju. Wykorzystanie biegu, węszenia oraz kopania. | Sezon wynika z lokalnej daty; zmiana sezonu nie usuwa kolekcji. Znaleziska wracają sezonowo, bez codziennych obowiązków i utraty nagrody za pominięty dzień. |
+| 4 | Krótki spacer za furtką | Jedna ścieżka i trzy przystanki: węszenie, spotkanie i wspólne ćwiczenie. Zastosowanie „Przyjdź” oraz „Zostań”; powrót do wody i odpoczynku. | Komendy korzystają z istniejącego treningu i formy, bez drugiego postępu lub podwójnej nagrody. Zmęczenie, noc, przerwanie i przejście w tło bezpiecznie kończą spacer. |
+| 5 | Album wspólnych chwil | Opcjonalne zdjęcia ważnych wydarzeń, podpisy i udostępnianie pojedynczego zdjęcia. Rozwinięcie obecnego Albumu. | Gracz decyduje o zapisaniu i udostępnieniu zdjęcia; pełny album ma czytelne wyjście bez utraty starszych zdjęć. Anulowanie udostępniania niczego nie usuwa. |
+
+### Najbliższy pakiet: preferencje i spokojne rytuały
+
+1. Rozszerzyć istniejącą pamięć zainteresowań i reakcji na zaproszenia o miejsca. Nie tworzyć konkurencyjnego systemu preferencji. Różnicować zachowanie na podstawie rzeczywistych wspólnych sesji i temperamentu, a nie pojedynczego kliknięcia. Wagi i minimalną liczbę obserwacji dobrać podczas implementacji i prób balansu.
+2. Połączyć wybrane miejsce z istniejącymi zaproszeniami. Gloria może podejść do krzaka, przynieść piłkę albo wybrać legowisko. Własna inicjatywa ustępuje działaniu gracza, pogodzie, rytmowi dnia i potrzebie odpoczynku; pominięcie propozycji nie obniża więzi.
+3. Dodać głaskanie podczas spokojnego leżenia, przeciąganie po drzemce i powitanie. Przygotować animacje zgodne z obecną sylwetką, paletą i położeniem łap; zachować źródła grafik. Powitanie nie powinno powtarzać się przy każdym krótkim przełączeniu aplikacji ani przerywać nocnego snu.
+4. Sprawdzić, czy te zachowania są czytelne bez nowych liczników i list zadań. Zwykłe głaskanie zachowuje dotychczasowy balans; samo przynoszenie piłki, wybór miejsca i animacja nie przyznają dodatkowych nagród.
+5. Zweryfikować zapis preferencji, restart, odłożenie zaproszenia, przerwanie animacji, powrót do domu i przejście aplikacji w tło. Obejrzeć klatki i układ 320 px oraz wykonać ręczną próbę na telefonie przy kolejnej instalacji.
+
+### Testy i balans równolegle z rozbudową
+
+- Ocenić na telefonie obecne sześć sekund bezczynności przed samodzielnym piciem i odpoczynkiem: czy Gloria nie przerywa graczowi planowania następnej zabawy? To punkt do obserwacji, nie zatwierdzona zmiana czasu.
+- Sprawdzić częstotliwość nowych zaproszeń, czytelność preferencji oraz możliwość spokojnego oglądania psa bez kolejnych komunikatów.
+- W [tygodniowych próbach](test-tygodniowy.md) notować używany build, powody powrotu i wybierane aktywności. Dla porównywalności utrzymać ustalony build u danej grupy; rozwój może trwać osobno. Testy automatyczne nie zastępują obserwacji graczy.
+- Domknąć ręczne sprawdzenie odświeżania widgetu i faktycznego doręczenia przypomnienia. Weryfikacja instalacji nie oznacza potwierdzenia wszystkich zachowań na urządzeniu.
+
+### Zachowanie postępów i zakres odłożony
+
+Każdy pakiet zachowuje tożsamość i imię Glorii, temperament, opanowanie sztuczek, formę, więź, ogródek, kolekcje, Album oraz ustawienia. Obecny schemat to v15. Jeżeli trwałe preferencje wymagają nowych pól, zaplanować jedną docelową zmianę schematu na wydanie, bez resetowania wcześniejszych danych; sprawdzić migrację, ponowny zapis i odczyt na odseparowanej kopii. Numeru schematu nie zmieniać samą edycją tego planu.
+
+Przed instalacją: świeża kopia całego Documents, ten sam bundle ID i zespół podpisujący, aktualizacja bez odinstalowania. Po uruchomieniu: porównanie postępów, zdjęć i ustawień z kopią. Zmiany potrzeb wynikające z upływu czasu opisywać oddzielnie od trwałych postępów.
+
+Choroby, dodatkowe wskaźniki potrzeb, dorastanie i AI pozostają odłożone. Przed wydaniem sklepowym nadal potrzebne są pierwsze uruchomienie z nadaniem imienia bez wpływu na istniejącego psa, opcjonalne wibracje, polityka prywatności i dopracowanie grafiki oraz muzyki. Android pozostaje osobnym etapem. Nie dodajemy obowiązków wyłącznie po to, żeby wymusić codzienną wizytę.
+
+## Archiwum planu po audycie i feedbacku — 17 listopada 2026
+
+Poniższy zapis zachowuje decyzje i stan z wcześniejszych buildów 17–19. Dawne określenia „aktualny” i „następny etap” dotyczą tamtego momentu; bieżący zakres i kolejność znajdują się powyżej. Ukończone funkcje nie są ponownym zleceniem, a wcześniejsze oczekiwanie na zakończenie testów nie blokuje obecnego planu.
+
 
 Decyzja użytkownika z 17 listopada 2026: rozwijamy wyjście na potrzebę i ogródek równolegle z testami, bez czekania na koniec tygodnia. Poniższa pierwotna kolejność pozostaje historią planu; testy z ludźmi nadal są otwarte i nie są warunkiem wdrożenia tych dwóch funkcji.
 

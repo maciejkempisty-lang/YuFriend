@@ -160,10 +160,12 @@ W ustawieniach gry na iPhonie można włączyć **Przypomnienia od pieska**: naj
 
 ## Kolejne etapy
 
-1. Test użyteczności i balansu kilku krótkich sesji; eksport oraz sprawdzenie na telefonie.
-2. Dopracowanie proporcji na styku klipów oraz docelowej siatki pixel art.
-3. Dopasowanie pyska do miski, przedmioty opieki i odsłuch balansu dźwięków.
-4. Opcjonalny backend AI, bogatsze zachowania i kolejne etapy wieku.
+1. Ulubione miejsca i zabawy oraz spokojne chwile razem: pamięć preferencji, dobrowolne zaproszenia, głaskanie na leżąco i przeciąganie po drzemce.
+2. Pory roku, zaczynając od jesiennych liści i sezonowych znalezisk.
+3. Krótki spacer za furtką z wykorzystaniem istniejących sztuczek.
+4. Album wspólnych chwil: opcjonalne zdjęcia wydarzeń, podpisy i udostępnianie.
+
+To plan dalszej rozbudowy. Testy z graczami i ocena balansu na telefonie mają odbywać się równolegle z rozbudową. Zakres, warunki akceptacji i ochrona danych Glorii: [aktualny plan rozwoju](docs/rozwoj-projektu.md#dalsze-kroki-po-buildzie-28--17-listopada-2026).
 
 Obecna gra nie korzysta z płatnego API i nie generuje kosztów wywołań modeli. Pole `life_stage` jest przygotowane, ale dorastanie jeszcze nie działa. Szczegółowy zakres późniejszych prac opisuje [plan implementacji](docs/plan-implementacji.md).
 
