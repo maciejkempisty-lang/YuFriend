@@ -13,9 +13,9 @@ Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
 
 ## Aktualny stan — 17 listopada 2026
 
-Na iPhonie jest build 22 / v14 z pamięcią gości i ilustrowanym Albumem, zainstalowany z zachowaniem postępów Glorii. Lokalny kod dodaje opcjonalne przygody dnia łączące ogródek, sztuczki i szukanie skarbów. Dwie czynności dają pamiątkę do Albumu, bez dodatkowej więzi, serii i kar za pominięcie. Przygody są dostępne w Albumie oraz menu „Pobaw się”.
+Na iPhonie jest build 23 / v15 z pamięcią gości, ilustrowanym Albumem i zachowanymi postępami Glorii. Aktualna wersja zawiera opcjonalne przygody dnia łączące ogródek, sztuczki i szukanie skarbów. Dwie czynności dają pamiątkę do Albumu, bez dodatkowej więzi, serii i kar za pominięcie. Przygody są dostępne w Albumie oraz menu „Pobaw się”.
 
-Aktualny schemat w kodzie: **v15**; migracja v1–v14 zachowuje wcześniejsze dane i wersjonowane kopie. Widget odczytuje v4–v15. Pakiet przygód jest sprawdzony lokalnie, jeszcze bez instalacji na telefonie. Pakiet animacji ma 28 klipów / 172 klatki. Opisy wcześniejszych wydań poniżej zachowują historię prototypu.
+Aktualny schemat w kodzie: **v15**; migracja v1–v14 zachowuje wcześniejsze dane i wersjonowane kopie. Widget odczytuje v4–v15. Pakiet przygód zainstalowano i uruchomiono na iPhonie; migracja zachowała dotychczasowy postęp oraz archiwum v14. Pakiet animacji ma 28 klipów / 172 klatki. Opisy wcześniejszych wydań poniżej zachowują historię prototypu.
 
 Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji oraz tygodnia testów](docs/rozwoj-projektu.md). Decyzją użytkownika ogródek i wyjście na potrzebę rozwijamy równolegle z próbą 5–10 osób. Bieżący status instalacji i dowody zachowania postępów są w [testach iOS](docs/test-ios.md).
 

@@ -221,3 +221,13 @@ Przechodzą 23 zestawy logiki oraz 18 interfejsu, w tym 65 sprawdzeń przygód i
 Widget: 1526 sprawdzeń, 252 prognozy zgodne z Godotem, odczyt v15. Przypomnienia: 1067 planisty i 18 kontrolera. Migracja roboczej kopii `2026-11-17-after-v22/Documents/pet.json` v14 → v15 zachowała wszystkie 28 wcześniejszych pól dokładnie, dodała pustą przygodę, pozostawiła identyczne bajtowo archiwum `.v14` i przeszła ponowny odczyt. Oryginał i dane telefonu nie były zmieniane.
 
 Pakiet nie jest zainstalowany na iPhonie; ostatnia instalacja to build 22 / v14. Przed instalacją kolejnego wydania pobrać świeże Documents i sprawdzić migrację najnowszego zapisu. Po przejściu na v15 build 22 nie odczyta nowego zapisu.
+
+## Aktualizacja 0.1.0 (23) — małe przygody dnia, 17 listopada 2026
+
+Pakiet `2ddc949` wyeksportowano, podpisano, zainstalowano i uruchomiono na MagicPhone jako build 23. Odczyt aplikacji i procesów potwierdza nową wersję oraz działającą grę. Aplikacja i widget mają numer 23, dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Kontrola podpisu z rozszerzeniem przeszła, PCK aplikacji jest identyczny z eksportem. Gry nie odinstalowywano.
+
+Kopie Documents: `exports/iphone-backups/2026-11-17-before-v23/`, bezpośrednio przed instalacją `before-v23-final/` i po uruchomieniu `after-v23/`. Migrację świeżej kopii sprawdzono przed instalacją: wszystkie 28 dotychczasowych pól bez zmian, pusty plan, dokładne archiwum v14 i poprawny ponowny odczyt. Telefon po uruchomieniu potwierdza v15 oraz nowe `adventure` bez zaliczonych zadań. W porównaniu końcowym 26 wcześniejszych pól pozostało identycznych, w tym sztuczki, więź, cechy, historia, pamiątki, ogródek, kolekcja, zdjęcia i dekoracje. Zmieniły się tylko potrzeby i czas ostatniej wizyty, zgodnie z działaniem gry.
+
+Oryginał bezpośredniej kopii sprzed instalacji zachowano dokładnie w `pet.json.v14.85217380b708e4489b80141472fe37ce1b24f7aa8f1ed71b004de78401fcea40`. Zwykła kopia `.v14` zawiera wcześniejszy stan różniący się tylko potrzebami i czasem; nie została nadpisana. Dowody: `exports/ios-adventures-v23/verification.json` oraz raporty instalacji i uruchomienia. Duże produkty są w `/tmp/yufriend-adventures-v23` i `/tmp/yufriend-adventures-v23-build`.
+
+Nie wykonywano zadań ani nie zmieniano zegara lub potrzeb Glorii na telefonie. Obsługę przygód i układ 320 px sprawdzono wcześniej na komputerze. Build 22 nie odczyta nowego zapisu v15; poprzedni zapis jest zabezpieczony w kopiach.
