@@ -21,7 +21,7 @@ Pakiet po buildzie 19 łączy „Przyjdź” w aporcie i „Zostań” w chowany
 
 Kod po buildzie 20 dodaje ptaka, motyla i kota sąsiada przy płocie. Gloria reaguje według temperamentu; gracz może ją uspokoić lub przywołać. Wizyty czekają na przerwę między zajęciami, nie dają dodatkowej więzi i nie zmieniają schematu v14. Pakiet zainstalowano na iPhonie jako build 21; schemat zapisu pozostaje v14.
 
-Kod po buildzie 21 dodaje pamięć gości, oswajanie przez trzy spokojne dni i ilustrowaną sekcję znajomości w Albumie. Zachowuje schemat v14 i dotychczasowe postępy. Ten pakiet sprawdzono lokalnie; nie jest jeszcze zainstalowany na iPhonie.
+Kod po buildzie 21 dodaje pamięć gości, oswajanie przez trzy spokojne dni i ilustrowaną sekcję znajomości w Albumie. Zachowuje schemat v14 i dotychczasowe postępy. Ten pakiet zainstalowano i uruchomiono na iPhonie jako build 22, z zachowaniem postępów Glorii.
 
 ## Dokumentacja
 
