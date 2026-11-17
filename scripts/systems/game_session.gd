@@ -35,6 +35,15 @@ var last_message: String = "Dotknij, by pogłaskać. Przycisk „Cały pokój”
 var _refresh_left: float = 0.0
 var _save_left: float = 25.0
 var _brain_left: float = 8.0
+signal hide_revealed(spot: int)
+var hide_game := YardHide.new()
+var fetch := YardFetch.new()
+var in_yard := false
+var _yard_dark_idle := 0.0
+var in_bath := false
+var bath := BathSystem.new()
+var sniff_spot := -1
+const YARD_FINDS := ["Gładki kamyk", "Złoty liść", "Ulubiony patyk"]
 var performance_done: bool = true
 var _approach_token: int = 0
 var _pending_action: String = ""
@@ -92,6 +101,7 @@ func start(save_path: String = "user://pet.json") -> void:
 	var was_resting := pet.resting
 	var away := maxf(0, now - seen)
 	NeedsSystem.catch_up(pet, now)
+	PracticeSystem.sync(pet, _local_now())
 	var news := _reflect()
 	var report := _update_life(seen, now, was_resting)
 	if writable and (loaded.status == "new" or away > 300): _note("visit")
@@ -122,12 +132,18 @@ func start(save_path: String = "user://pet.json") -> void:
 func _process(delta: float) -> void:
 	if not active or suspended: return
 	var was_idle := activity == "idle"
-	_tick_rhythm(delta)
+	_tick_travel(delta)
+	if in_yard: _tick_yard(delta)
+	if not in_yard and not in_bath: _tick_rhythm(delta)
 	if attention_available and not is_sleeping() and not busy():
 		_initiative_wait = maxf(0, _initiative_wait - delta)
 		if invitation_presented and not invitation.is_empty():
 			invitation.remaining -= delta
 			if float(invitation.remaining) <= 0: _finish_invitation("ignored")
+	_tick_hide(delta)
+	if fetch.advance(delta):
+		play.finish_ball()
+		_settle_touch_game()
 	if play.running():
 		play.advance(delta)
 		_settle_touch_game()
@@ -156,9 +172,11 @@ func _process(delta: float) -> void:
 	if activity_left > 0:
 		activity_left -= delta
 		if activity_left <= 0:
-			if not _sequence_id.is_empty():
+			if activity == "sniff":
+				_finish_sniff()
+			elif not _sequence_id.is_empty():
 				_advance_behavior()
-			elif activity in ["feed", "play", "happy"] and not _reward_from_training and not training_view_active and play.kind.is_empty():
+			elif activity in ["feed", "play", "happy"] and not _reward_from_training and not training_view_active and not in_yard and play.kind.is_empty():
 				_start_behavior("carpet")
 			else:
 				activity = "idle"
@@ -175,7 +193,9 @@ func _process(delta: float) -> void:
 	_refresh_left -= delta
 	if _refresh_left <= 0:
 		_refresh_left = 0.15
-		if writable and LifeSystem.refresh_mood(pet, _local_now()): flush()
+		if writable:
+			var practice_changed := PracticeSystem.sync(pet, _local_now())
+			if LifeSystem.refresh_mood(pet, _local_now()) or practice_changed: flush()
 		changed.emit()
 	_save_left -= delta
 	if _save_left <= 0:
@@ -215,6 +235,9 @@ func _greeting(away: float = 3600) -> String:
 # Samodzielna decyzja psa: odpoczynek, zachowanie wynikające z nawyku albo spacer.
 func _spontaneous(roll: float = -1.0) -> void:
 	if not writable or suspended or training_view_active or is_sleeping(): return
+	if in_yard:
+		if not _return_tired(): move_to(RoomLayout.random_walk_point(), false)
+		return
 	if float(pet.needs.energy) < 28:
 		act("rest", false)
 		return
@@ -267,12 +290,13 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
 
 func _cancel_motion() -> void:
+	sniff_spot = -1
 	_reward_from_training = false
 	_sequence.clear()
 	_sequence_id = ""
@@ -315,6 +339,15 @@ func arrive_at(token: int) -> void:
 	activity_left = 2.0
 	match action:
 		"touch_ball":
+			_travel_left = 0
+			if fetch.active:
+				fetch.arrive()
+				activity = "catch"
+				activity_left = 0
+				clip_requested.emit("play_bow")
+				say("Teraz! Dotknij pieska przy złapaniu piłki.")
+				changed.emit()
+				return
 			play.finish_ball()
 			_settle_touch_game()
 			return
@@ -417,6 +450,9 @@ func act(action: String, by_player: bool = true) -> bool:
 		if action == "pet" and is_sleeping():
 			_wake()
 			return true
+	if in_yard and action in ["feed", "rest", "toys", "window", "door", "clean"]:
+		say("Wróćmy do domu, żeby się tym zająć.")
+		return false
 	if action == "pet": return _pet()
 	if busy() and not (training.phase == "idle" and _inviting()):
 		say("Jeszcze chwilka — kończymy tę czynność.")
@@ -474,10 +510,27 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 	destination_requested.emit(RoomLayout.clamp_walk(world_position))
 	if announce: attention_requested.emit(false)
 	clip_requested.emit("walk")
-	if announce: say("Już idę! Małe łapki odkrywają pokój.")
+	_travel_left = 90.0
+	if announce: say("Już idę! Małe łapki odkrywają podwórko." if in_yard else "Już idę! Małe łapki odkrywają pokój.")
 	changed.emit()
 
 func destination_reached() -> void:
+	if suspended or not writable: return
+	if in_yard and activity == "hide_walk" and hide_game.arrive():
+		_travel_left = 0
+		activity = "hide_sniff"
+		clip_requested.emit("sniff")
+		say(hide_game.hint())
+		changed.emit()
+		return
+	if in_yard and activity == "sniff_walk" and sniff_spot >= 0:
+		_travel_left = 0
+		activity = "sniff"
+		activity_left = 3.0
+		clip_requested.emit("sniff")
+		say("Ciekawe, co kryje ten zapach…")
+		changed.emit()
+		return
 	if activity != "walk": return
 	_travel_left = 0
 	if not _sequence_id.is_empty():
@@ -512,8 +565,8 @@ func begin_training(key: String, guided: bool) -> bool:
 	if tired: _note("train_tired")
 	activity = "idle"
 	performance_done = false
-	pose = "sit" if key in ["sit", "paw"] and training.will_succeed else "stand"
-	var clip: String = {"come": "walk", "sit": "sit_down", "paw": "give_paw"}[key] if training.will_succeed else "head_tilt_stand"
+	pose = "sit" if key in ["sit", "paw", "stay"] and training.will_succeed else "stand"
+	var clip: String = {"come": "walk", "sit": "sit_down", "paw": "give_paw", "lie": "lie_down", "bow": "play_bow", "bark": "bark_stand", "stay": "sit_down", "spin": "spin", "roll": "roll"}[key] if training.will_succeed else "head_tilt_stand"
 	attention_requested.emit(true)
 	performance_requested.emit(clip, training.trial_id)
 	say(result.message)
@@ -528,6 +581,8 @@ func give_reward(kind: String) -> bool:
 	if not result.ok:
 		say(result.message)
 		return false
+	var daily_bonus := PracticeSystem.record(pet, training.trick, _local_now())
+	if daily_bonus: result.message = "Trening dnia ukończony! +2 więzi · seria %d dni." % int(pet.practice.streak)
 	_note("reward_" + kind)
 	sound_requested.emit("success")
 	if kind == "treat": sound_requested.emit("treat")
@@ -563,10 +618,12 @@ func flush() -> bool:
 	return save_ok
 
 func suspend_session() -> void:
+	if in_bath: cancel_bath()
 	if not active or suspended: return
 	_cancel_invitation()
 	cancel_touch_game()
 	training.cancel()
+	if in_yard: change_yard(false)
 	_cancel_motion()
 	activity_left = 0
 	activity = "sleep" if is_sleeping() else "idle"
@@ -580,6 +637,7 @@ func resume_session() -> void:
 	var was_resting := pet.resting
 	var away := maxf(0, now - seen)
 	NeedsSystem.catch_up(pet, now)
+	PracticeSystem.sync(pet, _local_now())
 	suspended = false
 	activity = "sleep" if is_sleeping() else "idle"
 	if pet.resting: place_requested.emit("rest")
@@ -593,12 +651,13 @@ func resume_session() -> void:
 		clip_requested.emit(LifeSystem.greeting(pet, away).clip)
 	elif not news.is_empty():
 		say(news)
-	_sync_rhythm_on_return(away >= 60)
+	if not in_yard and not in_bath: _sync_rhythm_on_return(away >= 60)
 	flush()
 	changed.emit()
 	if report: away_report_ready.emit()
 
 func offer_initiative(kind: String = "", now: float = -1.0) -> bool:
+	if in_yard or in_bath: return false
 	if not active or not writable or suspended or not initiatives_enabled or not attention_available or busy() or is_sleeping() or not invitation.is_empty() or not play.kind.is_empty(): return false
 	if now < 0: now = Time.get_unix_time_from_system()
 	if not is_finite(now) or now - float(pet.social.last_offer_at) < InitiativeSystem.OFFER_INTERVAL: return false
@@ -696,14 +755,27 @@ func _begin_touch_game(kind: String) -> bool:
 	changed.emit()
 	return true
 
-func throw_ball(target: Vector2) -> bool:
-	if not target.is_finite() or not _begin_touch_game("ball"): return false
+func throw_ball(target: Vector2, origin: Vector2 = RoomLayout.STATIONS.ball.position) -> bool:
+	if not target.is_finite() or not origin.is_finite(): return false
+	origin = RoomLayout.clamp_walk(origin)
+	target = RoomLayout.clamp_walk(origin + (target - origin).limit_length(YardFetch.MAX_DISTANCE)) if in_yard else RoomLayout.clamp_walk(target)
+	if in_yard and origin.distance_to(target) < 40: return false
+	if not _begin_touch_game("ball"): return false
+	if in_yard: fetch.start(origin, target)
+	_travel_left = 90.0
 	activity = "approach"
 	_pending_action = "touch_ball"
 	_pending_by_player = true
 	say("Piłka w ruch! %s biegnie ją złapać." % pet.pet_name)
 	ball_throw_requested.emit(RoomLayout.clamp_walk(target), _approach_token)
 	changed.emit()
+	return true
+
+func catch_ball() -> bool:
+	if not writable or suspended or not in_yard or not fetch.tap(): return false
+	player_activity()
+	play.finish_ball()
+	_settle_touch_game()
 	return true
 
 func play_cue() -> void:
@@ -731,10 +803,21 @@ func _settle_touch_game() -> void:
 	var kind := play.kind
 	pet.social.games[kind] = mini(PetState.MAX_EVENT_COUNT, int(pet.social.games[kind]) + 1)
 	var now := Time.get_unix_time_from_system()
+	var bonus := false
+	var fetch_distance := fetch.distance
+	var fetch_precise := fetch.precise
+	var fetch_round := fetch.active and kind == "ball"
+	var record := fetch_round and fetch_distance > pet.yard_record
+	if record: pet.yard_record = fetch_distance
 	if play.success and now - float(pet.social.last_reward_at) >= TouchPlaySystem.REWARD_INTERVAL:
+		if in_yard: NeedsSystem.change(pet, {"hygiene": -9})
 		pet.social.last_reward_at = maxf(float(pet.social.last_reward_at), now)
 		_apply_care_effects("play", {"play": 18, "contact": 6, "energy": -3, "hygiene": -1})
-		pet.bond = minf(100, pet.bond + 0.35)
+		if fetch_round:
+			var award := FetchRewards.award(pet, fetch_precise, _local_now())
+			pet.bond = minf(100, pet.bond + float(award.bond))
+			bonus = award.bonus
+		else: pet.bond = minf(100, pet.bond + 0.35)
 		_note("play")
 	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + InitiativeSystem.LABELS[kind], "Pierwsza runda zabawy sterowanej dotykiem.", now)
 	_reward_from_training = false
@@ -743,11 +826,16 @@ func _settle_touch_game() -> void:
 	clip_requested.emit("tail_wag_stand" if play.success else "head_tilt_stand")
 	if play.success: sound_requested.emit("success")
 	say(play.hint())
+	if fetch_round:
+		say("Aport %.1f m! %s%s" % [fetch_distance, "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dzisiejsze premie wykorzystane." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
+	fetch.reset()
 	if kind == "ball": play.reset()
 	flush()
 	changed.emit()
 
 func cancel_touch_game() -> void:
+	if hide_game.active(): cancel_hide()
+	fetch.reset()
 	if play.kind.is_empty(): return
 	play.reset()
 	_cancel_motion()
@@ -776,6 +864,7 @@ func set_training_view(value: bool) -> void:
 		clip_requested.emit(PetAnimator.BASE.get(pose, "idle"))
 
 func player_activity() -> void:
+	_yard_dark_idle = 0
 	_idle_seconds = 0
 	sleep_warning = false
 	_attention_shown = false
@@ -821,18 +910,6 @@ func _tick_rhythm(delta: float) -> void:
 		return
 	if not attention_available: return
 	_idle_seconds += delta
-	if _travel_left > 0:
-		_travel_left -= delta
-		if _travel_left <= 0:
-			_cancel_motion()
-			activity = "idle"
-			clip_requested.emit("idle")
-	if _follow_target.is_finite():
-		_follow_left -= delta
-		if _follow_left <= 0:
-			var target := _follow_target
-			_follow_target = Vector2.INF
-			move_to(target, false)
 	var night := DailyRhythm.phase(pet, _local_now()) == "night"
 	if night:
 		var limit := 120.0 if _woken_at_night else 180.0
@@ -903,3 +980,227 @@ func _enter_sleep(kind: String, observe: bool = true) -> void:
 	if observe: _observe("rest")
 	flush()
 	changed.emit()
+
+func change_yard(enabled: bool) -> bool:
+	if enabled and DailyRhythm.phase(pet, _local_now()) == "night":
+		say("Za ciemno, pora spać.")
+		return false
+	if in_bath: return false
+	if not writable or suspended or is_sleeping() or training.phase != "idle": return false
+	if enabled and busy(): return false
+	cancel_touch_game()
+	_cancel_motion()
+	invitation.clear()
+	_yard_dark_idle = 0
+	_follow_target = Vector2.INF
+	in_yard = enabled
+	activity = "idle"
+	activity_left = 0
+	pose = "stand"
+	clip_requested.emit("idle")
+	say("Podwórko! Rzuć piłkę albo poszukaj zapachu." if enabled else "Znów w domu.")
+	changed.emit()
+	return true
+
+func start_sniff(spot: int = -1) -> bool:
+	if not in_yard or not writable or suspended or busy() or is_sleeping() or spot < -1 or spot >= YARD_FINDS.size(): return false
+	if float(pet.needs.energy) < 25:
+		say("Najpierw wróćmy do domu odpocząć.")
+		return false
+	_cancel_motion()
+	sniff_spot = 0
+	for index in YARD_FINDS.size():
+		if not pet.milestones.has("yard_find_%d" % index):
+			sniff_spot = index
+			break
+	if spot >= 0: sniff_spot = spot
+	_travel_left = 90.0
+	activity = "sniff_walk"
+	activity_left = 0
+	destination_requested.emit(Vector2(350 + sniff_spot * 400, 302))
+	clip_requested.emit("walk")
+	say("Prowadzi mnie ciekawy zapach…")
+	changed.emit()
+	return true
+
+func _finish_sniff() -> void:
+	if not in_yard or sniff_spot < 0 or suspended or not writable: return
+	NeedsSystem.change(pet, {"hygiene": -8})
+	var key := "yard_find_%d" % sniff_spot
+	var label: String = YARD_FINDS[sniff_spot]
+	var fresh := not pet.milestones.has(key)
+	if fresh:
+		pet.remember(key, "Znalezisko: " + label, "Pierwszy skarb odkryty podczas węszenia na podwórku.")
+		NeedsSystem.change(pet, {"play": 5, "energy": -2})
+		sound_requested.emit("success")
+	sniff_spot = -1
+	activity = "idle"
+	activity_left = 0
+	clip_requested.emit("tail_wag_stand")
+	say("Znalezione: %s! Pamiątka czeka w Albumie." % label if fresh else "Znajomy zapach. Ten skarb jest już w Albumie — sprawdź też pozostałe krzaki.")
+	flush()
+	changed.emit()
+
+func bath_readiness() -> String:
+	if not writable or suspended or is_sleeping() or busy(): return "Kąpiel poczeka, aż piesek będzie gotowy."
+	if float(pet.needs.energy) < 35: return "Najpierw odpoczynek. Kąpiel kosztuje 5 energii."
+	if float(pet.needs.fullness) < 30: return "Najpierw posiłek, potem kąpiel."
+	if float(pet.needs.hygiene) >= 80: return "Sierść jest dość czysta. Wystarczy delikatne czesanie."
+	return ""
+
+func start_bath() -> bool:
+	var reason := bath_readiness()
+	if not reason.is_empty():
+		say(reason)
+		return false
+	_cancel_motion()
+	invitation.clear()
+	in_yard = false
+	in_bath = true
+	activity = "bath"
+	activity_left = 0
+	bath.start()
+	changed.emit()
+	return true
+
+func finish_bath() -> bool:
+	if not in_bath or not bath.active or bath.stage != 3 or bath.settled or not writable or suspended: return false
+	bath.settled = true
+	NeedsSystem.change(pet, {"hygiene": 45, "energy": -5, "fullness": -2})
+	pet.remember("first_bath", "Pierwsza kąpiel", "Piana, woda, miękki ręcznik i radosne otrzepywanie.")
+	sound_requested.emit("success")
+	say("Kąpiel skończona: +45 czystości, −5 energii, −2 sytości.")
+	flush()
+	changed.emit()
+	return true
+
+func cancel_bath() -> void:
+	bath.cancel()
+	in_bath = false
+	activity = "idle"
+	activity_left = 0
+	clip_requested.emit("idle")
+	changed.emit()
+
+func _tick_travel(delta: float) -> void:
+	if not writable or suspended: return
+	if _travel_left > 0:
+		_travel_left -= delta
+		if _travel_left <= 0:
+			if hide_game.active(): cancel_hide()
+			if play.kind == "ball": cancel_touch_game()
+			_cancel_motion()
+			activity = "idle"
+			clip_requested.emit("idle")
+	if _follow_target.is_finite() and not busy():
+		_follow_left -= delta
+		if _follow_left <= 0:
+			var target := _follow_target
+			_follow_target = Vector2.INF
+			move_to(target, false)
+
+func _tick_yard(delta: float) -> void:
+	if not writable or suspended: return
+	if _return_tired(): return
+	if DailyRhythm.phase(pet, _local_now()) != "night" or busy():
+		_yard_dark_idle = 0
+		return
+	_yard_dark_idle += delta
+	if _yard_dark_idle < 30: return
+	if change_yard(false):
+		_start_behavior("night")
+		say("Za ciemno. Wracamy do domu, pora spać.")
+
+func start_hide(kind: String, seed_value: int = 0) -> bool:
+	if not in_yard: return false
+	var reason := play_readiness()
+	if not reason.is_empty():
+		say(reason)
+		return false
+	if DailyRhythm.phase(pet, _local_now()) == "night":
+		say("Za ciemno na chowanego, pora spać.")
+		return false
+	if not hide_game.start(kind, seed_value): return false
+	player_activity()
+	_cancel_invitation()
+	_cancel_motion()
+	_follow_target = Vector2.INF
+	activity = "hide"
+	activity_left = 0
+	pose = "stand"
+	clip_requested.emit("idle")
+	say(hide_game.hint())
+	changed.emit()
+	return true
+
+func choose_hide_bush(spot: int) -> bool:
+	if not writable or suspended or not in_yard or not hide_game.active(): return false
+	var event := hide_game.select(spot)
+	if event.is_empty(): return false
+	player_activity()
+	_handle_hide_event(event)
+	return true
+
+func _tick_hide(delta: float) -> void:
+	if not writable or suspended or not hide_game.active(): return
+	_handle_hide_event(hide_game.advance(delta))
+
+func _handle_hide_event(event: String) -> void:
+	if event.is_empty(): return
+	match event:
+		"timeout":
+			cancel_hide()
+			say("Chowany poczeka. Piesek wrócił — możecie zacząć jeszcze raz.")
+		"walk":
+			_cancel_motion()
+			activity = "hide_walk"
+			activity_left = 0
+			_travel_left = 90
+			destination_requested.emit(Vector2(350 + hide_game.search_spot() * 400, 302))
+			clip_requested.emit("walk")
+			say(hide_game.hint())
+		"guess": say(hide_game.hint())
+		"wrong": say("Tutaj go nie ma. Rozejrzyj się za machającym ogonem!")
+		"found": _finish_hide()
+	changed.emit()
+
+func _finish_hide() -> void:
+	if hide_game.phase != "found" or not writable or suspended: return
+	var mode := hide_game.kind
+	var spot := hide_game.hiding_spot
+	hide_game.reset() # Consume the result before emitting any signals or granting rewards.
+	_cancel_motion()
+	_follow_target = Vector2.INF
+	if mode == "dog": hide_revealed.emit(spot)
+	var now := Time.get_unix_time_from_system()
+	var rewarded := now - float(pet.social.last_reward_at) >= TouchPlaySystem.REWARD_INTERVAL
+	if rewarded:
+		pet.social.last_reward_at = maxf(float(pet.social.last_reward_at), now)
+		_apply_care_effects("play", {"play": 12, "contact": 6, "energy": -2})
+		pet.bond = minf(100, pet.bond + 0.5)
+		_note("play")
+	pet.remember("yard_hide_" + mode, "Smakołyk w krzakach" if mode == "treat" else "Ogon zdradził kryjówkę", "Pierwsza ukończona runda chowanego na podwórku.", now)
+	activity = "happy"
+	activity_left = 1.4
+	clip_requested.emit("tail_wag_stand")
+	sound_requested.emit("success")
+	say(("Smakołyk znaleziony!" if mode == "treat" else "Jest piesek! Ogon go zdradził!") + (" +0,5 więzi." if rewarded else " Brawo! Nagrody odpoczywają 30 s."))
+	flush()
+	changed.emit()
+
+func cancel_hide() -> void:
+	if not hide_game.active(): return
+	hide_game.reset()
+	_cancel_motion()
+	_follow_target = Vector2.INF
+	activity = "idle"
+	activity_left = 0
+	clip_requested.emit("idle")
+	changed.emit()
+
+func _return_tired() -> bool:
+	if not in_yard or busy() or float(pet.needs.energy) >= 28: return false
+	if not change_yard(false): return false
+	act("rest", false)
+	say("Łapki potrzebują odpoczynku. Wracamy do legowiska.")
+	return true

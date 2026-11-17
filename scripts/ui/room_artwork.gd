@@ -5,6 +5,9 @@ const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-
 const PORTRAIT_PUPPY = preload("res://assets/sprites/puppy/pixel/sheets/sit_idle.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
 var kind := "room"
+var decor: Array = []
+const DECOR_ATLAS = preload("res://assets/art/environments/decor-v1.png")
+const DECOR_REGIONS := {"rug": Rect2(39, 474, 449, 232), "flower": Rect2(617, 293, 275, 469), "shelf": Rect2(1040, 382, 447, 329)}
 var area := Vector2.ZERO
 var roll_phase := 0.0
 var draw_count := 0
@@ -17,7 +20,11 @@ func configure(bounds: Vector2) -> void:
 func _draw() -> void:
 	draw_count += 1
 	match kind:
-		"room": _draw_room()
+		"room":
+			_draw_room()
+			_draw_decor()
+		"yard": _draw_yard()
+		"hide_tail": _draw_hide_tail()
 		"shadow": _pixel_ellipse(Vector2(0, 3), Vector2(53, 9), Color(0.35, 0.31, 0.20, 0.16))
 		"ball": _draw_ball()
 		"bed": _draw_bed()
@@ -451,3 +458,45 @@ func _pixel_ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
 		var left := roundf((center.x - half_width) / PIXEL) * PIXEL
 		var right := roundf((center.x + half_width) / PIXEL) * PIXEL
 		draw_rect(Rect2(left, y, maxf(PIXEL, right - left), PIXEL), color)
+
+func _draw_yard() -> void:
+	draw_rect(Rect2(0, -2400, area.x, 2660), Color("c5dfcf"))
+	draw_rect(Rect2(0, 260, area.x, 4000), Color("a7ba79"))
+	for x in range(0, int(area.x), 42):
+		_pixel_rect(Rect2(x, 185, 30, 90), Color("d7b889"))
+		_pixel_rect(Rect2(x + 3, 185, 6, 90), Color("ecd4a2"))
+	_pixel_rect(Rect2(0, 213, area.x, 12), Color("b69468"))
+	_pixel_rect(Rect2(0, 252, area.x, 12), Color("b69468"))
+	# A wooden gate and a marked fetch lawn give the yard fixed landmarks.
+	_pixel_rect(Rect2(108, 190, 84, 84), Color("a48059"))
+	for x in [114, 138, 162, 186]: _pixel_rect(Rect2(x, 190, 6, 84), Color("efd7a4"))
+	_pixel_rect(Rect2(177, 232, 9, 6), Color("755b43"))
+	_pixel_ellipse(Vector2(940, 310), Vector2(120, 28), Color("b5c784"))
+	for x in [838, 1042]:
+		_pixel_rect(Rect2(x, 273, 6, 39), Color("ead9a1"))
+		_pixel_rect(Rect2(x + 6, 273, 21, 15), Color("dc946f"))
+	for x in [350, 750, 1150]:
+		_pixel_ellipse(Vector2(x, 272), Vector2(90, 26), Color("6e945f"))
+		_pixel_ellipse(Vector2(x - 25, 252), Vector2(48, 39), Color("85a66c"))
+		_pixel_ellipse(Vector2(x + 24, 248), Vector2(44, 44), Color("91b276"))
+		_pixel_rect(Rect2(x - 6, 293, 12, 6), Color("e4cb8a"))
+	for x in range(20, int(area.x), 57):
+		_pixel_rect(Rect2(x, 350 + (x % 4) * 9, 12, 3), Color("8ba263"))
+		_pixel_rect(Rect2(x + 15, 305, 3, 9), Color("78965a"))
+
+func _draw_decor() -> void:
+	var placements := {"rug": Rect2(600, 292, 240, 72), "flower": Rect2(990, 165, 75, 129), "shelf": Rect2(910, 75, 150, 111)}
+	for key in decor:
+		if placements.has(key): draw_texture_rect_region(DECOR_ATLAS, placements[key], DECOR_REGIONS[key])
+
+func _draw_hide_tail() -> void:
+	# Overlapping outline segments first, then solid fur: no stripes between pixels.
+	var wag := roundf(sin(roll_phase * 7) * 3) * PIXEL
+	var curve := [0, 0, 3, 6, 9, 9, 6, 0]
+	for layer in 2:
+		for i in curve.size():
+			var x := roundf((float(curve[i]) + wag * i / 7) / PIXEL) * PIXEL
+			_pixel_rect(Rect2(x - (9 if layer == 0 else 6), -i * 6, 21 if layer == 0 else 15, 12 if layer == 0 else 9), Color("674831") if layer == 0 else Color("e7a75f"))
+	for i in 6:
+		var x := roundf((float(curve[i]) + wag * i / 7) / PIXEL) * PIXEL
+		_pixel_rect(Rect2(x - 3, -i * 6, 6, 6), Color("f6ce87"))

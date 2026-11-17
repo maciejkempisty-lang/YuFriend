@@ -34,7 +34,7 @@ func _run() -> void:
 	var last: AtlasTexture = pack.frames.get_frame_texture("give_paw", 2)
 	check(last.region == Rect2(0, 627, 627, 627), "atlas order is row-major")
 	check(not pack.frames.get_animation_loop("give_paw") and pack.frames.get_frame_duration("give_paw", 1) == 3, "one-shot and authored hold timing survive import")
-	check(result.missing.size() == 21 and result.missing.has("idle"), "missing clips remain eligible for fallback")
+	check(result.missing.size() == PetAnimator.CLIPS.size() - 1 and result.missing.has("idle"), "missing clips remain eligible for fallback")
 	var invalid := _manifest()
 	invalid.animations.give_paw.count = 5
 	check(not SpriteImporter.build(invalid).ok, "too many atlas cells rejected")
@@ -150,7 +150,7 @@ func _run() -> void:
 	var production_frames: SpriteFrames = animator.skin.frames
 	var total := 0
 	for clip in PetAnimator.CLIPS: total += production_frames.get_frame_count(clip)
-	check(production_frames.get_animation_names().size() == 22 and total == 142, "production pack contains all 22 clips and 142 frames")
+	check(production_frames.get_animation_names().size() == 27 and total == 166, "production pack contains all 27 clips and 166 frames")
 	var paw_seconds := 0.0
 	for i in production_frames.get_frame_count("give_paw"):
 		paw_seconds += production_frames.get_frame_duration("give_paw", i) / production_frames.get_animation_speed("give_paw")

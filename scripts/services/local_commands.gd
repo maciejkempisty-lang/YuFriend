@@ -2,7 +2,7 @@ class_name LocalCommands
 extends RefCounted
 
 const ALIASES := {"come": ["przyjdz", "do mnie", "chodz", "chodz tutaj"],
-	"sit": ["siad", "usiadz", "siadaj"], "paw": ["lapa", "daj lape", "podaj lape"]}
+	"sit": ["siad", "usiadz", "siadaj"], "paw": ["lapa", "daj lape", "podaj lape"], "lie": ["lezec", "poloz sie"], "bow": ["uklon", "uklon sie"], "bark": ["glos", "daj glos"], "stay": ["zostan", "czekaj"], "spin": ["krec sie", "obrot"], "roll": ["turlaj sie", "turlaj"]}
 
 static func interpret(text: String) -> String:
 	var value := text.to_lower().strip_edges()

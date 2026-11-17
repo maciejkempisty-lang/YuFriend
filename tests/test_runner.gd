@@ -10,6 +10,7 @@ func _initialize() -> void:
 	_test_personality()
 	_test_needs()
 	_test_training()
+	_test_progression()
 	_test_saving()
 	_test_commands()
 	_test_habits()
@@ -400,3 +401,26 @@ func _test_action_feedback() -> void:
 	train.reward(pet, "play")
 	var restored := PetState.from_dict(pet.to_dict())
 	check(restored.milestones.has("favorite_reward") and restored.favorite_reward == "play", "successful favorite discovery survives save roundtrip")
+
+func _test_progression() -> void:
+	var pet := PetState.create(17, 1000)
+	var data := pet.to_dict()
+	data.skills.sit.mastery = 100.0
+	data.skills.paw.mastery = 42.0
+	for key in ["lie", "bow", "bark"]: data.skills.erase(key)
+	var migrated := PetState.from_dict(SaveSystem.migrate(data, 5))
+	check(migrated != null and migrated.pet_id == pet.pet_id and migrated.skills.paw.mastery == 42, "v5 preserves identity and partial training")
+	check(migrated.skills.sit.mastery == 100 and migrated.skills.lie.mastery == 0, "v5 preserves mastered tricks and adds new ones")
+	check(TrainingSystem.unlock_reason(migrated, "lie").is_empty(), "existing 100 percent immediately unlocks next trick")
+	check(not TrainingSystem.unlock_reason(pet, "lie").is_empty(), "new trick requires prerequisite")
+	var training := TrainingSystem.new()
+	pet.skills.sit.mastery = 99
+	training.begin(pet, "sit", true)
+	training.advance(training.time_left)
+	var result := training.reward(pet, "praise")
+	check(result.mastered and pet.milestones.has("mastered_sit"), "crossing 100 celebrates and records mastery")
+	training.begin(pet, "sit", true)
+	training.advance(training.time_left)
+	result = training.reward(pet, "praise")
+	check(not result.mastered, "repeat practice does not repeat celebration")
+	check(PetState.from_dict(pet.to_dict()).milestones.has("mastered_sit"), "mastery memory survives reload")

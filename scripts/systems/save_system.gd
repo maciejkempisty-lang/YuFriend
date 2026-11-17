@@ -1,7 +1,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 5
+const VERSION := 11
 const MAX_BYTES := 1024 * 1024
 var path: String
 var last_error: String = ""
@@ -20,7 +20,7 @@ func _read(file_path: String) -> Dictionary:
 		return {"status": "invalid"}
 	var data: Dictionary = parsed.data
 	var version: Variant = data.get("schema_version")
-	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4):
+	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4 and version != 5 and version != 6 and version != 7 and version != 8 and version != 9 and version != 10):
 		return {"status": "unsupported"}
 	if not data.get("pet") is Dictionary:
 		return {"status": "invalid"}
@@ -44,7 +44,15 @@ static func migrate(pet_data: Dictionary, version: int) -> Dictionary:
 	# 3 → 4: responses to invitations and touch-play history. Existing life stays intact.
 	if version < 4 and not result.has("social"): result.social = PetState.initial_social()
 	# 4 → 5: persistent, gradual daily rhythm and bounded automatic naps.
-	if not result.has("rhythm"): result.rhythm = DailyRhythm.initial()
+	if version < 5 and not result.has("rhythm"): result.rhythm = DailyRhythm.initial()
+	if result.get("skills") is Dictionary:
+		for key in ["lie", "bow", "bark", "stay", "spin", "roll"]:
+			if version < ({"lie": 6, "bow": 6, "bark": 6, "stay": 7, "spin": 8, "roll": 8}[key]) and not result.skills.has(key): result.skills[key] = {"mastery": 0.0, "attempts": 0, "successes": 0}
+	if version < 8 and not result.has("photos"): result.photos = []
+	if version < 8 and not result.has("decor"): result.decor = []
+	if version < 10 and not result.has("yard_record"): result.yard_record = 0.0
+	if version < 9 and not result.has("practice"): result.practice = PracticeSystem.initial()
+	if version < 11 and not result.has("fetch_rewards"): result.fetch_rewards = FetchRewards.initial()
 	return result
 
 func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:
@@ -52,7 +60,7 @@ func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:
 	var keep := "%s.v%d" % [ProjectSettings.globalize_path(path), version]
 	if FileAccess.file_exists(keep):
 		var retained := _read(keep)
-		if retained.status == "ok" and retained.version == version and retained.pet.pet_id == pet_id:
+		if retained.status == "ok" and retained.version == version and retained.pet.pet_id == pet_id and FileAccess.get_sha256(keep) == FileAccess.get_sha256(source):
 			return true
 		# A foreign snapshot belongs to its owner. Retain our source alongside it.
 		var source_hash := FileAccess.get_sha256(source)

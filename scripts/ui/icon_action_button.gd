@@ -96,4 +96,7 @@ func _draw() -> void:
 func _draw_centered(value: String, y: float, font_size: int, ink: Color) -> void:
 	var font := get_theme_font("font")
 	var width := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	while width > size.x - 6 and font_size > 9:
+		font_size -= 1
+		width = font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	draw_string(font, Vector2((size.x - width) / 2, y), value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)

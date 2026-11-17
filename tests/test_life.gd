@@ -142,7 +142,7 @@ func _test_migration_and_resume() -> void:
 	var store := SaveSystem.new(path)
 	var loaded := store.load_pet()
 	var same_skills := true
-	for key in PetState.TRICK_KEYS:
+	for key in legacy.pet.skills:
 		for field in ["mastery", "attempts", "successes"]:
 			same_skills = same_skills and loaded.pet.skills[key][field] == legacy.pet.skills[key][field]
 	check(loaded.writable and loaded.pet.pet_id == legacy.pet.pet_id and same_skills, "v2 migration keeps identity and training")

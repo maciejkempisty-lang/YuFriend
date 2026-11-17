@@ -3,6 +3,7 @@ extends RefCounted
 
 # Original, shared line icons. Rasterize once at 4x for crisp high-DPI UI.
 const PATHS := {
+	"search": '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
 	"paw": '<path d="M8.5 14c1-3 6-3 7 0l2 3c1 3-2 4-5.5 2-3.5 2-6.5 1-5.5-2z"/><ellipse cx="5" cy="10" rx="2" ry="2.6"/><ellipse cx="9.3" cy="5.7" rx="2" ry="2.7"/><ellipse cx="15" cy="5.7" rx="2" ry="2.7"/><ellipse cx="19.3" cy="10" rx="2" ry="2.6"/>',
 	"bowl": '<path d="M3 12h18l-2 7H5zM2 19h20M8 8c-2-2 2-2 0-4m8 4c-2-2 2-2 0-4"/>',
 	"heart": '<path d="M12 20S3 14 3 8a4.7 4.7 0 0 1 9-2 4.7 4.7 0 0 1 9 2c0 6-9 12-9 12z"/>',

@@ -19,14 +19,23 @@ var reminder_poll := 0.0
 var room := RoomView.new()
 var needs_ui: Dictionary = {}
 var care_buttons: Dictionary = {}
+var photos_list: VBoxContainer
+var photo_signature := ""
+var taking_photo := false
+var bath_dialog: AcceptDialog
+var yard_toolbar: HBoxContainer
+var yard_button: Button
+var sniff_button: Button
 var reward_buttons: Dictionary = {}
 var trick_buttons: Dictionary = {}
+var gesture_dialog: AcceptDialog
 var tab_buttons: Dictionary = {}
 var panels: Dictionary = {}
 var name_label: Button
 var bond_label: Label
 var message_label: Label
 var footer_label: Label
+var practice_label: Label
 var mastery_label: Label
 var mastery_bar: ProgressBar
 var training_hint: Label
@@ -120,9 +129,10 @@ func _ready() -> void:
 	room.floor_tapped.connect(session.move_to)
 	room.room_viewed.connect(session.follow_room)
 	room.return_button.pressed.connect(session.player_activity)
-	room.care_requested.connect(func(action: String): session.act(action))
-	room.ball_thrown.connect(session.throw_ball)
+	room.care_requested.connect(_room_care_action)
+	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
+	session.hide_revealed.connect(room.reveal_hide)
 	session.initiative_requested.connect(room.present_invitation)
 	session.ball_aim_requested.connect(_aim_ball)
 	session.touch_game_opened.connect(_show_touch_game)
@@ -294,6 +304,11 @@ func _build_ui() -> void:
 	identity.add_child(bond_bar)
 	var settings := _icon_button("settings", "Ustawienia", _show_settings)
 	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var camera_button := _button("Foto", _take_photo)
+	camera_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	camera_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	camera_button.custom_minimum_size.x = 54
+	header_row.add_child(camera_button)
 	header_row.add_child(settings)
 	bubble = PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
@@ -388,7 +403,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = session.attention_available and not session.suspended and not room.overview
+	companion_card.visible = session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -421,6 +436,14 @@ func _companion_act() -> void:
 func _build_care() -> VBoxContainer:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 5)
+	var outdoors := HBoxContainer.new()
+	yard_toolbar = outdoors
+	add_child(outdoors)
+	yard_button = _button("Podwórko", _toggle_yard)
+	outdoors.add_child(yard_button)
+	sniff_button = _button("Krzaki", _show_yard_games)
+	outdoors.add_child(sniff_button)
+	outdoors.add_child(_button("Kąpiel", _show_bath))
 	care_status = _label("Małe rytuały, wspólny dzień", 12, MUTED)
 	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(care_status)
@@ -439,15 +462,12 @@ func _build_care() -> VBoxContainer:
 
 func _build_training() -> VBoxContainer:
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 6)
+	box.add_theme_constant_override("separation", 2)
 	var choices := HBoxContainer.new()
 	choices.add_theme_constant_override("separation", 4)
 	box.add_child(choices)
-	for key in PetState.TRICK_KEYS:
-		var button := _button(TrainingSystem.LABELS[key], _choose_trick.bind(key))
-		button.add_theme_font_size_override("font_size", 13)
-		choices.add_child(button)
-		trick_buttons[key] = button
+	choices.add_child(_button("Lista sztuczek", _show_tricks))
+	choices.add_child(_button("Na dziś", func(): _show_tricks(true)))
 	choices.add_child(_icon_button("keyboard", "Wpisz komendę", _show_command))
 	var progress_row := HBoxContainer.new()
 	box.add_child(progress_row)
@@ -458,6 +478,8 @@ func _build_training() -> VBoxContainer:
 	progress_row.add_child(training_footer)
 	mastery_bar = _bar(Color("91a871"), 5)
 	box.add_child(mastery_bar)
+	practice_label = _label("", 12, MUTED)
+	box.add_child(practice_label)
 	var steps := HBoxContainer.new()
 	box.add_child(steps)
 	for entry in [["gesture", "1. Gest"], ["clock", "2. Czekaj"], ["heart", "3. Nagroda"]]:
@@ -470,7 +492,7 @@ func _build_training() -> VBoxContainer:
 		training_steps.append(step)
 	training_hint = _label("", 13)
 	training_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	training_hint.custom_minimum_size.y = 36
+	training_hint.custom_minimum_size.y = 32
 	training_hint.max_lines_visible = 2
 	training_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(training_hint)
@@ -512,14 +534,26 @@ func _build_journal() -> VBoxContainer:
 	heading.add_child(title)
 	album_count = _label("", 12, MUTED)
 	heading.add_child(album_count)
+	var album_actions := HBoxContainer.new()
+	box.add_child(album_actions)
+	album_actions.add_child(_button("Zrób zdjęcie", func():
+		_select_tab("care")
+		_take_photo()))
+	album_actions.add_child(_button("Dekoracje", _show_decor))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(scroll)
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	photos_list = VBoxContainer.new()
+	photos_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(photos_list)
 	journal_list = VBoxContainer.new()
 	journal_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	journal_list.add_theme_constant_override("separation", 10)
-	scroll.add_child(journal_list)
+	content.add_child(journal_list)
 	return box
 
 func _build_dialogs() -> void:
@@ -592,6 +626,9 @@ func _build_dialogs() -> void:
 	settings_box.add_theme_constant_override("separation", 12)
 	settings_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings_scroll.add_child(settings_box)
+	settings_box.add_child(_button("Dekoracje pokoju", func():
+		_hide_settings()
+		_show_decor()))
 	music_toggle = CheckButton.new()
 	music_toggle.text = "Muzyka w tle"
 	music_toggle.custom_minimum_size.y = 44
@@ -746,6 +783,9 @@ func _show_touch_game(kind: String) -> void:
 	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
+	if key != "care" and session.in_yard:
+		if not session.change_yard(false): return
+		room.set_yard(false)
 	if key != selected_tab:
 		effects.play_effect("ui")
 		bubble_left = 0
@@ -777,6 +817,9 @@ func _fit_room() -> void:
 		panel_width = safe_rect.size.x - 24
 		panel_top = safe_rect.position.y + 8
 		panel_height = nav_y - panel_top - 8 - warning_space
+	yard_toolbar.visible = selected_tab == "care"
+	_place(yard_toolbar, Rect2(panel_x, safe_rect.position.y + 196, panel_width, 44))
+	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
 	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
 	var scene_width := safe_rect.end.x - rail if layout_wide else size.x
@@ -819,6 +862,57 @@ func _position_dialog(dialog: AcceptDialog, wanted: Vector2i) -> void:
 	dialog.size = wanted.min(available)
 	dialog.position = Vector2i(safe_rect.position + (safe_rect.size - Vector2(dialog.size)) / 2 + Vector2(0, 12))
 
+func _show_tricks(daily: bool = false) -> void:
+	if session.training.phase != "idle": return
+	var dialog := AcceptDialog.new()
+	dialog.title = "Sztuczki pieska"
+	var list := VBoxContainer.new()
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 320)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	dialog.add_child(scroll)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	var keys := PetState.TRICK_KEYS.duplicate()
+	if daily:
+		if session.writable and PracticeSystem.sync(session.pet, session._local_now()): session.flush()
+		keys = session.pet.practice.targets.duplicate()
+		dialog.title = "Trening dnia %d/%d · seria %d" % [session.pet.practice.done.size(), keys.size(), int(session.pet.practice.streak)]
+	var explanation := _label("Forma opanowanych sztuczek: −10 za dzień bez ćwiczeń, +25 za udaną próbę. Niższa forma utrudnia wykonanie bez podpowiedzi. Opanowanie zostaje na zawsze." + ("\nUkończ dzisiejszą listę: +2 więzi i kolejny dzień serii." if daily else ""), 13, MUTED)
+	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	list.add_child(explanation)
+	for key in keys:
+		var value := roundi(float(session.pet.skills[key].mastery))
+		var reason := TrainingSystem.unlock_reason(session.pet, key)
+		var status := "Umiem! Forma %d%%" % roundi(PracticeSystem.form(session.pet, key)) if value >= 100 else "%d%%" % value
+		if daily and session.pet.practice.done.has(key): status = "✓ " + status
+		if not reason.is_empty(): status = reason
+		var button := _button("%s · %s" % [TrainingSystem.LABELS[key], status], func():
+			_choose_trick(key)
+			dialog.hide())
+		button.disabled = not reason.is_empty()
+		list.add_child(button)
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(320, 400))
+	dialog.popup()
+
+func _celebrate_mastery() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Umiem!"
+	var next: Array[String] = []
+	for key in TrainingSystem.PREREQUISITES:
+		if TrainingSystem.PREREQUISITES[key] == selected_trick:
+			next.append(TrainingSystem.LABELS[key])
+	dialog.dialog_text = "%s opanowuje „%s” na 100%%!\nWspomnienie czeka w Albumie." % [session.pet.pet_name, TrainingSystem.LABELS[selected_trick]]
+	dialog.dialog_text += "\nOdblokowane: " + ", ".join(next) if not next.is_empty() else "\nSprawdź kolejne cele na liście sztuczek."
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(320, 220))
+	dialog.popup()
+
 func _choose_trick(key: String) -> void:
 	if session.training.phase != "idle": return
 	selected_trick = key
@@ -826,23 +920,58 @@ func _choose_trick(key: String) -> void:
 	_refresh()
 
 func _care_action(key: String) -> void:
+	if session.in_yard and key == "play":
+		session.throw_ball(YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), room.ball_world)
+		return
+	if session.in_yard and key not in ["pet", "play"]:
+		if not session.change_yard(false): return
+		room.set_yard(false)
 	if key == "train": _select_tab("training")
 	elif key == "play": _show_play_menu()
 	else: session.act(key)
 
 func _train(guided: bool) -> void:
-	session.begin_training(selected_trick, guided)
+	if not guided or selected_trick not in ["lie", "stay"]:
+		session.begin_training(selected_trick, guided)
+		return
+	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
+	var reason := session.training.readiness(session.pet, selected_trick)
+	if not reason.is_empty() or session.busy() or not session.writable: return
+	var key := selected_trick
+	gesture_dialog = AcceptDialog.new()
+	var dialog := gesture_dialog
+	dialog.title = "Gest: " + TrainingSystem.LABELS[key]
+	dialog.get_ok_button().text = "Wróć"
+	var gesture := TrainingGesture.new()
+	gesture.hold_mode = key == "stay"
+	dialog.add_child(gesture)
+	gesture.completed.connect(func():
+		dialog.hide()
+		if not session.suspended and selected_tab == "training" and selected_trick == key:
+			session.begin_training(key, true))
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(320, 330))
+	dialog.popup()
 
 func _reward(kind: String) -> void:
 	var before: float = session.pet.skills[selected_trick].mastery
+	var form_before := PracticeSystem.form(session.pet, selected_trick)
 	if session.give_reward(kind):
 		gain_label.text = "+%d  %s" % [roundi(session.pet.skills[selected_trick].mastery - before), TrainingSystem.LABELS[selected_trick]]
+		if before >= 100:
+			var form_after := PracticeSystem.form(session.pet, selected_trick)
+			gain_label.text = "Forma +%d → %d%%" % [roundi(form_after - form_before), roundi(form_after)] if form_after > form_before else "Forma %d%% · przećwiczone" % roundi(form_after)
+		gain_label.text += " · Dziś %d/%d" % [session.pet.practice.done.size(), session.pet.practice.targets.size()]
 		gain_left = 1.8
 		if selected_tab == "training":
 			training_feedback = gain_label.text + " · " + session.last_message
 			training_feedback_left = 4.0
 			_refresh()
 		_position_feedback()
+		if before < 100 and float(session.pet.skills[selected_trick].mastery) >= 100:
+			_celebrate_mastery()
 
 func _show_profile() -> void:
 	if session.pet == null: return
@@ -910,7 +1039,7 @@ func _submit_command() -> void:
 		return
 	var key := LocalCommands.interpret(command_edit.text)
 	if key.is_empty():
-		session.say("Ćwiczymy: przyjdź, siad i podaj łapę. Spróbuj jednej z tych komend.")
+		session.say("Wybierz nazwę komendy z listy sztuczek.")
 		return
 	_choose_trick(key)
 	_train(false)
@@ -918,7 +1047,16 @@ func _submit_command() -> void:
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
+	if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
+	if room.backdrop.decor != pet.decor:
+		room.backdrop.decor = pet.decor.duplicate()
+		room.backdrop.queue_redraw()
+	_refresh_photos()
+	if room.animator.sprite.material is ShaderMaterial:
+		room.animator.sprite.material.set_shader_parameter("dirt", clampf((80.0 - float(pet.needs.hygiene)) / 60.0, 0, 1))
 	_update_attention()
+	room.present_hide(session.hide_game.phase, session.hide_game.hiding_spot if session.hide_game.kind == "dog" else -1)
+	room.catch_active = session.fetch.catching
 	room.ball_throw_enabled = session.play_readiness().is_empty()
 	_refresh_companion()
 	play_hint.text = session.play.hint()
@@ -944,10 +1082,16 @@ func _refresh() -> void:
 		button.queue_redraw()
 	care_buttons.rest.caption = "Obudź" if session.is_sleeping() else ("Senność" if float(pet.needs.energy) < 30 else "Drzemka")
 	care_buttons.rest.icon_name = "sun" if session.is_sleeping() else "moon"
-	care_status.text = _activity_status()
+	yard_button.text = "Dom" if session.in_yard else "Podwórko"
+	sniff_button.visible = session.in_yard
+	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
+	sniff_button.disabled = (session.busy() and not session.hide_game.active()) or not session.writable
+	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
+	if session.hide_game.active(): care_status.text = session.hide_game.hint()
 	var mastery: float = pet.skills[selected_trick].mastery
-	mastery_label.text = "Opanowanie %d%%" % roundi(mastery)
+	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
+	practice_label.text = "Forma %d%% · Dziś %d/%d · Seria %d dni" % [roundi(PracticeSystem.form(pet, selected_trick)), pet.practice.done.size(), pet.practice.targets.size(), int(pet.practice.streak)]
 	var reason := session.training.readiness(pet, selected_trick)
 	guided_button.disabled = not session.writable or session.busy() or not reason.is_empty()
 	guidance_toggle.disabled = session.training.phase != "idle"
@@ -1030,6 +1174,8 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_APPLICATION_PAUSED:
 		music.set_backgrounded(true)
 		effects.set_backgrounded(true)
+		if is_instance_valid(bath_dialog): bath_dialog.hide()
+		if is_instance_valid(gesture_dialog): gesture_dialog.hide()
 		session.suspend_session()
 		play_menu.hide()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
@@ -1037,6 +1183,8 @@ func _notification(what: int) -> void:
 		music.set_backgrounded(false)
 		effects.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if is_instance_valid(bath_dialog): bath_dialog.hide()
+		if is_instance_valid(gesture_dialog): gesture_dialog.hide()
 		app_foreground = false
 		_update_attention()
 		session.flush()
@@ -1045,6 +1193,8 @@ func _notification(what: int) -> void:
 		_update_attention()
 
 func _activity_status() -> String:
+	if session.activity == "sniff_walk": return "Podąża za zapachem…"
+	if session.activity == "sniff": return "Węszy… jeszcze %d s" % ceili(session.activity_left)
 	if session.play.running(): return "Wspólna zabawa · " + InitiativeSystem.LABELS[session.play.kind]
 	if not session.invitation.is_empty(): return session.pet.pet_name + " zaprasza Cię do wspólnej chwili"
 	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
@@ -1177,8 +1327,8 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = bubble_left > 0 and on_screen and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
-	gain_label.visible = gain_left > 0 and on_screen
+	bubble.visible = bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
+	gain_label.visible = gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
 	var obstacles: Array[Rect2] = [pet_bounds.grow(12)]
@@ -1214,3 +1364,186 @@ func _journal_icon(key: String) -> String:
 	if key.begins_with("first_") or key.begins_with("learned_"): return "spark"
 	if key.begins_with("habit_"): return "paw"
 	return {"welcome": "home", "feed": "bowl", "rest": "moon", "play": "ball", "pet": "heart", "clean": "brush", "favorite_reward": "treat"}.get(key, "book")
+
+func _toggle_yard() -> void:
+	if session.change_yard(not session.in_yard):
+		gain_left = 0
+		gain_label.hide()
+		room.set_yard(session.in_yard)
+
+func _room_care_action(action: String) -> void:
+	if action == "catch":
+		session.catch_ball()
+		return
+	if action.begins_with("yard_") and session.in_yard:
+		var place := action.trim_prefix("yard_")
+		if place == "gate": _toggle_yard()
+		elif place == "fetch":
+			if session.play_readiness().is_empty(): _aim_ball()
+		elif place.begins_with("bush_"):
+			var spot := int(place.trim_prefix("bush_"))
+			if session.hide_game.active(): session.choose_hide_bush(spot)
+			else: session.start_sniff(spot)
+		return
+	if action == "door": _toggle_yard()
+	elif session.in_yard and action == "play":
+		session.throw_ball(YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), room.ball_world)
+	else: session.act(action)
+
+func _show_bath() -> void:
+	if is_instance_valid(bath_dialog) and bath_dialog.visible: return
+	if not session.start_bath(): return
+	room.set_yard(false)
+	bath_dialog = AcceptDialog.new()
+	var dialog := bath_dialog
+	dialog.title = "Łazienka"
+	dialog.get_ok_button().text = "Wróć do domu"
+	var view := BathView.new()
+	view.bath = session.bath
+	view.initial_dirt = clampf((80.0 - float(session.pet.needs.hygiene)) / 60.0, 0, 1)
+	dialog.add_child(view)
+	view.finished.connect(func():
+		if session.finish_bath(): view.celebrate())
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible:
+			session.cancel_bath()
+			dialog.queue_free())
+	_position_dialog(dialog, Vector2i(340, 430))
+	dialog.popup()
+
+func _take_photo() -> void:
+	if taking_photo or not session.writable or session.suspended or session.in_bath: return
+	if session.pet.photos.size() >= KeepsakeSystem.MAX_PHOTOS:
+		session.say("Album mieści 24 zdjęcia. Twoje fotografie pozostają zachowane.")
+		return
+	taking_photo = true
+	var outside := session.in_yard
+	await RenderingServer.frame_post_draw
+	if session.suspended or session.in_bath or not room.visible or outside != session.in_yard:
+		taking_photo = false
+		return
+	var picture := room.viewport.get_texture().get_image()
+	KeepsakeSystem.save_photo(session, picture, "%s · %s" % [session.pet.pet_name, "Podwórko" if outside else "Dom"])
+	taking_photo = false
+
+func _refresh_photos() -> void:
+	if photos_list == null: return
+	var signature := JSON.stringify(session.pet.photos)
+	if photo_signature == signature: return
+	photo_signature = signature
+	for child in photos_list.get_children():
+		photos_list.remove_child(child)
+		child.queue_free()
+	for photo in session.pet.photos:
+		var box := VBoxContainer.new()
+		photos_list.add_child(box)
+		box.add_child(_label(photo.caption, 15, INK, true))
+		var date := Time.get_datetime_dict_from_unix_time(int(photo.at) + int(Time.get_time_zone_from_system().bias) * 60)
+		box.add_child(_label("%02d.%02d · %02d:%02d" % [date.day, date.month, date.hour, date.minute], 11, MUTED))
+		box.add_child(_button("Usuń z Albumu", func(): _confirm_remove_photo(photo.id)))
+		var path := KeepsakeSystem.photo_path(session.storage.path, photo.id)
+		var picture := Image.new()
+		if not FileAccess.file_exists(path) or picture.load(path) != OK:
+			box.add_child(_label("Plik zdjęcia jest niedostępny.", 13, MUTED))
+			continue
+		var texture := ImageTexture.create_from_image(picture)
+		var preview := TextureRect.new()
+		preview.texture = texture
+		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		preview.custom_minimum_size = Vector2(0, 160)
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		box.add_child(preview)
+		box.add_child(_button("Otwórz zdjęcie", func(): _show_photo(texture, photo.caption)))
+
+func _show_photo(texture: Texture2D, caption: String) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = caption
+	var preview := TextureRect.new()
+	preview.texture = texture
+	preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	preview.custom_minimum_size = Vector2(250, 300)
+	preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	dialog.add_child(preview)
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(340, 420))
+	dialog.popup()
+
+func _show_decor() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Dekoracje pokoju"
+	var list := VBoxContainer.new()
+	dialog.add_child(list)
+	for key in KeepsakeSystem.DECOR:
+		var reason := KeepsakeSystem.unlock_reason(session.pet, key)
+		var preview := TextureRect.new()
+		var atlas := AtlasTexture.new()
+		atlas.atlas = RoomArtwork.DECOR_ATLAS
+		atlas.region = RoomArtwork.DECOR_REGIONS[key]
+		preview.texture = atlas
+		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		preview.custom_minimum_size = Vector2(0, 62)
+		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		list.add_child(preview)
+		var button := _button(("Schowaj: " if session.pet.decor.has(key) else "Ustaw: ") + KeepsakeSystem.DECOR[key], func():
+			if KeepsakeSystem.toggle_decor(session, key):
+				dialog.hide()
+				_show_decor())
+		button.disabled = not reason.is_empty() or not session.writable
+		list.add_child(button)
+		if not reason.is_empty():
+			var hint := _label(reason, 12, MUTED)
+			hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			list.add_child(hint)
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(330, 480))
+	dialog.popup()
+
+func _show_yard_games() -> void:
+	if session.hide_game.active():
+		session.cancel_hide()
+		session.say("Chowany przerwany. Możecie spróbować ponownie.")
+		return
+	if not session.in_yard: return
+	var reason := session.play_readiness()
+	if not reason.is_empty():
+		session.say(reason)
+		return
+	var dialog := AcceptDialog.new()
+	dialog.title = "Zabawy w krzakach"
+	dialog.get_ok_button().text = "Wróć"
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	dialog.add_child(box)
+	for entry in [["sniff", "Węsz i szukaj skarbów"], ["treat", "Schowaj smakołyk"], ["dog", "Znajdź pieska po ogonie"]]:
+		var mode: String = entry[0]
+		box.add_child(_button(entry[1], func():
+			dialog.hide()
+			if mode == "sniff": session.start_sniff()
+			else: session.start_hide(mode)))
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(300, 240))
+	dialog.popup()
+
+func _confirm_remove_photo(id: String) -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "Usunąć zdjęcie z Albumu?"
+	dialog.dialog_autowrap = true
+	dialog.dialog_text = "Zwolnisz jedno miejsce w Albumie. Pozostałe zdjęcia i postępy pieska zostaną zachowane. Plik pozostanie w danych aplikacji dla starszych kopii zapisu."
+	dialog.get_ok_button().text = "Usuń z Albumu"
+	dialog.get_cancel_button().text = "Zachowaj"
+	dialog.confirmed.connect(func(): KeepsakeSystem.remove_photo(session, id))
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(300, 260))
+	dialog.popup()

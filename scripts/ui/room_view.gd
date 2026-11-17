@@ -27,12 +27,21 @@ var world := Node2D.new()
 var actors := Node2D.new()
 var puppy := Node2D.new()
 var camera := Camera2D.new()
+var yard_markers: Dictionary = {}
+var yard_controls_bottom := 0.0
+var hide_phase := ""
+var hide_spot := -1
+var hide_tail := RoomArtwork.new()
+var catch_active := false
+var catch_ring := Line2D.new()
+var throw_power := Label.new()
 var station_nodes: Dictionary = {}
 var effect_label := Label.new()
 var sleep_label := Label.new()
 var return_button := Button.new()
 var overview_button := Button.new()
 var overview := false
+var in_yard := false
 var _render_pixel_size := RoomLayout.PIXEL_SIZE
 var room_hint := Label.new()
 var pet_world: Vector2 = RoomLayout.START
@@ -117,6 +126,7 @@ func _ready() -> void:
 	throw_guide.z_index = 10
 	world.add_child(throw_guide)
 	throw_guide.hide()
+	throw_power.hide()
 	actors.y_sort_enabled = true
 	for id in RoomLayout.STATIONS:
 		if id == "ball": continue
@@ -126,12 +136,24 @@ func _ready() -> void:
 		if id in ["bed", "window", "door"]: node.z_index = -1
 		actors.add_child(node)
 		station_nodes[id] = node
+	catch_ring.width = 4
+	catch_ring.default_color = Color("ffe29a")
+	var ring := PackedVector2Array()
+	for i in 33:
+		var angle := i * TAU / 32
+		ring.append(Vector2(cos(angle) * 65, sin(angle) * 20 - 8))
+	catch_ring.points = ring
+	puppy.add_child(catch_ring)
+	catch_ring.hide()
 	actors.add_child(puppy)
 	shadow.kind = "shadow"
 	puppy.add_child(shadow)
 	puppy.add_child(animator)
 	ball_art.kind = "ball"
 	actors.add_child(ball_art)
+	hide_tail.kind = "hide_tail"
+	hide_tail.hide()
+	actors.add_child(hide_tail)
 	for label in [effect_label, sleep_label]:
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.add_theme_font_size_override("font_size", 23)
@@ -151,6 +173,28 @@ func _ready() -> void:
 	# physical-pixel alignment computed below, even at e.g. 1080 / 390 scale.
 	display.centered = false
 	add_child(display)
+	throw_power.add_theme_font_size_override("font_size", 14)
+	throw_power.add_theme_color_override("font_color", Color("24483d"))
+	throw_power.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(throw_power)
+	throw_power.hide()
+	for id in RoomLayout.YARD_STATIONS:
+		var marker := Button.new()
+		var entry: Dictionary = RoomLayout.YARD_STATIONS[id]
+		marker.text = entry.label
+		marker.icon = GameIcons.texture(entry.icon)
+		marker.expand_icon = true
+		marker.add_theme_constant_override("icon_max_width", 16)
+		marker.add_theme_font_size_override("font_size", 12)
+		var badge := StyleBoxFlat.new()
+		badge.bg_color = Color("fff9eded")
+		badge.set_corner_radius_all(10)
+		marker.add_theme_stylebox_override("normal", badge)
+		marker.custom_minimum_size = Vector2(82, 44)
+		marker.pressed.connect(func(): care_requested.emit("yard_" + id))
+		marker.hide()
+		add_child(marker)
+		yard_markers[id] = marker
 	for id in ["food", "bed", "ball"]:
 		var marker := PanelContainer.new()
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -227,7 +271,11 @@ func _pointer_move(point: Vector2, id: int) -> void:
 	if not _dragged or overview: return
 	if _drag_ball:
 		var drag := (point - _press_point) / _press_zoom
-		_throw_target = RoomLayout.clamp_walk(ball_world + Vector2(drag.x * 2.0, 0))
+		_throw_target = YardFetch.target(ball_world, drag) if in_yard else RoomLayout.clamp_walk(ball_world + Vector2(drag.x * 2.0, 0))
+		if in_yard:
+			throw_power.text = "Siła %d%% · %.1f m" % [roundi(minf(1, drag.length() * 3 / YardFetch.MAX_DISTANCE) * 100), ball_world.distance_to(_throw_target) / 100]
+			throw_power.position = Vector2(clampf(point.x - 65, 8, size.x - 145), maxf(hud_bottom + 8, point.y - 50))
+			throw_power.show()
 		var points := PackedVector2Array()
 		for index in 13:
 			var t := index / 12.0
@@ -241,13 +289,14 @@ func _pointer_move(point: Vector2, id: int) -> void:
 		first_pan.emit()
 	camera_manual = true
 	_set_camera_center(_press_camera - Vector2((point.x - _press_point.x) / _press_zoom, 0))
-	return_button.show()
+	return_button.visible = not (in_yard and hide_phase in ["hiding", "guess"])
 
 func _pointer_up(point: Vector2, id: int, cancelled: bool = false) -> void:
 	if id != _pointer_id: return
 	if not cancelled: _pointer_move(point, id)
 	_pointer_id = -1
 	throw_guide.hide()
+	throw_power.hide()
 	var ball_drag := _drag_ball
 	_drag_ball = false
 	if cancelled: return
@@ -258,6 +307,12 @@ func _pointer_up(point: Vector2, id: int, cancelled: bool = false) -> void:
 	if not _dragged and render_rect.has_point(point): _interact(point)
 
 func _interact(point: Vector2) -> void:
+	if in_yard and hide_phase in ["choose", "guess"]:
+		var where := screen_to_world(point)
+		for spot in 3:
+			if Rect2(350 + spot * 400 - 100, 195, 200, 100).has_point(where):
+				care_requested.emit("yard_bush_%d" % spot)
+				return
 	if overview:
 		look_at_world(screen_to_world(point))
 		return
@@ -275,6 +330,11 @@ func action_at(point: Vector2) -> String:
 		if prop_markers[id].visible and prop_markers[id].get_rect().has_point(point):
 			return RoomLayout.STATIONS[id].action
 	var where := screen_to_world(point)
+	if in_yard:
+		if catch_active and Rect2(pet_world - Vector2(90, 170) * presentation_scale, Vector2(180, 190) * presentation_scale).has_point(where): return "catch"
+		if ball_touch_rect().has_point(point): return "play"
+		if _hits_pet(where): return "pet"
+		return ""
 	if ball_touch_rect().has_point(point): return "play"
 	# Crate/bowl in front of the puppy keep the same priority as Y-sorted rendering.
 	for id in ["toys", "food"]:
@@ -287,6 +347,7 @@ func action_at(point: Vector2) -> String:
 	return ""
 
 func _hits_pet(where: Vector2) -> bool:
+	if not puppy.visible: return false
 	var sprite := animator.sprite
 	if sprite.sprite_frames == null: return false
 	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
@@ -364,6 +425,7 @@ func update_placement() -> void:
 	_pointer_id = -1
 	_drag_ball = false
 	throw_guide.hide()
+	throw_power.hide()
 	_available_rect = Rect2(Vector2.ZERO, size)
 	# Work in actual window pixels, including the outer UI stretch transform.
 	# Only the room is rasterized at low resolution; UI text stays sharp.
@@ -381,14 +443,15 @@ func update_placement() -> void:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
 		_base_pixel_scale = maxi(1, floori(available_width / (RoomLayout.SIZE.x / _render_pixel_size)))
-		_available_rect = Rect2(0, hud_bottom + 54, size.x, maxf(1, stage_height - hud_bottom - 66))
+		var top := maxf(hud_bottom + 54, yard_controls_bottom + 48) if in_yard else hud_bottom + 54
+		_available_rect = Rect2(0, top, size.x, maxf(1, stage_height - top - 12))
 	world.scale = Vector2.ONE / _render_pixel_size
 	_apply_pixel_scale(_wanted_zoom())
 	animator.scale = Vector2.ONE * presentation_scale
 	shadow.scale = Vector2.ONE * presentation_scale
 	room_hint.position = Vector2(20, hud_bottom + 54)
-	room_hint.text = "Dotknij miejsca, aby przybliżyć" if overview else "Przesuń pokój ↔"
-	overview_button.text = "Do pieska" if overview else "Cały pokój"
+	room_hint.text = "Dotknij miejsca, aby przybliżyć" if overview else ("Przesuń podwórko ↔" if in_yard else "Przesuń pokój ↔")
+	overview_button.text = "Do pieska" if overview else ("Podwórko" if in_yard else "Cały pokój")
 	overview_button.position = Vector2(overlay_left, hud_bottom)
 	overview_button.size = Vector2(112, 44)
 	return_button.position = Vector2((overlay_right if overlay_right > 0 else size.x - 12) - 100, hud_bottom)
@@ -422,7 +485,7 @@ func _apply_pixel_scale(level: int) -> void:
 	var available := (end - origin).max(Vector2.ONE)
 	var logical_size := (available / pixel_scale).floor().max(Vector2.ONE)
 	logical_size.x = minf(logical_size.x, RoomLayout.SIZE.x / _render_pixel_size)
-	if overview: logical_size.y = minf(logical_size.y, RoomLayout.SIZE.y / _render_pixel_size)
+	if overview and not in_yard: logical_size.y = minf(logical_size.y, RoomLayout.SIZE.y / _render_pixel_size)
 	_view_size = Vector2i(logical_size)
 	viewport.size = _view_size + Vector2i(2, 2)
 	display.region_rect = Rect2(Vector2.ONE, Vector2(_view_size))
@@ -504,7 +567,7 @@ func look_at_world(point: Vector2) -> void:
 		update_placement()
 	camera_manual = true
 	_set_camera_center(Vector2(point.x, _world_bottom() - _visible_world_size().y * 0.5))
-	return_button.show()
+	return_button.visible = not (in_yard and hide_phase in ["hiding", "guess"])
 
 func _update_camera(delta: float) -> void:
 	if not _camera_initialized or _pointer_id != -1: return
@@ -516,7 +579,7 @@ func _update_camera(delta: float) -> void:
 		_set_camera_center(_follow_position.lerp(desired, 1.0 - exp(-6.0 * delta)))
 	else:
 		_set_camera_center(_follow_position)
-	return_button.visible = camera_manual and not overview
+	return_button.visible = camera_manual and not overview and not (in_yard and hide_phase in ["hiding", "guess"])
 	room_hint.visible = overview or (not pan_hint_dismissed and not (interaction_focus or focus_left > 0))
 
 func move_to(point: Vector2) -> void:
@@ -545,7 +608,7 @@ func throw_ball(target: Vector2, token: int) -> void:
 	_ball_flight_left = _ball_flight_total
 	target_world = station_point("play")
 	moving = true
-	animator.request_clip("walk")
+	animator.request_clip("run" if in_yard else "walk")
 	sound_requested.emit("ball_roll")
 
 func present_invitation(kind: String) -> void:
@@ -561,6 +624,7 @@ func place_at_station(action: String) -> void:
 	_sync_layers()
 	if not camera_manual:
 		_set_camera_center(Vector2(pet_world.x, _world_bottom() - _visible_world_size().y * 0.5))
+	update_placement()
 
 func cancel_activity() -> void:
 	moving = false
@@ -575,6 +639,7 @@ func cancel_activity() -> void:
 	_pointer_id = -1
 	_drag_ball = false
 	throw_guide.hide()
+	throw_power.hide()
 	_ball_flight_left = 0
 	_ball_lift = 0
 
@@ -605,10 +670,13 @@ func play_clip(clip: String) -> void:
 		effect_left = 1.4
 
 func _process(delta: float) -> void:
-	if moving and animator.current == "walk":
+	if hide_tail.visible:
+		hide_tail.roll_phase += delta
+		hide_tail.queue_redraw()
+	if moving and animator.current in ["walk", "run"]:
 		var difference := target_world - pet_world
 		if absf(difference.x) > 0.1: animator.facing_left = difference.x < 0
-		var speed := WALK_SPEED * mood_walk_speed
+		var speed := WALK_SPEED * mood_walk_speed * (2.5 if animator.current == "run" else 1.0)
 		var previous := pet_world
 		pet_world = pet_world.move_toward(target_world, speed * delta)
 		_step_distance += previous.distance_to(pet_world)
@@ -671,9 +739,66 @@ func _sync_layers() -> void:
 		var marker: Control = prop_markers[id]
 		var bounds := ball_touch_rect() if id == "ball" else _screen_rect(station_bounds(id))
 		marker.position = Vector2(bounds.get_center().x - 12, bounds.position.y - 28)
-		marker.visible = not overview and marker.position.x >= 4 and marker.position.x + 24 <= size.x - 4 and marker.position.y >= hud_bottom + 44 and marker.position.y + 24 < (content_bottom if content_bottom > 0 else size.y)
+		marker.visible = (not in_yard or id == "ball") and not overview and marker.position.x >= 4 and marker.position.x + 24 <= size.x - 4 and marker.position.y >= hud_bottom + 44 and marker.position.y + 24 < (content_bottom if content_bottom > 0 else size.y)
+	puppy.visible = not (in_yard and hide_phase in ["hiding", "guess"])
+	if not puppy.visible: return_button.hide()
+	hide_tail.visible = in_yard and hide_phase == "guess" and hide_spot >= 0
+	if hide_tail.visible: hide_tail.position = Vector2(350 + hide_spot * 400 + 70, 250)
+	catch_ring.visible = in_yard and catch_active
+	for id in yard_markers:
+		var marker: Button = yard_markers[id]
+		var point := world_to_screen(RoomLayout.YARD_STATIONS[id].point)
+		marker.text = RoomLayout.YARD_STATIONS[id].label
+		marker.custom_minimum_size = Vector2(82, 44)
+		marker.size = Vector2(82, 44)
+		marker.position = point - Vector2(41, 44)
+		if overview:
+			marker.text = str(int(id.trim_prefix("bush_")) + 1) if id.begins_with("bush_") else ""
+			marker.custom_minimum_size = Vector2(44, 44)
+			marker.size = Vector2(44, 44)
+			var index := RoomLayout.YARD_STATIONS.keys().find(id)
+			marker.position = Vector2(render_rect.position.x + index * (render_rect.size.x - 44) / 4, maxf(yard_controls_bottom, render_rect.position.y - 48))
+		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
+		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
+		marker.visible = in_yard and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)
 	effect_label.visible = effect_left > 0
 	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
 	effect_label.modulate.a = minf(1, effect_left)
 	sleep_label.visible = animator.current == "sleep"
 	sleep_label.position = Vector2(55, -100) * presentation_scale
+
+func set_yard(enabled: bool) -> void:
+	cancel_activity()
+	in_yard = enabled
+	backdrop.kind = "yard" if enabled else "room"
+	backdrop.queue_redraw()
+	wall_clock.visible = not enabled
+	for node in station_nodes.values(): node.visible = not enabled
+	pet_world = RoomLayout.START
+	target_world = pet_world
+	ball_world = RoomLayout.STATIONS.ball.position
+	ball_target = ball_world
+	camera_manual = false
+	animator.request_clip("idle")
+	_sync_layers()
+	_set_camera_center(Vector2(pet_world.x, _world_bottom() - _visible_world_size().y * 0.5))
+	update_placement()
+
+func present_hide(phase: String, spot: int) -> void:
+	var previous := hide_phase
+	hide_phase = phase
+	hide_spot = spot
+	if previous != phase:
+		if phase == "choose": show_overview()
+		elif phase == "hiding": look_at_world(Vector2(750, 310))
+		elif phase == "walk" and previous == "choose": focus_pet(false)
+	_sync_layers()
+
+func reveal_hide(spot: int) -> void:
+	cancel_activity()
+	pet_world = Vector2(350 + spot * 400, 302)
+	target_world = pet_world
+	hide_phase = ""
+	hide_spot = -1
+	look_at_world(pet_world)
+	_sync_layers()

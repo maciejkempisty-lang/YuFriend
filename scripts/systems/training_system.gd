@@ -1,7 +1,18 @@
 class_name TrainingSystem
 extends RefCounted
 
-const LABELS := {"come": "Przyjdź", "sit": "Siad", "paw": "Podaj łapę"}
+const LABELS := {"come": "Przyjdź", "sit": "Siad", "paw": "Podaj łapę", "lie": "Leżeć", "bow": "Ukłon", "bark": "Głos", "stay": "Zostań", "spin": "Kręć się", "roll": "Turlaj się"}
+const PREREQUISITES := {"lie": "sit", "bow": "lie", "bark": "paw", "stay": "sit", "spin": "bow", "roll": "lie"}
+
+static func unlock_reason(pet: PetState, key: String) -> String:
+	# Existing progress always keeps a previously practiced trick available.
+	if float(pet.skills[key].mastery) > 0 or int(pet.skills[key].attempts) > 0: return ""
+	if key == "paw" and float(pet.skills.sit.mastery) < 25: return "Siad: 25%"
+	if PREREQUISITES.has(key):
+		var required: String = PREREQUISITES[key]
+		if float(pet.skills[required].mastery) < 100: return "%s: 100%%" % LABELS[required]
+	return ""
+
 const REWARDS := ["treat", "praise", "play"]
 var phase: String = "idle"
 var trick: String = ""
@@ -18,8 +29,8 @@ func readiness(pet: PetState, key: String) -> String:
 	if float(pet.needs.energy) < 25: return "Najpierw chwila odpoczynku."
 	if float(pet.needs.fullness) < 25: return "Najpierw coś do jedzenia."
 	if pet.fatigue >= 75: return "Czas na przerwę od ćwiczeń."
-	if key == "paw" and float(pet.skills.sit.mastery) < 25:
-		return "Najpierw poćwicz siad — do 25%."
+	var locked := unlock_reason(pet, key)
+	if not locked.is_empty(): return "Odblokowanie: " + locked
 	return ""
 
 func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0) -> Dictionary:
@@ -31,9 +42,10 @@ func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0) -
 	trial_id += 1
 	# Include time for a seated/standing transition before the main trick.
 	time_left = (2.8 if key == "paw" else 2.0) + (1.0 - float(pet.traits.patience)) * 0.4
-	reward_duration = 2.7 + float(pet.traits.patience) * 0.7
+	reward_duration = (2.7 + float(pet.traits.patience) * 0.7)
 	var distraction := pet.fatigue * (0.0008 + float(pet.traits.sensitivity) * 0.0012)
 	var chance := clampf(0.16 + float(pet.skills[key].mastery) * 0.007 + pet.bond * 0.001 - distraction, 0.12, 0.96)
+	chance *= 0.5 + 0.5 * PracticeSystem.form(pet, key) / 100.0
 	will_succeed = guided or (randf() if roll < 0 else roll) < chance
 	pet.skills[key].attempts = int(pet.skills[key].attempts) + 1
 	pet.fatigue = minf(100, pet.fatigue + 12)
@@ -53,7 +65,7 @@ func advance(seconds: float, performance_done: bool = true) -> Dictionary:
 	if phase == "attempt":
 		if not will_succeed:
 			phase = "idle"
-			return {"event": "miss", "message": "Jeszcze się uczy. Spróbuj z naprowadzaniem."}
+			return {"event": "miss", "message": "Hmm, jak to szło? Spróbuj z podpowiedzią."}
 		# A stalled frame cannot grant a fresh full reward window after it expired.
 		if overrun >= reward_duration:
 			phase = "idle"
@@ -83,7 +95,11 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 	pet.remember("first_" + trick, "Pierwsze „%s”" % LABELS[trick], "Dobry moment nagrody pomógł zapamiętać ćwiczenie.")
 	if before < 75 and float(pet.skills[trick].mastery) >= 75:
 		pet.remember("learned_" + trick, "Coraz pewniejsze „%s”" % LABELS[trick], "Wspólne ćwiczenia przynoszą efekty.")
-	return {"ok": true, "gain": float(pet.skills[trick].mastery) - before,
+	var mastered := before < 100 and float(pet.skills[trick].mastery) >= 100
+	if mastered:
+		pet.practice.forms[trick].value = 100.0
+		pet.remember("mastered_" + trick, "Umiem: %s!" % LABELS[trick], "Wspólnie osiągnęliście 100% opanowania.")
+	return {"ok": true, "mastered": mastered, "gain": float(pet.skills[trick].mastery) - before,
 		"message": "To ulubiona nagroda!" if favorite else "Dobrze wyczuty moment. Zapamiętuje!"}
 
 func cancel() -> void:

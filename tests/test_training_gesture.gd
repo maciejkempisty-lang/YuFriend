@@ -1,0 +1,57 @@
+extends SceneTree
+var failures := 0
+func check(ok: bool, text: String) -> void:
+	if not ok:
+		failures += 1
+		push_error(text)
+	else: print("PASS " + text)
+func _initialize() -> void:
+	var gesture := TrainingGesture.new()
+	gesture.size = Vector2(260, 240)
+	var hits := [0]
+	gesture.completed.connect(func(): hits[0] += 1)
+	gesture.press(gesture.point(0), 0)
+	gesture.move(gesture.point(1), 1)
+	gesture.release(gesture.point(1), 1)
+	check(hits[0] == 0 and gesture.pointer == 0, "second finger cannot complete or steal gesture")
+	gesture.move(gesture.point(1), 0)
+	gesture.release(gesture.point(1), 0, true)
+	check(hits[0] == 0, "cancelled swipe grants no completion")
+	gesture.press(gesture.point(0), 0)
+	gesture.move(Vector2(0, 100), 0)
+	gesture.release(gesture.point(1), 0)
+	check(hits[0] == 0, "leaving the path resets gesture")
+	gesture.press(gesture.point(0), 0)
+	gesture.move(gesture.point(1), 0)
+	gesture.release(gesture.point(1), 0)
+	gesture.release(gesture.point(1), 0)
+	check(hits[0] == 1, "completed swipe emits exactly once")
+	gesture.free()
+	gesture = TrainingGesture.new()
+	gesture.size = Vector2(260, 240)
+	gesture.hold_mode = true
+	gesture.completed.connect(func(): hits[0] += 1)
+	gesture.press(gesture.point(0.5), 0)
+	gesture._process(0.5)
+	gesture.release(gesture.point(0.5), 0)
+	check(hits[0] == 1, "early release is retryable")
+	gesture.press(gesture.point(0.5), 0)
+	gesture._process(8)
+	check(gesture.elapsed <= 0.1, "stalled frame cannot finish hold")
+	gesture._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	check(gesture.pointer == -2, "losing focus cancels held input")
+	gesture.press(gesture.point(0.5), 0)
+	for i in 22: gesture._process(0.1)
+	gesture.release(gesture.point(0.5), 0)
+	check(hits[0] == 2, "release in green window succeeds")
+	gesture.free()
+	var original := PetState.create(14, 1000)
+	original.skills.sit.mastery = 100
+	original.skills.lie.mastery = 72
+	var data := original.to_dict()
+	data.skills.erase("stay")
+	var migrated := PetState.from_dict(SaveSystem.migrate(data, 6))
+	check(migrated != null and migrated.skills.lie.mastery == 72 and migrated.skills.stay.mastery == 0 and migrated.pet_id == original.pet_id, "v6 migration preserves dog and advanced progress")
+	check(TrainingSystem.unlock_reason(migrated, "stay").is_empty(), "existing sit mastery unlocks stay")
+	print("Gesture test failures: ", failures)
+	quit(1 if failures else 0)

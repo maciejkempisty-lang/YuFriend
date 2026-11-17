@@ -2,7 +2,7 @@ class_name PetState
 extends RefCounted
 
 const NEED_KEYS := ["fullness", "energy", "hygiene", "play", "contact"]
-const TRICK_KEYS := ["come", "sit", "paw"]
+const TRICK_KEYS := ["come", "sit", "paw", "lie", "bow", "bark", "stay", "spin", "roll"]
 const TRAIT_KEYS := ["curiosity", "patience", "sociability", "sensitivity"]
 const EVENT_KEYS := ["visit", "feed", "pet", "play", "clean", "rest", "train_guided", "train_free",
 	"train_tired", "reward_treat", "reward_praise", "reward_play", "reward_missed", "miss"]
@@ -29,6 +29,11 @@ var traits: Dictionary = {}
 var favorite_reward: String = "praise"
 var needs: Dictionary = {"fullness": 78.0, "energy": 76.0, "hygiene": 85.0, "play": 58.0, "contact": 65.0}
 var skills: Dictionary = {}
+var fetch_rewards: Dictionary = FetchRewards.initial()
+var yard_record := 0.0
+var practice: Dictionary = PracticeSystem.initial()
+var photos: Array = []
+var decor: Array = []
 var bond: float = 12.0
 var fatigue: float = 0.0
 var resting: bool = false
@@ -173,7 +178,7 @@ func trim_journal() -> void:
 	journal = kept
 
 func to_dict() -> Dictionary:
-	return {"pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
+	return {"fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
 		"skin": skin, "personality_seed": personality_seed, "traits": traits.duplicate(true),
 		"favorite_reward": favorite_reward, "needs": needs.duplicate(true),
 		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
@@ -186,6 +191,9 @@ static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
 
 static func from_dict(data: Dictionary) -> PetState:
+	if not FetchRewards.valid(data.get("fetch_rewards")): return null
+	if not valid_number(data.get("yard_record")) or data.yard_record < 0 or data.yard_record > 13: return null
+	if not KeepsakeSystem.valid(data) or not PracticeSystem.valid(data.get("practice")): return null
 	# Required state is checked before any defaults are applied. A broken save is
 	# never silently replaced with a new animal.
 	if not valid_life(data.get("life")): return null
@@ -272,6 +280,11 @@ static func from_dict(data: Dictionary) -> PetState:
 	pet.habits = data.habits.duplicate()
 	pet.reflected_day = int(data.reflected_day)
 	pet.pet_id = data.pet_id
+	pet.fetch_rewards = data.fetch_rewards.duplicate(true)
+	pet.yard_record = float(data.yard_record)
+	pet.practice = data.practice.duplicate(true)
+	pet.photos = data.photos.duplicate(true)
+	pet.decor = data.decor.duplicate()
 	pet.pet_name = data.pet_name
 	pet.life_stage = data.life_stage
 	pet.skin = data.skin

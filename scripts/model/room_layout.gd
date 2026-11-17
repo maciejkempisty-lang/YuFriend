@@ -8,6 +8,13 @@ const FLOOR_Y := 260.0
 const WALK_AREA := Rect2(95, 286, 1250, 42)
 const PUPPY_SCALE := 0.64
 const START := Vector2(670, 322)
+const YARD_STATIONS := {
+	"gate": {"label": "Dom", "icon": "home", "point": Vector2(150, 205)},
+	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205)},
+	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205)},
+	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205)},
+	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205)}
+}
 const STATIONS := {
 	"bed": {"label": "Legowisko", "action": "rest", "position": Vector2(205, 322), "stand": Vector2(205, 306), "bounds": Rect2(-88, -52, 176, 68), "clip": "sleep", "need": "energy", "effects": {}, "facing_left": false},
 	"food": {"label": "Miska", "action": "feed", "position": Vector2(485, 325), "stand": Vector2(431, 319), "bounds": Rect2(-28, -28, 56, 28), "clip": "eat_loop", "need": "fullness", "effects": {"fullness": 22}, "facing_left": false},

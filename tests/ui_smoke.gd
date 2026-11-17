@@ -37,7 +37,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
-	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 22, "new puppy uses the complete pixel animation pack")
+	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 27, "new puppy uses the complete pixel animation pack")
 	await _test_music()
 	_test_effects()
 	await capture("01-care.png")
@@ -77,7 +77,24 @@ func _run() -> void:
 	check(game.activity == "feed" and game.last_message.contains("zajada"), "touching the eating puppy gives contextual feedback through the room")
 	step_game(2.0)
 	app.tab_buttons.training.pressed.emit()
-	app.trick_buttons.sit.pressed.emit()
+	app._show_tricks()
+	await process_frame
+	var tricks_dialog: AcceptDialog
+	for child in app.get_children():
+		if child is AcceptDialog and child.title == "Sztuczki pieska": tricks_dialog = child
+	check(tricks_dialog != null and tricks_dialog.visible, "trick catalogue opens")
+	var rows := tricks_dialog.get_child(0).get_child(0)
+	check(rows.get_child_count() == 10 and rows.get_child(4).disabled, "catalogue lists nine tricks and locks advanced ones")
+	await capture("24-trick-catalogue.png")
+	tricks_dialog.hide()
+	app._choose_trick("sit")
+	app._celebrate_mastery()
+	await process_frame
+	for child in app.get_children():
+		if child is AcceptDialog and child.title == "Umiem!":
+			check(child.dialog_text.contains("Leżeć"), "celebration names the unlocked trick")
+			await capture("25-mastery.png")
+			child.hide()
 	app.guided_button.pressed.emit()
 	check(game.training.phase == "attempt", "guided button begins selected sit trial")
 	app.command_edit.text = "podaj łapę"
@@ -393,6 +410,11 @@ func _test_world_room() -> void:
 	for id in ["window", "toys", "door"]:
 		room.look_at_world(RoomLayout.STATIONS[id].position)
 		await click_at(room.world_to_screen(room.station_bounds(id).get_center()))
+		if id == "door":
+			check(game.in_yard and room.in_yard, "door enters the yard")
+			app._toggle_yard()
+			check(not game.in_yard and room.station_nodes.food.visible, "return restores indoor stations")
+			continue
 		check(game.activity == "approach" and game._pending_action == id, "world station responds after panning: " + id)
 		wait_for_arrival()
 		check(room.pet_world.distance_to(room.station_point(id)) < 0.1 and game.activity == "need", "puppy reaches station and shows its behaviour: " + id)
@@ -548,7 +570,7 @@ func check_pixel_grid(label: String) -> void:
 				continue
 			var block := Rect2(Vector2(point), Vector2.ONE * room.pixel_scale)
 			var under_ui := false
-			for control in [app.header, app.sheet, app.navigation, app.bubble, app.companion_card, app.gain_label, app.footer_label, room.return_button, room.overview_button, room.room_hint] + room.prop_markers.values():
+			for control in [app.yard_toolbar, app.header, app.sheet, app.navigation, app.bubble, app.companion_card, app.gain_label, app.footer_label, room.return_button, room.overview_button, room.room_hint] + room.prop_markers.values():
 				if control.is_visible_in_tree():
 					var ui_rect: Rect2 = root.get_final_transform() * control.get_global_rect().grow(24)
 					if ui_rect.intersects(block): under_ui = true
