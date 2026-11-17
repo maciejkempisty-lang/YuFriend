@@ -172,7 +172,11 @@ func _process(delta: float) -> void:
 	if activity_left > 0:
 		activity_left -= delta
 		if activity_left <= 0:
-			if activity == "sniff":
+			if activity == "outing_pause":
+				activity = "outing_praise"
+				activity_left = 20
+				say("Gotowe! Możesz pochwalić pieska przy płocie.")
+			elif activity == "sniff":
 				_finish_sniff()
 			elif not _sequence_id.is_empty():
 				_advance_behavior()
@@ -241,6 +245,11 @@ func _spontaneous(roll: float = -1.0) -> void:
 	if float(pet.needs.energy) < 28:
 		act("rest", false)
 		return
+	if DailyRhythm.phase(pet, _local_now()) == "morning" and YardRoutines.due(self) and float(cooldowns.get("outing", 0)) <= 0:
+		cooldowns["outing"] = 3600
+		move_to(RoomLayout.STATIONS.door.stand, false)
+		say("Może wyjdziemy na chwilę? Czekam przy drzwiach.")
+		return
 	for need in [["fullness", "hungry"], ["play", "bored"]]:
 		# At night boredom asks for quiet company instead of a ball.
 		if need[0] == "play" and DailyRhythm.quiet(pet, _local_now()): continue
@@ -290,7 +299,7 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return activity in ["outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
@@ -516,6 +525,13 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 
 func destination_reached() -> void:
 	if suspended or not writable: return
+	if in_yard and activity == "outing_walk":
+		_travel_left = 0
+		activity = "outing_pause"
+		activity_left = 4
+		clip_requested.emit("sniff")
+		say("Chwila prywatności w trawie…")
+		return
 	if in_yard and activity == "hide_walk" and hide_game.arrive():
 		_travel_left = 0
 		activity = "hide_sniff"

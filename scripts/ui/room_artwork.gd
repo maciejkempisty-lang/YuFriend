@@ -5,6 +5,8 @@ const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-
 const PORTRAIT_PUPPY = preload("res://assets/sprites/puppy/pixel/sheets/sit_idle.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
 var kind := "room"
+var garden_state: Dictionary = {}
+var garden_key := ""
 var decor: Array = []
 const DECOR_ATLAS = preload("res://assets/art/environments/decor-v1.png")
 const DECOR_REGIONS := {"rug": Rect2(39, 474, 449, 232), "flower": Rect2(617, 293, 275, 469), "shelf": Rect2(1040, 382, 447, 329)}
@@ -467,6 +469,19 @@ func _draw_yard() -> void:
 		_pixel_rect(Rect2(x + 3, 185, 6, 90), Color("ecd4a2"))
 	_pixel_rect(Rect2(0, 213, area.x, 12), Color("b69468"))
 	_pixel_rect(Rect2(0, 252, area.x, 12), Color("b69468"))
+	_pixel_rect(Rect2(485, 265, 138, 60), Color("9a704e"))
+	_pixel_rect(Rect2(491, 271, 126, 48), Color("74543f"))
+	if not garden_state.is_empty() and garden_state.plant != "":
+		var view := garden_state.duplicate(true)
+		YardRoutines.update(view, Time.get_unix_time_from_system())
+		var height := 9 + 36 * float(view.growth) / YardRoutines.GROW_TIME
+		for x in [510, 550, 590]:
+			_pixel_rect(Rect2(x, 300 - height, 6, height), Color("63905a"))
+			_pixel_rect(Rect2(x - 9, 288, 12, 6), Color("7caa68"))
+			if view.growth >= YardRoutines.GROW_TIME:
+				_pixel_ellipse(Vector2(x + 3, 300 - height), Vector2(12, 9), {"daisy": Color("fff3d5"), "poppy": Color("d97c68"), "lavender": Color("aa8cbd")}[view.plant])
+	_pixel_rect(Rect2(1290, 265, 6, 32), Color("a48059"))
+	_pixel_rect(Rect2(1278, 265, 33, 15), Color("efd7a4"))
 	# A wooden gate and a marked fetch lawn give the yard fixed landmarks.
 	_pixel_rect(Rect2(108, 190, 84, 84), Color("a48059"))
 	for x in [114, 138, 162, 186]: _pixel_rect(Rect2(x, 190, 6, 84), Color("efd7a4"))

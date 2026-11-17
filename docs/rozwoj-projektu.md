@@ -4,7 +4,7 @@
 
 ## Aktualny plan po audycie i feedbacku — 17 listopada 2026
 
-Ten plan zastępuje wcześniejszą kolejność rozbudowy. **Wstrzymujemy nowe funkcje do zakończenia stabilizacji i tygodniowej próby z 5–10 osobami.** Najbliższy cel: wiarygodny build testowy, zachowane postępy Glorii i ustalenie, co rzeczywiście zachęca graczy do powrotu. Poniższe zadania są planem, nie deklaracją wykonania; aktualizacja dokumentu nie oznacza commitu kodu ani instalacji.
+Decyzja użytkownika z 17 listopada 2026: rozwijamy wyjście na potrzebę i ogródek równolegle z testami, bez czekania na koniec tygodnia. Poniższa pierwotna kolejność pozostaje historią planu; testy z ludźmi nadal są otwarte i nie są warunkiem wdrożenia tych dwóch funkcji.
 
 ### Plan wykonawczy — zatwierdzona kolejność wdrażania
 
@@ -17,7 +17,7 @@ Polecenie rozpoczęcia wdrożenia: 17 listopada 2026. Realizujemy kolejno:
 5. Rzeczywisty widget i przypomnienie, następnie siedem dni z 5–10 testerami. Ten etap wymaga uczestników i upływu czasu; nie można zastąpić go testami automatycznymi.
 6. Po wynikach wybór jednego rozszerzenia z etapu D; przed ogródkiem/kopaniem wydzielenie systemów podwórka i kąpieli. Checklistę wydania sklepowego realizujemy po ustaleniu zakresu produktu.
 
-Każdy pakiet kończy się testami adekwatnymi do zmian. Nie uruchamiamy wszystkich przyszłych funkcji jednocześnie: wybór po tygodniu testów pozostaje częścią zatwierdzonego planu.
+Każdy pakiet kończy się testami adekwatnymi do zmian. Aktualny wyjątek zatwierdzony przez użytkownika: wyjście na potrzebę i ogródek wdrażamy teraz. Pozostałe rozszerzenia nadal wymagają wyboru zakresu.
 
 **Pakiety stabilizacyjne i instalacja zakończone:** kod, grafiki i regresje są w commicie `3ea71cc`. Build 17 zainstalowano i uruchomiono na iPhonie jako aktualizację tej samej aplikacji. Świeża kopia Glorii v8 przeszła do v11; porównanie po uruchomieniu potwierdziło tożsamość, sztuczki, więź, nawyki, zdjęcia, dekoracje i osiągnięcia. Oryginał v8 zachowano również w archiwum z sumą zawartości, ponieważ istniała już inna kopia `.v8`.
 

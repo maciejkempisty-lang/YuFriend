@@ -443,7 +443,7 @@ func update_placement() -> void:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
 		_base_pixel_scale = maxi(1, floori(available_width / (RoomLayout.SIZE.x / _render_pixel_size)))
-		var top := maxf(hud_bottom + 54, yard_controls_bottom + 48) if in_yard else hud_bottom + 54
+		var top := maxf(hud_bottom + 54, yard_controls_bottom + 96) if in_yard else hud_bottom + 54
 		_available_rect = Rect2(0, top, size.x, maxf(1, stage_height - top - 12))
 	world.scale = Vector2.ONE / _render_pixel_size
 	_apply_pixel_scale(_wanted_zoom())
@@ -757,7 +757,7 @@ func _sync_layers() -> void:
 			marker.custom_minimum_size = Vector2(44, 44)
 			marker.size = Vector2(44, 44)
 			var index := RoomLayout.YARD_STATIONS.keys().find(id)
-			marker.position = Vector2(render_rect.position.x + index * (render_rect.size.x - 44) / 4, maxf(yard_controls_bottom, render_rect.position.y - 48))
+			marker.position = Vector2(12 + (index % 4) * (size.x - 68) / 3, maxf(yard_controls_bottom, render_rect.position.y - 96) + (index / 4) * 48)
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
 		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
 		marker.visible = in_yard and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)

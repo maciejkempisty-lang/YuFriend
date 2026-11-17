@@ -27,7 +27,7 @@ static func valid_id(id: String) -> bool:
 	return true
 
 static func unlock_reason(pet: PetState, key: String) -> String:
-	if key == "flower" and not (pet.milestones.has("yard_find_0") or pet.milestones.has("yard_find_1") or pet.milestones.has("yard_find_2")): return "Znajdź pierwszy skarb na podwórku."
+	if key == "flower" and pet.yard_routines.flowers.is_empty() and not (pet.milestones.has("yard_find_0") or pet.milestones.has("yard_find_1") or pet.milestones.has("yard_find_2")): return "Znajdź pierwszy skarb na podwórku."
 	if key == "shelf":
 		for skill in pet.skills.values():
 			if float(skill.mastery) >= 100: return ""

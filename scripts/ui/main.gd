@@ -1087,6 +1087,14 @@ func _refresh() -> void:
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
 	sniff_button.disabled = (session.busy() and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
+	if session.activity == "outing_praise": care_status.text = "Gotowe! Dotknij miejsca Na potrzebę, by pochwalić."
+	var garden_view := pet.yard_routines.duplicate(true)
+	YardRoutines.update(garden_view, Time.get_unix_time_from_system())
+	var garden_key := "%s:%d" % [garden_view.plant, int(garden_view.growth / 3600)]
+	if room.backdrop.garden_key != garden_key:
+		room.backdrop.garden_key = garden_key
+		room.backdrop.garden_state = garden_view
+		if session.in_yard: room.backdrop.queue_redraw()
 	if session.hide_game.active(): care_status.text = session.hide_game.hint()
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
@@ -1378,6 +1386,10 @@ func _room_care_action(action: String) -> void:
 	if action.begins_with("yard_") and session.in_yard:
 		var place := action.trim_prefix("yard_")
 		if place == "gate": _toggle_yard()
+		elif place == "garden": _show_garden()
+		elif place == "outing":
+			if session.activity == "outing_praise": YardRoutines.praise(session)
+			elif not YardRoutines.start_outing(session): session.say("Dziś już byliśmy. Możecie spokojnie pobyć na podwórku." if not YardRoutines.due(session) else "Zakończmy obecną czynność przed wyjściem.")
 		elif place == "fetch":
 			if session.play_readiness().is_empty(): _aim_ball()
 		elif place.begins_with("bush_"):
@@ -1546,4 +1558,50 @@ func _confirm_remove_photo(id: String) -> void:
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
 	_position_dialog(dialog, Vector2i(300, 260))
+	dialog.popup()
+
+func _show_garden() -> void:
+	if not YardRoutines.available(session):
+		session.say("Ogródek poczeka. Najpierw zakończmy obecną czynność.")
+		return
+	var dialog := AcceptDialog.new()
+	dialog.title = "Ogródek"
+	dialog.get_ok_button().text = "Wróć"
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(260, 230)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	dialog.add_child(scroll)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+	var description := _label(YardRoutines.describe(session.pet.yard_routines, Time.get_unix_time_from_system()), 15, MUTED)
+	description.custom_minimum_size.x = 260
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(description)
+	var state := session.pet.yard_routines.duplicate(true)
+	YardRoutines.update(state, Time.get_unix_time_from_system())
+	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else {"water": "Podlej"})
+	for key in choices:
+		var action: String = key
+		var button := _button(("Posadź: " if state.plant == "" else "") + choices[key], func():
+			YardRoutines.garden(session, action)
+			dialog.hide()
+			_show_garden())
+		button.disabled = action == "water" and Time.get_unix_time_from_system() < state.water_until
+		box.add_child(button)
+	var collection := _label("Kolekcja kwiatów: %d/3. Wzrost trwa 3 podlane doby." % state.flowers.size(), 12, MUTED)
+	collection.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(collection)
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	var weak_dialog: WeakRef = weakref(dialog)
+	var close_if_away := func():
+		var current: AcceptDialog = weak_dialog.get_ref()
+		if current != null and (not session.in_yard or session.suspended): current.hide()
+	session.changed.connect(close_if_away)
+	dialog.tree_exiting.connect(func():
+		if session.changed.is_connected(close_if_away): session.changed.disconnect(close_if_away))
+	_position_dialog(dialog, Vector2i(300, 340))
 	dialog.popup()

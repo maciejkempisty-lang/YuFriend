@@ -38,7 +38,7 @@ func run() -> void:
 	check(game.in_yard and app.room.in_yard, "entry changes scene")
 	check(not app.room.station_nodes.food.visible and not app.room.wall_clock.visible, "indoor props hidden outside")
 	await shot("entry")
-	check(app.room.yard_markers.size() == 5, "yard has gate lawn and three fixed search stations")
+	check(app.room.yard_markers.size() == 7, "yard has gate lawn bushes garden and outing stations")
 	app.room.yard_markers.bush_2.pressed.emit()
 	check(game.sniff_spot == 2, "third bush starts search at that actual location")
 	app._toggle_yard()
@@ -123,14 +123,15 @@ func run() -> void:
 	await process_frame
 	await shot("stations")
 	var visible_stations := 0
-	var last_end := -1.0
+	var marker_rects: Array[Rect2] = []
 	for marker in app.room.yard_markers.values():
 		if marker.visible:
 			visible_stations += 1
 			check(not marker.get_global_rect().intersects(app.yard_toolbar.get_global_rect()), "station is clear of yard toolbar")
-			check(marker.position.x >= last_end, "overview station targets do not overlap")
-			last_end = marker.get_rect().end.x
-	check(visible_stations == 5, "overview shows all five station targets on narrow screen")
+			for previous in marker_rects:
+				check(not marker.get_rect().intersects(previous), "overview station targets do not overlap")
+			marker_rects.append(marker.get_rect())
+	check(visible_stations == 7, "overview shows all seven station targets on narrow screen")
 	game.local_clock = func(): return 100 * 86400.0 + 23 * 3600
 	game.player_activity()
 	tick(310)

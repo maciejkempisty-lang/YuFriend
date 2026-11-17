@@ -13,6 +13,8 @@ const YARD_STATIONS := {
 	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205)},
 	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205)},
 	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205)},
+	"garden": {"label": "Ogródek", "icon": "flower", "point": Vector2(550, 205)},
+	"outing": {"label": "Na potrzebę", "icon": "paw", "point": Vector2(1300, 205)},
 	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205)}
 }
 const STATIONS := {

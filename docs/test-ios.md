@@ -143,3 +143,9 @@ Zmiany: powrót zmęczonego psa do legowiska po zakończeniu zabawy, usuwanie zd
 Weryfikacja lokalna: 17 zestawów logiki i 11 UI bez błędów; widget 1526 sprawdzeń, przypomnienia 1067 planisty i 18 kontrolera. Obejrzano komputerowe zrzuty wąskiego układu. Te wyniki nie są potwierdzeniem gestów na fizycznym ekranie 320 px ani rzeczywistego doręczenia przypomnienia. Status przypomnień po uruchomieniu: włączone, zero oczekujących; nie dowodzi to doręczenia. Bieżąca obserwacja widgetu, powiadomienia i siedem dni z 5–10 testerami pozostają otwarte.
 
 Duże produkty poza SSD projektu: `/tmp/yufriend-stabilization-v17` oraz `/tmp/yufriend-stabilization-v17-build`; log kompilacji `/tmp/yufriend-stabilization-v17-build.log`.
+
+## Kod po buildzie 17 — ogródek i wyjście na potrzebę
+
+Wdrożone lokalnie, jeszcze bez nowej instalacji telefonu. Schemat v12; widget akceptuje v4–v12. Test roboczej kopii Glorii z `2026-11-17-after-v17/Documents/pet.json` zachował wszystkie 26 istniejących pól, archiwum v11 i poprawny odczyt po ponownym zapisie. Nie modyfikowano oryginału ani danych na telefonie. Przed kolejną instalacją nadal należy pobrać świeże Documents.
+
+Regresja: 18 zestawów logiki, w tym 49 sprawdzeń ogródka/wyjścia; 12 zestawów UI, w tym sadzenie i podlewanie przy 320 px oraz wejście i pochwała w nowym miejscu. Po korekcie deklaracji WeakRef ponowiono testy kąpieli i dymków; oba przechodzą. Ponowiona kontrola rytmu nie zgłosiła ostrzeżenia zasobów przy zamknięciu. Widget: 1526 sprawdzeń / 252 prognozy zgodne z Godotem. Zrzuty lokalne: `/tmp/yuf-garden-ui.png`, `/tmp/yuf-garden-overview.png`. Są to próby komputerowe, nie potwierdzenie nowej wersji na fizycznym iPhonie.

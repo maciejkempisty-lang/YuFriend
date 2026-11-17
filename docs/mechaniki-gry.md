@@ -297,3 +297,15 @@ Kąpiel wymaga co najmniej 35 energii i 30 sytości oraz czystości poniżej 80.
 Na wąskim ekranie podpisy ikon mieszczą się we własnych polach przez dopasowanie rozmiaru tekstu. Podgląd całego podwórka wypełnia dostępną wysokość tłem nieba i trawnika, zachowując proporcje świata oraz dostęp do wszystkich miejsc. Nie rozciąga grafiki ani psa w pionie.
 
 Zapis pozostaje v11. Nowy `test_stabilization` przechodzi 17 sprawdzeń; zestawy UI obejmują rzeczywiste ukończenie kąpieli i anulowanie/potwierdzenie usunięcia fotografii. Świeża kopia Documents Glorii z telefonu została sprawdzona przez migrację v8 → v11, zapis i odczyt — wszystkie 23 wcześniejsze pola zachowano.
+
+
+## Ogródek i wyjście na potrzebę — po buildzie 17
+
+Decyzją użytkownika wdrażane bez oczekiwania na koniec tygodnia testów. Osobny `YardRoutines` przechowuje reguły obu czynności; sesja obsługuje dojście, krótką pauzę i powrót do zwykłych aktywności. Nowe miejsca są dostępne na mapie podwórka, także na 320 px.
+
+- **Na potrzebę:** rano pies może podejść do drzwi i poprosić o wyjście. Przy miejscu „Na potrzebę” podchodzi do spokojnego fragmentu trawy, czeka 4 sekundy, po czym przez 20 sekund można go pochwalić dotknięciem tego samego miejsca. Pochwała daje +0,5 więzi raz dziennie. Pominięcie, przerwanie i brak pochwały nie powodują kary. Cofnięcie daty nie odnawia premii. Nocny zakaz wejścia na podwórko pozostaje.
+- **Ogródek:** jedna grządka, stokrotka, mak lub lawenda. Po posadzeniu trzeba podlać. Woda wystarcza na 24 godziny rzeczywistego wzrostu; nie można jej gromadzić wielokrotnymi kliknięciami. Pełny wzrost wymaga 72 podlanych godzin. Bez wody roślina czeka i nie ginie. Wzrost po nieobecności nalicza tylko okres objęty podlewaniem. Cofnięcie zegara nie nalicza ponownie czasu; przestawienie zegara w przyszłość może wykorzystać dostępną dobę wody, bez dodatkowych nagród.
+- **Kwiaty:** zebranie dojrzałego kwiatu zapisuje gatunek w kolekcji i pierwsze osiągnięcie w Albumie. Odblokowuje istniejącą dekorację słonecznika, bez zabierania dotychczasowych odblokowań. Grządka jest wtedy wolna pod kolejne nasiona. Posadzonej rośliny nie można przypadkowo zastąpić.
+- **Zapis:** v12 dodaje wyłącznie `yard_routines`. Migracja v11 zachowuje wcześniejsze pola i archiwum. Brak tego pola w pliku deklarującym v12 jest traktowany jako uszkodzenie. Widget akceptuje v12.
+
+Grafika grządki, sadzonek i kwiatów jest rysowana w kodzie w stylu istniejącego podwórka. Pies używa obecnego chodu i węszenia. Nie dodano animacji fizjologicznej ani rozkopywania roślin.

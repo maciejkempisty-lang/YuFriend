@@ -30,6 +30,7 @@ var favorite_reward: String = "praise"
 var needs: Dictionary = {"fullness": 78.0, "energy": 76.0, "hygiene": 85.0, "play": 58.0, "contact": 65.0}
 var skills: Dictionary = {}
 var fetch_rewards: Dictionary = FetchRewards.initial()
+var yard_routines: Dictionary = YardRoutines.initial()
 var yard_record := 0.0
 var practice: Dictionary = PracticeSystem.initial()
 var photos: Array = []
@@ -178,7 +179,7 @@ func trim_journal() -> void:
 	journal = kept
 
 func to_dict() -> Dictionary:
-	return {"fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
+	return {"yard_routines": yard_routines.duplicate(true), "fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
 		"skin": skin, "personality_seed": personality_seed, "traits": traits.duplicate(true),
 		"favorite_reward": favorite_reward, "needs": needs.duplicate(true),
 		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
@@ -191,6 +192,7 @@ static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
 
 static func from_dict(data: Dictionary) -> PetState:
+	if not YardRoutines.valid(data.get("yard_routines")): return null
 	if not FetchRewards.valid(data.get("fetch_rewards")): return null
 	if not valid_number(data.get("yard_record")) or data.yard_record < 0 or data.yard_record > 13: return null
 	if not KeepsakeSystem.valid(data) or not PracticeSystem.valid(data.get("practice")): return null
@@ -280,6 +282,7 @@ static func from_dict(data: Dictionary) -> PetState:
 	pet.habits = data.habits.duplicate()
 	pet.reflected_day = int(data.reflected_day)
 	pet.pet_id = data.pet_id
+	pet.yard_routines = data.yard_routines.duplicate(true)
 	pet.fetch_rewards = data.fetch_rewards.duplicate(true)
 	pet.yard_record = float(data.yard_record)
 	pet.practice = data.practice.duplicate(true)
