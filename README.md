@@ -1,6 +1,6 @@
 # YuFriend
 
-Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Jeden pokój, temperament kształtowany przez wspólne rytuały i nauka trzech komend. Działa lokalnie, bez konta, internetu i klucza API.
+Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Dom, podwórko, kąpiel, temperament kształtowany przez wspólne rytuały i dziewięć sztuczek. Działa lokalnie, bez konta, internetu i klucza API.
 
 Pokój wypełnia wysokość ekranu, a interfejs pływa nad nim. W widoku 390 × 844 około 75% wysokości znajduje się nad panelem opieki. Jeden rząd pięciu przycisków łączy akcję, obwódkę potrzeby i widoczny procent. U góry są imię otwierające kartę psa, pasek więzi i osobne ustawienia. Stała nawigacja **Dom / Trening / Album** pozostaje przy dolnej krawędzi bezpiecznego obszaru; szerokie okno ma sterowanie z boku.
 
@@ -10,6 +10,12 @@ Pokój wypełnia wysokość ekranu, a interfejs pływa nad nim. W widoku 390 × 
 </p>
 
 Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
+
+## Aktualny stan — 17 listopada 2026
+
+Build 17, zainstalowany na iPhonie z zachowaniem postępów Glorii, obejmuje formę i trening dnia, aport z dziennym limitem więzi, chowanego w krzakach, kąpiel z kosztem oraz Album z usuwaniem zdjęć. Pakiet animacji ma 27 klipów / 166 klatek. Aktualny schemat zapisu: **v11**; aplikacja migruje v1–v10 i zachowuje wersjonowane kopie. Widget odczytuje v4–v11. Starsze parametry i opisy poniżej zachowują historię prototypu.
+
+Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji oraz tygodnia testów](docs/rozwoj-projektu.md). Przed nowymi funkcjami wymagany jest tydzień prób z 5–10 osobami. Bieżący status instalacji i dowody zachowania postępów są w [testach iOS](docs/test-ios.md).
 
 ## Dokumentacja
 

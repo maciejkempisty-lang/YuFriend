@@ -123,3 +123,23 @@ Po commicie `f1b86d4` zainstalowano i uruchomiono build 15 na MagicPhone jako ak
 Kopia zapisu po instalacji jest w `exports/iphone-backups/2026-11-15-after-v15/`. Format wynosi 5; identyfikator Glorii, imię, ziarno, cechy, umiejętności, więź, nawyki i osiągnięcia zostały zachowane. Pamięć reakcji zawiera jedno nowe zignorowane zaproszenie do bliskości podczas działania gry; licznik wzrósł o jeden i ograniczona historia przesunęła się o jeden wpis. Nie traktujemy jej jako identycznej bajtowo ani jako resetu postępu. Szczegóły zapisano w `state-verification.json`.
 
 Obejrzano zrzut fizycznego iPhone’a `exports/ios-rhythm-v15/iphone-rhythm.png` (1290 × 2796): Gloria, potrzeby, pokój i nawigacja są widoczne. Noc o 22:30 i powtórzenia treningu sprawdzono z wstrzykniętym zegarem na macOS; nie przestawiano zegara telefonu. Rzeczywiste doręczenie przypomnienia, zachowanie widgetu po aktualizacji i tygodniowy test z ludźmi nadal wymagają obserwacji na urządzeniu.
+
+
+## Aktualizacja 0.1.0 (16) — etapy 1–5, 17 listopada 2026
+
+Zbudowano, podpisano i zainstalowano aktualizację na tym samym iPhonie, pod tym samym identyfikatorem aplikacji. Użytkownik potwierdził działanie zmian. Kopia `Documents` bezpośrednio sprzed instalacji jest w `exports/iphone-backups/2026-11-17-before-v16-final/`, a po zakończonym uruchomieniu w `exports/iphone-backups/2026-11-17-after-v16-ready/`. Pierwszy, zbyt wczesny odczyt `after-v16` nadal zawierał v5; miarodajny odczyt `after-v16-ready` potwierdził migrację do v8. Porównanie potwierdziło zachowanie tożsamości Glorii, imienia, cech, więzi, nawyków, dotychczasowych sztuczek i osiągnięć. Oryginał v5 pozostał w kopii wersjonowanej. Raport: `exports/ios-stage5-v16/state-verification.json`.
+
+Historycznie, przed buildem 17: poprawki po przeglądzie (forma sztuczek i lista dnia, pełny test powrotów oraz nocny powrót z podwórka) są obecnie lokalne i używają schematu v9. Nie instalowano ich ponownie na telefonie. Test kopii zapisu Glorii v8 → v9 zachował wszystkie wcześniejsze pola; raport w `exports/ios-stage5-v16/migration-v9-review.json`. Kolejna instalacja wymaga świeżej kopii Documents, aby zachować także postępy zdobyte od builda 16.
+
+
+## Aktualizacja 0.1.0 (17) — stabilizacja, 17 listopada 2026
+
+Kod i zasoby: commit `3ea71cc`. Eksport, podpisana kompilacja aplikacji z widgetem, kontrola podpisu, instalacja i uruchomienie na MagicPhone zakończyły się powodzeniem. Odczyt urządzenia potwierdza build 17. Zachowano bundle ID i zespół; aplikacji nie odinstalowywano.
+
+Świeża kopia całego Documents przed instalacją: `exports/iphone-backups/2026-11-17-before-v17/Documents`; odczyt po uruchomieniu: `exports/iphone-backups/2026-11-17-after-v17/Documents`. Migracja v8 → v11 zachowała identyfikator, imię, umiejętności, osobowość, cechy, więź, nawyki, zdjęcia, dekoracje i osiągnięcia Glorii. Z wcześniejszych pól zmieniły się tylko potrzeby i czas ostatniej wizyty, zgodnie z upływem czasu. Oryginał v8 jest identyczny bajtowo z archiwum `.v8.8621c49249fb592972051f0ea21a370d9bc48f16934cd148d6b229bda419c515`; zwykła `.v8` przechowuje wcześniejszą zawartość i nie została nadpisana. Raport oraz potwierdzenia urządzenia: `exports/ios-stabilization-v17/`.
+
+Zmiany: powrót zmęczonego psa do legowiska po zakończeniu zabawy, usuwanie zdjęcia z potwierdzeniem, kąpiel przy energii co najmniej 35, sytości 30 i higienie poniżej 80 (efekt +45 higieny, −5 energii, −2 sytości), czytelne podpisy opieki i pełniejszy kadr podwórka przy szerokości 320 px. Usunięcie wpisu Albumu nie kasuje PNG używanego przez starsze kopie.
+
+Weryfikacja lokalna: 17 zestawów logiki i 11 UI bez błędów; widget 1526 sprawdzeń, przypomnienia 1067 planisty i 18 kontrolera. Obejrzano komputerowe zrzuty wąskiego układu. Te wyniki nie są potwierdzeniem gestów na fizycznym ekranie 320 px ani rzeczywistego doręczenia przypomnienia. Status przypomnień po uruchomieniu: włączone, zero oczekujących; nie dowodzi to doręczenia. Bieżąca obserwacja widgetu, powiadomienia i siedem dni z 5–10 testerami pozostają otwarte.
+
+Duże produkty poza SSD projektu: `/tmp/yufriend-stabilization-v17` oraz `/tmp/yufriend-stabilization-v17-build`; log kompilacji `/tmp/yufriend-stabilization-v17-build.log`.
