@@ -320,3 +320,16 @@ Piaskownica to ósme stałe miejsce podwórka. Pies dochodzi na miejsce i kopie 
 Kolekcja w Albumie obejmuje 12 przedmiotów: sześć pospolitych (waga 6), cztery niezwykłe (waga 3), dwa rzadkie (waga 1). Losowanie zależy od ziarna pieska i trwałego licznika ukończonych prób, więc anulowanie nie zmienia kolejnego wyniku. Duplikat daje jeden punkt wymiany, trzy punkty pozwalają wybrać brakujący skarb. Nie ma płatnej waluty ani premii więzi za kopanie.
 
 Schemat v13 dodaje `exploration` z kolekcją i limitami. Starsze dane migrują bez zmiany wcześniejszych pól. `YardActivities`, `BathCare` i `OutdoorPanels` wydzielają istniejącą logikę z sesji i głównego widoku; `DiggingSystem`, `BondLevels` i `ProgressionPanels` obsługują nowe funkcje.
+
+
+## Sztuczki w zabawach i kwiatowe dekoracje — pakiet po buildzie 19
+
+Po aporcie pojawia się opcjonalne „Przyjdź” (oferta do 25 sekund). Pies wraca do punktu rzutu z piłką; zaliczenie wymaga faktycznego dojścia oraz pochwały w oknie nagrody. Kolejna zabawa może zastąpić niewykorzystaną ofertę. W chowanym ze smakołykiem, przed wskazaniem krzaka, można użyć „Zostań”. Przez około 2 sekundy pies pozostaje na miejscu, po czym gracz go chwali i wybiera kryjówkę. Wariant, w którym chowa się pies, pozostaje bez „Zostań”. Oba kroki można pominąć.
+
+Przycisk komendy zastępuje na chwilę przycisk kąpieli na podwórku, utrzymując trzy pola dotykowe także przy 320 px. Można wybrać samą komendę lub komendę z gestem. Bez podpowiedzi obowiązuje zwykła szansa zależna m.in. od opanowania i formy; z gestem wykonanie jest pewne. Obowiązują odblokowania i gotowość treningowa. Próba ma standardowy koszt energii i zmęczenia, a pochwała daje standardowy postęp sztuczki. Nieudana lub przerwana próba nie daje zaliczenia ani nagrody; można spróbować ponownie, jeśli pies jest gotowy. Po pochwalonym „Zostań” ta runda chowanego nie oferuje drugiego ćwiczenia.
+
+Udana, pochwalona komenda wywołuje ten sam `PracticeSystem.record` co zakładka Trening: +25 formy do 100 i zaliczenie, jeśli sztuczka należy do listy dnia. Ukończenie listy daje tę samą pojedynczą premię +2 więzi i serię, bez osobnych liczników dla podwórka. Nauka, osiągnięcie 100% i odblokowania także korzystają z `TrainingSystem`. Wyjście do domu, przerwanie ruchu, tło aplikacji i upływ czasu unieważniają oczekującą próbę. Błąd zapisu cofa nagrodę w pamięci.
+
+Zebrana stokrotka odblokowuje wazon ze stokrotkami, mak wazon z makami, a lawenda doniczkę lawendy. Wcześniej zebrane gatunki działają od razu. Dekoracje ustawia się w Albumie; wszystkie trzy mogą być widoczne jednocześnie. Nie zużywają kwiatów. Dotychczasowy słonecznik i pozostałe dekoracje pozostają dostępne na wcześniejszych zasadach.
+
+Schemat v14 nie dodaje pól do pieska: rozszerza dozwolone identyfikatory dekoracji. Granica wersji zapobiega potraktowaniu nowego zapisu jako uszkodzonego przez wcześniejszą aplikację. Widget w kodzie obsługuje v14. Oryginał v13 jest archiwizowany przy migracji.

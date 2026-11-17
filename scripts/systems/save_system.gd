@@ -1,7 +1,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 13
+const VERSION := 14
 const MAX_BYTES := 1024 * 1024
 var path: String
 var last_error: String = ""
@@ -20,7 +20,7 @@ func _read(file_path: String) -> Dictionary:
 		return {"status": "invalid"}
 	var data: Dictionary = parsed.data
 	var version: Variant = data.get("schema_version")
-	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4 and version != 5 and version != 6 and version != 7 and version != 8 and version != 9 and version != 10 and version != 11 and version != 12):
+	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4 and version != 5 and version != 6 and version != 7 and version != 8 and version != 9 and version != 10 and version != 11 and version != 12 and version != 13):
 		return {"status": "unsupported"}
 	if not data.get("pet") is Dictionary:
 		return {"status": "invalid"}

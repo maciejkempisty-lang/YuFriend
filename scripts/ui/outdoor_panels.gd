@@ -98,3 +98,30 @@ static func _show_garden(app: GameUI) -> void:
 		if app.session.changed.is_connected(close_if_away): app.session.changed.disconnect(close_if_away))
 	app._position_dialog(dialog, Vector2i(300, 340))
 	dialog.popup()
+
+static func command(app: GameUI) -> void:
+	var commands := app.session.outdoor_commands
+	if commands.phase == "praise":
+		commands.praise(app.session)
+		return
+	var key := commands.available_key(app.session)
+	if key.is_empty() or commands.running(): return
+	var reason := app.session.training.readiness(app.session.pet, key)
+	if not reason.is_empty():
+		app.session.say(reason)
+		return
+	var dialog := AcceptDialog.new()
+	dialog.title = TrainingSystem.LABELS[key] + " w zabawie"
+	dialog.get_ok_button().text = "Pomiń"
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	dialog.add_child(box)
+	for guided in [false, true]:
+		box.add_child(app._button("Komenda z gestem" if guided else "Sama komenda", func():
+			dialog.hide()
+			if commands.available_key(app.session) == key: commands.start(app.session, guided)))
+	app.add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	app._position_dialog(dialog, Vector2i(290, 210))
+	dialog.popup()

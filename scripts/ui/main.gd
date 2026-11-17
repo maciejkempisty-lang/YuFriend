@@ -25,6 +25,8 @@ var photo_signature := ""
 var taking_photo := false
 var bath_dialog: AcceptDialog
 var yard_toolbar: HBoxContainer
+var yard_command_button: Button
+var yard_bath_button: Button
 var yard_button: Button
 var sniff_button: Button
 var reward_buttons: Dictionary = {}
@@ -444,7 +446,11 @@ func _build_care() -> VBoxContainer:
 	outdoors.add_child(yard_button)
 	sniff_button = _button("Krzaki", _show_yard_games)
 	outdoors.add_child(sniff_button)
-	outdoors.add_child(_button("Kąpiel", _show_bath))
+	yard_bath_button = _button("Kąpiel", _show_bath)
+	outdoors.add_child(yard_bath_button)
+	yard_command_button = _button("Komenda", func(): OutdoorPanels.command(self))
+	outdoors.add_child(yard_command_button)
+	yard_command_button.hide()
 	care_status = _label("Małe rytuały, wspólny dzień", 12, MUTED)
 	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(care_status)
@@ -1087,6 +1093,12 @@ func _refresh() -> void:
 		button.queue_redraw()
 	care_buttons.rest.caption = "Obudź" if session.is_sleeping() else ("Senność" if float(pet.needs.energy) < 30 else "Drzemka")
 	care_buttons.rest.icon_name = "sun" if session.is_sleeping() else "moon"
+	room.carrying_ball = session.outdoor_commands.key == "come" and session.outdoor_commands.phase == "perform" and session.outdoor_commands.trial.will_succeed
+	var command := session.outdoor_commands.available_key(session)
+	yard_command_button.visible = not command.is_empty()
+	yard_bath_button.visible = command.is_empty()
+	yard_command_button.text = "Pochwal" if session.outdoor_commands.phase == "praise" else TrainingSystem.LABELS.get(command, "Komenda")
+	yard_command_button.disabled = session.outdoor_commands.phase == "perform" or (command == "come" and session.busy() and not session.outdoor_commands.running())
 	yard_button.text = "Dom" if session.in_yard else "Podwórko"
 	sniff_button.visible = session.in_yard
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
@@ -1102,6 +1114,8 @@ func _refresh() -> void:
 		room.backdrop.garden_state = garden_view
 		if session.in_yard: room.backdrop.queue_redraw()
 	if session.hide_game.active(): care_status.text = session.hide_game.hint()
+	if session.outdoor_commands.phase == "praise": care_status.text = "Udało się! Pochwal, aby zaliczyć trening."
+	elif session.outdoor_commands.phase == "perform": care_status.text = "Wraca z piłką…" if command == "come" else "Zostań… spokojnie czekamy."
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
@@ -1496,7 +1510,7 @@ func _show_decor() -> void:
 			atlas.atlas = RoomArtwork.DECOR_ATLAS
 			atlas.region = RoomArtwork.DECOR_REGIONS[key]
 			preview.texture = atlas
-		else: preview.texture = GameIcons.texture("heart" if key == "cushion" else "paw")
+		else: preview.texture = GameIcons.texture("flower" if YardRoutines.PLANTS.has(key) else ("heart" if key == "cushion" else "paw"))
 		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		preview.custom_minimum_size = Vector2(0, 62)
 		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

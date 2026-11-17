@@ -56,7 +56,7 @@ static func garden(session: GameSession, action: String) -> bool:
 		state.plant = ""
 		state.growth = 0.0
 		state.water_until = 0.0
-		message = "Kwiat w kolekcji! Odblokowano słonecznik do pokoju."
+		message = "Kwiat w kolekcji! Odblokowano: %s. Ustaw dekorację w Albumie." % KeepsakeSystem.DECOR[plant]
 	else: return false
 	if not session.flush():
 		session.pet = PetState.from_dict(before)

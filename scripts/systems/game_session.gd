@@ -38,6 +38,7 @@ var _brain_left: float = 8.0
 signal hide_revealed(spot: int)
 var hide_game := YardHide.new()
 var fetch := YardFetch.new()
+var outdoor_commands := OutdoorCommands.new()
 var in_yard := false
 var _yard_dark_idle := 0.0
 var in_bath := false
@@ -140,6 +141,7 @@ func _process(delta: float) -> void:
 		if invitation_presented and not invitation.is_empty():
 			invitation.remaining -= delta
 			if float(invitation.remaining) <= 0: _finish_invitation("ignored")
+	outdoor_commands.advance(self, delta)
 	_tick_hide(delta)
 	if fetch.advance(delta):
 		play.finish_ball()
@@ -301,12 +303,13 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
 
 func _cancel_motion() -> void:
+	outdoor_commands.cancel()
 	sniff_spot = -1
 	_reward_from_training = false
 	_sequence.clear()
@@ -527,6 +530,10 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 
 func destination_reached() -> void:
 	if suspended or not writable: return
+	if in_yard and outdoor_commands.phase == "perform" and outdoor_commands.key == "come":
+		outdoor_commands.arrived = true
+		_travel_left = 0
+		return
 	if in_yard and activity == "dig_walk":
 		_travel_left = 0
 		activity = "digging"
@@ -828,6 +835,7 @@ func _settle_touch_game() -> void:
 	pet.social.games[kind] = mini(PetState.MAX_EVENT_COUNT, int(pet.social.games[kind]) + 1)
 	var now := Time.get_unix_time_from_system()
 	var bonus := false
+	var fetch_origin := fetch.origin
 	var fetch_distance := fetch.distance
 	var fetch_precise := fetch.precise
 	var fetch_round := fetch.active and kind == "ball"
@@ -853,11 +861,13 @@ func _settle_touch_game() -> void:
 	if fetch_round:
 		say("Aport %.1f m! %s%s" % [fetch_distance, "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dzisiejsze premie wykorzystane." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
 	fetch.reset()
+	if fetch_round: outdoor_commands.offer_recall(fetch_origin)
 	if kind == "ball": play.reset()
 	flush()
 	changed.emit()
 
 func cancel_touch_game() -> void:
+	outdoor_commands.cancel()
 	if hide_game.active(): cancel_hide()
 	fetch.reset()
 	if play.kind.is_empty(): return

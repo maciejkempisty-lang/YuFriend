@@ -95,7 +95,7 @@ func _initialize() -> void:
 	check(store.save_pet(session.pet), "game result saves")
 	var loaded := store.load_pet()
 	check(loaded.pet.yard_record == 4.5 and loaded.pet.skills.sit.mastery == 100 and loaded.pet.milestones.has("yard_hide_dog") and loaded.pet.milestones.has("yard_hide_treat"), "reload preserves previous progress and new memories")
-	check(SaveSystem.VERSION == 13, "current save schema")
+	check(SaveSystem.VERSION == 14, "current save schema")
 	check(session.pet.milestones.has("yard_find_0"), "older collection survives both new games")
 	session.start_hide("dog", 3)
 	session.local_clock = func(): return 100 * 86400.0 + 23 * 3600

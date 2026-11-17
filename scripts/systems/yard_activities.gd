@@ -101,6 +101,7 @@ static func start_hide(s: GameSession, kind: String, seed_value: int = 0) -> boo
 
 
 static func choose_hide_bush(s: GameSession, spot: int) -> bool:
+	if s.outdoor_commands.running(): return false
 	if not s.writable or s.suspended or not s.in_yard or not s.hide_game.active(): return false
 	var event := s.hide_game.select(spot)
 	if event.is_empty(): return false

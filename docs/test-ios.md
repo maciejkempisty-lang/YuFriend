@@ -162,3 +162,12 @@ Odczyt `after-v19` potwierdził zachowanie tożsamości, imienia, sztuczek, wię
 Weryfikacja: 19 zestawów logiki, 13 UI, widget 1526 sprawdzeń / 252 prognozy oraz przypomnienia 1067 + 18. W zestawach sprite’ów, Albumu i UI zaktualizowano oczekiwane liczby klipów (28) i dekoracji (5), po czym odpowiednie zestawy powtórzono z powodzeniem. Nowy test kopania i więzi ma 64 sprawdzenia. Zrzuty 320 px obejmują animację, kolekcję, poziomy oraz dekoracje. Próby komputerowe nie potwierdzają dotyku na iPhonie ani faktycznego doręczenia przypomnienia; te obserwacje pozostają otwarte. Nie przestawiano zegara ani nie zmieniano ręcznie potrzeb Glorii.
 
 Końcową kompilację buildu 19 z poprawką dymka ponownie zainstalowano i uruchomiono. Dodatkowe kopie: `before-v19-final` i `after-v19-final`. Porównanie potwierdza schemat 13 i zachowanie tożsamości, imienia, ziarna, sztuczek, więzi, cech, zdjęć, dekoracji, osiągnięć, ogródka oraz kolekcji. Raport: `exports/ios-exploration-v19/verification-final.json`.
+
+
+## Pakiet po buildzie 19 — komendy w zabawach i kwiaty
+
+Implementacja lokalna, bez nowej instalacji na iPhonie. Kopia Glorii `2026-11-17-after-v19-final/Documents/pet.json` przeszła migrację v13 → v14, ponowny zapis i odczyt; wszystkie 28 dotychczasowych pól zostało zachowanych. Oryginał i dane telefonu nie zostały zmienione.
+
+Nowy zestaw logiki: 60 sprawdzeń komend, wspólnego treningu dnia, zapisu, przerwania, cofnięcia nagrody przy błędzie zapisu oraz dekoracji. Próba UI przechodzi przez przyciski na 320 px i faktyczny powrót pieska do punktu rzutu. Widget: 1526 sprawdzeń / 252 prognozy. Zrzuty: `/tmp/yuf-outdoor-recall.png`, `/tmp/yuf-outdoor-stay.png`, `/tmp/yuf-outdoor-flowers-room.png`, `/tmp/yuf-outdoor-flowers-menu.png`. Przed kolejną instalacją trzeba pobrać świeże Documents z telefonu; wcześniejsza kopia jest dowodem migracji, nie aktualną kopią bezpieczeństwa.
+
+Końcowa regresja pakietu: 20 zestawów logiki i 14 interfejsu bez błędów. Po dodaniu anulowania oferty przy zakończeniu zabawy ponowiono 60 sprawdzeń komend z powodzeniem.

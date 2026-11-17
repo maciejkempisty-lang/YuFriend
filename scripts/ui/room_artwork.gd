@@ -502,6 +502,19 @@ func _draw_yard() -> void:
 		_pixel_rect(Rect2(x + 15, 305, 3, 9), Color("78965a"))
 
 func _draw_decor() -> void:
+	for i in YardRoutines.PLANTS.size():
+		var flower: String = YardRoutines.PLANTS.keys()[i]
+		if not decor.has(flower): continue
+		var x := 540 + i * 120
+		var color: Color = {"daisy": Color("fff3d5"), "poppy": Color("d97c68"), "lavender": Color("aa8cbd")}[flower]
+		_pixel_rect(Rect2(x, 215, 36, 42), Color("bd8b69"))
+		_pixel_rect(Rect2(x - 3, 212, 42, 9), Color("d8ad87"))
+		for offset in [6, 18, 30]:
+			_pixel_rect(Rect2(x + offset, 170, 3, 42), Color("63905a"))
+			if flower == "lavender": _pixel_rect(Rect2(x + offset - 3, 155, 9, 24), color)
+			else:
+				_pixel_ellipse(Vector2(x + offset, 170), Vector2(9, 9), color)
+				_pixel_rect(Rect2(x + offset - 3, 167, 6, 6), Color("d9b858"))
 	if decor.has("cushion"):
 		_pixel_ellipse(Vector2(305, 320), Vector2(45, 18), Color("c58d75"))
 		_pixel_ellipse(Vector2(305, 314), Vector2(33, 10), Color("e4b99a"))

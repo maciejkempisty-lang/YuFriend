@@ -13,9 +13,11 @@ Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
 
 ## Aktualny stan — 17 listopada 2026
 
-Build 17, zainstalowany na iPhonie z zachowaniem postępów Glorii, obejmuje formę i trening dnia, aport z dziennym limitem więzi, chowanego w krzakach, kąpiel z kosztem oraz Album z usuwaniem zdjęć. Pakiet animacji ma 28 klipów / 172 klatki. Kod po buildzie 17 dodaje ogródek i wyjście na potrzebę. Aktualny schemat zapisu w kodzie: **v13**; aplikacja migruje v1–v12 i zachowuje wersjonowane kopie. Widget w kodzie odczytuje v4–v13. Na iPhonie zainstalowano build 19 / v13: ogródek, wyjście na potrzebę, poziomy więzi i kopanie. Starsze parametry i opisy poniżej zachowują historię prototypu.
+Build 17, zainstalowany na iPhonie z zachowaniem postępów Glorii, obejmuje formę i trening dnia, aport z dziennym limitem więzi, chowanego w krzakach, kąpiel z kosztem oraz Album z usuwaniem zdjęć. Pakiet animacji ma 28 klipów / 172 klatki. Kod po buildzie 17 dodaje ogródek i wyjście na potrzebę. Aktualny schemat zapisu w kodzie: **v14**; aplikacja migruje v1–v13 i zachowuje wersjonowane kopie. Widget w kodzie odczytuje v4–v14. Na iPhonie zainstalowano build 19 / v13: ogródek, wyjście na potrzebę, poziomy więzi i kopanie. Starsze parametry i opisy poniżej zachowują historię prototypu.
 
 Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji oraz tygodnia testów](docs/rozwoj-projektu.md). Decyzją użytkownika ogródek i wyjście na potrzebę rozwijamy równolegle z próbą 5–10 osób. Bieżący status instalacji i dowody zachowania postępów są w [testach iOS](docs/test-ios.md).
+
+Pakiet po buildzie 19 łączy „Przyjdź” w aporcie i „Zostań” w chowanym z formą oraz tą samą listą treningu dnia. Stokrotka, mak i lawenda odblokowują własne dekoracje. Kod używa v14 (nowe identyfikatory dekoracji), widget odczytuje v4–v14; na telefonie pozostaje build 19 / v13 do następnej instalacji.
 
 ## Dokumentacja
 

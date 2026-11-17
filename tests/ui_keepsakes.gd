@@ -24,6 +24,7 @@ func run() -> void:
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.set_process(false)
+	game.pet.yard_routines.flowers = ["daisy", "poppy", "lavender"]
 	game.pet.bond = 75 # This suite previews every unlocked decoration.
 	game.pet.skills.sit.mastery = 100
 	game.pet.skills.bow.mastery = 100

@@ -46,6 +46,7 @@ var _render_pixel_size := RoomLayout.PIXEL_SIZE
 var room_hint := Label.new()
 var pet_world: Vector2 = RoomLayout.START
 var target_world: Vector2 = RoomLayout.START
+var carrying_ball := false
 var ball_world: Vector2 = RoomLayout.STATIONS.ball.position
 var ball_target: Vector2 = ball_world
 var moving := false
@@ -728,6 +729,9 @@ func _process(delta: float) -> void:
 
 func _sync_layers() -> void:
 	puppy.position = (pet_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
+	if carrying_ball:
+		ball_world = pet_world + Vector2(-25 if animator.facing_left else 25, -10)
+		ball_target = ball_world
 	ball_art.position = ((ball_world - Vector2(0, _ball_lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	for id in prop_bounces:
 		var node: Node2D = ball_art if id == "ball" else station_nodes[id]

@@ -2,6 +2,7 @@ class_name YardHide
 extends RefCounted
 
 const ROUND_SECONDS := 120.0
+var stay_used := false
 var kind := ""
 var phase := ""
 var hiding_spot := -1
@@ -19,6 +20,7 @@ func start(mode: String, seed_value: int = 0) -> bool:
 	var rng := RandomNumberGenerator.new()
 	if seed_value == 0: rng.randomize()
 	else: rng.seed = seed_value
+	stay_used = false
 	kind = mode
 	phase = "choose" if mode == "treat" else "hiding"
 	remaining = ROUND_SECONDS
