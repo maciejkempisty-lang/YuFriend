@@ -191,3 +191,11 @@ Eksport i kompilacja poza SSD projektu: `/tmp/yufriend-commands-v20` oraz `/tmp/
 - Wizualnie sprawdzono wszystkie trzy postacie i przyciski na 320 px. Znaczniki miejsc są ukryte podczas spotkania. Nadal potrzebna ocena na fizycznym telefonie.
 - Kopia `exports/iphone-backups/2026-11-17-after-v20/Documents/pet.json` przeszła odczyt, trzy spotkania z przywołaniem i ponowny zapis w osobnym katalogu `/tmp`: wszystkie 28 pól pieska identyczne, schema_version nadal 14. Oryginalna kopia i dane telefonu nie były modyfikowane.
 - Pakiet gości nie jest jeszcze zainstalowany na iPhonie; ostatnia instalacja pozostaje buildem 20. Przy następnej instalacji wykonać świeżą kopię Documents oraz sprawdzić wizyty, uspokojenie, faktyczne dojście po przywołaniu i powrót po zmęczeniu/nocą.
+
+## Aktualizacja 0.1.0 (21) — goście przy płocie, 17 listopada 2026
+
+Build 21 z kodem gości (`5c6d4a5`) wyeksportowano, podpisano, zainstalowano i uruchomiono na MagicPhone. Urządzenie potwierdza 0.1.0 (21). Bundle ID, zespół P665WUWCN4 i App Group pozostały bez zmian; nie odinstalowywano gry. Podpis aplikacji z widgetem zweryfikowano, obydwa pakiety mają numer 21, a PCK w aplikacji jest identyczny z eksportem. Pierwsze uruchomienie zablokował ekran blokady; po odblokowaniu przez użytkownika uruchomienie i obecność procesu potwierdzono.
+
+Kopie Documents: `exports/iphone-backups/2026-11-17-before-v21/`, bezpośrednio przed instalacją `before-v21-final/`, po samej instalacji `after-v21-install/`, po uruchomieniu `after-v21/`. Kopia robocza świeżego zapisu przeszła odczyt, wizyty i ponowny zapis bez zmiany żadnego z 28 pól. Po samej instalacji wszystkie pola pozostały identyczne. Po uruchomieniu zachowano 25 pól, w tym tożsamość, więź, sztuczki, formę, temperament, zdjęcia, dekoracje, ogródek i kolekcję. Zmieniły się potrzeby i czas ostatniej wizyty oraz historia: jedna nowa wizyta wieczorem. Schemat nadal v14, bez migracji.
+
+Potwierdzenia i porównanie: `exports/ios-visitors-v21/verification.json` oraz pliki instalacji, uruchomienia i listy aplikacji. Duże produkty są w `/tmp/yufriend-visitors-v21` i `/tmp/yufriend-visitors-v21-build`. Weryfikacja wizualna samych gości dotyczy wcześniejszych prób komputerowych; nie przeprowadzano ręcznego spotkania z gościem na telefonie ani nie zmieniano potrzeb lub zegara Glorii.
