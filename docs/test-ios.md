@@ -182,3 +182,12 @@ Bezpośrednia kopia sprzed instalacji: `exports/iphone-backups/2026-11-17-before
 Przechodzi 20 zestawów logiki i 15 interfejsu po powtórzeniu dwóch poprawionych prób: dymki 786 sprawdzeń, animacja 14. Nowy zestaw sprawdza oba kierunki, ruch, otwarcie drzwi, moment zmiany sceny, anulowanie, brak podwójnego uruchomienia, tło aplikacji i noc przy przekroczeniu progu. Sprawdzono podpis aplikacji z widgetem; obejrzano komputerowe zrzuty na 320 px. Nie jest to potwierdzenie jakości gestów na fizycznym telefonie ani doręczenia powiadomienia.
 
 Eksport i kompilacja poza SSD projektu: `/tmp/yufriend-commands-v20` oraz `/tmp/yufriend-commands-v20-build`. Zrzuty animacji: `/tmp/yuf-transition-approach.png`, `/tmp/yuf-transition-door-open.png`, `/tmp/yuf-transition-enter-yard.png`, `/tmp/yuf-transition-home.png`.
+
+
+## Goście przy płocie — weryfikacja lokalna po buildzie 20 (17.11.2026)
+
+- Logika: 21 zestawów przechodzi, w tym 52 sprawdzenia gości i 135 rytmu dnia.
+- Interfejs: 16 zestawów przechodzi, w tym 24 sprawdzenia gości przy 320 × 680 oraz 14 przejść przez drzwi. Jednorazowe ostrzeżenie o zasobach przy zamykaniu testu ogródka nie powtórzyło się w osobnym przebiegu z logowaniem szczegółowym; jego asercje przeszły w obu przebiegach.
+- Wizualnie sprawdzono wszystkie trzy postacie i przyciski na 320 px. Znaczniki miejsc są ukryte podczas spotkania. Nadal potrzebna ocena na fizycznym telefonie.
+- Kopia `exports/iphone-backups/2026-11-17-after-v20/Documents/pet.json` przeszła odczyt, trzy spotkania z przywołaniem i ponowny zapis w osobnym katalogu `/tmp`: wszystkie 28 pól pieska identyczne, schema_version nadal 14. Oryginalna kopia i dane telefonu nie były modyfikowane.
+- Pakiet gości nie jest jeszcze zainstalowany na iPhonie; ostatnia instalacja pozostaje buildem 20. Przy następnej instalacji wykonać świeżą kopię Documents oraz sprawdzić wizyty, uspokojenie, faktyczne dojście po przywołaniu i powrót po zmęczeniu/nocą.

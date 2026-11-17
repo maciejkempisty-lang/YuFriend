@@ -18,6 +18,7 @@ const HOME_FRAME_WIDTH := 480.0
 const DECORATION_TOP := 60.0
 var animator := PetAnimator.new()
 var backdrop := RoomArtwork.new()
+var fence_visitor := FenceVisitorView.new()
 var wall_clock := preload("res://scripts/ui/wall_clock.gd").new()
 var ball_art := RoomArtwork.new()
 var shadow := RoomArtwork.new()
@@ -123,6 +124,9 @@ func _ready() -> void:
 	wall_clock.z_index = -4
 	world.add_child(wall_clock)
 	world.add_child(actors)
+	fence_visitor.position = YardVisitors.FENCE
+	fence_visitor.scale = Vector2.ONE * 1.5
+	world.add_child(fence_visitor)
 	throw_guide.width = 4
 	throw_guide.default_color = Color("fff3be")
 	throw_guide.z_index = 10
@@ -765,7 +769,7 @@ func _sync_layers() -> void:
 			marker.position = Vector2(12 + (index % 4) * (size.x - 68) / 3, maxf(yard_controls_bottom, render_rect.position.y - 96) + (index / 4) * 48)
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
 		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
-		marker.visible = in_yard and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)
+		marker.visible = in_yard and not fence_visitor.visible and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)
 	# Nearby new stations must retain separate touch targets on narrow screens.
 	if in_yard and not overview:
 		var visible_markers: Array = []
@@ -789,6 +793,7 @@ func _sync_layers() -> void:
 func set_yard(enabled: bool) -> void:
 	cancel_activity()
 	in_yard = enabled
+	if not enabled: fence_visitor.present("")
 	backdrop.kind = "yard" if enabled else "room"
 	backdrop.queue_redraw()
 	wall_clock.visible = not enabled

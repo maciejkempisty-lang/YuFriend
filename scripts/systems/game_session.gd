@@ -35,9 +35,11 @@ var last_message: String = "Dotknij, by pogłaskać. Przycisk „Cały pokój”
 var _refresh_left: float = 0.0
 var _save_left: float = 25.0
 var _brain_left: float = 8.0
+signal visitor_appeared
 signal hide_revealed(spot: int)
 var hide_game := YardHide.new()
 var fetch := YardFetch.new()
+var visitors := YardVisitors.new()
 var outdoor_commands := OutdoorCommands.new()
 var portal_active := false
 var in_yard := false
@@ -134,6 +136,7 @@ func start(save_path: String = "user://pet.json") -> void:
 func _process(delta: float) -> void:
 	if not active or suspended: return
 	var was_idle := activity == "idle"
+	visitors.advance(self, delta)
 	_tick_travel(delta)
 	if in_yard: _tick_yard(delta)
 	if not in_yard and not in_bath: _tick_rhythm(delta)
@@ -305,12 +308,13 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return portal_active or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return portal_active or visitors.active() or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
 
 func _cancel_motion() -> void:
+	visitors.cancel()
 	outdoor_commands.cancel()
 	sniff_spot = -1
 	_reward_from_training = false
@@ -533,6 +537,9 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 func destination_reached() -> void:
 	if portal_active: return
 	if suspended or not writable: return
+	if visitors.active():
+		visitors.arrived(self)
+		return
 	if in_yard and outdoor_commands.phase == "perform" and outdoor_commands.key == "come":
 		outdoor_commands.arrived = true
 		_travel_left = 0

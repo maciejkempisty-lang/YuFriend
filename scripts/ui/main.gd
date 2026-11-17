@@ -27,6 +27,8 @@ var bath_dialog: AcceptDialog
 var yard_toolbar: HBoxContainer
 var yard_transition := YardTransition.new()
 var yard_command_button: Button
+var visitor_soothe_button: Button
+var visitor_recall_button: Button
 var yard_bath_button: Button
 var yard_button: Button
 var sniff_button: Button
@@ -119,6 +121,7 @@ func _ready() -> void:
 	_fit_room()
 	add_child(session)
 	session.changed.connect(_refresh)
+	session.visitor_appeared.connect(func(): room.look_at_world(Vector2(940, 300)))
 	session.feedback.connect(_show_feedback)
 	session.care_completed.connect(_show_gain)
 	session.clip_requested.connect(room.play_clip)
@@ -409,7 +412,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = not session.portal_active and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
+	companion_card.visible = not session.portal_active and not session.visitors.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -454,7 +457,14 @@ func _build_care() -> VBoxContainer:
 	yard_command_button = _button("Komenda", func(): OutdoorPanels.command(self))
 	outdoors.add_child(yard_command_button)
 	yard_command_button.hide()
+	visitor_soothe_button = _button("Spokojnie", func(): session.visitors.respond(session, "soothe"))
+	visitor_recall_button = _button("Przyjdź", func(): session.visitors.respond(session, "recall"))
+	outdoors.add_child(visitor_soothe_button)
+	outdoors.add_child(visitor_recall_button)
+	visitor_soothe_button.hide()
+	visitor_recall_button.hide()
 	care_status = _label("Małe rytuały, wspólny dzień", 12, MUTED)
+	care_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(care_status)
 	var actions := HBoxContainer.new()
@@ -1119,6 +1129,17 @@ func _refresh() -> void:
 	if session.hide_game.active(): care_status.text = session.hide_game.hint()
 	if session.outdoor_commands.phase == "praise": care_status.text = "Udało się! Pochwal, aby zaliczyć trening."
 	elif session.outdoor_commands.phase == "perform": care_status.text = "Wraca z piłką…" if command == "come" else "Zostań… spokojnie czekamy."
+	var visiting := session.visitors.active() and session.in_yard
+	room.fence_visitor.present(session.visitors.kind if visiting else "")
+	visitor_soothe_button.visible = visiting
+	visitor_recall_button.visible = visiting
+	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe"]
+	visitor_recall_button.disabled = visitor_soothe_button.disabled
+	if visiting:
+		sniff_button.hide()
+		yard_bath_button.hide()
+		yard_command_button.hide()
+		care_status.text = session.visitors.hint()
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery

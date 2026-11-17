@@ -19,6 +19,8 @@ Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji or
 
 Pakiet po buildzie 19 łączy „Przyjdź” w aporcie i „Zostań” w chowanym z formą oraz tą samą listą treningu dnia. Stokrotka, mak i lawenda odblokowują własne dekoracje. Kod używa v14 (nowe identyfikatory dekoracji), widget odczytuje v4–v14; build 20 / v14 został zainstalowany na telefonie z zachowaniem postępów Glorii.
 
+Kod po buildzie 20 dodaje ptaka, motyla i kota sąsiada przy płocie. Gloria reaguje według temperamentu; gracz może ją uspokoić lub przywołać. Wizyty czekają na przerwę między zajęciami, nie dają dodatkowej więzi i nie zmieniają schematu v14. Pakiet jest sprawdzony lokalnie, jeszcze bez instalacji na telefonie.
+
 ## Dokumentacja
 
 [Mapa dokumentacji projektu](docs/README.md) prowadzi przez opis gry, architekturę, mechaniki, model danych, testy i plan rozwoju. Szybkie uruchomienie jest poniżej, a materiały dla grafika znajdują się w [liście sprite’ów](docs/lista-spriteow-szczeniaka.md) oraz [instrukcji integracji](docs/integracja-spriteow.md).

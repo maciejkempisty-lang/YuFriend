@@ -1,0 +1,60 @@
+extends SceneTree
+var app: GameUI
+var passed := 0
+var failed := 0
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool, label: String) -> void:
+	if ok: passed += 1
+	else:
+		failed += 1
+		push_error(label)
+func shot(name: String) -> void:
+	await process_frame
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png("/tmp/yuf-visitor-" + name + ".png")
+func tick(count: int) -> void:
+	for i in count:
+		app.room._process(0.1)
+		app.room.animator._process(0.1)
+		app.session._process(0.1)
+func run() -> void:
+	root.size = Vector2i(320, 680)
+	root.content_scale_size = root.size
+	app = load("res://scenes/Main.tscn").instantiate()
+	app.save_path_override = "/tmp/yuf-visitor-ui-%s/pet.json" % Time.get_ticks_usec()
+	root.add_child(app)
+	var s := app.session
+	s.local_clock = func(): return 100 * 86400.0 + 12 * 3600
+	s.set_process(false)
+	s._brain_left = INF
+	app.room.set_process(false)
+	app.room.animator.set_process(false)
+	s.pet.traits = {"curiosity": 0.65, "patience": 0.8, "sociability": 0.4, "sensitivity": 0.25}
+	await process_frame
+	app._toggle_yard(false)
+	for guest in YardVisitors.KINDS:
+		check(s.visitors.start(s, guest), "start " + guest)
+		tick(150)
+		await process_frame
+		check(app.room.fence_visitor.visible and app.room.fence_visitor.kind == guest, "guest rendered")
+		check(app.visitor_soothe_button.visible and app.visitor_recall_button.visible and not app.sniff_button.visible and not app.yard_bath_button.visible, "three toolbar slots")
+		check(app.visitor_recall_button.get_global_rect().end.x <= 320, "controls fit 320px")
+		check(not app.visitor_soothe_button.get_global_rect().intersects(app.visitor_recall_button.get_global_rect()), "controls separate")
+		check(app.room.yard_markers.values().all(func(marker): return not marker.visible), "markers do not cover guest")
+		await shot(guest)
+		if guest == "cat":
+			app.visitor_recall_button.pressed.emit()
+			check(s.visitors.active() and app.room.moving, "recall uses real movement")
+			tick(100)
+			check(app.room.pet_world.distance_to(YardVisitors.SAFE_SPOT) < 1, "returns to player")
+		else:
+			app.visitor_soothe_button.pressed.emit()
+			tick(30)
+		check(not s.visitors.active() and not app.room.fence_visitor.visible, "finished guest removed")
+	s.visitors.start(s, "cat")
+	app._toggle_yard(false)
+	check(not s.visitors.active() and not app.room.fence_visitor.visible, "home clears guest")
+	print("UI VISITORS RESULTS: %d passed, %d failed" % [passed, failed])
+	app.queue_free()
+	await process_frame
+	quit(1 if failed else 0)
