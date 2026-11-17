@@ -34,22 +34,22 @@ func run() -> void:
 	game.pet.skills.paw.mastery = 43
 	var identity: String = game.pet.pet_id
 	await process_frame
-	app._toggle_yard()
+	app._toggle_yard(false)
 	check(game.in_yard and app.room.in_yard, "entry changes scene")
 	check(not app.room.station_nodes.food.visible and not app.room.wall_clock.visible, "indoor props hidden outside")
 	await shot("entry")
 	check(app.room.yard_markers.size() == 8, "yard has gate lawn bushes garden and outing stations")
 	app.room.yard_markers.bush_2.pressed.emit()
 	check(game.sniff_spot == 2, "third bush starts search at that actual location")
-	app._toggle_yard()
-	app._toggle_yard()
+	app._toggle_yard(false)
+	app._toggle_yard(false)
 	check(game.start_sniff(), "sniff begins at available spot")
 	tick(15)
-	app._toggle_yard()
+	app._toggle_yard(false)
 	game.destination_reached()
 	tick(40)
 	check(not game.pet.milestones.has("yard_find_0"), "leaving before arrival grants no find")
-	app._toggle_yard()
+	app._toggle_yard(false)
 	for i in 3:
 		check(game.start_sniff(), "start search %d" % i)
 		for j in 400:
@@ -73,9 +73,9 @@ func run() -> void:
 	var loaded := game.storage.load_pet()
 	check(loaded.pet.pet_id == identity and loaded.pet.skills.sit.mastery == 100 and loaded.pet.skills.paw.mastery == 43, "reload preserves identity and skill progress")
 	check(loaded.pet.milestones.has("yard_find_2"), "reload preserves discoveries")
-	app._toggle_yard()
+	app._toggle_yard(false)
 	check(not game.in_yard and app.room.station_nodes.food.visible, "return restores room")
-	app._toggle_yard()
+	app._toggle_yard(false)
 	root.size = Vector2i(320, 640)
 	root.content_scale_size = root.size
 	await process_frame

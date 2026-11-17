@@ -333,3 +333,10 @@ Udana, pochwalona komenda wywołuje ten sam `PracticeSystem.record` co zakładka
 Zebrana stokrotka odblokowuje wazon ze stokrotkami, mak wazon z makami, a lawenda doniczkę lawendy. Wcześniej zebrane gatunki działają od razu. Dekoracje ustawia się w Albumie; wszystkie trzy mogą być widoczne jednocześnie. Nie zużywają kwiatów. Dotychczasowy słonecznik i pozostałe dekoracje pozostają dostępne na wcześniejszych zasadach.
 
 Schemat v14 nie dodaje pól do pieska: rozszerza dozwolone identyfikatory dekoracji. Granica wersji zapobiega potraktowaniu nowego zapisu jako uszkodzonego przez wcześniejszą aplikację. Widget w kodzie obsługuje v14. Oryginał v13 jest archiwizowany przy migracji.
+
+
+## Animacja drzwi i furtki — build 20
+
+Dotknięcie Podwórka lub drzwi rozpoczyna podejście pieska do wyjścia. Kamera podąża za psem; drzwi otwierają się po dojściu. Krótkie przyciemnienie łączy sceny, po czym pies wychodzi przez furtkę. Powrót przyciskiem Dom lub przez furtkę działa odwrotnie i kończy się przy drzwiach w pokoju. Animacja korzysta z istniejącego biegu i chodu, z osobnym przejściowym tempem ruchu; nie wymaga nowych sprite’ów.
+
+W trakcie przejścia panel blokuje ponowne akcje. Podejście można anulować. Zmiana miejsca następuje dopiero przy przekroczeniu progu, a nocna blokada wyjścia jest sprawdzana także w tym momencie. Faktyczne przejście aplikacji w tło przerywa animację i usuwa przyciemnienie. Zwykła utrata fokusu okna na komputerze nie anuluje przejścia. Stan animacji pozostaje wyłącznie w pamięci i nie zmienia schematu ani postępów pieska. Automatyczny powrót w tle oraz techniczne przełączenia scen nadal korzystają z bezpośredniej zmiany miejsca.

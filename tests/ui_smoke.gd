@@ -411,8 +411,12 @@ func _test_world_room() -> void:
 		room.look_at_world(RoomLayout.STATIONS[id].position)
 		await click_at(room.world_to_screen(room.station_bounds(id).get_center()))
 		if id == "door":
+			for step in 240:
+				room._process(0.1)
+				room.animator._process(0.1)
+				app.yard_transition._process(0.1)
 			check(game.in_yard and room.in_yard, "door enters the yard")
-			app._toggle_yard()
+			app._toggle_yard(false)
 			check(not game.in_yard and room.station_nodes.food.visible, "return restores indoor stations")
 			continue
 		check(game.activity == "approach" and game._pending_action == id, "world station responds after panning: " + id)

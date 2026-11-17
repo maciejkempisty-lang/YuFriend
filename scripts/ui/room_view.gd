@@ -49,6 +49,7 @@ var target_world: Vector2 = RoomLayout.START
 var carrying_ball := false
 var ball_world: Vector2 = RoomLayout.STATIONS.ball.position
 var ball_target: Vector2 = ball_world
+var portal_speed := 0.0
 var moving := false
 var mood_walk_speed: float = 1.0
 var presentation_scale: float = RoomLayout.PUPPY_SCALE
@@ -677,7 +678,7 @@ func _process(delta: float) -> void:
 	if moving and animator.current in ["walk", "run"]:
 		var difference := target_world - pet_world
 		if absf(difference.x) > 0.1: animator.facing_left = difference.x < 0
-		var speed := WALK_SPEED * mood_walk_speed * (2.5 if animator.current == "run" else 1.0)
+		var speed := portal_speed if portal_speed > 0 else WALK_SPEED * mood_walk_speed * (2.5 if animator.current == "run" else 1.0)
 		var previous := pet_world
 		pet_world = pet_world.move_toward(target_world, speed * delta)
 		_step_distance += previous.distance_to(pet_world)

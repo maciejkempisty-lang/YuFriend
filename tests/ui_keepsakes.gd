@@ -48,7 +48,7 @@ func run() -> void:
 	await shot("album")
 	check(app.photos_list.get_child_count() == 1, "album renders captured photo")
 	app._select_tab("care")
-	app._toggle_yard()
+	app._toggle_yard(false)
 	await app._take_photo()
 	check(game.pet.photos.size() == 2 and game.pet.photos[0].caption.ends_with("Podwórko"), "camera also saves outdoor scene")
 	app._select_tab("training")

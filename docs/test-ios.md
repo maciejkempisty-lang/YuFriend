@@ -171,3 +171,14 @@ Implementacja lokalna, bez nowej instalacji na iPhonie. Kopia Glorii `2026-11-17
 Nowy zestaw logiki: 60 sprawdzeń komend, wspólnego treningu dnia, zapisu, przerwania, cofnięcia nagrody przy błędzie zapisu oraz dekoracji. Próba UI przechodzi przez przyciski na 320 px i faktyczny powrót pieska do punktu rzutu. Widget: 1526 sprawdzeń / 252 prognozy. Zrzuty: `/tmp/yuf-outdoor-recall.png`, `/tmp/yuf-outdoor-stay.png`, `/tmp/yuf-outdoor-flowers-room.png`, `/tmp/yuf-outdoor-flowers-menu.png`. Przed kolejną instalacją trzeba pobrać świeże Documents z telefonu; wcześniejsza kopia jest dowodem migracji, nie aktualną kopią bezpieczeństwa.
 
 Końcowa regresja pakietu: 20 zestawów logiki i 14 interfejsu bez błędów. Po dodaniu anulowania oferty przy zakończeniu zabawy ponowiono 60 sprawdzeń komend z powodzeniem.
+
+
+## Aktualizacja 0.1.0 (20) — animacja przejścia i komendy w zabawach
+
+17 listopada 2026 zbudowano, podpisano, zainstalowano i uruchomiono build 20 na MagicPhone. Odczyt urządzenia potwierdza 0.1.0 (20). Zachowano bundle ID `com.maciejkempisty.yufriend.playtest` i zespół; nie odinstalowywano aplikacji. Pakiet zawiera wcześniejsze komendy i kwiatowe dekoracje oraz animację podejścia do drzwi/furtki, otwarcia, przyciemnienia i wyjścia po drugiej stronie.
+
+Bezpośrednia kopia sprzed instalacji: `exports/iphone-backups/2026-11-17-before-v20-final/Documents`; po uruchomieniu: `exports/iphone-backups/2026-11-17-after-v20/Documents`. Migracja roboczej kopii v13 → v14 zachowała wszystkie 28 wcześniejszych pól, ponowny zapis i odczyt. Na telefonie archiwum `.v13` jest identyczne bajtowo z kopią sprzed instalacji. Porównanie po uruchomieniu potwierdziło zachowanie tożsamości, sztuczek, cech, osiągnięć, treningu dnia, ogródka, kolekcji i dekoracji. Więź wzrosła z 96,55 do 96,90 wraz z jedną dodatkową zabawą piłką (`games.ball` i historia zabawy +1); zmiany potrzeb i czasu są zgodne z działaniem gry. Nie traktujemy tych pól jako identycznych. Dowody: `exports/ios-commands-v20/verification.json` i potwierdzenia instalacji.
+
+Przechodzi 20 zestawów logiki i 15 interfejsu po powtórzeniu dwóch poprawionych prób: dymki 786 sprawdzeń, animacja 14. Nowy zestaw sprawdza oba kierunki, ruch, otwarcie drzwi, moment zmiany sceny, anulowanie, brak podwójnego uruchomienia, tło aplikacji i noc przy przekroczeniu progu. Sprawdzono podpis aplikacji z widgetem; obejrzano komputerowe zrzuty na 320 px. Nie jest to potwierdzenie jakości gestów na fizycznym telefonie ani doręczenia powiadomienia.
+
+Eksport i kompilacja poza SSD projektu: `/tmp/yufriend-commands-v20` oraz `/tmp/yufriend-commands-v20-build`. Zrzuty animacji: `/tmp/yuf-transition-approach.png`, `/tmp/yuf-transition-door-open.png`, `/tmp/yuf-transition-enter-yard.png`, `/tmp/yuf-transition-home.png`.

@@ -36,7 +36,7 @@ func run() -> void:
 	game.pet.skills.sit.mastery = 100
 	game.pet.yard_record = 4.5
 	var identity := game.pet.pet_id
-	app._toggle_yard()
+	app._toggle_yard(false)
 	app.sniff_button.pressed.emit()
 	await process_frame
 	var menu: AcceptDialog

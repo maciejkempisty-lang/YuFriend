@@ -25,6 +25,7 @@ var photo_signature := ""
 var taking_photo := false
 var bath_dialog: AcceptDialog
 var yard_toolbar: HBoxContainer
+var yard_transition := YardTransition.new()
 var yard_command_button: Button
 var yard_bath_button: Button
 var yard_button: Button
@@ -112,6 +113,8 @@ func _ready() -> void:
 	process_priority = 10 # Follow the room's updated camera in the same frame.
 	_build_theme()
 	_build_ui()
+	add_child(yard_transition)
+	yard_transition.setup(self)
 	resized.connect(_fit_room)
 	_fit_room()
 	add_child(session)
@@ -406,7 +409,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
+	companion_card.visible = not session.portal_active and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -1200,6 +1203,7 @@ func _notification(what: int) -> void:
 		session.flush()
 		get_tree().quit()
 	elif what == NOTIFICATION_APPLICATION_PAUSED:
+		yard_transition.cancel()
 		music.set_backgrounded(true)
 		effects.set_backgrounded(true)
 		if is_instance_valid(bath_dialog): bath_dialog.hide()
@@ -1355,7 +1359,7 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
+	bubble.visible = not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
 	gain_label.visible = gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
@@ -1398,7 +1402,10 @@ func _journal_icon(key: String) -> String:
 	if key.begins_with("habit_"): return "paw"
 	return {"welcome": "home", "feed": "bowl", "rest": "moon", "play": "ball", "pet": "heart", "clean": "brush", "favorite_reward": "treat"}.get(key, "book")
 
-func _toggle_yard() -> void:
+func _toggle_yard(animated: bool = true) -> void:
+	if animated:
+		yard_transition.start(not session.in_yard)
+		return
 	if session.change_yard(not session.in_yard):
 		gain_left = 0
 		gain_label.hide()

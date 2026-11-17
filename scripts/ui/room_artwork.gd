@@ -4,6 +4,7 @@ extends Node2D
 const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-v1.png")
 const PORTRAIT_PUPPY = preload("res://assets/sprites/puppy/pixel/sheets/sit_idle.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
+var portal_open := false
 var kind := "room"
 var garden_state: Dictionary = {}
 var garden_key := ""
@@ -425,6 +426,12 @@ func _draw_toys() -> void:
 	_pixel_rect(Rect2(-15, -39, 30, 9), Color("805733"))
 
 func _draw_door() -> void:
+	if portal_open:
+		_pixel_rect(Rect2(-60, -186, 120, 186), Color("6c563a"))
+		_pixel_rect(Rect2(-51, -177, 102, 177), Color("9bbd88"))
+		_pixel_rect(Rect2(-51, -177, 24, 177), Color("b2844f"))
+		_pixel_rect(Rect2(-63, 0, 126, 6), Color("805733"))
+		return
 	_pixel_ellipse(Vector2(-15, 38), Vector2(85, 19), Color("a9956c"))
 	_pixel_ellipse(Vector2(-15, 35), Vector2(78, 16), Color("bfc19a"))
 	_pixel_rect(Rect2(-60, -186, 120, 186), Color("6c563a"))
@@ -488,6 +495,9 @@ func _draw_yard() -> void:
 	_pixel_rect(Rect2(108, 190, 84, 84), Color("a48059"))
 	for x in [114, 138, 162, 186]: _pixel_rect(Rect2(x, 190, 6, 84), Color("efd7a4"))
 	_pixel_rect(Rect2(177, 232, 9, 6), Color("755b43"))
+	if portal_open:
+		_pixel_rect(Rect2(114, 190, 72, 84), Color("8da478"))
+		_pixel_rect(Rect2(108, 190, 18, 84), Color("a48059"))
 	_pixel_ellipse(Vector2(940, 310), Vector2(120, 28), Color("b5c784"))
 	for x in [838, 1042]:
 		_pixel_rect(Rect2(x, 273, 6, 39), Color("ead9a1"))

@@ -32,7 +32,7 @@ func run() -> void:
 			check(child.size.x <= 320 and child.size.y <= 600, "bond panel fits narrow screen")
 	await shot("bond")
 	close()
-	app._toggle_yard()
+	app._toggle_yard(false)
 	app.room.yard_markers.dig.pressed.emit()
 	check(app.session.activity == "dig_walk", "sandbox starts approach")
 	for i in 80:

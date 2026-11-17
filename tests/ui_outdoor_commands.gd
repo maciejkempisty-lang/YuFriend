@@ -40,7 +40,7 @@ func run() -> void:
 	PracticeSystem.sync(s.pet, s._local_now())
 	s.pet.practice.targets = ["come", "stay"]
 	await process_frame
-	app._toggle_yard()
+	app._toggle_yard(false)
 	s.throw_ball(Vector2(1100, 310), Vector2(700, 310))
 	for i in 150:
 		tick(1)

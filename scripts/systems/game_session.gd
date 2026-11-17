@@ -39,6 +39,7 @@ signal hide_revealed(spot: int)
 var hide_game := YardHide.new()
 var fetch := YardFetch.new()
 var outdoor_commands := OutdoorCommands.new()
+var portal_active := false
 var in_yard := false
 var _yard_dark_idle := 0.0
 var in_bath := false
@@ -242,6 +243,7 @@ func _greeting(away: float = 3600) -> String:
 
 # Samodzielna decyzja psa: odpoczynek, zachowanie wynikające z nawyku albo spacer.
 func _spontaneous(roll: float = -1.0) -> void:
+	if portal_active: return
 	if not writable or suspended or training_view_active or is_sleeping(): return
 	if in_yard:
 		if not _return_tired(): move_to(RoomLayout.random_walk_point(), false)
@@ -303,7 +305,7 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return portal_active or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
@@ -529,6 +531,7 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 	changed.emit()
 
 func destination_reached() -> void:
+	if portal_active: return
 	if suspended or not writable: return
 	if in_yard and outdoor_commands.phase == "perform" and outdoor_commands.key == "come":
 		outdoor_commands.arrived = true
@@ -933,6 +936,7 @@ func _sync_rhythm_on_return(reset: bool = true) -> void:
 		sleep_warning = false
 
 func _tick_rhythm(delta: float) -> void:
+	if portal_active: return
 	groggy_left = maxf(0, groggy_left - delta)
 	if not writable: return
 	if night_sleep and DailyRhythm.phase(pet, _local_now()) != "night": _wake(false)
