@@ -22,6 +22,7 @@ func _initialize() -> void:
 	game.pet = PetState.create(42)
 	game.storage = SaveSystem.new("/tmp/yuf-routines-%s/pet.json" % Time.get_ticks_usec())
 	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600
+	game.weather.override_kind = "sun"
 	game.active = true
 	game._brain_left = INF
 	game.change_yard(true)

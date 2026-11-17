@@ -13,6 +13,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = "/tmp/yuf-memory-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	app.session.set_process(false)
 	app.session.pet.pet_name = "Gloria"
@@ -24,7 +25,7 @@ func run() -> void:
 	app._select_tab("journal")
 	await process_frame
 	await process_frame
-	check(app.visitor_album_status.text.contains("1/3"), "album shows saved familiarity")
+	check(app.visitor_album_status.text.contains("Pierwsze spokojne spotkanie"), "album shows saved familiarity")
 	check(app.visitor_album_status.text.contains("Jeszcze się nie poznali"), "unknown guests stay unknown")
 	check(app.visitor_album_status.get_global_rect().end.x <= 320, "status fits narrow screen")
 	check(app.journal_count >= 2, "first encounter and calm day in album")

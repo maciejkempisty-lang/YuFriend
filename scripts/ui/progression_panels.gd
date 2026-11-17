@@ -22,7 +22,7 @@ static func panel(app: GameUI, title: String) -> Dictionary:
 static func bond(app: GameUI) -> void:
 	var ui := panel(app, "Nasza więź")
 	ui.box.add_child(app._label(BondLevels.summary(app.session.pet), 18, app.INK, true))
-	var rewards := ["Poznawanie pieska i wszystkie dotychczasowe zabawy", "Poduszka przyjaźni do pokoju", "Girlanda łapek do pokoju", "Spokojna chwila: +8 bliskości raz dziennie", "Tytuł: Nierozłączni"]
+	var rewards := ["Poznawanie pieska i wszystkie dotychczasowe zabawy", "Poduszka przyjaźni do pokoju", "Girlanda łapek do pokoju", "Spokojna chwila razem", "Tytuł: Nierozłączni"]
 	for i in BondLevels.THRESHOLDS.size():
 		var label := app._label("%s %d · %s\n%s" % ["✓" if app.session.pet.bond >= BondLevels.THRESHOLDS[i] else "○", BondLevels.THRESHOLDS[i], BondLevels.NAMES[i], rewards[i]], 14, app.MUTED)
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -31,7 +31,7 @@ static func bond(app: GameUI) -> void:
 		if BondLevels.ritual(app.session):
 			ui.dialog.hide()
 			bond(app))
-	ritual.disabled = app.session.pet.bond < 75 or app.session.busy() or app.session.is_sleeping() or PersonalitySystem.day_of(app.session._local_now()) <= int(app.session.pet.exploration.ritual_day)
+	ritual.disabled = app.session.pet.bond < 75 or app.session.busy(false) or app.session.is_sleeping() or PersonalitySystem.day_of(app.session._local_now()) <= int(app.session.pet.exploration.ritual_day)
 	ui.box.add_child(ritual)
 	ui.box.add_child(app._button("Dekoracje", func():
 		ui.dialog.hide()
@@ -42,7 +42,7 @@ static func collection(app: GameUI) -> void:
 	var ui := panel(app, "Odkopane skarby")
 	var state := app.session.pet.exploration
 	ui.box.add_child(app._label("Kolekcja %d/12 · wymiany: %d" % [state.items.size(), int(state.tokens)], 14, app.MUTED))
-	var hint := app._label("Trzy duplikaty pozwalają wybrać brakujący skarb. Kopanie: do trzech prób dziennie.", 13, app.MUTED)
+	var hint := app._label("Trzy duplikaty pozwalają wybrać brakujący skarb. Szukajcie wtedy, gdy macie ochotę.", 13, app.MUTED)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ui.box.add_child(hint)
 	for id in DiggingSystem.ITEMS:

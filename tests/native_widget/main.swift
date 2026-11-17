@@ -26,7 +26,31 @@ legacySave["schema_version"] = 4
 check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: legacySave)) != nil, "Keep reading v4 alongside v5")
 var malformed = sampleSave
 malformed["schema_version"] = 99
-check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) == nil, "Reject unknown schema")
+check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) != nil, "Accept future schema with valid widget fields")
+for version: Any in [0, 3, -1, 4.5, "15", NSNull()] {
+    malformed["schema_version"] = version
+    check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) == nil, "Reject unsupported or invalid schema \(version)")
+}
+for version in [4, 15, 16, 99, 10000] {
+    malformed = sampleSave
+    malformed["schema_version"] = version
+    malformed["new_game_system"] = ["anything": true]
+    check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) != nil, "Ignore additive fields in v\(version)")
+    var invalidPet = sampleSave["pet"] as! [String: Any]
+    invalidPet["needs"] = ["energy": 20]
+    malformed["pet"] = invalidPet
+    check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) == nil, "Still validate required fields in v\(version)")
+}
+for invalid: Any in [-1, 101, "hungry", NSNull()] {
+    malformed = sampleSave
+    malformed["schema_version"] = 99
+    var invalidPet = sampleSave["pet"] as! [String: Any]
+    var needs = invalidPet["needs"] as! [String: Any]
+    needs["energy"] = invalid
+    invalidPet["needs"] = needs
+    malformed["pet"] = invalidPet
+    check(PetSnapshot.fromGameSave(try JSONSerialization.data(withJSONObject: malformed)) == nil, "Reject invalid future need \(invalid)")
+}
 var brokenPet = sampleSave["pet"] as! [String: Any]
 brokenPet["needs"] = ["energy": 20]
 malformed = sampleSave

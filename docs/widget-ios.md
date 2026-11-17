@@ -16,7 +16,7 @@ Podgląd natywnego widoku na syntetycznym stanie, nie zrzut danych Glorii z tele
 
 ## Dane i odświeżanie
 
-`PetWidgetBridge.swift` uruchamia się z natywnego punktu inicjalizacji eksportu Godota. Odczytuje zatwierdzony `Documents/pet.json` (wersje zapisu 4 i 5), wybiera minimalny zestaw pól i atomowo publikuje `pet-widget.json` w App Group. Nigdy nie zapisuje ani nie migruje pliku gry. Błędny lub nieobsługiwany zapis nie zastępuje ostatniego poprawnego obrazu stanu.
+`PetWidgetBridge.swift` uruchamia się z natywnego punktu inicjalizacji eksportu Godota. Odczytuje zatwierdzony `Documents/pet.json` (wersje zapisu od 4 wzwyż), wybiera minimalny zestaw pól i atomowo publikuje `pet-widget.json` w App Group. Nigdy nie zapisuje ani nie migruje pliku gry. Błędny lub nieobsługiwany zapis nie zastępuje ostatniego poprawnego obrazu stanu.
 
 Most obserwuje katalog `Documents`, dzięki czemu działa również po atomowej podmianie pliku. Odczytuje stan przy starcie i wznowieniu, kontrolnie co 10 sekund w aktywnej aplikacji oraz podczas krótkiego zadania po przejściu w tło. Wywołuje `WidgetCenter.reloadTimelines` po publikacji nowego stanu. Serie zdarzeń plikowych są łączone w jedno odczytanie.
 
@@ -42,7 +42,7 @@ python3 tools/install_ios_widget.py exports/ios/YuFriend.xcodeproj
 
 Domyślna grupa to `group.com.maciejkempisty.yufriend.playtest`, rozszerzenie ma bundle ID `com.maciejkempisty.yufriend.playtest.widget`. Identyfikatory wynikają z eksportowanego targetu aplikacji; `--app-group` pozwala wskazać inną zarejestrowaną grupę. Oba targety muszą mieć tę samą grupę i zespół podpisujący. Wersja i numer buildu rozszerzenia są kopiowane z aplikacji.
 
-Sam eksport przez edytor Godota nie dodaje widgetu: po nim uruchom instalator. Nie zapisuj ręcznych poprawek wyłącznie w `exports/`, bo następny eksport je zastąpi. Zmiana wersji schematu zapisu lub reguł potrzeb wymaga aktualizacji natywnego czytnika i sprawdzenia zgodności.
+Sam eksport przez edytor Godota nie dodaje widgetu: po nim uruchom instalator. Nie zapisuj ręcznych poprawek wyłącznie w `exports/`, bo następny eksport je zastąpi. Samo dodanie wersji lub pól zapisu nie wymaga dopisywania numeru do czytnika. Zmiana wymaganych pól widgetu lub reguł potrzeb nadal wymaga sprawdzenia zgodności. Czytnik sprawdza typy, zakresy potrzeb, nastrój, tożsamość i znacznik czasu; błędne dane także w przyszłej wersji są odrzucane.
 
 ## Testy
 
@@ -50,7 +50,7 @@ Sam eksport przez edytor Godota nie dodaje widgetu: po nim uruchom instalator. N
 sh tools/test_ios_widget.sh
 ```
 
-Test uruchamia rzeczywisty `NeedsSystem` Godota dla 252 kombinacji czasu, energii, snu i towarzyskości, a następnie porównuje wynik z kodem Swift. Łącznie **1525 sprawdzeń** obejmuje też błędne dane, nowy schemat, brak pliku, wybór najpilniejszej potrzeby, brak fałszywych alarmów i odczyt współdzielonego formatu.
+Test uruchamia rzeczywisty `NeedsSystem` Godota dla 252 kombinacji czasu, energii, snu i towarzyskości, a następnie porównuje wynik z kodem Swift. Po zmianie 17 listopada 2026 **1546 sprawdzeń** obejmuje też błędne dane, nowy schemat, brak pliku, wybór najpilniejszej potrzeby, brak fałszywych alarmów i odczyt współdzielonego formatu.
 
 15 listopada 2026 przeszły kompilacja iOS oraz podpisanie aplikacji i rozszerzenia z App Groups. Instalator sprawdzono przez ponowne uruchomienie i kontrolę braku zduplikowanych elementów. Pełny eksport Godota nie zlinkował się na symulator arm64: dostarczona biblioteka silnika zawierała obiekty x86_64. Natywny podgląd zbudowano i uruchomiono niezależnie od silnika; obejrzano mały i średni widget oraz sen z długim imieniem. Cztery testy mostu na symulatorze potwierdziły publikację przy starcie, aktualizację po atomowej podmianie zapisu, zachowanie poprzednich danych po uszkodzonym pliku i odebranie późnego zapisu po powiadomieniu o przejściu w tło. Wyniki: `test-results/widget/bridge-results.json`.
 

@@ -26,6 +26,7 @@ func _run() -> void:
 	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-integration-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory + "/pet.json"
+	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	var game: GameSession = app.session
@@ -500,7 +501,8 @@ func visible_above_navigation(control: Control) -> bool:
 func capture(name: String) -> void:
 	await process_frame
 	await process_frame
-	await RenderingServer.frame_post_draw
+	# Static panels may not schedule another draw after ambient animations stop.
+	RenderingServer.force_draw()
 	var output := ProjectSettings.globalize_path("res://test-results")
 	DirAccess.make_dir_recursive_absolute(output)
 	var ignore := FileAccess.open(output.path_join(".gdignore"), FileAccess.WRITE)
@@ -605,19 +607,28 @@ func _test_slow_pan() -> void:
 		previous = current
 	check(smooth, "slow drag advances every physical pixel instead of whole enlarged art pixels")
 	await process_frame
-	await RenderingServer.frame_post_draw
+	# Nothing may be animating; render explicitly instead of waiting for a redraw.
+	RenderingServer.force_draw()
 	var before_image := root.get_texture().get_image()
-	var patch := Vector2i((root.get_final_transform() * room.world_to_screen(Vector2(740, 195))).round())
+	# Sample background beside the dog: the idle sprite may change frame between captures.
+	var dog_bounds := room.pet_screen_bounds()
+	var patch := Vector2i((root.get_final_transform() * Vector2(room.render_rect.position.x + 45, dog_bounds.get_center().y)).round())
 	room._pointer_move(start + Vector2(15 + 25 / physical_scale, 0), 12)
 	await process_frame
-	await RenderingServer.frame_post_draw
+	RenderingServer.force_draw()
 	var after_image := root.get_texture().get_image()
 	var image_shifted := true
+	var compared := 0
+	var colors := {}
+	var dog := root.get_final_transform() * dog_bounds.grow(4)
 	for y in range(-20, 20):
 		for x in range(-20, 20):
 			var point := patch + Vector2i(x, y)
+			if dog.has_point(Vector2(point)) or dog.has_point(Vector2(point + Vector2i(1, 0))): continue
+			compared += 1
+			colors[before_image.get_pixelv(point)] = true
 			if before_image.get_pixelv(point) != after_image.get_pixelv(point + Vector2i(1, 0)): image_shifted = false
-	check(image_shifted, "rendered background translates by exactly one physical pixel during slow drag")
+	check(image_shifted and compared >= 400 and colors.size() >= 3, "rendered background translates by exactly one physical pixel during slow drag (%d px, %d colours)" % [compared, colors.size()])
 	previous = room.world_to_screen(Vector2(700, 300)).x
 	room._pointer_up(start + Vector2(15 + 25 / physical_scale, 0), 12)
 	step_game(0.2)

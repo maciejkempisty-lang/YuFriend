@@ -68,20 +68,21 @@ static func _show_garden(app: GameUI) -> void:
 	dialog.add_child(scroll)
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(box)
+	app.session.weather.water_garden(app.session)
 	var description := app._label(YardRoutines.describe(app.session.pet.yard_routines, Time.get_unix_time_from_system()), 15, app.MUTED)
 	description.custom_minimum_size.x = 260
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(description)
 	var state := app.session.pet.yard_routines.duplicate(true)
 	YardRoutines.update(state, Time.get_unix_time_from_system())
-	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else ({"observe": "Obejrzyj grządkę"} if Time.get_unix_time_from_system() < state.water_until else {"water": "Podlej"}))
+	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else ({"water": "Podlej"} if YardRoutines.can_water(app.session) else {"observe": "Obejrzyj grządkę"}))
 	for key in choices:
 		var action: String = key
 		var button := app._button(("Posadź: " if state.plant == "" else "") + choices[key], func():
 			YardRoutines.garden(app.session, action)
 			dialog.hide()
 			app._show_garden())
-		button.disabled = action == "water" and Time.get_unix_time_from_system() < state.water_until
+		button.disabled = action == "water" and not YardRoutines.can_water(app.session)
 		box.add_child(button)
 	var collection := app._label("Kolekcja kwiatów: %d/3. Wzrost trwa 3 podlane doby." % state.flowers.size(), 12, app.MUTED)
 	collection.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

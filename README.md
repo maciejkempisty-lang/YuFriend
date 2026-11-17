@@ -13,9 +13,23 @@ Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
 
 ## Aktualny stan — 17 listopada 2026
 
-Na iPhonie jest build 23 / v15 z pamięcią gości, ilustrowanym Albumem i zachowanymi postępami Glorii. Aktualna wersja zawiera opcjonalne przygody dnia łączące ogródek, sztuczki i szukanie skarbów. Dwie czynności dają pamiątkę do Albumu, bez dodatkowej więzi, serii i kar za pominięcie. Przygody są dostępne w Albumie oraz menu „Pobaw się”.
+W buildzie **28**, zainstalowanym i uruchomionym na iPhonie, dodano [odpoczynek na podwórku](docs/odpoczynek-na-podworku.md): legowisko w cieniu, wodę z animacją picia i samodzielne przerwy po zabawie. Bez wskaźnika pragnienia, bez zmiany schematu v15. Pełne 29 zestawów logiki i 23 interfejsu przechodzą; kopia zapisu Glorii zachowuje 29/29 pól. Po uruchomieniu na telefonie zmieniły się tylko potrzeby i czas zapisu; postępy Glorii zachowano.
 
-Aktualny schemat w kodzie: **v15**; migracja v1–v14 zachowuje wcześniejsze dane i wersjonowane kopie. Widget odczytuje v4–v15. Pakiet przygód zainstalowano i uruchomiono na iPhonie; migracja zachowała dotychczasowy postęp oraz archiwum v14. Pakiet animacji ma 28 klipów / 172 klatki. Opisy wcześniejszych wydań poniżej zachowują historię prototypu.
+Build **27** z [małym torem przeszkód](docs/tor-przeszkod.md), animacją skoku i „Zostań” na podeście zainstalowano i uruchomiono na iPhonie. Pochwała zalicza istniejący trening, a pierwsza meta zostawia pamiątkę. Schemat nadal v15; odczyt telefonu potwierdził zachowanie postępów Glorii.
+
+Projekt przeniesiono na `/Volumes/KINGSTON/YuFriend` z historią Git, lokalnymi zmianami i kopiami zapisów.
+
+Lokalne rozszerzenie żywego podwórka dodaje ślimaka i wiewiórkę: razem cztery gatunki tła, najwyżej dwa zwierzęta naraz, plus ptak za oknem w pokoju. Wiewiórka przebiega po niższej belce płotu, poniżej przycisków miejsc; ślimak pełznie przy brzegu trawy. Zwierzęta ustępują działaniu gracza bez blokady i bez zapisu postępów. Sprawdzono 318 warunków w pięciu zestawach testów oraz zrzuty 320/390 px. Rozszerzenie jest również zawarte w zainstalowanym buildzie 28.
+
+Build **26** z [pogodą i zaproszeniami na podwórku](docs/pogoda-i-zaproszenia.md) zainstalowano i uruchomiono na iPhonie: słońce, deszcz i dzień po deszczu, podlewanie przez deszcz oraz opcjonalne propozycje wody, aportu i chowanego. Schemat nadal v15; odczyt telefonu potwierdził zachowanie postępów Glorii.
+
+Kod po buildzie 24 dodaje małe zdarzenia tła: motyla nad grządką, wróbla na trawie i ptaka za oknem. Zwierzęta ustępują zabawie, nie dodają zadań, liczników ani wpisów w Albumie. Pakiet zainstalowano na iPhonie jako 0.1.0 (25), zachowując wszystkie 28 plików danych Glorii bez zmian. Uruchomienie potwierdzono: zachowano 26 z 29 pól pieska dokładnie; zmieniły się tylko potrzeby, czas oraz historia jednej wizyty.
+
+Build 24 zainstalowany na iPhonie: wspólny panel **Dziś** z 2–3 opcjonalnymi pomysłami, bez dziennych liczników i widocznej serii. Wejście jest na górnym pasku oraz w Treningu, Albumie i menu zabaw; zdjęcie nadal można zrobić z Albumu. Goście ustępują pierwszej wybranej zabawie lub opiece i odwiedzają podwórko najwyżej dwa razy podczas jednego pobytu. Ogródek można podlać raz na lokalny dzień kalendarzowy, również rano po wieczornym podlewaniu. Zainstalowano i uruchomiono aktualizację 0.1.0 (24), zachowując postępy Glorii. Szczegóły: [spokojniejszy dzień](docs/mechaniki-gry.md#spokojniejszy-dzień--17-listopada-2026).
+
+Wcześniejszy build 23 / v15 dodał przygody dnia do gry z pamięcią gości i ilustrowanym Albumem, zachowując postępy Glorii. Aktualna wersja zawiera opcjonalne przygody dnia łączące ogródek, sztuczki i szukanie skarbów. Dwie czynności dają pamiątkę do Albumu, bez dodatkowej więzi, serii i kar za pominięcie. Przygody są dostępne w Albumie oraz menu „Pobaw się”.
+
+Aktualny schemat w kodzie: **v15**; migracja v1–v14 zachowuje wcześniejsze dane i wersjonowane kopie. Widget odczytuje v4 i nowsze, jeśli wymagane pola są poprawne. Pakiet przygód zainstalowano i uruchomiono na iPhonie; migracja zachowała dotychczasowy postęp oraz archiwum v14. Pakiet animacji ma 28 klipów / 172 klatki. Opisy wcześniejszych wydań poniżej zachowują historię prototypu.
 
 Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji oraz tygodnia testów](docs/rozwoj-projektu.md). Decyzją użytkownika ogródek i wyjście na potrzebę rozwijamy równolegle z próbą 5–10 osób. Bieżący status instalacji i dowody zachowania postępów są w [testach iOS](docs/test-ios.md).
 
@@ -34,7 +48,7 @@ Kod po buildzie 21 dodaje pamięć gości, oswajanie przez trzy spokojne dni i i
 Projekt sprawdzono w Godot **4.7.2**, renderer **Compatibility**, na macOS. Otwórz `project.godot` w Godocie i wybierz **Uruchom projekt (F5)**. Możesz też uruchomić grę bez edytora:
 
 ```sh
-'/Applications/Godot.app/Contents/MacOS/Godot' --path '/Volumes/Samsung SSD/YuFriend'
+'/Applications/Godot.app/Contents/MacOS/Godot' --path '/Volumes/KINGSTON/YuFriend'
 ```
 
 ## Co można zrobić
@@ -122,7 +136,7 @@ Wcześniejsza weryfikacja 15 listopada 2026: **467 sprawdzeń zakończonych powo
 Przy pierwszym otwarciu lub po dodaniu PNG poczekaj, aż Godot zaimportuje zasoby. Import można wykonać także bez okna:
 
 ```sh
-'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path '/Volumes/Samsung SSD/YuFriend' --editor --quit
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path '/Volumes/KINGSTON/YuFriend' --editor --quit
 ```
 
 Testy uruchamiane z katalogu projektu:

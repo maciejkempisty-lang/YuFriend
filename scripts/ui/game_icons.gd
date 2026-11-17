@@ -3,6 +3,8 @@ extends RefCounted
 
 # Original, shared line icons. Rasterize once at 4x for crisp high-DPI UI.
 const PATHS := {
+	"water": '<path d="M12 3C10 7 5 11 5 15a7 7 0 0 0 14 0c0-4-5-8-7-12zM8 15c0 2 1 3 3 3"/>',
+	"sprinkler": '<path d="M6 21h12M12 21v-7M8 14h8M12 3v2M4 6l2 2m14-2-2 2M2 12h2m16 0h2M8 3l1 3m7-3-1 3"/>',
 	"search": '<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
 	"flower": '<path d="M12 21V11M12 17L7 14M12 18l5-4"/><circle cx="12" cy="7" r="4"/>',
 	"paw": '<path d="M8.5 14c1-3 6-3 7 0l2 3c1 3-2 4-5.5 2-3.5 2-6.5 1-5.5-2z"/><ellipse cx="5" cy="10" rx="2" ry="2.6"/><ellipse cx="9.3" cy="5.7" rx="2" ry="2.7"/><ellipse cx="15" cy="5.7" rx="2" ry="2.7"/><ellipse cx="19.3" cy="10" rx="2" ry="2.6"/>',

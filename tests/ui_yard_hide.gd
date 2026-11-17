@@ -26,6 +26,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = "/tmp/yuf-hide-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600

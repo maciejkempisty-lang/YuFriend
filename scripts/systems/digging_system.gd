@@ -22,7 +22,7 @@ static func readiness(s: GameSession) -> String:
 	if not YardRoutines.available(s): return "Najpierw zakończmy obecną czynność."
 	if float(s.pet.needs.energy) < 35: return "Najpierw odpoczynek — kopanie kosztuje 4 energii."
 	var day := PersonalitySystem.day_of(s._local_now())
-	if day < int(s.pet.exploration.day) or (day == int(s.pet.exploration.day) and int(s.pet.exploration.rounds) >= DAILY_LIMIT): return "Piaskownica odpoczywa. Kolejne trzy poszukiwania jutro."
+	if day < int(s.pet.exploration.day) or (day == int(s.pet.exploration.day) and int(s.pet.exploration.rounds) >= DAILY_LIMIT): return "Piaskownica odpoczywa. Możecie wrócić do niej jutro."
 	if int(s.pet.exploration.total) >= 1000000: return "Kolekcja jest już pełna przygód."
 	return ""
 static func start(s: GameSession) -> bool:

@@ -142,3 +142,10 @@ Czytnik nadal przyjmuje wcześniejsze albumy v4 do 240 wpisów. Po walidacji zac
 Pole `adventure`: `day` (całkowity lokalny dzień lub −1), `done` (0–2 unikalne identyfikatory z dzisiejszego zestawu: garden/trick/treasure), `rewarded` (true dokładnie po obu zadaniach). Zestaw wyznacza dzień modulo 3. Nie zapisujemy osobnej serii ani zaległości. Widok planu nie zmienia danych; ukończona czynność zatwierdza nowy dzień, zadanie i ewentualną nagrodę razem ze swoim zapisem. Dzień nie cofa się. Nagrody wykorzystują dotychczasowy journal/milestones (trzy stałe pamiątki i jeden wpis ostatniej powtórki).
 
 Migracja wcześniejszych wersji dodaje wyłącznie pusty `adventure`. Wersja bieżąca wymaga poprawnego pola; niepoprawne zadania, powtórzenia i niespójna flaga nagrody są odrzucane. Starszy zapis jest archiwizowany przed aktualizacją. Widget i przypomnienia używają wspólnego czytnika obsługującego v15.
+
+
+### Zgodne rozszerzenie v15 — podlewanie kalendarzowe
+
+`yard_routines.watered_day` jest opcjonalnym numerem lokalnego dnia (`-1` przed pierwszym podlewaniem). Jeśli występuje, musi być liczbą całkowitą nie mniejszą od `-1`. Brak pola w istniejących zapisach nie jest błędem i nie wymaga nowej wersji schematu. `YardRoutines.watering_day()` odczytuje wtedy dawny czas podlewania z `water_until - 86400`, z bieżącym przesunięciem lokalnego zegara. Pierwsza udana czynność ogródka zapisuje pole; błąd zapisu przywraca cały wcześniejszy stan. Nowa data musi być większa od zapisanej, a zegar czasu wzrostu nie może cofać się przed `checked_at`.
+
+`TodayPlan` jest tylko widokiem istniejących danych. Nie dodaje osobnej listy zadań, liczników ani migracji. Usunięcie widocznej serii i ułamków nie usuwa danych postępu ani wspomnień.

@@ -22,6 +22,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = "/tmp/yuf-visitor-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	var s := app.session
 	s.local_clock = func(): return 100 * 86400.0 + 12 * 3600
@@ -33,14 +34,15 @@ func run() -> void:
 	await process_frame
 	app._toggle_yard(false)
 	for guest in YardVisitors.KINDS:
+		s.visitors.begin_visit()
 		check(s.visitors.start(s, guest), "start " + guest)
 		tick(150)
 		await process_frame
 		check(app.room.fence_visitor.visible and app.room.fence_visitor.kind == guest, "guest rendered")
-		check(app.visitor_soothe_button.visible and app.visitor_recall_button.visible and not app.sniff_button.visible and not app.yard_bath_button.visible, "three toolbar slots")
+		check(app.visitor_soothe_button.visible and app.visitor_recall_button.visible and app.sniff_button.visible and not app.sniff_button.disabled and app.yard_bath_button.visible, "yard actions remain available")
 		check(app.visitor_recall_button.get_global_rect().end.x <= 320, "controls fit 320px")
 		check(not app.visitor_soothe_button.get_global_rect().intersects(app.visitor_recall_button.get_global_rect()), "controls separate")
-		check(app.room.yard_markers.values().all(func(marker): return not marker.visible), "markers do not cover guest")
+		check(app.visitor_toolbar.get_global_rect().position.y >= app.yard_toolbar.get_global_rect().end.y, "visitor responses have a separate row")
 		await shot(guest)
 		if guest == "cat":
 			app.visitor_recall_button.pressed.emit()
@@ -54,6 +56,34 @@ func run() -> void:
 	s.visitors.start(s, "cat")
 	app._toggle_yard(false)
 	check(not s.visitors.active() and not app.room.fence_visitor.visible, "home clears guest")
+	# Exercise the actual UI routes, not only the session API.
+	s.change_yard(true)
+	s.visitors.begin_visit()
+	s.visitors.start(s, "cat")
+	app._room_care_action("play")
+	check(s.play.running() and not s.visitors.active(), "first ball tap starts fetch during a visit")
+	s.cancel_touch_game()
+	s.visitors.begin_visit()
+	s.visitors.start(s, "bird")
+	app.sniff_button.pressed.emit()
+	await process_frame
+	var games: AcceptDialog
+	for child in app.get_children():
+		if child is AcceptDialog and child.title == "Zabawy w krzakach" and child.visible: games = child
+	check(games != null, "bush menu accessible during a visit")
+	if games != null:
+		for button in games.find_children("*", "Button", true, false):
+			if button.text == "Schowaj smakołyk": button.pressed.emit(); break
+	check(s.hide_game.active() and not s.visitors.active(), "first hide selection starts play during a visit")
+	s.cancel_hide()
+	s.visitors.begin_visit()
+	s.visitors.start(s, "cat")
+	app.room.look_at_world(Vector2(650, 315))
+	app.room.update_placement()
+	await process_frame
+	check(app.room.yard_markers.dig.visible, "digging marker remains visible during a visit")
+	app.room.yard_markers.dig.pressed.emit()
+	check(s.activity == "dig_walk" and not s.visitors.active(), "first sandbox tap starts digging during a visit")
 	print("UI VISITORS RESULTS: %d passed, %d failed" % [passed, failed])
 	app.queue_free()
 	await process_frame

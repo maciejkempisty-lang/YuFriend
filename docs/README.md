@@ -15,6 +15,10 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 | [Opis projektu](opis-projektu.md) | Cel gry, zakres prototypu, ekrany i sposób rozgrywki |
 | [Architektura](architektura.md) | Moduły, przepływ zdarzeń i połączenie logiki z animacjami |
 | [Mechaniki gry](mechaniki-gry.md) | Potrzeby, temperament, trening, nagrody i aktualne parametry balansu |
+| [Odpoczynek na podwórku](odpoczynek-na-podworku.md) | Cień, miska z wodą, animacja picia i samodzielne przerwy |
+| [Mały tor przeszkód](tor-przeszkod.md) | Slalom, skok, Zostań i wspólny trening |
+| [Pogoda i zaproszenia](pogoda-i-zaproszenia.md) | Lokalny deszcz, podlewanie ogródka i samodzielne propozycje zabawy |
+| [Kałuża i zraszacz](woda-na-podworku.md) | Pluskanie, brudzenie sierści, otrzepywanie, grafika i połączenie z kąpielą |
 | [Cykl zachowań](cykl-zachowan.md) | Rytm dnia, noc, adaptacja, wybór ważony i sekwencje |
 | [Osobowość i nawyki](osobowosc.md) | Dziennik zdarzeń, dryf cech, nawyki i miejsce na AI |
 | [Model danych i zapis](model-danych-i-zapis.md) | Format JSON, walidacja, kopie, odzyskiwanie i upływ czasu |

@@ -2,6 +2,9 @@ class_name YardVisitors
 extends RefCounted
 
 # Runtime encounters are temporary; VisitorMemory stores bounded album milestones.
+const SESSION_LIMIT := 2
+const FIRST_WAIT := 60.0
+const BETWEEN_VISITS := 240.0
 const KINDS := ["bird", "butterfly", "cat"]
 const LABELS := {"bird": "Ptak przy płocie", "butterfly": "Motyl przy płocie", "cat": "Kot sąsiada"}
 const FENCE := Vector2(1010, 205)
@@ -12,8 +15,13 @@ var reaction := ""
 var familiar := false
 var remaining := 0.0
 var response_left := 0.0
-var wait_left := 35.0
+var wait_left := FIRST_WAIT
+var visits := 0
 var next_guest := 0
+
+func begin_visit() -> void:
+	visits = 0
+	wait_left = FIRST_WAIT
 
 func active() -> bool:
 	return not kind.is_empty()
@@ -30,10 +38,11 @@ func available(s: GameSession) -> bool:
 	return s.activity == "idle" and s.in_yard and s.writable and not s.suspended and not s.is_sleeping() and not s.busy() and not s.training_view_active and s.outdoor_commands.phase.is_empty() and float(s.pet.needs.energy) >= 35 and DailyRhythm.phase(s.pet, s._local_now()) != "night"
 
 func start(s: GameSession, guest: String) -> bool:
-	if guest not in KINDS or not available(s): return false
+	if guest not in KINDS or visits >= SESSION_LIMIT or not available(s): return false
 	s._cancel_motion()
 	s.invitation.clear()
 	s._follow_target = Vector2.INF
+	visits += 1
 	kind = guest
 	phase = "watch"
 	familiar = VisitorMemory.known(s.pet, guest)
@@ -98,7 +107,7 @@ func advance(s: GameSession, delta: float) -> void:
 		if remaining <= 0: finish(s, "Gość rusza dalej. Znowu spokojne podwórko.")
 		return
 	# Only time spent watching the yard counts; games and panels pause the wait.
-	if not s.attention_available or not available(s): return
+	if visits >= SESSION_LIMIT or not s.attention_available or not available(s): return
 	wait_left = maxf(0, wait_left - delta)
 	if wait_left == 0 and start(s, KINDS[next_guest]):
 		next_guest = (next_guest + 1) % KINDS.size()
@@ -110,7 +119,7 @@ func cancel() -> void:
 	reaction = ""
 	remaining = 0
 	response_left = 0
-	wait_left = 100
+	wait_left = BETWEEN_VISITS
 
 func finish(s: GameSession, message: String, peaceful: bool = false) -> void:
 	if peaceful and active() and s.in_yard and not s.suspended and float(s.pet.needs.energy) >= 28 and DailyRhythm.phase(s.pet, s._local_now()) != "night":

@@ -2,6 +2,7 @@ class_name YardActivities
 extends RefCounted
 
 static func change_yard(s: GameSession, enabled: bool) -> bool:
+	if not enabled and s.yard_rest.phase == "rest": return s.yard_rest.return_home(s)
 	if enabled and DailyRhythm.phase(s.pet, s._local_now()) == "night":
 		s.say("Za ciemno, pora spać.")
 		return false
@@ -13,6 +14,7 @@ static func change_yard(s: GameSession, enabled: bool) -> bool:
 	s.invitation.clear()
 	s._yard_dark_idle = 0
 	s._follow_target = Vector2.INF
+	if enabled and not s.in_yard: s.visitors.begin_visit()
 	s.in_yard = enabled
 	s.activity = "idle"
 	s.activity_left = 0
@@ -24,7 +26,7 @@ static func change_yard(s: GameSession, enabled: bool) -> bool:
 
 
 static func start_sniff(s: GameSession, spot: int = -1) -> bool:
-	if not s.in_yard or not s.writable or s.suspended or s.busy() or s.is_sleeping() or spot < -1 or spot >= s.YARD_FINDS.size(): return false
+	if not s.in_yard or not s.writable or s.suspended or s.busy(false) or s.is_sleeping() or spot < -1 or spot >= s.YARD_FINDS.size(): return false
 	if float(s.pet.needs.energy) < 25:
 		s.say("Najpierw wróćmy do domu odpocząć.")
 		return false
@@ -155,6 +157,7 @@ static func _finish_hide(s: GameSession) -> void:
 		s._apply_care_effects("play", {"play": 12, "contact": 6, "energy": -2})
 		s.pet.bond = minf(100, s.pet.bond + 0.5)
 		s._note("play")
+	s.yard_rest.note_play()
 	s.pet.remember("yard_hide_" + mode, "Smakołyk w krzakach" if mode == "treat" else "Ogon zdradził kryjówkę", "Pierwsza ukończona runda chowanego na podwórku.", now)
 	s.activity = "happy"
 	s.activity_left = 1.4

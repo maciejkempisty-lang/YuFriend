@@ -4,7 +4,7 @@ extends RefCounted
 const TASKS := {"garden": "Zadbaj o ogródek", "trick": "Wykonaj i nagródź dowolną sztuczkę", "treasure": "Ukończ węszenie lub kopanie"}
 const PLANS := [["garden", "trick"], ["trick", "treasure"], ["garden", "treasure"]]
 const TITLES := ["Ogród pełen sztuczek", "Tropem łapek", "Skarby wśród kwiatów"]
-const HINTS := {"garden": "Posadź, podlej, zbierz kwiat lub obejrzyj już podlaną grządkę.", "trick": "Dowolna dostępna sztuczka z nagrodą — w Treningu lub zabawie na podwórku.", "treasure": "Znajomy skarb też się liczy. Wybierz krzaki lub piaskownicę."}
+const HINTS := {"garden": "Posadź, podlej, zbierz kwiat lub obejrzyj grządkę.", "trick": "Dowolna dostępna sztuczka z nagrodą — w Treningu lub zabawie na podwórku.", "treasure": "Znajomy skarb też się liczy. Wybierz krzaki lub piaskownicę."}
 
 static func initial() -> Dictionary:
 	return {"day": -1, "done": [], "rewarded": false}
@@ -44,7 +44,3 @@ static func record(pet: PetState, task: String, local_seconds: float) -> bool:
 	if not pet.remember(key, TITLES[index], detail):
 		pet.add_journal_entry("adventure_recent", "Kolejna przygoda: " + TITLES[index], detail, Time.get_unix_time_from_system())
 	return true
-
-static func summary(pet: PetState, local_seconds: float) -> String:
-	var state := view(pet, local_seconds)
-	return "Przygoda dnia · %s" % ("pamiątka w Albumie" if state.rewarded else "%d/2 · opcjonalna" % state.done.size())

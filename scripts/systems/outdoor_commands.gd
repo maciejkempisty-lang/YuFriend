@@ -113,7 +113,7 @@ func praise(s: GameSession) -> bool:
 	if s.pet.practice.done.has(command): message += " Zaliczone na dziś."
 	if result.mastered: message = "Umiem: %s! 100%%. " % TrainingSystem.LABELS[command] + message
 	if adventure_completed: message += " Przygoda ukończona! Pamiątka w Albumie."
-	if daily: message += " Trening dnia ukończony! +2 więzi."
+	if daily: message += " Miło poćwiczyć razem! +2 więzi."
 	s.say(message)
 	s.changed.emit()
 	return true

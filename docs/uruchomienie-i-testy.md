@@ -6,7 +6,7 @@
 
 Projekt był uruchamiany w **Godot 4.7.2 na macOS**, z rendererem Compatibility. Logika jest napisana w GDScripcie. Do lokalnej gry nie są potrzebne konto, backend, klucz API ani instalacja pakietów innych języków.
 
-Katalog roboczy: `/Volumes/Samsung SSD/YuFriend`. Punkt wejścia to [project.godot](../project.godot). Otwórz ten plik w menedżerze projektów Godota, poczekaj na import zasobów i wybierz **Uruchom projekt (F5)**.
+Katalog roboczy: `/Volumes/KINGSTON/YuFriend` (przeniesiony 17 listopada 2026 z dysku Samsung SSD). Punkt wejścia to [project.godot](../project.godot). Otwórz ten plik w menedżerze projektów Godota, poczekaj na import zasobów i wybierz **Uruchom projekt (F5)**.
 
 Wszystkie poniższe polecenia zakładają terminal otwarty w katalogu projektu. Ścieżka programu odpowiada instalacji na tym Macu; na innym komputerze należy wskazać własny plik wykonywalny Godota.
 
@@ -33,6 +33,30 @@ Uruchomienie z oddzielnym zapisem do ręcznego sprawdzania:
 `--qa` zapisuje stan do `user://qa-ui/pet.json`. Ten stan pozostaje między uruchomieniami i nie jest za każdym razem losowany od nowa. Nie uruchamiaj kilku okien na tym samym zapisie. Zwykłą grę i podgląd `--qa` rozdzielają różne ścieżki danych.
 
 ## Testy automatyczne
+
+Testy interfejsu ustawiają `app.room.ambient_life.life.autoplay = false`, żeby losowo pojawiające się postacie tła nie trafiały do porównywanych zrzutów. `ui_ambient` nadal uruchamia postacie jawnie przez `start()`. Nowy zestaw interfejsu musi dodać tę samą linię zaraz po `save_path_override`.
+
+Sporadyczna porażka `ui_smoke` („rendered background translates by exactly one physical pixel”) miała inną przyczynę. Porównywany fragment 40 × 40 px leżał w całości na psie. Pies w spoczynku zmienia klatkę co około 3,3 s i czasem trafiał na moment między zrzutami. Sprawdzenie bierze teraz fragment tła obok psa, pomija obrys psa i wymaga co najmniej 400 porównanych pikseli w co najmniej 3 kolorach (obecnie 1600 px, 16 kolorów). Zrzuty wymuszają renderowanie przez `RenderingServer.force_draw()` zamiast czekać na `frame_post_draw`, bo bez animacji w kadrze Godot nie rysuje nowej klatki.
+
+`tools/test_ios_widget.sh` i `tools/test_ios_reminders.sh` trzymają pamięć podręczną modułów Swift w katalogu z kluczem zależnym od ścieżki projektu. Po przeniesieniu repozytorium na inny dysk skrypt zakłada nową pamięć zamiast używać nieaktualnej. Stare katalogi `swift-cache*` w `test-results/` można usunąć ręcznie.
+
+17 listopada 2026 — rozszerzenie tła o ślimaka i wiewiórkę: **318/318 sprawdzeń** w pięciu zestawach: `test_ambient` 43, `ui_ambient` 42, `test_calm_day` 152, `test_visitors` 52, `ui_visitors` 29. Sprawdzono pełzanie, przebieg i postój na belce, limit dwóch postaci przy czterech gatunkach, ich automatyczne pojawianie się, przerwanie przy kopaniu, brak zapisów i blokad, łagodne wycofanie przy przerwaniu pojawiania oraz widoczność pod przyciskami w 320/390 px. Obejrzano oba zrzuty nowych postaci. Regresja gości obejmuje pierwsze użycie piłki, chowanego i piaskownicy oraz dziesięć aktywności w czterech fazach wizyty. Zrzuty i logi: `test-results/ambient-extension/`. Testy bez okna w sandboxie zgłosiły systemowy błąd odczytu certyfikatów macOS (`get_system_ca_certificates`), ale wszystkie asercje przeszły i procesy zakończyły się kodem 0; testy graficzne poza sandboxem zakończyły się bez tych komunikatów. Brak instalacji tego rozszerzenia i próby na fizycznym telefonie.
+
+17 listopada 2026 — żywe otoczenie, kod po buildzie 24: **26/26** sprawdzeń logiki (`test_ambient`) i **25/25** integracji (`ui_ambient`). Sprawdzono ruch, lądowanie na roślinie, pustą grządkę, odlot przy psie i zabawie, brak zmian zapisu, brak blokad, priorytet prawdziwych gości oraz zatrzymanie po zmianie sceny, nocy, otwarciu Albumu/Dziś i przejściu aplikacji w tło. Obejrzano sceny w szerokościach 390 i 320 px. Regresja: `test_calm_day` 152/152 oraz siedem zestawów UI — `ui_ambient`, `ui_smoke` (241/241), `ui_visitors`, `ui_yard`, `ui_water` (105/105), `ui_adventures`, `ui_yard_transition` — bez nieudanych sprawdzeń i ostrzeżeń. W `ui_smoke` naprawiono oczekiwanie na zrzut statycznego panelu: po dwóch klatkach układu test jawnie renderuje obraz, zamiast czekać bez końca na `frame_post_draw`. Pakiet otoczenia zainstalowano następnie jako build 25; uruchomienie i zachowanie postępów Glorii potwierdzono, szczegóły w [testach iOS](test-ios.md). Zrzuty i logi są lokalnie w `test-results/ambient/`.
+
+```sh
+'/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_ambient.gd
+'/Applications/Godot.app/Contents/MacOS/Godot' --path . --script res://tests/ui_ambient.gd
+```
+
+17 listopada 2026 — spokojniejszy dzień: **25 zestawów logiki i 19 interfejsu — wszystkie sprawdzenia zaliczone** po poprawkach. `ui_water` po poprawce sprzątania przechodzi 105/105: zatrzymuje audio, zwalnia scenę i przed zakończeniem silnika sprawdza słabe referencje do widoku oraz nagrań. Trzy kolejne przebiegi, w tym szczegółowy, nie zgłosiły ostrzeżeń. Nowy `test_calm_day.gd`: **152 sprawdzenia**, obejmujące przerwanie każdej fazy wizyty przez dziesięć aktywności, limit dwóch gości na pobyt, podlewanie przed upływem 24 godzin następnego dnia, restart, cofnięcie daty, 23-/25-godzinną dobę, starszy zapis i cofnięcie nieudanego zapisu. `ui_visitors`: **29 sprawdzeń**, w tym pierwsze użycie piłki, chowanego i piaskownicy podczas wizyty. `ui_adventures` sprawdza teraz wspólny panel Dziś: **25 sprawdzeń**, trzy szerokości, zmianę dnia i nocy, wejścia z Domu/Albumu i brak liczników. `ui_yard_routines` sprawdza również następny dzień bez czekania 24 godzin. Obejrzano zrzuty Dziś 320 px i gościa 320 px. Widget: **1546** sprawdzeń / **252** zgodne projekcje; przypomnienia: **1067 + 18** i kontrola typów iOS. Ten pakiet zainstalowano następnie jako build 24, z zachowaniem postępów Glorii; szczegóły w [testach iOS](test-ios.md).
+
+Dodatkowy test logiki:
+
+```sh
+YUFRIEND_TEST_ROOT=/tmp '/Applications/Godot.app/Contents/MacOS/Godot' --headless --path . --script res://tests/test_calm_day.gd
+```
+
 
 Poprawki cyklu przed buildem 15, 15 listopada 2026: **1636/1636 sprawdzeń w 14 zestawach**. `test_rhythm` ma teraz **122**, a `ui_rhythm` **17** sprawdzeń: pierwsze otwarcie o 22:30, nocne powitanie istniejącego psa i powrót po nieobecności, trzy rodzaje nagród treningowych, pozostawanie w miejscu w zakładce treningu, powrót autonomii oraz neutralne teksty. Zrzuty `rhythm-night-greeting-390.png` i `rhythm-training-stay-390.png` pokazują nowe zachowanie. Ponowiono również **1526** sprawdzeń widgetu i **1067+18** przypomnień. Migracja kopii rzeczywistego zapisu Glorii v4→v5 zachowuje wszystkie istniejące pola i oryginał v4.
 

@@ -19,6 +19,7 @@ func game() -> GameSession:
 	s._brain_left = INF
 	return s
 func soothe(s: GameSession, guest: String) -> void:
+	s.visitors.begin_visit()
 	check(s.visitors.start(s, guest), "encounter starts")
 	check(s.visitors.respond(s, "soothe"), "soothe accepted")
 	s.visitors.advance(s, 2.6)
@@ -42,6 +43,7 @@ func _initialize() -> void:
 	soothe(s, "cat")
 	check(VisitorMemory.level(s.pet, "cat") == 1, "clock rollback cannot grant progress")
 	day = 101
+	s.visitors.begin_visit()
 	s.visitors.start(s, "cat")
 	check(s.visitors.familiar and s.visitors.hint().contains("Znowu razem"), "returning visitor recognized")
 	s.visitors.respond(s, "recall")
@@ -50,6 +52,7 @@ func _initialize() -> void:
 	s.destination_reached()
 	check(VisitorMemory.level(s.pet, "cat") == 2, "recall arrival records calm day")
 	day = 102
+	s.visitors.begin_visit()
 	s.visitors.start(s, "cat")
 	s.visitors.respond(s, "soothe")
 	s.change_yard(false)

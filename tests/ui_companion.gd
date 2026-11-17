@@ -18,6 +18,7 @@ func _run() -> void:
 	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-companion-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory.path_join("pet.json")
+	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	var game: GameSession = app.session
@@ -51,6 +52,14 @@ func _run() -> void:
 		var scale: Vector2 = app.room.screen_scale()
 		var pet_point: Vector2 = app.room.pet_position()
 		await capture("companion-thought-%d.png" % layout.x)
+		if layout.x == 320:
+			game.say("Znów w domu.")
+			app.bubble_left = 3
+			await settle()
+			check(app.bubble.visible and app.companion_card.modulate.a == 0, "narrow screen: a reply bubble replaces a passing thought")
+			app.bubble_left = 0
+			await settle()
+			check(app.companion_card.visible and app.companion_card.modulate.a > 0, "narrow screen: the thought returns after the reply")
 		game.pet.needs.fullness = 20
 		await settle()
 		await capture("companion-need-%d.png" % layout.x)

@@ -13,6 +13,7 @@ func _run() -> void:
 	directory = (OS.get_environment("YUFRIEND_TEST_ROOT") if not OS.get_environment("YUFRIEND_TEST_ROOT").is_empty() else "user://").path_join("qa-bubbles-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory.path_join("pet.json")
+	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 12.0 * 3600
 	root.add_child(app)
 	app.session.set_process(false)

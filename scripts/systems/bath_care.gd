@@ -2,7 +2,7 @@ class_name BathCare
 extends RefCounted
 
 static func bath_readiness(s: GameSession) -> String:
-	if not s.writable or s.suspended or s.is_sleeping() or s.busy(): return "Kąpiel poczeka, aż piesek będzie gotowy."
+	if not s.writable or s.suspended or s.is_sleeping() or s.busy(false): return "Kąpiel poczeka, aż piesek będzie gotowy."
 	if float(s.pet.needs.energy) < 35: return "Najpierw odpoczynek. Kąpiel kosztuje 5 energii."
 	if float(s.pet.needs.fullness) < 30: return "Najpierw posiłek, potem kąpiel."
 	if float(s.pet.needs.hygiene) >= 80: return "Sierść jest dość czysta. Wystarczy delikatne czesanie."

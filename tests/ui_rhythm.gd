@@ -22,6 +22,7 @@ func _run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory.path_join("pet.json")
+	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return now
 	root.add_child(app)
 	app.session.set_process(false)

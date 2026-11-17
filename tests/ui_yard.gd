@@ -23,6 +23,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = "/tmp/yuf-yard-%s/pet.json" % Time.get_ticks_usec()
+	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600
@@ -38,7 +39,7 @@ func run() -> void:
 	check(game.in_yard and app.room.in_yard, "entry changes scene")
 	check(not app.room.station_nodes.food.visible and not app.room.wall_clock.visible, "indoor props hidden outside")
 	await shot("entry")
-	check(app.room.yard_markers.size() == 8, "yard has gate lawn bushes garden and outing stations")
+	check(app.room.yard_markers.size() == 12, "yard has gate lawn bushes garden and outing stations")
 	app.room.yard_markers.bush_2.pressed.emit()
 	check(game.sniff_spot == 2, "third bush starts search at that actual location")
 	app._toggle_yard(false)
@@ -131,7 +132,7 @@ func run() -> void:
 			for previous in marker_rects:
 				check(not marker.get_rect().intersects(previous), "overview station targets do not overlap")
 			marker_rects.append(marker.get_rect())
-	check(visible_stations == 8, "overview shows all eight station targets on narrow screen")
+	check(visible_stations == 12, "overview shows all twelve station targets on narrow screen")
 	game.local_clock = func(): return 100 * 86400.0 + 23 * 3600
 	game.player_activity()
 	tick(310)

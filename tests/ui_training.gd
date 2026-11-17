@@ -13,6 +13,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	var app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = "/tmp/yuf-training-%s/pet.json" % Time.get_ticks_usec()
+	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	app.session.set_process(false)
 	app.session.pet.skills.sit.mastery = 100
@@ -40,8 +41,8 @@ func run() -> void:
 	app._show_tricks(true)
 	await process_frame
 	for child in app.get_children():
-		if child is AcceptDialog and child.title.begins_with("Trening dnia"):
-			check(child.get_child(0).get_child(0).get_child_count() == 4, "daily list offers three available tricks")
+		if child is AcceptDialog and child.title == "Dziś":
+			check(child.find_children("*", "Button", true, false).size() >= 3, "training opens the shared Today suggestions")
 			child.hide()
 	await process_frame
 	app._choose_trick("sit")
@@ -49,7 +50,7 @@ func run() -> void:
 	app.session.training.begin(app.session.pet, "sit", true)
 	app.session.training.advance(app.session.training.time_left)
 	app._reward("praise")
-	check(app.training_feedback.contains("Forma +25") and app.training_feedback.contains("Dziś"), "mastered trick reports form and daily progress")
+	check(app.training_feedback.contains("Forma +25") and not app.training_feedback.contains("Dziś"), "mastered trick reports form without daily counters")
 	for width in [390, 320]:
 		root.size = Vector2i(width, 844 if width == 390 else 640)
 		root.content_scale_size = root.size

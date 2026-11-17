@@ -88,7 +88,7 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 		var words: Array = NEEDS[need]
 		return _line("need", words[0], words[1], words[2], game)
 	if not game.invitation.is_empty():
-		var words: Array = INVITATIONS[game.invitation.kind]
+		var words: Array = YardInvitations.WORDS[game.invitation.kind] if YardInvitations.WORDS.has(game.invitation.kind) else INVITATIONS[game.invitation.kind]
 		return _line("invitation", words[0], "invite:" + str(game.invitation.kind), words[1], game)
 	var memories: Array = []
 	for entry in pet.journal:

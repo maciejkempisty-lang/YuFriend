@@ -13,14 +13,15 @@ static func summary(pet: PetState) -> String:
 	return "%s · %d%%" % [NAMES[current], roundi(pet.bond)]
 static func ritual(s: GameSession) -> bool:
 	var day := PersonalitySystem.day_of(s._local_now())
-	if not s.writable or s.suspended or s.busy() or s.is_sleeping() or s.pet.bond < 75 or day <= int(s.pet.exploration.ritual_day): return false
+	if not s.writable or s.suspended or s.busy(false) or s.is_sleeping() or s.pet.bond < 75 or day <= int(s.pet.exploration.ritual_day): return false
 	var before := s.pet.to_dict()
 	s.pet.exploration.ritual_day = day
 	NeedsSystem.change(s.pet, {"contact": 8})
 	if not s.flush():
 		s.pet = PetState.from_dict(before)
 		return false
+	if s.visitors.active(): s.visitors.finish(s, "Gość rusza dalej. Teraz czas dla Was.")
 	s.clip_requested.emit("petted_stand")
-	s.say("Nasza spokojna chwila. +8 bliskości, raz dziennie.")
+	s.say("Nasza spokojna chwila. Dobrze być razem.")
 	s.changed.emit()
 	return true

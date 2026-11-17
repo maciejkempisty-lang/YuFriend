@@ -26,6 +26,7 @@ func _run() -> void:
 	directory = ("user://" if test_root.is_empty() else test_root).path_join("qa-play-ui-%s" % Time.get_ticks_usec())
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = directory.path_join("pet.json")
+	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	var game: GameSession = app.session

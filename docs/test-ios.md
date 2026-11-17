@@ -231,3 +231,58 @@ Kopie Documents: `exports/iphone-backups/2026-11-17-before-v23/`, bezpośrednio 
 Oryginał bezpośredniej kopii sprzed instalacji zachowano dokładnie w `pet.json.v14.85217380b708e4489b80141472fe37ce1b24f7aa8f1ed71b004de78401fcea40`. Zwykła kopia `.v14` zawiera wcześniejszy stan różniący się tylko potrzebami i czasem; nie została nadpisana. Dowody: `exports/ios-adventures-v23/verification.json` oraz raporty instalacji i uruchomienia. Duże produkty są w `/tmp/yufriend-adventures-v23` i `/tmp/yufriend-adventures-v23-build`.
 
 Nie wykonywano zadań ani nie zmieniano zegara lub potrzeb Glorii na telefonie. Obsługę przygód i układ 320 px sprawdzono wcześniej na komputerze. Build 22 nie odczyta nowego zapisu v15; poprzedni zapis jest zabezpieczony w kopiach.
+
+
+## Aktualizacja 0.1.0 (24) — spokojniejszy dzień i zabawa w wodzie, 17 listopada 2026
+
+Build 24 został wyeksportowany, podpisany, zainstalowany i uruchomiony na MagicPhone. Lista aplikacji potwierdza 0.1.0 (24), a lista procesów działającą grę. Aplikacja i widget mają build 24, dotychczasowy bundle ID, zespół P665WUWCN4 oraz App Group. Podpis z rozszerzeniem przeszedł weryfikację, a pakiet PCK w aplikacji jest identyczny z eksportem. Aktualizacja obejmuje panel Dziś, nieblokujących gości, kalendarzowe podlewanie, czytnik widgetu v4+ i istniejące lokalne zmiany zabawy w wodzie. Nie odinstalowywano gry.
+
+Kopia robocza świeżego zapisu przeszła odczyt, zapis i ponowny odczyt z zachowaniem wszystkich 29 pól. Przed instalacją ponowiono kopię Documents. Po samej instalacji wszystkie 28 plików Documents pozostało identycznych bajtowo. Po uruchomieniu nadal istnieją wszystkie pliki, a 26 z 29 pól pieska jest identycznych: zachowane są tożsamość Glorii, więź, sztuczki, temperament, forma, osiągnięcia, fotografie, dekoracje, ogródek, kolekcje i przygody. Zmieniły się potrzeby i czas ostatniej wizyty; historia dostała dokładnie jedną wizytę wieczorem. Schemat nadal v15. Nie wykonywano czynności ani nie edytowano danych Glorii na telefonie.
+
+Trwałe kopie całego Documents: `exports/iphone-backups/2026-11-17-before-v24.zip` i `2026-11-17-after-v24.zip`. Zweryfikowano zawartość pet.json w obu archiwach. Raport: `exports/ios-calm-v24/verification.json`. Potwierdzenia urządzenia, log kompilacji, eksportu i testów: `exports/ios-calm-v24/evidence.zip`. Ze względu na małą ilość miejsca na SSD eksport i produkty kompilacji są na dysku wewnętrznym: `/tmp/yufriend-calm-v24`, `/tmp/yufriend-calm-v24-build`; robocze dane w `/tmp/yufriend-calm-v24-evidence`.
+
+`ui_water` kończy teraz pracę po zatrzymaniu audio, zwolnieniu sceny oraz sprawdzeniu słabych referencji do widoku i nagrań. Trzy przebiegi (w tym ze szczegółowym logowaniem) dały 105/105 bez ostrzeżeń zasobów. Wcześniejsze ostrzeżenie było nieregularne; nie przypisujemy go potwierdzonemu wyciekowi produkcyjnej logiki wody. Przed tym buildem przeszły 25 zestawów logiki i 19 interfejsu, 1546 sprawdzeń widgetu i 1085 przypomnień. Instalacja nie zastępuje ręcznej oceny nowych zachowań, widgetu i doręczenia przypomnienia na telefonie.
+
+
+## Aktualizacja 0.1.0 (25) — żywe otoczenie, 17 listopada 2026
+
+Build 25 wyeksportowano z projektu na Kingstonie, skompilowano, podpisano i zainstalowano na MagicPhone. Odczyt listy aplikacji potwierdza 0.1.0 (25). Pakiet zawiera motyla nad grządką, wróbla na trawie i ptaka za oknem, bez zadań, liczników ani blokowania czynności. Aplikacja i widget mają build 25 oraz dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Podpis z rozszerzeniem jest poprawny, PCK w aplikacji jest identyczny z eksportem, a log eksportu potwierdza obecność trzech nowych skryptów otoczenia. Nie odinstalowywano gry.
+
+Świeża kopia Glorii przeszła odczyt, zapis i ponowny odczyt z zachowaniem wszystkich 29 pól. Bezpośrednio przed instalacją ponowiono kopię Documents. Po samej instalacji wszystkie 28 plików pozostało identycznych bajtowo. Zachowany jest schemat v15, bez migracji. Kopia bezpieczeństwa: `exports/iphone-backups/2026-11-17-before-v25.zip`; integralność archiwum i zawartość pet.json zweryfikowano. Raport i dowody: `exports/ios-ambient-v25/verification.json` oraz `evidence.zip`.
+
+Po odblokowaniu telefonu przez użytkownika uruchomiono grę i potwierdzono działający proces buildu 25. Porównanie z kopią bezpośrednio sprzed instalacji zachowuje 26 z 29 pól pieska dokładnie, w tym tożsamość, więź, sztuczki, temperament, formę, osiągnięcia, fotografie, dekoracje, ogródek, kolekcje i przygody. Zmieniły się jedynie potrzeby i czas ostatniej wizyty oraz historia: dokładnie jedna dodatkowa wizyta wieczorem. Wszystkie wcześniejsze pliki Documents pozostają obecne. Kopia po uruchomieniu: `exports/iphone-backups/2026-11-17-after-v25.zip`, z potwierdzoną integralnością i zawartością pet.json. Raport i archiwum dowodów uzupełniono. Nie wykonywano czynności ani nie edytowano danych Glorii; nie oceniano wizualnie animacji na telefonie. Wcześniejsze testy komputerowe: 26 sprawdzeń logiki otoczenia, 25 integracji, 152 spokojnego dnia i siedem zestawów UI.
+
+Eksport: `/tmp/yufriend-ambient-v25`; kompilacja: `/tmp/yufriend-ambient-v25-build`; robocze kopie i raporty: `/tmp/yufriend-ambient-v25-evidence`. Eksport zgłosił ostrzeżenia o automatycznym skalowaniu ikony, brakującym ustawieniu pełnoekranowego splashu i odczycie źródłowych PNG przez lokalny generator grafik widgetu; kompilacja i weryfikacja podpisu zakończyły się powodzeniem.
+
+
+## Aktualizacja 0.1.0 (26) — pogoda i zaproszenia Glorii, 17 listopada 2026
+
+Wyeksportowano aktualny projekt z KINGSTON, skompilowano, podpisano, zainstalowano i uruchomiono build 26 na MagicPhone. Lista aplikacji i procesów potwierdza wersję 26 i działającą grę. Aplikacja i widget mają ten sam numer, dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Kontrola podpisu przeszła; PCK w aplikacji jest identyczny z eksportem i zawiera pogodę, zaproszenia oraz nową grafikę. Źródła nie zmieniły się podczas kompilacji; manifest sum jest w archiwum dowodów.
+
+Świeża kopia Glorii przeszła odczyt, zapis i ponowny odczyt bez zmiany żadnego z 29 pól. Przed instalacją ponowiono kopię Documents. Trwałe archiwa: `exports/iphone-backups/2026-11-17-before-v26.zip`, `before-v26-final.zip` (z pełnym prefiksem daty) i `2026-11-17-after-v26.zip`; integralność ZIP oraz zapis pet.json sprawdzono. Ostatni odczyt po uruchomieniu zachowuje 27 z 29 pól dokładnie. Zmieniły się tylko potrzeby i czas zapisu; tożsamość, więź, umiejętności, forma, temperament, historia, pamiątki, zdjęcia, dekoracje, ogródek, kolekcje, przygody i preferencje pozostały bez zmian. Schemat nadal v15, bez migracji. Wszystkie 28 wcześniejszych plików Documents pozostają obecne. Gry nie odinstalowywano.
+
+Podczas przygotowania aktualizacji działająca wcześniejsza gra zapisała jeszcze potrzeby i czas oraz pliki planisty przypomnień; nie deklarujemy identyczności bajtowej wszystkich plików po samej instalacji. Raport porównania: `exports/ios-weather-v26/verification.json`, szczegółowe dowody: `evidence.zip`. Eksport i kompilacja są w `/tmp/yufriend-weather-v26` i `/tmp/yufriend-weather-v26-build`.
+
+Przed wydaniem przeszło 27 zestawów logiki i 21 interfejsu; nowy pakiet ma 99 sprawdzeń logiki i 19 UI. Test fauny dostosowano do słonecznej pogody. Sporadyczne ostrzeżenie zasobów przy zamknięciu testu rytmu nie wystąpiło w osobnym powtórzeniu. Eksport powtórzył znane komunikaty generatora grafik widgetu; kompilacja, podpis i kontrola paczki zakończyły się powodzeniem. Nie przestawiano czasu ani potrzeb Glorii i nie wymuszano deszczu na telefonie. Ocena grafiki, gestów, widgetu oraz doręczenia powiadomień na fizycznym urządzeniu pozostaje osobną próbą.
+
+
+## Aktualizacja 0.1.0 (27) — tor przeszkód i skok, 17 listopada 2026
+
+Aktualny projekt wyeksportowano, skompilowano, podpisano, zainstalowano i uruchomiono na MagicPhone jako build 27. Odczyt aplikacji i procesu potwierdza 0.1.0 (27). Aplikacja i widget mają numer 27, dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Kontrola podpisu przeszła; PCK jest identyczny z eksportem oraz zawiera `yard_course`, `puppy_jump` i grafikę toru. Manifest sum źródeł potwierdza brak zmian podczas budowania. Nie odinstalowywano aplikacji.
+
+Świeża kopia Glorii przeszła odczyt, zapis i ponowny odczyt z zachowaniem wszystkich 29 pól. Przed instalacją ponowiono pobranie Documents. Kopie z potwierdzoną integralnością: `exports/iphone-backups/2026-11-17-before-v27.zip`, `2026-11-17-before-v27-final.zip` i `2026-11-17-after-v27.zip`.
+
+Po uruchomieniu 26 z 29 pól pozostaje identycznych, w tym identyfikator, imię, sztuczki, forma, więź, temperament, historia, pamiątki, zdjęcia, dekoracje, ogródek, kolekcje, przygody oraz preferencje. Zmieniły się potrzeby, czas ostatniego zapisu i `resting`: kopia miała odpoczynek oraz 100 energii, więc istniejąca reguła progu 85 obudziła Glorię przy uruchomieniu. Nie jest to reset. Schemat pozostaje v15, a wszystkie 28 wcześniejszych plików Documents są obecne. Działająca wcześniejsza gra zapisała jeszcze potrzeby, czas i plik planisty podczas przygotowania instalacji; nie deklarujemy identyczności bajtowej wszystkich plików po instalacji.
+
+Raport: `exports/ios-course-v27/verification.json`; szczegółowe dowody: `evidence.zip`. Eksport i kompilacja: `/tmp/yufriend-course-v27` i `/tmp/yufriend-course-v27-build`. Eksport powtórzył znane komunikaty generatora grafik widgetu; podpis i kompilacja zakończyły się poprawnie.
+
+Przed wydaniem przechodziło 28 zestawów logiki i 22 UI po powtórzeniu zestawu fauny tła. Nowy tor ma 42 sprawdzenia logiki i 133 interfejsu. Układ 320 px, animację skoku, podest i przerwanie w tle sprawdzono na komputerze. Na telefonie potwierdzono instalację, uruchomienie i zapis; nie wykonywano rundy toru, nie zmieniano ręcznie potrzeb ani zegara Glorii. Ocena dotyku i wyglądu pozostaje próbą użytkownika.
+
+
+## Odpoczynek na podwórku — build 28 (17.11.2026)
+
+Zbudowano, podpisano, zainstalowano i uruchomiono build 28 na MagicPhone. Aplikacja i widget zachowują dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Kontrola podpisu, identyczności PCK oraz manifestu źródeł przeszła. Pakiet zawiera zacienione legowisko, miskę z animacją picia i samodzielne przerwy po zabawie.
+
+Świeża kopia zapisu zachowała 29/29 pól w próbie odczytu i zapisu. Po samej instalacji zapis pozostał identyczny. Po uruchomieniu zachowano 27/29 pól dokładnie; zmieniły się jedynie potrzeby i czas zapisu. Wszystkie wcześniejsze pliki Documents pozostają obecne. Schemat nadal v15. Nie odinstalowywano gry.
+
+Archiwa: `exports/iphone-backups/2026-11-17-before-v28.zip`, `2026-11-17-before-v28-final.zip`, `2026-11-17-after-v28.zip`. Raport i dowody: `exports/ios-rest-v28/verification.json`, `evidence.zip`. Eksport i kompilacja: `/tmp/yufriend-rest-v28` i `/tmp/yufriend-rest-v28-build`. Przeszły wcześniejsze 29 zestawów logiki oraz 23 interfejsu. Animację i układ 320 px oceniono na komputerze; instalacja i uruchomienie nie zastępują ręcznej oceny nowej zabawy na telefonie.

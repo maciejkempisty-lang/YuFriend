@@ -84,7 +84,7 @@ struct PetSnapshot: Codable, Equatable {
         return snapshot
     }
 
-    /// Decode only the fields needed by the widget; reject unknown save versions.
+    /// Decode and validate the stable widget fields; ignore additive game fields in v4+.
     static func fromGameSave(_ data: Data) -> PetSnapshot? {
         struct Save: Decodable {
             struct Pet: Decodable {
@@ -102,7 +102,7 @@ struct PetSnapshot: Codable, Equatable {
             let pet: Pet
         }
         guard data.count <= 1_048_576,
-              let save = try? JSONDecoder().decode(Save.self, from: data), [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].contains(save.schema_version) else { return nil }
+              let save = try? JSONDecoder().decode(Save.self, from: data), save.schema_version >= 4 else { return nil }
         let pet = save.pet
         let result = Self(version: 1, petID: pet.pet_id, name: pet.pet_name, savedAt: pet.last_seen_at,
                           needs: pet.needs, resting: pet.resting, sociability: pet.traits.sociability, mood: pet.life.mood)

@@ -29,9 +29,10 @@ func _initialize() -> void:
 	var s := game()
 	var before := s.pet.to_dict()
 	for guest in YardVisitors.KINDS:
+		s.visitors.begin_visit()
 		s.pet.traits = curious.duplicate()
 		check(s.visitors.start(s, guest), guest + " starts")
-		check(s.busy() and not s.start_hide("treat"), "visit prevents competing game")
+		check(s.busy() and s.play_readiness().is_empty(), "visit protects autonomy but leaves player games ready")
 		s.destination_reached()
 		check(s.visitors.phase == "watch", "arrival keeps encounter")
 		check(s.visitors.respond(s, "soothe"), "soothe accepted")
@@ -45,6 +46,7 @@ func _initialize() -> void:
 	s.destination_reached()
 	check(not s.visitors.active(), "actual arrival finishes recall")
 	check(not s.visitors.respond(s, "recall"), "stale response ignored")
+	s.visitors.begin_visit()
 	s.visitors.start(s, "bird")
 	s.visitors.advance(s, 31)
 	check(not s.busy(), "ignored encounter expires")
@@ -67,9 +69,11 @@ func _initialize() -> void:
 	check(not s.visitors.active() and s.visitors.wait_left == 1, "hidden yard pauses schedule")
 	s.attention_available = true
 	for guest in YardVisitors.KINDS:
-		s.visitors.advance(s, 101)
+		s.visitors.begin_visit()
+		s.visitors.advance(s, YardVisitors.FIRST_WAIT)
 		check(s.visitors.kind == guest, "rotation " + guest)
 		s.visitors.finish(s, "")
+	s.visitors.begin_visit()
 	s.visitors.start(s, "cat")
 	s.local_clock = func(): return 100 * 86400.0 + 23 * 3600
 	s._process(0.1)

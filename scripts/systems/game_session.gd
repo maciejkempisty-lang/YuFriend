@@ -35,11 +35,16 @@ var last_message: String = "Dotknij, by pogłaskać. Przycisk „Cały pokój”
 var _refresh_left: float = 0.0
 var _save_left: float = 25.0
 var _brain_left: float = 8.0
+signal course_jump_requested(target: Vector2)
 signal visitor_appeared
 signal hide_revealed(spot: int)
 var hide_game := YardHide.new()
 var fetch := YardFetch.new()
 var visitors := YardVisitors.new()
+var yard_rest := YardRest.new()
+var course := YardCourse.new()
+var water := YardWater.new()
+var weather := YardWeather.new()
 var outdoor_commands := OutdoorCommands.new()
 var portal_active := false
 var in_yard := false
@@ -136,6 +141,10 @@ func start(save_path: String = "user://pet.json") -> void:
 func _process(delta: float) -> void:
 	if not active or suspended: return
 	var was_idle := activity == "idle"
+	yard_rest.advance(self, delta)
+	course.advance(self, delta)
+	weather.advance(self, delta)
+	water.advance(self, delta)
 	visitors.advance(self, delta)
 	_tick_travel(delta)
 	if in_yard: _tick_yard(delta)
@@ -249,7 +258,9 @@ func _spontaneous(roll: float = -1.0) -> void:
 	if portal_active: return
 	if not writable or suspended or training_view_active or is_sleeping(): return
 	if in_yard:
-		if not _return_tired(): move_to(RoomLayout.random_walk_point(), false)
+		if _return_tired(): return
+		if _initiative_wait <= 0 and offer_initiative(): return
+		move_to(RoomLayout.random_walk_point(), false)
 		return
 	if float(pet.needs.energy) < 28:
 		act("rest", false)
@@ -305,15 +316,22 @@ func say(text: String) -> void:
 func _inviting() -> bool:
 	return activity in ["habit", "need", "initiative", "behavior"] or (activity == "approach" and not _pending_by_player)
 
-func busy() -> bool:
+func busy(include_visitors: bool = true) -> bool:
+	# Player readiness passes false so visitors yield; autonomy still waits.
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return portal_active or visitors.active() or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
-	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
+	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk", "visitor"] or _inviting())
 
 func _cancel_motion() -> void:
+	yard_rest.cancel(self)
+	course.cancel()
+	if str(invitation.get("kind", "")).begins_with("yard_"):
+		invitation.clear()
+		_initiative_wait = InitiativeSystem.OFFER_INTERVAL
+	water.cancel()
 	visitors.cancel()
 	outdoor_commands.cancel()
 	sniff_spot = -1
@@ -414,6 +432,7 @@ func arrive_at(token: int) -> void:
 	changed.emit()
 
 func _wake(by_player: bool = true) -> void:
+	if yard_rest.active(): yard_rest.cancel(self)
 	var was_night := night_sleep
 	night_sleep = false
 	automatic_nap = false
@@ -470,11 +489,16 @@ func act(action: String, by_player: bool = true) -> bool:
 		if action == "pet" and is_sleeping():
 			_wake()
 			return true
+	if in_yard and action == "rest":
+		if yard_rest.active():
+			yard_rest.finish(self)
+			return true
+		return yard_rest.start(self, "bed")
 	if in_yard and action in ["feed", "rest", "toys", "window", "door", "clean"]:
 		say("Wróćmy do domu, żeby się tym zająć.")
 		return false
 	if action == "pet": return _pet()
-	if busy() and not (training.phase == "idle" and _inviting()):
+	if busy(not by_player) and not (training.phase == "idle" and _inviting()):
 		say("Jeszcze chwilka — kończymy tę czynność.")
 		return false
 	if action == "rest" and is_sleeping():
@@ -521,7 +545,7 @@ func _satisfied_message(action: String) -> String:
 	}[need]
 
 func move_to(world_position: Vector2, announce: bool = true) -> void:
-	if not writable or busy() or is_sleeping() or suspended: return
+	if not writable or busy(not announce) or is_sleeping() or suspended: return
 	if announce: _answer_action("walk")
 	_cancel_motion()
 	pose = "stand"
@@ -537,6 +561,21 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 func destination_reached() -> void:
 	if portal_active: return
 	if suspended or not writable: return
+	if str(invitation.get("kind", "")).begins_with("yard_"):
+		_travel_left = 0
+		invitation.arrived = true
+		clip_requested.emit("sniff" if invitation.kind == "yard_hide" else "tail_wag_stand")
+		changed.emit()
+		return
+	if yard_rest.active():
+		yard_rest.arrived(self)
+		return
+	if course.active():
+		course.arrived(self)
+		return
+	if water.active():
+		water.arrived(self)
+		return
 	if visitors.active():
 		visitors.arrived(self)
 		return
@@ -591,7 +630,7 @@ func begin_training(key: String, guided: bool) -> bool:
 	if is_sleeping():
 		say("Najpierw spokojnie obudź pieska.")
 		return false
-	if busy() and not (training.phase == "idle" and _inviting()):
+	if busy(false) and not (training.phase == "idle" and _inviting()):
 		say("Poczekaj, aż piesek skończy tę czynność.")
 		return false
 	var tired := pet.fatigue >= 50
@@ -625,7 +664,7 @@ func give_reward(kind: String) -> bool:
 		say(result.message)
 		return false
 	var daily_bonus := PracticeSystem.record(pet, training.trick, _local_now())
-	if daily_bonus: result.message = "Trening dnia ukończony! +2 więzi · seria %d dni." % int(pet.practice.streak)
+	if daily_bonus: result.message = "Miło poćwiczyć razem! +2 więzi."
 	var adventure_completed := DailyAdventure.record(pet, "trick", _local_now())
 	_note("reward_" + kind)
 	if not flush():
@@ -707,7 +746,8 @@ func resume_session() -> void:
 	if report: away_report_ready.emit()
 
 func offer_initiative(kind: String = "", now: float = -1.0) -> bool:
-	if in_yard or in_bath: return false
+	if in_yard: return YardInvitations.offer(self, kind, now)
+	if in_bath: return false
 	if not active or not writable or suspended or not initiatives_enabled or not attention_available or busy() or is_sleeping() or not invitation.is_empty() or not play.kind.is_empty(): return false
 	if now < 0: now = Time.get_unix_time_from_system()
 	if not is_finite(now) or now - float(pet.social.last_offer_at) < InitiativeSystem.OFFER_INTERVAL: return false
@@ -744,7 +784,12 @@ func _finish_invitation(response: String) -> void:
 	if invitation.is_empty() or not writable: return
 	var kind: String = invitation.kind
 	_cancel_invitation()
-	InitiativeSystem.record(pet, kind, response, Time.get_unix_time_from_system())
+	if kind.begins_with("yard_"):
+		# Skipping an outdoor invitation never changes interest, needs or bond.
+		if response == "accepted" and kind in ["yard_ball", "yard_hide"]:
+			InitiativeSystem.record(pet, "ball" if kind == "yard_ball" else "cups", response, Time.get_unix_time_from_system())
+	else:
+		InitiativeSystem.record(pet, kind, response, Time.get_unix_time_from_system())
 	flush()
 	changed.emit()
 
@@ -765,6 +810,7 @@ func decline_invitation() -> void:
 func accept_invitation() -> bool:
 	if suspended or invitation.is_empty(): return false
 	var kind: String = invitation.kind
+	if kind.begins_with("yard_"): return YardInvitations.accept(self)
 	if kind == "cuddle": return act("pet")
 	if kind == "ball":
 		if not play_readiness().is_empty():
@@ -778,7 +824,7 @@ func accept_invitation() -> bool:
 func play_readiness() -> String:
 	if not writable: return "Najpierw trzeba odzyskać poprawny zapis."
 	if suspended: return "Wróć do gry, żeby się pobawić."
-	if busy(): return "Dokończmy najpierw tę czynność."
+	if busy(false): return "Dokończmy najpierw tę czynność."
 	if is_sleeping(): return "Najpierw spokojnie obudź pieska."
 	if float(pet.needs.energy) < 28 or pet.fatigue >= 85: return "Najpierw chwila odpoczynku, potem zabawa."
 	return ""
@@ -875,10 +921,12 @@ func _settle_touch_game() -> void:
 	activity = "happy"
 	activity_left = 1.4
 	clip_requested.emit("tail_wag_stand" if play.success else "head_tilt_stand")
-	if play.success: sound_requested.emit("success")
+	if play.success:
+		sound_requested.emit("success")
+		if in_yard: yard_rest.note_play()
 	say(play.hint())
 	if fetch_round:
-		say("Aport %.1f m! %s%s" % [fetch_distance, "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dzisiejsze premie wykorzystane." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
+		say("Aport %.1f m! %s%s" % [fetch_distance, "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dobry chwyt." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
 	fetch.reset()
 	if fetch_round: outdoor_commands.offer_recall(fetch_origin)
 	if kind == "ball": play.reset()
@@ -1063,6 +1111,7 @@ func _tick_travel(delta: float) -> void:
 		if _travel_left <= 0:
 			if hide_game.active(): cancel_hide()
 			if play.kind == "ball": cancel_touch_game()
+			_cancel_invitation()
 			_cancel_motion()
 			activity = "idle"
 			clip_requested.emit("idle")

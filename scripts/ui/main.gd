@@ -27,6 +27,15 @@ var bath_dialog: AcceptDialog
 var yard_toolbar: HBoxContainer
 var yard_transition := YardTransition.new()
 var yard_command_button: Button
+var water_splash_button: Button
+var yard_rest_stop: Button
+var course_action: Button
+var course_stop: Button
+var water_shake_button: Button
+var yard_invite_accept: Button
+var yard_invite_later: Button
+var visitor_toolbar: HBoxContainer
+var today_button: Button
 var visitor_soothe_button: Button
 var visitor_recall_button: Button
 var yard_bath_button: Button
@@ -128,6 +137,7 @@ func _ready() -> void:
 	session.care_completed.connect(_show_gain)
 	session.clip_requested.connect(room.play_clip)
 	session.destination_requested.connect(room.move_to)
+	session.course_jump_requested.connect(room.start_course_jump)
 	session.performance_requested.connect(room.play_performance)
 	session.approach_requested.connect(room.approach_station)
 	session.place_requested.connect(room.place_at_station)
@@ -315,11 +325,11 @@ func _build_ui() -> void:
 	identity.add_child(bond_bar)
 	var settings := _icon_button("settings", "Ustawienia", _show_settings)
 	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var camera_button := _button("Foto", _take_photo)
-	camera_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	camera_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	camera_button.custom_minimum_size.x = 54
-	header_row.add_child(camera_button)
+	today_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
+	today_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	today_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	today_button.custom_minimum_size.x = 54
+	header_row.add_child(today_button)
 	header_row.add_child(settings)
 	bubble = PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
@@ -414,7 +424,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = not session.portal_active and not session.visitors.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
+	companion_card.visible = not session.yard_rest.active() and not session.course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -427,7 +437,7 @@ func _refresh_companion(delta: float = 0.0) -> void:
 	# Renaming the dog also updates the bubble without restarting its quiet timer.
 	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz"}[data.kind]]
 	_position_companion()
-	session.invitation_presented = companion_card.visible and companion_card.modulate.a > 0 and data.get("kind") == "invitation"
+	session.invitation_presented = session.attention_available and (str(session.invitation.get("kind", "")).begins_with("yard_") or (companion_card.visible and companion_card.modulate.a > 0 and data.get("kind") == "invitation"))
 
 func _companion_act() -> void:
 	if not companion_card.visible or companion_data.is_empty(): return
@@ -459,15 +469,40 @@ func _build_care() -> VBoxContainer:
 	yard_command_button = _button("Komenda", func(): OutdoorPanels.command(self))
 	outdoors.add_child(yard_command_button)
 	yard_command_button.hide()
+	water_splash_button = _button("Plusk!", func(): session.water.splash(session))
+	water_shake_button = _button("Otrzep się", func(): session.water.shake(session))
+	outdoors.add_child(water_splash_button)
+	outdoors.add_child(water_shake_button)
+	yard_invite_accept = _button("Zabawmy się", session.accept_invitation)
+	yard_invite_later = _button("Później", session.decline_invitation)
+	outdoors.add_child(yard_invite_accept)
+	outdoors.add_child(yard_invite_later)
+	yard_invite_accept.hide()
+	yard_invite_later.hide()
+	course_action = _button("Skacz", _course_action)
+	course_stop = _button("Przerwij", func(): session.course.finish(session, "Tor poczeka. Chwila odpoczynku."))
+	outdoors.add_child(course_action)
+	outdoors.add_child(course_stop)
+	yard_rest_stop = _button("Przerwij", func(): session.yard_rest.finish(session))
+	outdoors.add_child(yard_rest_stop)
+	yard_rest_stop.hide()
+	course_action.hide()
+	course_stop.hide()
+	water_splash_button.hide()
+	water_shake_button.hide()
+	visitor_toolbar = HBoxContainer.new()
+	add_child(visitor_toolbar)
 	visitor_soothe_button = _button("Spokojnie", func(): session.visitors.respond(session, "soothe"))
 	visitor_recall_button = _button("Przyjdź", func(): session.visitors.respond(session, "recall"))
-	outdoors.add_child(visitor_soothe_button)
-	outdoors.add_child(visitor_recall_button)
+	visitor_toolbar.add_child(visitor_soothe_button)
+	visitor_toolbar.add_child(visitor_recall_button)
 	visitor_soothe_button.hide()
 	visitor_recall_button.hide()
 	care_status = _label("Małe rytuały, wspólny dzień", 12, MUTED)
 	care_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	care_status.max_lines_visible = 2
+	care_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(care_status)
 	var actions := HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 2)
@@ -489,7 +524,7 @@ func _build_training() -> VBoxContainer:
 	choices.add_theme_constant_override("separation", 4)
 	box.add_child(choices)
 	choices.add_child(_button("Lista sztuczek", _show_tricks))
-	choices.add_child(_button("Na dziś", func(): _show_tricks(true)))
+	choices.add_child(_button("Dziś", func(): AdventurePanel.show_plan(self)))
 	choices.add_child(_icon_button("keyboard", "Wpisz komendę", _show_command))
 	var progress_row := HBoxContainer.new()
 	box.add_child(progress_row)
@@ -562,7 +597,7 @@ func _build_journal() -> VBoxContainer:
 		_select_tab("care")
 		_take_photo()))
 	album_actions.add_child(_button("Dekoracje", _show_decor))
-	adventure_button = _button("Przygoda dnia", func(): AdventurePanel.show_plan(self))
+	adventure_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
 	box.add_child(adventure_button)
 	box.add_child(_button("Kolekcja wykopanych skarbów", func(): ProgressionPanels.collection(self)))
 	var scroll := ScrollContainer.new()
@@ -746,7 +781,7 @@ func _build_play_dialogs() -> void:
 	choices.add_theme_constant_override("separation", 12)
 	play_menu.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	choices.add_child(_button("Mała przygoda dnia", func():
+	choices.add_child(_button("Dziś", func():
 		play_menu.hide()
 		AdventurePanel.show_plan(self)))
 	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · schowaj smakołyk"]]:
@@ -786,13 +821,15 @@ func _build_play_dialogs() -> void:
 		if not play_dialog.visible: session.cancel_touch_game())
 
 func _dialog_open() -> bool:
-	for dialog in [profile_dialog, settings_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
-		if dialog != null and dialog.visible: return true
+	for dialog in get_children():
+		if dialog is Window and dialog.visible: return true
 	return false
 
 func _update_attention() -> void:
 	session.set_training_view(selected_tab == "training")
 	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview
+	if room.ambient_life.is_node_ready() and session.pet != null:
+		room.ambient_life.sync(room, session, app_foreground and selected_tab == "care" and room.visible and not _dialog_open())
 	if companion_card != null and not session.attention_available:
 		companion_card.hide()
 		session.invitation_presented = false
@@ -826,7 +863,7 @@ func _show_touch_game(kind: String) -> void:
 func _select_tab(key: String) -> void:
 	if key != "care" and session.in_yard:
 		if not session.change_yard(false): return
-		room.set_yard(false)
+		if room.in_yard: room.set_yard(false)
 	if key != selected_tab:
 		effects.play_effect("ui")
 		bubble_left = 0
@@ -860,6 +897,8 @@ func _fit_room() -> void:
 		panel_height = nav_y - panel_top - 8 - warning_space
 	yard_toolbar.visible = selected_tab == "care"
 	_place(yard_toolbar, Rect2(panel_x, safe_rect.position.y + 196, panel_width, 44))
+	visitor_toolbar.visible = selected_tab == "care" and session.visitors.active()
+	_place(visitor_toolbar, Rect2(panel_x, panel_top - 52, panel_width, 44))
 	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
 	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
@@ -904,6 +943,9 @@ func _position_dialog(dialog: AcceptDialog, wanted: Vector2i) -> void:
 	dialog.position = Vector2i(safe_rect.position + (safe_rect.size - Vector2(dialog.size)) / 2 + Vector2(0, 12))
 
 func _show_tricks(daily: bool = false) -> void:
+	if daily:
+		AdventurePanel.show_plan(self)
+		return
 	if session.training.phase != "idle": return
 	var dialog := AcceptDialog.new()
 	dialog.title = "Sztuczki pieska"
@@ -915,18 +957,13 @@ func _show_tricks(daily: bool = false) -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	var keys := PetState.TRICK_KEYS.duplicate()
-	if daily:
-		if session.writable and PracticeSystem.sync(session.pet, session._local_now()): session.flush()
-		keys = session.pet.practice.targets.duplicate()
-		dialog.title = "Trening dnia %d/%d · seria %d" % [session.pet.practice.done.size(), keys.size(), int(session.pet.practice.streak)]
-	var explanation := _label("Forma opanowanych sztuczek: −10 za dzień bez ćwiczeń, +25 za udaną próbę. Niższa forma utrudnia wykonanie bez podpowiedzi. Opanowanie zostaje na zawsze." + ("\nUkończ dzisiejszą listę: +2 więzi i kolejny dzień serii." if daily else ""), 13, MUTED)
+	var explanation := _label("Wybierz sztuczkę, na którą macie ochotę. Opanowanie zostaje na zawsze; gest pomoże przypomnieć sobie ćwiczenie.", 13, MUTED)
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	list.add_child(explanation)
 	for key in keys:
 		var value := roundi(float(session.pet.skills[key].mastery))
 		var reason := TrainingSystem.unlock_reason(session.pet, key)
 		var status := "Umiem! Forma %d%%" % roundi(PracticeSystem.form(session.pet, key)) if value >= 100 else "%d%%" % value
-		if daily and session.pet.practice.done.has(key): status = "✓ " + status
 		if not reason.is_empty(): status = reason
 		var button := _button("%s · %s" % [TrainingSystem.LABELS[key], status], func():
 			_choose_trick(key)
@@ -964,9 +1001,9 @@ func _care_action(key: String) -> void:
 	if session.in_yard and key == "play":
 		session.throw_ball(YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), room.ball_world)
 		return
-	if session.in_yard and key not in ["pet", "play"]:
+	if session.in_yard and key not in ["pet", "play", "rest"]:
 		if not session.change_yard(false): return
-		room.set_yard(false)
+		if room.in_yard: room.set_yard(false)
 	if key == "train": _select_tab("training")
 	elif key == "play": _show_play_menu()
 	else: session.act(key)
@@ -977,7 +1014,7 @@ func _train(guided: bool) -> void:
 		return
 	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
 	var reason := session.training.readiness(session.pet, selected_trick)
-	if not reason.is_empty() or session.busy() or not session.writable: return
+	if not reason.is_empty() or session.busy(false) or not session.writable: return
 	var key := selected_trick
 	gesture_dialog = AcceptDialog.new()
 	var dialog := gesture_dialog
@@ -1004,7 +1041,6 @@ func _reward(kind: String) -> void:
 		if before >= 100:
 			var form_after := PracticeSystem.form(session.pet, selected_trick)
 			gain_label.text = "Forma +%d → %d%%" % [roundi(form_after - form_before), roundi(form_after)] if form_after > form_before else "Forma %d%% · przećwiczone" % roundi(form_after)
-		gain_label.text += " · Dziś %d/%d" % [session.pet.practice.done.size(), session.pet.practice.targets.size()]
 		gain_left = 1.8
 		if selected_tab == "training":
 			training_feedback = gain_label.text + " · " + session.last_message
@@ -1075,7 +1111,7 @@ func _show_command() -> void:
 	command_edit.grab_focus()
 
 func _submit_command() -> void:
-	if session.busy():
+	if session.busy(false):
 		session.say("Dokończmy najpierw tę czynność.")
 		return
 	var key := LocalCommands.interpret(command_edit.text)
@@ -1132,7 +1168,7 @@ func _refresh() -> void:
 	yard_button.text = "Dom" if session.in_yard else "Podwórko"
 	sniff_button.visible = session.in_yard
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
-	sniff_button.disabled = (session.busy() and not session.hide_game.active()) or not session.writable
+	sniff_button.disabled = (session.busy(false) and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
 	if session.activity in ["dig_walk", "digging"]: care_status.text = "Idzie do piaskownicy…" if session.activity == "dig_walk" else "Kopie… jeszcze %d s" % ceili(session.activity_left)
 	if session.activity == "outing_praise": care_status.text = "Gotowe! Dotknij miejsca Na potrzebę, by pochwalić."
@@ -1148,21 +1184,71 @@ func _refresh() -> void:
 	elif session.outdoor_commands.phase == "perform": care_status.text = "Wraca z piłką…" if command == "come" else "Zostań… spokojnie czekamy."
 	var visiting := session.visitors.active() and session.in_yard
 	room.fence_visitor.present(session.visitors.kind if visiting else "")
+	visitor_toolbar.visible = visiting and selected_tab == "care"
+	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
 	visitor_soothe_button.visible = visiting
 	visitor_recall_button.visible = visiting
 	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe"]
 	visitor_recall_button.disabled = visitor_soothe_button.disabled
 	if visiting:
+		care_status.text = session.visitors.hint()
+	if room.yard_weather.kind != session.weather.kind(session):
+		room.yard_weather.kind = session.weather.kind(session)
+		room.yard_weather.queue_redraw()
+		room.update_placement()
+	room.yard_weather.night = DailyRhythm.phase(pet, session._local_now()) == "night"
+	room.yard_weather.animate = app_foreground and selected_tab == "care" and not _dialog_open()
+	var water_play := session.water.active() and session.in_yard
+	room.yard_water.kind = session.water.kind if water_play else ""
+	room.yard_water.phase = session.water.phase if water_play else ""
+	water_splash_button.visible = water_play
+	water_shake_button.visible = water_play
+	water_splash_button.disabled = session.water.phase != "ready"
+	water_shake_button.disabled = session.water.phase == "shake"
+	if water_play:
 		sniff_button.hide()
 		yard_bath_button.hide()
 		yard_command_button.hide()
-		care_status.text = session.visitors.hint()
+		care_status.text = session.water.hint()
+	var yard_offer := session.in_yard and str(session.invitation.get("kind", "")).begins_with("yard_")
+	yard_invite_accept.visible = yard_offer
+	yard_invite_later.visible = yard_offer
+	if yard_offer:
+		sniff_button.hide()
+		yard_bath_button.hide()
+		yard_command_button.hide()
+		care_status.text = YardInvitations.WORDS[session.invitation.kind][0]
+		yard_invite_accept.disabled = not YardInvitations.options(session).has(session.invitation.kind)
+	var on_course := session.in_yard and session.course.active()
+	room.yard_course.playing = on_course
+	room.yard_course.queue_redraw()
+	course_action.visible = on_course
+	course_stop.visible = on_course
+	if on_course:
+		sniff_button.hide()
+		yard_bath_button.hide()
+		yard_command_button.hide()
+		care_status.text = session.course.hint()
+		course_action.text = "Pochwal" if session.course.phase == "praise" else ("Zostań" if session.course.phase in ["stay_ready", "stay"] else "Skacz")
+		course_action.disabled = session.course.phase not in ["jump_ready", "stay_ready", "praise"]
+	var resting_outside := session.in_yard and session.yard_rest.active()
+	if session.yard_rest.phase == "drink": room.animator.facing_left = false
+	room.yard_rest.drinking = session.yard_rest.phase == "drink" and session.yard_rest.drink_stage == 1
+	room.yard_rest.animate = app_foreground and selected_tab == "care" and not _dialog_open()
+	room.yard_rest.queue_redraw()
+	yard_rest_stop.visible = resting_outside
+	yard_rest_stop.text = "Obudź" if pet.resting else "Przerwij"
+	if resting_outside:
+		sniff_button.hide()
+		yard_bath_button.hide()
+		yard_command_button.hide()
+		care_status.text = session.yard_rest.hint(session)
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
-	practice_label.text = "Forma %d%% · Dziś %d/%d · Seria %d dni" % [roundi(PracticeSystem.form(pet, selected_trick)), pet.practice.done.size(), pet.practice.targets.size(), int(pet.practice.streak)]
+	practice_label.text = "Forma %d%% · ćwiczcie we własnym rytmie" % roundi(PracticeSystem.form(pet, selected_trick))
 	var reason := session.training.readiness(pet, selected_trick)
-	guided_button.disabled = not session.writable or session.busy() or not reason.is_empty()
+	guided_button.disabled = not session.writable or session.busy(false) or not reason.is_empty()
 	guidance_toggle.disabled = session.training.phase != "idle"
 	guided_button.text = "Pokaż gest" if guidance_toggle.button_pressed else "Powiedz komendę"
 	for key in trick_buttons:
@@ -1198,7 +1284,7 @@ func _refresh() -> void:
 	if had_warning != footer_label.visible: _fit_room()
 	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
 	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
-	adventure_button.text = DailyAdventure.summary(pet, session._local_now())
+	adventure_button.text = "Dziś · pomysły na wspólną chwilę"
 	var visitor_lines: PackedStringArray = []
 	for guest in YardVisitors.KINDS:
 		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
@@ -1233,7 +1319,10 @@ func _refresh() -> void:
 			item.add_child(words)
 			var date := Time.get_datetime_dict_from_unix_time(int(entry.at) + int(Time.get_time_zone_from_system().bias) * 60)
 			words.add_child(_label("%02d.%02d · %02d:%02d" % [date.day, date.month, date.hour, date.minute], 11, MUTED))
-			var title := _label(entry.title, 16, INK, true)
+			var entry_title: String = entry.title
+			if str(entry.key).begins_with("visitor_") and str(entry.key).contains("_calm_"):
+				for count in [1, 2, 3]: entry_title = entry_title.trim_suffix(" %d/3" % count)
+			var title := _label(entry_title, 16, INK, true)
 			title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			words.add_child(title)
 			var detail := _label(entry.detail, 13, MUTED)
@@ -1413,6 +1502,12 @@ func _position_feedback() -> void:
 			if marker.visible: obstacles.append(marker.get_global_rect().grow(4))
 	var fixed_obstacles := obstacles.size()
 	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(10))
+	if bubble.visible and safe_rect.size.x < 360 and companion_card.modulate.a > 0 and companion_data.get("kind") in ["thought", "memory"]:
+		# Narrow phones: a passing thought yields to the immediate reply instead
+		# of stacking two speech overlays above the dog.
+		companion_card.position = Vector2(-10000, -10000)
+		companion_card.modulate.a = 0
+		obstacles.resize(fixed_obstacles)
 	if bubble.visible:
 		var preferred := Vector2(head.x - bubble.size.x / 2, head.y - bubble.size.y - 24)
 		if not _place_pet_overlay(bubble, preferred, obstacles) and obstacles.size() > 1:
@@ -1446,14 +1541,40 @@ func _journal_icon(key: String) -> String:
 	if key.begins_with("habit_"): return "paw"
 	return {"welcome": "home", "feed": "bowl", "rest": "moon", "play": "ball", "pet": "heart", "clean": "brush", "favorite_reward": "treat"}.get(key, "book")
 
+func _show_yard_rest() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Chwila w cieniu"
+	dialog.get_ok_button().text = "Wróć"
+	var box := VBoxContainer.new()
+	dialog.add_child(box)
+	for option in [["bed", "Połóż się w cieniu"], ["drink", "Napij się wody"]]:
+		var kind: String = option[0]
+		box.add_child(_button(option[1], func():
+			dialog.hide()
+			session.yard_rest.start(session, kind)))
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	_position_dialog(dialog, Vector2i(290, 190))
+	dialog.popup()
+
 func _toggle_yard(animated: bool = true) -> void:
+	if session.in_yard and session.yard_rest.phase == "rest":
+		session.change_yard(false)
+		return
 	if animated:
 		yard_transition.start(not session.in_yard)
 		return
 	if session.change_yard(not session.in_yard):
 		gain_left = 0
 		gain_label.hide()
-		room.set_yard(session.in_yard)
+		if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
+
+func _course_action() -> void:
+	match session.course.phase:
+		"jump_ready": session.course.jump(session)
+		"stay_ready": session.course.stay(session)
+		"praise": session.course.praise(session)
 
 func _room_care_action(action: String) -> void:
 	if action == "catch":
@@ -1462,7 +1583,10 @@ func _room_care_action(action: String) -> void:
 	if action.begins_with("yard_") and session.in_yard:
 		var place := action.trim_prefix("yard_")
 		if place == "gate": _toggle_yard()
+		elif place == "shade": _show_yard_rest()
+		elif place == "course": session.course.start(session)
 		elif place == "dig": DiggingSystem.start(session)
+		elif place in YardWater.SPOTS: session.water.start(session, place)
 		elif place == "garden": _show_garden()
 		elif place == "outing":
 			if session.activity == "outing_praise": YardRoutines.praise(session)

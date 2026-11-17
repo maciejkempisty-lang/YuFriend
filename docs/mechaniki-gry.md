@@ -372,3 +372,27 @@ Po dwóch czynnościach pamiątka automatycznie trafia do Albumu. Pierwsze ukoń
 `DailyAdventure` przechowuje tylko dzień, maksymalnie dwa zaliczone zadania i flagę nagrody. Cofnięcie daty nie pozwala ponownie odebrać nagrody. Postęp i nagroda są zapisywane wspólnie z wykonaną czynnością; błąd zapisu cofa transakcję. W tym celu także nagrody treningowe i węszenie zyskały wycofanie zmian po błędzie zapisu. `AdventurePanel` pokazuje zadania, wyjaśnienia, skróty i kolekcję pamiątek.
 
 Schemat v15 dodaje `adventure` z pustym planem; nie przyznaje zadań wstecz. Migracja zachowuje wcześniejsze pola i oryginał v14. Widget obsługuje v4–v15. Build 22 nie odczyta zapisu v15; telefon pozostaje na buildzie 22, dopóki nie zostanie wykonana osobna instalacja.
+
+
+## Spokojniejszy dzień — 17 listopada 2026
+
+Ta zmiana zastępuje opisane wyżej liczniki w interfejsie jednym panelem **Dziś**. Za dnia pokazuje dwie istniejące propozycje przygody oraz swobodne pobycie z pieskiem; nocą proponuje odpoczynek i Album. Wszystkie propozycje są opcjonalne. Panel odświeża się po zmianie dnia, nie zapisuje nowego postępu i nie dodaje zadań po wykonaniu wcześniejszych. Nie ma sumy do ukończenia, serii ani przypomnienia o brakujących zadaniach. Dzienna lista treningowa kieruje teraz do tego samego panelu. Zdjęcia są nadal dostępne w Albumie; na górnym pasku zamiast Foto jest Dziś.
+
+Dotychczasowe nagrody, pamiątki, ograniczenia premii, forma sztuczek i dane serii pozostają zgodne ze starszym zapisem. Interfejs nie pokazuje liczników treningu, spokojnych spotkań ani wykorzystanych premii aportu. Limity ochronne działają wewnętrznie; kopanie po ich wyczerpaniu proponuje powrót jutro. Historyczne wpisy spokojnych spotkań wyświetlane są bez ułamka, bez przepisywania zapisanych wspomnień.
+
+Goście czekają co najmniej 60 sekund oglądania wolnego podwórka na pierwszą wizytę i 240 sekund na następną. Maksymalnie dwie wizyty przypadają na pobyt od wejścia do wyjścia; panele, zabawy i ukryte podwórko nie odliczają oczekiwania. Pierwszy rzut, wybór chowanego, kopania, węszenia, podlewania, opieki lub innej dostępnej czynności przerywa wizytę i wykonuje tę czynność. Przerwanie nie odbiera znajomości i nie przyznaje spokojnego spotkania. Ruch psa i opóźniona odpowiedź gościa są anulowane. Przyciski zabaw i miejsca podwórka pozostają dostępne; odpowiedzi gości mają własny rząd nad panelem opieki.
+
+Podlewanie jest dostępne raz na lokalny dzień kalendarzowy. Przykład: po podlewaniu o 18:00 można ponownie podlać o 08:00 następnego dnia. Woda obejmuje maksymalnie następne 24 godziny wzrostu, bez kumulowania zapasu; pełny wzrost nadal wymaga 72 podlanych godzin, a sucha roślina nie więdnie. Data podlewania pozostaje po restarcie, a cofnięcie daty nie odnawia dostępności. Nieudany zapis cofa wzrost, wodę, datę i ewentualną nagrodę.
+
+Schemat pozostaje v15. Opcjonalne pole `yard_routines.watered_day` przechowuje numer lokalnego dnia. Stare zapisy bez pola są poprawne; pierwsza czynność ogródka wyprowadza poprzedni dzień z `water_until - 86400`, używając bieżącego przesunięcia lokalnego zegara, i utrwala go razem z zapisem. Kolejne podlewania używają już zapisanej daty, niezależnie od 23- lub 25-godzinnej doby. Widget akceptuje wersje od 4 wzwyż tylko po walidacji własnego zestawu pól. Gra nadal odrzuca nieobsługiwane przyszłe schematy pełnego zapisu.
+
+
+## Żywe otoczenie — kod po buildzie 24
+
+Motyl przelatuje łukiem nad grządką i przysiada na rosnącej roślinie; nad pustą grządką tylko przelatuje. Wróbel sfruwa na trawę, podskakuje, dziobie i odlatuje, gdy pies się zbliża. Ślimak pełznie przy brzegu trawy przez około 24 sekundy, a wiewiórka przebiega po niższej belce płotu i przystaje na dwie sekundy. Niższa belka pozostawia postać widoczną pod przyciskami miejsc także na małym ekranie. W pokoju mały ptak przysiada za szybą, w dolnej prawej części okna. Zdarzenia pojawiają się tylko w oglądanej części sceny, za dnia i podczas bezczynności. Pierwsze oczekiwanie to 12–54 sekundy zależnie od postaci, kolejne 40–75 sekund; zdarzenia trwają około 8–24 sekund. Deszcz zatrzymuje zdarzenia na podwórku.
+
+To wyłącznie dekoracja. Nie ma zadań, dziennych liczników, nagród, wpisów w Albumie ani nowych pól zapisu. Zwierzęta nie sterują psem, nie przejmują kamery i nie blokują czynności. Rozpoczęcie ruchu, zabawy lub opieki usuwa dekorację w około 0,8 sekundy: ptaki i motyl odlatują, ślimak chowa się w muszli i znika, wiewiórka ucieka wzdłuż belki. Prawdziwy gość przy płocie ma pierwszeństwo. Przejście między scenami, otwarcie panelu, noc lub tło aplikacji usuwa dekoracyjne zdarzenie i zatrzymuje jego animację.
+
+Jednocześnie są najwyżej dwie postacie na podwórku albo jeden ptak za oknem. `AmbientLife` przechowuje wyłącznie stan ulotny, a `AmbientLifeView` animuje małe sprite’y 16 × 16 z dwiema klatkami motyla, czterema ptaka oraz trzema ślimaka i wiewiórki. Wszystkie korzystają ze wspólnej palety i siatki otoczenia. Tekstury powstają raz; ruch wykorzystuje siatkę pikseli otoczenia. Nie zmienia to pamięci prawdziwych gości ani schematu v15.
+
+Rozszerzenie o ślimaka i wiewiórkę z 17 listopada 2026 sprawdzono lokalnie; nie jest jeszcze częścią zainstalowanego buildu 26. To mały zakres: bez sezonowości, rzadkich zdarzeń, nowych reakcji psa ani przebudowy animacji prawdziwego kota przy płocie.

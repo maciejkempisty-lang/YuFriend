@@ -13,12 +13,22 @@ signal ball_thrown(target: Vector2)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
 const DRAG_THRESHOLD := 9.0
+const YARD_COLUMNS := 6
 # The initial bowl-to-ball span, including both silhouettes, fits in 480 world units.
 const HOME_FRAME_WIDTH := 480.0
 const DECORATION_TOP := 60.0
 var animator := PetAnimator.new()
 var backdrop := RoomArtwork.new()
 var fence_visitor := FenceVisitorView.new()
+var ambient_life := AmbientLifeView.new()
+var yard_water := YardWaterView.new()
+var yard_weather := YardWeatherView.new()
+var yard_course := YardCourseView.new()
+var yard_rest := YardRestView.new()
+var jump_motion := PuppyJump.new()
+var jump_lift := 0.0
+var jump_clip := ""
+var water_drops := YardWaterView.new()
 var wall_clock := preload("res://scripts/ui/wall_clock.gd").new()
 var ball_art := RoomArtwork.new()
 var shadow := RoomArtwork.new()
@@ -123,6 +133,24 @@ func _ready() -> void:
 	wall_clock.position = Vector2(471, 141)
 	wall_clock.z_index = -4
 	world.add_child(wall_clock)
+	yard_water.z_index = -2
+	yard_water.hide()
+	world.add_child(yard_water)
+	yard_weather.z_index = -1
+	yard_weather.hide()
+	world.add_child(yard_weather)
+	yard_course.z_index = -1
+	yard_course.hide()
+	world.add_child(yard_course)
+	yard_rest.z_index = -1
+	yard_rest.hide()
+	world.add_child(yard_rest)
+	water_drops.effects_only = true
+	water_drops.z_index = 5
+	water_drops.hide()
+	world.add_child(water_drops)
+	ambient_life.z_index = 0
+	world.add_child(ambient_life)
 	world.add_child(actors)
 	fence_visitor.position = YardVisitors.FENCE
 	fence_visitor.scale = Vector2.ONE * 1.5
@@ -449,14 +477,14 @@ func update_placement() -> void:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
 		_base_pixel_scale = maxi(1, floori(available_width / (RoomLayout.SIZE.x / _render_pixel_size)))
-		var top := maxf(hud_bottom + 54, yard_controls_bottom + 96) if in_yard else hud_bottom + 54
+		var top := maxf(hud_bottom + 54, yard_controls_bottom + ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) if in_yard else hud_bottom + 54
 		_available_rect = Rect2(0, top, size.x, maxf(1, stage_height - top - 12))
 	world.scale = Vector2.ONE / _render_pixel_size
 	_apply_pixel_scale(_wanted_zoom())
 	animator.scale = Vector2.ONE * presentation_scale
 	shadow.scale = Vector2.ONE * presentation_scale
 	room_hint.position = Vector2(20, hud_bottom + 54)
-	room_hint.text = "Dotknij miejsca, aby przybliżyć" if overview else ("Przesuń podwórko ↔" if in_yard else "Przesuń pokój ↔")
+	room_hint.text = (YardWeather.LABELS[yard_weather.kind] + " · wybierz miejsce" if in_yard else "Dotknij miejsca, aby przybliżyć") if overview else (YardWeather.LABELS[yard_weather.kind] + " · przesuń ↔" if in_yard else "Przesuń pokój ↔")
 	overview_button.text = "Do pieska" if overview else ("Podwórko" if in_yard else "Cały pokój")
 	overview_button.position = Vector2(overlay_left, hud_bottom)
 	overview_button.size = Vector2(112, 44)
@@ -632,7 +660,15 @@ func place_at_station(action: String) -> void:
 		_set_camera_center(Vector2(pet_world.x, _world_bottom() - _visible_world_size().y * 0.5))
 	update_placement()
 
+func start_course_jump(target: Vector2) -> void:
+	cancel_activity()
+	jump_motion.start(pet_world, target)
+	jump_clip = ""
+
 func cancel_activity() -> void:
+	jump_motion.cancel()
+	jump_lift = 0
+	animator.position.y = 0
 	moving = false
 	_step_distance = 0.0
 	_ball_was_rolling = false
@@ -664,7 +700,7 @@ func _on_clip_started(clip: String) -> void:
 	if clip == "bark_stand": sound_requested.emit("bark")
 
 func play_clip(clip: String) -> void:
-	if clip != "walk":
+	if clip not in ["walk", "run"]:
 		moving = false
 		walk_performance = 0
 	animator.request_clip(clip)
@@ -676,6 +712,19 @@ func play_clip(clip: String) -> void:
 		effect_left = 1.4
 
 func _process(delta: float) -> void:
+	if jump_motion.active():
+		var landed := jump_motion.advance(delta)
+		var sample := jump_motion.sample()
+		pet_world = sample.point
+		jump_lift = sample.lift
+		if jump_clip != sample.clip:
+			jump_clip = sample.clip
+			animator.remaining = 0
+			animator.request_clip(jump_clip)
+		if landed:
+			jump_motion.cancel()
+			jump_lift = 0
+			destination_reached.emit()
 	if hide_tail.visible:
 		hide_tail.roll_phase += delta
 		hide_tail.queue_redraw()
@@ -733,6 +782,17 @@ func _process(delta: float) -> void:
 	_sync_layers()
 
 func _sync_layers() -> void:
+	yard_rest.visible = in_yard and not yard_course.playing
+	yard_course.visible = in_yard
+	animator.position.y = -roundf(jump_lift / 3) * 3
+	yard_weather.visible = in_yard
+	yard_water.wet = yard_weather.kind != "sun" or yard_water.kind == "puddle"
+	yard_water.visible = in_yard and not yard_course.playing
+	yard_water.pet_world = pet_world
+	water_drops.kind = yard_water.kind
+	water_drops.phase = yard_water.phase
+	water_drops.pet_world = pet_world
+	water_drops.visible = in_yard and yard_water.phase in ["splash", "shake"]
 	puppy.position = (pet_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	if carrying_ball:
 		ball_world = pet_world + Vector2(-25 if animator.facing_left else 25, -10)
@@ -766,10 +826,10 @@ func _sync_layers() -> void:
 			marker.custom_minimum_size = Vector2(44, 44)
 			marker.size = Vector2(44, 44)
 			var index := RoomLayout.YARD_STATIONS.keys().find(id)
-			marker.position = Vector2(12 + (index % 4) * (size.x - 68) / 3, maxf(yard_controls_bottom, render_rect.position.y - 96) + (index / 4) * 48)
+			marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
 		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
-		marker.visible = in_yard and not fence_visitor.visible and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)
+		marker.visible = in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < ((content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y)
 	# Nearby new stations must retain separate touch targets on narrow screens.
 	if in_yard and not overview:
 		var visible_markers: Array = []
