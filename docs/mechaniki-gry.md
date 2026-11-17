@@ -360,3 +360,15 @@ Znajomość łagodzi reakcję na konkretnego gościa bez zmieniania cech osobowo
 Album zawiera ilustrację trzech gości oraz statusy od „Jeszcze się nie poznali” do „Dobrze znany gość · 3/3”. Grafika i pełny prompt znajdują się w `assets/art/visitors/`; wygenerowano ją wbudowanym image_gen. Animacje gości na płocie pozostają rysowane w kodzie.
 
 `VisitorMemory` zapisuje najwyżej 12 zwykłych pamiątek: pierwsze spotkanie i trzy spokojne dni na gościa. Dzień lokalny jest częścią klucza pamiątki, a jej data pozostaje rzeczywistym czasem UTC. Istniejący model journal/milestones zachowuje te wpisy i rozumie je także build 21. Nie dodano pól ani migracji: schemat nadal v14. Błąd zapisu cofa nowe wpisy w pamięci. Stare postępy, historia, cechy i kolekcje pozostają zachowane.
+
+## Małe przygody dnia — kod po buildzie 22
+
+Opcjonalna przygoda jest dostępna z Albumu i menu „Pobaw się”. Każdy lokalny dzień proponuje jeden z trzech zestawów po dwie czynności: ogródek + sztuczka („Ogród pełen sztuczek”), sztuczka + skarb („Tropem łapek”) albo ogródek + skarb („Skarby wśród kwiatów”). Nie trzeba przyjmować zadania; zwykła gra zalicza je automatycznie. Widok odświeża się także przez północ.
+
+Ogródek zalicza udane sadzenie, podlewanie, zbiór albo „Obejrzyj grządkę”, dostępne gdy roślina jest już podlana. Sztuczka wymaga poprawnego wykonania i nagrody w Treningu lub pochwały po komendzie w zabawie na podwórku. Skarb wymaga ukończenia węszenia lub kopania; znajome znaleziska też się liczą. Rozpoczęcie, anulowanie, spóźniona nagroda i wymiana duplikatów nie zaliczają zadania. Powtarzanie jednej kategorii nie zastępuje drugiej.
+
+Po dwóch czynnościach pamiątka automatycznie trafia do Albumu. Pierwsze ukończenie każdego z trzech zestawów daje stały wpis z ikoną iskierki. Kolejne ukończenia mają jeden odświeżany wpis ostatniej przygody, więc nie zapełniają pamięci. Przygody nie dają dodatkowej więzi, potrzeb, waluty ani serii dni. Następnego dnia jest świeży plan; niewykonanych zadań nie trzeba nadrabiać, zdobyte pamiątki pozostają. Zwykłe zasady potrzeb i formy sztuczek nie zmieniają się.
+
+`DailyAdventure` przechowuje tylko dzień, maksymalnie dwa zaliczone zadania i flagę nagrody. Cofnięcie daty nie pozwala ponownie odebrać nagrody. Postęp i nagroda są zapisywane wspólnie z wykonaną czynnością; błąd zapisu cofa transakcję. W tym celu także nagrody treningowe i węszenie zyskały wycofanie zmian po błędzie zapisu. `AdventurePanel` pokazuje zadania, wyjaśnienia, skróty i kolekcję pamiątek.
+
+Schemat v15 dodaje `adventure` z pustym planem; nie przyznaje zadań wstecz. Migracja zachowuje wcześniejsze pola i oryginał v14. Widget obsługuje v4–v15. Build 22 nie odczyta zapisu v15; telefon pozostaje na buildzie 22, dopóki nie zostanie wykonana osobna instalacja.

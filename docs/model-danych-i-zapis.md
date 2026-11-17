@@ -136,3 +136,9 @@ Nastrój ma osobny znacznik dnia zaczynającego się o 05:00. Relacje i powitani
 Limit albumu stosuje się oddzielnie do wpisów oznaczonych w `milestones` oraz do pozostałych. Sama korekta albumu nie zmieniała struktury v4; obecny schemat v5 dodaje opisany wyżej rytm. Dotychczasowe zapisy v1–4 nadal są odczytywane. Wspomnień już usuniętych przez starszą wersję nie odtwarzamy z wymyśloną datą ani treścią. Do odzyskania potrzebna byłaby kopia zawierająca te wpisy.
 
 Czytnik nadal przyjmuje wcześniejsze albumy v4 do 240 wpisów. Po walidacji zachowuje kamienie milowe i 10 najnowszych pozostałych wpisów; pełny stary album nie powoduje odrzucenia zapisu ani utraty psa.
+
+## v15 — opcjonalne przygody dnia
+
+Pole `adventure`: `day` (całkowity lokalny dzień lub −1), `done` (0–2 unikalne identyfikatory z dzisiejszego zestawu: garden/trick/treasure), `rewarded` (true dokładnie po obu zadaniach). Zestaw wyznacza dzień modulo 3. Nie zapisujemy osobnej serii ani zaległości. Widok planu nie zmienia danych; ukończona czynność zatwierdza nowy dzień, zadanie i ewentualną nagrodę razem ze swoim zapisem. Dzień nie cofa się. Nagrody wykorzystują dotychczasowy journal/milestones (trzy stałe pamiątki i jeden wpis ostatniej powtórki).
+
+Migracja wcześniejszych wersji dodaje wyłącznie pusty `adventure`. Wersja bieżąca wymaga poprawnego pola; niepoprawne zadania, powtórzenia i niespójna flaga nagrody są odrzucane. Starszy zapis jest archiwizowany przed aktualizacją. Widget i przypomnienia używają wspólnego czytnika obsługującego v15.

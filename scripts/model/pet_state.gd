@@ -30,6 +30,7 @@ var favorite_reward: String = "praise"
 var needs: Dictionary = {"fullness": 78.0, "energy": 76.0, "hygiene": 85.0, "play": 58.0, "contact": 65.0}
 var skills: Dictionary = {}
 var fetch_rewards: Dictionary = FetchRewards.initial()
+var adventure: Dictionary = DailyAdventure.initial()
 var exploration: Dictionary = DiggingSystem.initial()
 var yard_routines: Dictionary = YardRoutines.initial()
 var yard_record := 0.0
@@ -180,7 +181,7 @@ func trim_journal() -> void:
 	journal = kept
 
 func to_dict() -> Dictionary:
-	return {"exploration": exploration.duplicate(true), "yard_routines": yard_routines.duplicate(true), "fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
+	return {"adventure": adventure.duplicate(true), "exploration": exploration.duplicate(true), "yard_routines": yard_routines.duplicate(true), "fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
 		"skin": skin, "personality_seed": personality_seed, "traits": traits.duplicate(true),
 		"favorite_reward": favorite_reward, "needs": needs.duplicate(true),
 		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
@@ -193,6 +194,7 @@ static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
 
 static func from_dict(data: Dictionary) -> PetState:
+	if not DailyAdventure.valid(data.get("adventure")): return null
 	if not DiggingSystem.valid(data.get("exploration")): return null
 	if not YardRoutines.valid(data.get("yard_routines")): return null
 	if not FetchRewards.valid(data.get("fetch_rewards")): return null
@@ -284,6 +286,8 @@ static func from_dict(data: Dictionary) -> PetState:
 	pet.habits = data.habits.duplicate()
 	pet.reflected_day = int(data.reflected_day)
 	pet.pet_id = data.pet_id
+	pet.adventure = data.adventure.duplicate(true)
+	pet.adventure.day = int(pet.adventure.day)
 	pet.exploration = data.exploration.duplicate(true)
 	for key in ["tokens", "day", "rounds", "total", "ritual_day"]: pet.exploration[key] = int(pet.exploration[key])
 	for key in pet.exploration.items: pet.exploration.items[key] = int(pet.exploration.items[key])

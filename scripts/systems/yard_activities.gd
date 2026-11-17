@@ -47,6 +47,7 @@ static func start_sniff(s: GameSession, spot: int = -1) -> bool:
 
 static func _finish_sniff(s: GameSession) -> void:
 	if not s.in_yard or s.sniff_spot < 0 or s.suspended or not s.writable: return
+	var before := s.pet.to_dict()
 	NeedsSystem.change(s.pet, {"hygiene": -8})
 	var key := "yard_find_%d" % s.sniff_spot
 	var label: String = s.YARD_FINDS[s.sniff_spot]
@@ -60,7 +61,11 @@ static func _finish_sniff(s: GameSession) -> void:
 	s.activity_left = 0
 	s.clip_requested.emit("tail_wag_stand")
 	s.say("Znalezione: %s! Pamiątka czeka w Albumie." % label if fresh else "Znajomy zapach. Ten skarb jest już w Albumie — sprawdź też pozostałe krzaki.")
-	s.flush()
+	var adventure_completed := DailyAdventure.record(s.pet, "treasure", s._local_now())
+	if not s.flush():
+		s.pet = PetState.from_dict(before)
+		s.say("Nie udało się zapisać znaleziska. Postęp pozostaje bez zmian.")
+	elif adventure_completed: s.say("Przygoda ukończona! Pamiątka w Albumie.")
 	s.changed.emit()
 
 

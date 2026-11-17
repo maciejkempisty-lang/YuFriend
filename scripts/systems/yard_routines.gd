@@ -57,7 +57,10 @@ static func garden(session: GameSession, action: String) -> bool:
 		state.growth = 0.0
 		state.water_until = 0.0
 		message = "Kwiat w kolekcji! Odblokowano: %s. Ustaw dekorację w Albumie." % KeepsakeSystem.DECOR[plant]
+	elif action == "observe" and state.plant != "" and now < state.water_until:
+		message = "Grządka podlana, roślina spokojnie rośnie."
 	else: return false
+	if DailyAdventure.record(session.pet, "garden", session._local_now()): message += " Przygoda ukończona! Pamiątka w Albumie."
 	if not session.flush():
 		session.pet = PetState.from_dict(before)
 		session.changed.emit()

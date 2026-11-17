@@ -30,6 +30,7 @@ func check(ok: bool, label: String) -> void:
 func game_at(hour: float) -> GameSession:
 	now = 100 * 86400.0 + hour * 3600
 	var game := GameSession.new()
+	game.storage = SaveSystem.new(directory.path_join("session-%s.json" % Time.get_ticks_usec()))
 	game.local_clock = func(): return now
 	game.pet = PetState.create(42)
 	game.pet.life.mood = "calm"

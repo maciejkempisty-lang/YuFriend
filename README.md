@@ -13,11 +13,13 @@ Zrzuty z wersji komputerowej, wykonane na syntetycznym zapisie testowym.
 
 ## Aktualny stan — 17 listopada 2026
 
-Build 20, zainstalowany na iPhonie z zachowaniem postępów Glorii, obejmuje formę i trening dnia, aport z dziennym limitem więzi, chowanego w krzakach, kąpiel z kosztem oraz Album z usuwaniem zdjęć. Pakiet animacji ma 28 klipów / 172 klatki. Kod po buildzie 17 dodaje ogródek i wyjście na potrzebę. Aktualny schemat zapisu w kodzie: **v14**; aplikacja migruje v1–v13 i zachowuje wersjonowane kopie. Widget w kodzie odczytuje v4–v14. Na iPhonie zainstalowano build 20 / v14: komendy w zabawach, kwiatowe dekoracje oraz animacja wejścia i wyjścia. Starsze parametry i opisy poniżej zachowują historię prototypu.
+Na iPhonie jest build 22 / v14 z pamięcią gości i ilustrowanym Albumem, zainstalowany z zachowaniem postępów Glorii. Lokalny kod dodaje opcjonalne przygody dnia łączące ogródek, sztuczki i szukanie skarbów. Dwie czynności dają pamiątkę do Albumu, bez dodatkowej więzi, serii i kar za pominięcie. Przygody są dostępne w Albumie oraz menu „Pobaw się”.
+
+Aktualny schemat w kodzie: **v15**; migracja v1–v14 zachowuje wcześniejsze dane i wersjonowane kopie. Widget odczytuje v4–v15. Pakiet przygód jest sprawdzony lokalnie, jeszcze bez instalacji na telefonie. Pakiet animacji ma 28 klipów / 172 klatki. Opisy wcześniejszych wydań poniżej zachowują historię prototypu.
 
 Obowiązują [aktualne mechaniki](docs/mechaniki-gry.md) i [plan stabilizacji oraz tygodnia testów](docs/rozwoj-projektu.md). Decyzją użytkownika ogródek i wyjście na potrzebę rozwijamy równolegle z próbą 5–10 osób. Bieżący status instalacji i dowody zachowania postępów są w [testach iOS](docs/test-ios.md).
 
-Pakiet po buildzie 19 łączy „Przyjdź” w aporcie i „Zostań” w chowanym z formą oraz tą samą listą treningu dnia. Stokrotka, mak i lawenda odblokowują własne dekoracje. Kod używa v14 (nowe identyfikatory dekoracji), widget odczytuje v4–v14; build 20 / v14 został zainstalowany na telefonie z zachowaniem postępów Glorii.
+Pakiet po buildzie 19 łączy „Przyjdź” w aporcie i „Zostań” w chowanym z formą oraz tą samą listą treningu dnia. Stokrotka, mak i lawenda odblokowują własne dekoracje. Ten pakiet wprowadził v14 (nowe identyfikatory dekoracji), widget odczytuje v4–v14; build 20 / v14 został zainstalowany na telefonie z zachowaniem postępów Glorii.
 
 Kod po buildzie 20 dodaje ptaka, motyla i kota sąsiada przy płocie. Gloria reaguje według temperamentu; gracz może ją uspokoić lub przywołać. Wizyty czekają na przerwę między zajęciami, nie dają dodatkowej więzi i nie zmieniają schematu v14. Pakiet zainstalowano na iPhonie jako build 21; schemat zapisu pozostaje v14.
 

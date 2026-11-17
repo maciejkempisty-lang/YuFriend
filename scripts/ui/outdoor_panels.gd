@@ -74,7 +74,7 @@ static func _show_garden(app: GameUI) -> void:
 	box.add_child(description)
 	var state := app.session.pet.yard_routines.duplicate(true)
 	YardRoutines.update(state, Time.get_unix_time_from_system())
-	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else {"water": "Podlej"})
+	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else ({"observe": "Obejrzyj grządkę"} if Time.get_unix_time_from_system() < state.water_until else {"water": "Podlej"}))
 	for key in choices:
 		var action: String = key
 		var button := app._button(("Posadź: " if state.plant == "" else "") + choices[key], func():

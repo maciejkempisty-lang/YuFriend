@@ -62,12 +62,14 @@ static func finish(s: GameSession) -> bool:
 	if duplicate: state.tokens = int(state.tokens) + 1
 	NeedsSystem.change(s.pet, {"energy": -4, "hygiene": -10, "play": 8})
 	s.pet.remember("dig_" + id, "Odkopane: " + ITEMS[id][0], "Znalezisko z naszej piaskownicy.")
+	var adventure_completed := DailyAdventure.record(s.pet, "treasure", s._local_now())
 	if not s.flush():
 		s.pet = PetState.from_dict(before)
 		s.changed.emit()
 		return false
 	s.sound_requested.emit("success")
 	s.say("Odkopane: %s! %s" % [ITEMS[id][0], "Duplikat: +1 wymiana. Za 3 wybierzesz brakujący skarb." if duplicate else "Nowy skarb w Albumie."])
+	if adventure_completed: s.say("Przygoda ukończona! Pamiątka czeka w Albumie.")
 	s.changed.emit()
 	return true
 static func exchange(s: GameSession, id: String) -> bool:

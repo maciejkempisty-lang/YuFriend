@@ -1,7 +1,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 14
+const VERSION := 15
 const MAX_BYTES := 1024 * 1024
 var path: String
 var last_error: String = ""
@@ -20,7 +20,7 @@ func _read(file_path: String) -> Dictionary:
 		return {"status": "invalid"}
 	var data: Dictionary = parsed.data
 	var version: Variant = data.get("schema_version")
-	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4 and version != 5 and version != 6 and version != 7 and version != 8 and version != 9 and version != 10 and version != 11 and version != 12 and version != 13):
+	if not PetState.valid_number(version) or (version != VERSION and version != 1 and version != 2 and version != 3 and version != 4 and version != 5 and version != 6 and version != 7 and version != 8 and version != 9 and version != 10 and version != 11 and version != 12 and version != 13 and version != 14):
 		return {"status": "unsupported"}
 	if not data.get("pet") is Dictionary:
 		return {"status": "invalid"}
@@ -55,6 +55,7 @@ static func migrate(pet_data: Dictionary, version: int) -> Dictionary:
 	if version < 11 and not result.has("fetch_rewards"): result.fetch_rewards = FetchRewards.initial()
 	if version < 12 and not result.has("yard_routines"): result.yard_routines = YardRoutines.initial()
 	if version < 13 and not result.has("exploration"): result.exploration = DiggingSystem.initial()
+	if version < 15 and not result.has("adventure"): result.adventure = DailyAdventure.initial()
 	return result
 
 func _preserve_legacy(source: String, version: int, pet_id: String) -> bool:

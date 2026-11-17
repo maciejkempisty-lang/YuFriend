@@ -65,6 +65,7 @@ func _initialize() -> void:
 	for key in pet.practice.targets.duplicate(): PracticeSystem.record(pet, key, now + 3 * 86400)
 	check(pet.practice.streak == 1 and pet.practice.total_days == 3, "new streak preserves total completed days")
 	var game := GameSession.new()
+	game.storage = SaveSystem.new("/tmp/yuf-practice-session-%s/pet.json" % Time.get_ticks_usec())
 	game.pet = pet
 	game.local_clock = func(): return now + 4 * 86400
 	PracticeSystem.sync(pet, game._local_now())

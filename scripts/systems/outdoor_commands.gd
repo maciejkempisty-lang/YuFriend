@@ -100,6 +100,7 @@ func praise(s: GameSession) -> bool:
 	var result := trial.reward(s.pet, "praise")
 	if not result.ok: return false
 	var daily := PracticeSystem.record(s.pet, command, s._local_now())
+	var adventure_completed := DailyAdventure.record(s.pet, "trick", s._local_now())
 	cancel() # Consume the opportunity even if storage fails; no double reward.
 	s.activity = "hide" if s.hide_game.active() else "idle"
 	if not s.flush():
@@ -111,6 +112,7 @@ func praise(s: GameSession) -> bool:
 	if result.gain > 0: message += " Opanowanie +%d." % roundi(result.gain)
 	if s.pet.practice.done.has(command): message += " Zaliczone na dziś."
 	if result.mastered: message = "Umiem: %s! 100%%. " % TrainingSystem.LABELS[command] + message
+	if adventure_completed: message += " Przygoda ukończona! Pamiątka w Albumie."
 	if daily: message += " Trening dnia ukończony! +2 więzi."
 	s.say(message)
 	s.changed.emit()

@@ -618,13 +618,23 @@ func begin_training(key: String, guided: bool) -> bool:
 func give_reward(kind: String) -> bool:
 	if suspended or not writable: return false
 	player_activity()
+	var before := pet.to_dict()
+	var discovery_before := _discovery_message
 	var result := training.reward(pet, kind)
 	if not result.ok:
 		say(result.message)
 		return false
 	var daily_bonus := PracticeSystem.record(pet, training.trick, _local_now())
 	if daily_bonus: result.message = "Trening dnia ukończony! +2 więzi · seria %d dni." % int(pet.practice.streak)
+	var adventure_completed := DailyAdventure.record(pet, "trick", _local_now())
 	_note("reward_" + kind)
+	if not flush():
+		pet = PetState.from_dict(before)
+		_discovery_message = discovery_before
+		say("Nie udało się zapisać ćwiczenia. Postęp pozostaje bez zmian.")
+		changed.emit()
+		return false
+	if adventure_completed: result.message += " Przygoda ukończona! Pamiątka w Albumie."
 	sound_requested.emit("success")
 	if kind == "treat": sound_requested.emit("treat")
 	_reward_from_training = true
@@ -635,7 +645,6 @@ func give_reward(kind: String) -> bool:
 	else:
 		clip_requested.emit("treat_take_stand" if kind == "treat" else "tail_wag_stand")
 	say(result.message)
-	flush()
 	changed.emit()
 	return true
 

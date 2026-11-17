@@ -47,6 +47,7 @@ var mastery_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
 var guided_button: Button
+var adventure_button: Button
 var visitor_album_status: Label
 var journal_list: VBoxContainer
 var selected_trick: String = "come"
@@ -561,6 +562,8 @@ func _build_journal() -> VBoxContainer:
 		_select_tab("care")
 		_take_photo()))
 	album_actions.add_child(_button("Dekoracje", _show_decor))
+	adventure_button = _button("Przygoda dnia", func(): AdventurePanel.show_plan(self))
+	box.add_child(adventure_button)
 	box.add_child(_button("Kolekcja wykopanych skarbów", func(): ProgressionPanels.collection(self)))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -743,6 +746,9 @@ func _build_play_dialogs() -> void:
 	choices.add_theme_constant_override("separation", 12)
 	play_menu.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
+	choices.add_child(_button("Mała przygoda dnia", func():
+		play_menu.hide()
+		AdventurePanel.show_plan(self)))
 	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · schowaj smakołyk"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
@@ -1192,6 +1198,7 @@ func _refresh() -> void:
 	if had_warning != footer_label.visible: _fit_room()
 	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
 	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
+	adventure_button.text = DailyAdventure.summary(pet, session._local_now())
 	var visitor_lines: PackedStringArray = []
 	for guest in YardVisitors.KINDS:
 		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
@@ -1434,6 +1441,7 @@ func _remember_pan() -> void:
 	if config.save(ui_settings_path) != OK: push_warning("Could not save room tutorial preference.")
 
 func _journal_icon(key: String) -> String:
+	if key.begins_with("adventure_"): return "spark"
 	if key.begins_with("first_") or key.begins_with("learned_"): return "spark"
 	if key.begins_with("habit_"): return "paw"
 	return {"welcome": "home", "feed": "bowl", "rest": "moon", "play": "ball", "pet": "heart", "clean": "brush", "favorite_reward": "treat"}.get(key, "book")

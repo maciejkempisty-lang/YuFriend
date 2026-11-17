@@ -213,3 +213,11 @@ Kod pakietu `ae04c61` wyeksportowano, podpisano, zainstalowano i uruchomiono na 
 Świeże kopie Documents: `exports/iphone-backups/2026-11-17-before-v22/`, bezpośrednio przed instalacją `before-v22-final/`, po instalacji `after-v22-install/`, po uruchomieniu `after-v22/`. Próba pamięci gości na roboczej kopii świeżego zapisu zachowała wcześniejszy postęp oraz wpisy, a nowa pamiątka przetrwała odczyt. Porównanie końcowego zapisu telefonu zachowuje 26 z 28 pól dokładnie, w tym tożsamość, osobowość, więź, sztuczki, formę, historię, pamiątki, zdjęcia, dekoracje, ogródek i kolekcję. Zmieniły się jedynie potrzeby i czas ostatniej wizyty zgodnie z działaniem gry. Format nadal v14, bez migracji.
 
 Dowody instalacji, uruchomienia i porównania: `exports/ios-memory-v22/verification.json` oraz sąsiednie raporty urządzenia. Eksport i kompilacja: `/tmp/yufriend-memory-v22`, `/tmp/yufriend-memory-v22-build`. Ocena wizualna Albumu pochodzi z wcześniejszego testu komputerowego 320 px; nie wymuszano spotkań, zmiany daty ani potrzeb Glorii na telefonie.
+
+## Małe przygody dnia — pakiet lokalny po buildzie 22
+
+Przechodzą 23 zestawy logiki oraz 18 interfejsu, w tym 65 sprawdzeń przygód i 11 UI. Dwa stare zestawy logiki otrzymały rzeczywisty tymczasowy SaveSystem, ponieważ nagroda treningowa jest teraz zatwierdzana dopiero po udanym zapisie. Pojedyncza nieudana próba dotyku zaproszenia w `ui_play` przeszła po osobnym powtórzeniu (30/30); pozostałe zestawy UI przeszły od razu. Obejrzano plan i Album przy 320 × 680: `/tmp/yuf-adventure-plan.png`, `/tmp/yuf-adventure-album.png`.
+
+Widget: 1526 sprawdzeń, 252 prognozy zgodne z Godotem, odczyt v15. Przypomnienia: 1067 planisty i 18 kontrolera. Migracja roboczej kopii `2026-11-17-after-v22/Documents/pet.json` v14 → v15 zachowała wszystkie 28 wcześniejszych pól dokładnie, dodała pustą przygodę, pozostawiła identyczne bajtowo archiwum `.v14` i przeszła ponowny odczyt. Oryginał i dane telefonu nie były zmieniane.
+
+Pakiet nie jest zainstalowany na iPhonie; ostatnia instalacja to build 22 / v14. Przed instalacją kolejnego wydania pobrać świeże Documents i sprawdzić migrację najnowszego zapisu. Po przejściu na v15 build 22 nie odczyta nowego zapisu.
