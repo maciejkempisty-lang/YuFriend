@@ -469,6 +469,8 @@ func _draw_yard() -> void:
 		_pixel_rect(Rect2(x + 3, 185, 6, 90), Color("ecd4a2"))
 	_pixel_rect(Rect2(0, 213, area.x, 12), Color("b69468"))
 	_pixel_rect(Rect2(0, 252, area.x, 12), Color("b69468"))
+	_pixel_rect(Rect2(625, 280, 90, 45), Color("b69468"))
+	_pixel_rect(Rect2(631, 286, 78, 33), Color("e0c58d"))
 	_pixel_rect(Rect2(485, 265, 138, 60), Color("9a704e"))
 	_pixel_rect(Rect2(491, 271, 126, 48), Color("74543f"))
 	if not garden_state.is_empty() and garden_state.plant != "":
@@ -500,6 +502,14 @@ func _draw_yard() -> void:
 		_pixel_rect(Rect2(x + 15, 305, 3, 9), Color("78965a"))
 
 func _draw_decor() -> void:
+	if decor.has("cushion"):
+		_pixel_ellipse(Vector2(305, 320), Vector2(45, 18), Color("c58d75"))
+		_pixel_ellipse(Vector2(305, 314), Vector2(33, 10), Color("e4b99a"))
+	if decor.has("flags"):
+		_pixel_rect(Rect2(550, 105, 300, 3), Color("71513f"))
+		for x in range(550, 851, 50):
+			_pixel_rect(Rect2(x, 108, 24, 30), Color("b7c591"))
+			_pixel_rect(Rect2(x + 6, 138, 12, 6), Color("8a9f72"))
 	var placements := {"rug": Rect2(600, 292, 240, 72), "flower": Rect2(990, 165, 75, 129), "shelf": Rect2(910, 75, 150, 111)}
 	for key in decor:
 		if placements.has(key): draw_texture_rect_region(DECOR_ATLAS, placements[key], DECOR_REGIONS[key])

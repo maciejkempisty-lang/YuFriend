@@ -149,3 +149,16 @@ Duże produkty poza SSD projektu: `/tmp/yufriend-stabilization-v17` oraz `/tmp/y
 Wdrożone lokalnie, jeszcze bez nowej instalacji telefonu. Schemat v12; widget akceptuje v4–v12. Test roboczej kopii Glorii z `2026-11-17-after-v17/Documents/pet.json` zachował wszystkie 26 istniejących pól, archiwum v11 i poprawny odczyt po ponownym zapisie. Nie modyfikowano oryginału ani danych na telefonie. Przed kolejną instalacją nadal należy pobrać świeże Documents.
 
 Regresja: 18 zestawów logiki, w tym 49 sprawdzeń ogródka/wyjścia; 12 zestawów UI, w tym sadzenie i podlewanie przy 320 px oraz wejście i pochwała w nowym miejscu. Po korekcie deklaracji WeakRef ponowiono testy kąpieli i dymków; oba przechodzą. Ponowiona kontrola rytmu nie zgłosiła ostrzeżenia zasobów przy zamknięciu. Widget: 1526 sprawdzeń / 252 prognozy zgodne z Godotem. Zrzuty lokalne: `/tmp/yuf-garden-ui.png`, `/tmp/yuf-garden-overview.png`. Są to próby komputerowe, nie potwierdzenie nowej wersji na fizycznym iPhonie.
+
+
+## Buildy 18 i 19 — ogródek, więź i kopanie, 17 listopada 2026
+
+Build 18 zainstalowano i uruchomiono na MagicPhone z zachowaniem identyfikatora aplikacji oraz zespołu podpisującego. Kopie Documents: `exports/iphone-backups/2026-11-17-before-v18/` i `after-v18/`. Przejście v11 → v12 zachowało dotychczasowy postęp; w odczycie po uruchomieniu zmieniły się potrzeby i czas wizyty. Archiwa `.v11` pochodzą z ostatnich zapisów uruchomionej aplikacji i różnią się od wcześniejszej kopii komputera tylko tymi dwoma polami; nie są identyczne bajtowo z tą kopią.
+
+Build 19 dodaje poziomy więzi, pięć dekoracji, spokojny rytuał oraz piaskownicę z nowym klipem i kolekcją 12 skarbów. Kopia sprzed instalacji: `exports/iphone-backups/2026-11-17-before-v19/`. Migracja roboczej kopii v12 → v13 zachowała wszystkie 27 wcześniejszych pól, archiwum i odczyt po ponownym zapisie. Eksport, podpisana kompilacja, instalacja oraz uruchomienie zakończyły się powodzeniem.
+
+Odczyt `after-v19` potwierdził zachowanie tożsamości, imienia, sztuczek, więzi, cech, zdjęć, dekoracji, osiągnięć i ogródka. Poza potrzebami i czasem zmieniło się `social`: jedno zignorowane zaproszenie do liny podczas działania aplikacji, związany licznik i przesunięcie ograniczonej historii. To normalny zapis zdarzenia, nie reset. Dowody: `exports/ios-exploration-v19/`. Końcowa kompilacja tego samego wydania uwzględnia poprawkę omijania paska i miejsc podwórka przez dymki.
+
+Weryfikacja: 19 zestawów logiki, 13 UI, widget 1526 sprawdzeń / 252 prognozy oraz przypomnienia 1067 + 18. W zestawach sprite’ów, Albumu i UI zaktualizowano oczekiwane liczby klipów (28) i dekoracji (5), po czym odpowiednie zestawy powtórzono z powodzeniem. Nowy test kopania i więzi ma 64 sprawdzenia. Zrzuty 320 px obejmują animację, kolekcję, poziomy oraz dekoracje. Próby komputerowe nie potwierdzają dotyku na iPhonie ani faktycznego doręczenia przypomnienia; te obserwacje pozostają otwarte. Nie przestawiano zegara ani nie zmieniano ręcznie potrzeb Glorii.
+
+Końcową kompilację buildu 19 z poprawką dymka ponownie zainstalowano i uruchomiono. Dodatkowe kopie: `before-v19-final` i `after-v19-final`. Porównanie potwierdza schemat 13 i zachowanie tożsamości, imienia, ziarna, sztuczek, więzi, cech, zdjęć, dekoracji, osiągnięć, ogródka oraz kolekcji. Raport: `exports/ios-exploration-v19/verification-final.json`.

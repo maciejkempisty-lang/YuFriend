@@ -154,6 +154,13 @@
       "sha256": "466b280b8a041a3f7ff00cf9232f1123ed1d8d5a78509afee0e9a5d74a969d26",
       "frames": 8,
       "duration_ms": 1000
+    },
+    {
+      "clip": "dig",
+      "source": "image_gen / DIG-GENERATION.md",
+      "sha256": "065645dc84fccde3e1ddb8b64eeca0e57eca6b589ceea6c0d54d838eb8ff94d1",
+      "frames": 6,
+      "duration_ms": 750
     }
   ]
 }

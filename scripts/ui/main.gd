@@ -1,3 +1,4 @@
+class_name GameUI
 extends Control
 
 const INK := Color("24483d")
@@ -540,6 +541,7 @@ func _build_journal() -> VBoxContainer:
 		_select_tab("care")
 		_take_photo()))
 	album_actions.add_child(_button("Dekoracje", _show_decor))
+	box.add_child(_button("Kolekcja wykopanych skarbów", func(): ProgressionPanels.collection(self)))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -581,6 +583,9 @@ func _build_dialogs() -> void:
 	name_edit.max_length = 24
 	name_edit.custom_minimum_size.y = 44
 	box.add_child(name_edit)
+	box.add_child(_button("Poziomy więzi", func():
+		profile_dialog.hide()
+		ProgressionPanels.bond(self)))
 	profile_bars = VBoxContainer.new()
 	profile_bars.add_theme_constant_override("separation", 9)
 	box.add_child(profile_bars)
@@ -1067,7 +1072,7 @@ func _refresh() -> void:
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = pet.pet_name
-	bond_label.text = "%s · %d%%" % ["Poznajecie się" if pet.bond < 25 else ("Coraz bliżej" if pet.bond < 60 else "Najlepsi przyjaciele"), roundi(pet.bond)]
+	bond_label.text = BondLevels.summary(pet)
 	bond_bar.value = pet.bond
 	for key in care_buttons:
 		var button: IconActionButton = care_buttons[key]
@@ -1087,6 +1092,7 @@ func _refresh() -> void:
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
 	sniff_button.disabled = (session.busy() and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
+	if session.activity in ["dig_walk", "digging"]: care_status.text = "Idzie do piaskownicy…" if session.activity == "dig_walk" else "Kopie… jeszcze %d s" % ceili(session.activity_left)
 	if session.activity == "outing_praise": care_status.text = "Gotowe! Dotknij miejsca Na potrzebę, by pochwalić."
 	var garden_view := pet.yard_routines.duplicate(true)
 	YardRoutines.update(garden_view, Time.get_unix_time_from_system())
@@ -1340,6 +1346,11 @@ func _position_feedback() -> void:
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
 	var obstacles: Array[Rect2] = [pet_bounds.grow(12)]
+	if session.in_yard:
+		obstacles.append(yard_toolbar.get_rect().grow(4))
+		for marker in room.yard_markers.values():
+			if marker.visible: obstacles.append(marker.get_global_rect().grow(4))
+	var fixed_obstacles := obstacles.size()
 	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(10))
 	if bubble.visible:
 		var preferred := Vector2(head.x - bubble.size.x / 2, head.y - bubble.size.y - 24)
@@ -1347,7 +1358,7 @@ func _position_feedback() -> void:
 			# On a short screen let the immediate response take the thought's place.
 			companion_card.position = Vector2(-10000, -10000)
 			companion_card.modulate.a = 0
-			obstacles.resize(1)
+			obstacles.resize(fixed_obstacles)
 			_place_pet_overlay(bubble, preferred, obstacles)
 	bubble.modulate.a *= minf(1, bubble_left * 3)
 	gain_label.reset_size()
@@ -1386,6 +1397,7 @@ func _room_care_action(action: String) -> void:
 	if action.begins_with("yard_") and session.in_yard:
 		var place := action.trim_prefix("yard_")
 		if place == "gate": _toggle_yard()
+		elif place == "dig": DiggingSystem.start(session)
 		elif place == "garden": _show_garden()
 		elif place == "outing":
 			if session.activity == "outing_praise": YardRoutines.praise(session)
@@ -1403,26 +1415,7 @@ func _room_care_action(action: String) -> void:
 	else: session.act(action)
 
 func _show_bath() -> void:
-	if is_instance_valid(bath_dialog) and bath_dialog.visible: return
-	if not session.start_bath(): return
-	room.set_yard(false)
-	bath_dialog = AcceptDialog.new()
-	var dialog := bath_dialog
-	dialog.title = "Łazienka"
-	dialog.get_ok_button().text = "Wróć do domu"
-	var view := BathView.new()
-	view.bath = session.bath
-	view.initial_dirt = clampf((80.0 - float(session.pet.needs.hygiene)) / 60.0, 0, 1)
-	dialog.add_child(view)
-	view.finished.connect(func():
-		if session.finish_bath(): view.celebrate())
-	add_child(dialog)
-	dialog.visibility_changed.connect(func():
-		if not dialog.visible:
-			session.cancel_bath()
-			dialog.queue_free())
-	_position_dialog(dialog, Vector2i(340, 430))
-	dialog.popup()
+	OutdoorPanels._show_bath(self)
 
 func _take_photo() -> void:
 	if taking_photo or not session.writable or session.suspended or session.in_bath: return
@@ -1489,14 +1482,21 @@ func _show_decor() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "Dekoracje pokoju"
 	var list := VBoxContainer.new()
-	dialog.add_child(list)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(260, 300)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	dialog.add_child(scroll)
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
 	for key in KeepsakeSystem.DECOR:
 		var reason := KeepsakeSystem.unlock_reason(session.pet, key)
 		var preview := TextureRect.new()
-		var atlas := AtlasTexture.new()
-		atlas.atlas = RoomArtwork.DECOR_ATLAS
-		atlas.region = RoomArtwork.DECOR_REGIONS[key]
-		preview.texture = atlas
+		if RoomArtwork.DECOR_REGIONS.has(key):
+			var atlas := AtlasTexture.new()
+			atlas.atlas = RoomArtwork.DECOR_ATLAS
+			atlas.region = RoomArtwork.DECOR_REGIONS[key]
+			preview.texture = atlas
+		else: preview.texture = GameIcons.texture("heart" if key == "cushion" else "paw")
 		preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		preview.custom_minimum_size = Vector2(0, 62)
 		preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1519,32 +1519,7 @@ func _show_decor() -> void:
 	dialog.popup()
 
 func _show_yard_games() -> void:
-	if session.hide_game.active():
-		session.cancel_hide()
-		session.say("Chowany przerwany. Możecie spróbować ponownie.")
-		return
-	if not session.in_yard: return
-	var reason := session.play_readiness()
-	if not reason.is_empty():
-		session.say(reason)
-		return
-	var dialog := AcceptDialog.new()
-	dialog.title = "Zabawy w krzakach"
-	dialog.get_ok_button().text = "Wróć"
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	dialog.add_child(box)
-	for entry in [["sniff", "Węsz i szukaj skarbów"], ["treat", "Schowaj smakołyk"], ["dog", "Znajdź pieska po ogonie"]]:
-		var mode: String = entry[0]
-		box.add_child(_button(entry[1], func():
-			dialog.hide()
-			if mode == "sniff": session.start_sniff()
-			else: session.start_hide(mode)))
-	add_child(dialog)
-	dialog.visibility_changed.connect(func():
-		if not dialog.visible: dialog.queue_free())
-	_position_dialog(dialog, Vector2i(300, 240))
-	dialog.popup()
+	OutdoorPanels._show_yard_games(self)
 
 func _confirm_remove_photo(id: String) -> void:
 	var dialog := ConfirmationDialog.new()
@@ -1561,47 +1536,4 @@ func _confirm_remove_photo(id: String) -> void:
 	dialog.popup()
 
 func _show_garden() -> void:
-	if not YardRoutines.available(session):
-		session.say("Ogródek poczeka. Najpierw zakończmy obecną czynność.")
-		return
-	var dialog := AcceptDialog.new()
-	dialog.title = "Ogródek"
-	dialog.get_ok_button().text = "Wróć"
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 8)
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(260, 230)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	dialog.add_child(scroll)
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(box)
-	var description := _label(YardRoutines.describe(session.pet.yard_routines, Time.get_unix_time_from_system()), 15, MUTED)
-	description.custom_minimum_size.x = 260
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(description)
-	var state := session.pet.yard_routines.duplicate(true)
-	YardRoutines.update(state, Time.get_unix_time_from_system())
-	var choices: Dictionary = YardRoutines.PLANTS if state.plant == "" else ({"harvest": "Zbierz kwiat"} if state.growth >= YardRoutines.GROW_TIME else {"water": "Podlej"})
-	for key in choices:
-		var action: String = key
-		var button := _button(("Posadź: " if state.plant == "" else "") + choices[key], func():
-			YardRoutines.garden(session, action)
-			dialog.hide()
-			_show_garden())
-		button.disabled = action == "water" and Time.get_unix_time_from_system() < state.water_until
-		box.add_child(button)
-	var collection := _label("Kolekcja kwiatów: %d/3. Wzrost trwa 3 podlane doby." % state.flowers.size(), 12, MUTED)
-	collection.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(collection)
-	add_child(dialog)
-	dialog.visibility_changed.connect(func():
-		if not dialog.visible: dialog.queue_free())
-	var weak_dialog: WeakRef = weakref(dialog)
-	var close_if_away := func():
-		var current: AcceptDialog = weak_dialog.get_ref()
-		if current != null and (not session.in_yard or session.suspended): current.hide()
-	session.changed.connect(close_if_away)
-	dialog.tree_exiting.connect(func():
-		if session.changed.is_connected(close_if_away): session.changed.disconnect(close_if_away))
-	_position_dialog(dialog, Vector2i(300, 340))
-	dialog.popup()
+	OutdoorPanels._show_garden(self)

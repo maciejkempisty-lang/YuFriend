@@ -2,10 +2,10 @@ class_name KeepsakeSystem
 extends RefCounted
 
 const MAX_PHOTOS := 24
-const DECOR := {"rug": "Dywan z łapką", "flower": "Słonecznik", "shelf": "Półka z trofeum"}
+const DECOR := {"rug": "Dywan z łapką", "flower": "Słonecznik", "shelf": "Półka z trofeum", "cushion": "Poduszka przyjaźni", "flags": "Girlanda łapek"}
 
 static func valid(data: Dictionary) -> bool:
-	if not data.get("decor") is Array or data.decor.size() > 3: return false
+	if not data.get("decor") is Array or data.decor.size() > DECOR.size(): return false
 	var seen := {}
 	for key in data.decor:
 		if not key is String or not DECOR.has(key) or seen.has(key): return false
@@ -27,6 +27,8 @@ static func valid_id(id: String) -> bool:
 	return true
 
 static func unlock_reason(pet: PetState, key: String) -> String:
+	if key == "cushion" and pet.bond < 25: return "Więź 25: Zaufanie."
+	if key == "flags" and pet.bond < 50: return "Więź 50: Przyjaźń."
 	if key == "flower" and pet.yard_routines.flowers.is_empty() and not (pet.milestones.has("yard_find_0") or pet.milestones.has("yard_find_1") or pet.milestones.has("yard_find_2")): return "Znajdź pierwszy skarb na podwórku."
 	if key == "shelf":
 		for skill in pet.skills.values():

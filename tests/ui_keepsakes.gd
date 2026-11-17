@@ -24,6 +24,7 @@ func run() -> void:
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.set_process(false)
+	game.pet.bond = 75 # This suite previews every unlocked decoration.
 	game.pet.skills.sit.mastery = 100
 	game.pet.skills.bow.mastery = 100
 	game.pet.skills.lie.mastery = 100
@@ -81,7 +82,7 @@ func run() -> void:
 	close_windows()
 	game.flush()
 	var loaded: PetState = game.storage.load_pet().pet
-	check(loaded.photos.size() == 2 and loaded.decor.size() == 3 and loaded.skills.paw.mastery == 57, "reload keeps new extras and old partial mastery")
+	check(loaded.photos.size() == 2 and loaded.decor.size() == KeepsakeSystem.DECOR.size() and loaded.skills.paw.mastery == 57, "reload keeps new extras and old partial mastery")
 	app._select_tab("journal")
 	var remove_id: String = game.pet.photos[0].id
 	app._confirm_remove_photo(remove_id)

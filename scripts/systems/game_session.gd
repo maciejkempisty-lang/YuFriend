@@ -172,7 +172,9 @@ func _process(delta: float) -> void:
 	if activity_left > 0:
 		activity_left -= delta
 		if activity_left <= 0:
-			if activity == "outing_pause":
+			if activity == "digging":
+				DiggingSystem.finish(self)
+			elif activity == "outing_pause":
 				activity = "outing_praise"
 				activity_left = 20
 				say("Gotowe! Możesz pochwalić pieska przy płocie.")
@@ -299,7 +301,7 @@ func _inviting() -> bool:
 func busy() -> bool:
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return activity in ["outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk"] or _inviting())
@@ -525,6 +527,12 @@ func move_to(world_position: Vector2, announce: bool = true) -> void:
 
 func destination_reached() -> void:
 	if suspended or not writable: return
+	if in_yard and activity == "dig_walk":
+		_travel_left = 0
+		activity = "digging"
+		activity_left = 4
+		clip_requested.emit("dig")
+		return
 	if in_yard and activity == "outing_walk":
 		_travel_left = 0
 		activity = "outing_pause"
@@ -998,105 +1006,25 @@ func _enter_sleep(kind: String, observe: bool = true) -> void:
 	changed.emit()
 
 func change_yard(enabled: bool) -> bool:
-	if enabled and DailyRhythm.phase(pet, _local_now()) == "night":
-		say("Za ciemno, pora spać.")
-		return false
-	if in_bath: return false
-	if not writable or suspended or is_sleeping() or training.phase != "idle": return false
-	if enabled and busy(): return false
-	cancel_touch_game()
-	_cancel_motion()
-	invitation.clear()
-	_yard_dark_idle = 0
-	_follow_target = Vector2.INF
-	in_yard = enabled
-	activity = "idle"
-	activity_left = 0
-	pose = "stand"
-	clip_requested.emit("idle")
-	say("Podwórko! Rzuć piłkę albo poszukaj zapachu." if enabled else "Znów w domu.")
-	changed.emit()
-	return true
+	return YardActivities.change_yard(self, enabled)
 
 func start_sniff(spot: int = -1) -> bool:
-	if not in_yard or not writable or suspended or busy() or is_sleeping() or spot < -1 or spot >= YARD_FINDS.size(): return false
-	if float(pet.needs.energy) < 25:
-		say("Najpierw wróćmy do domu odpocząć.")
-		return false
-	_cancel_motion()
-	sniff_spot = 0
-	for index in YARD_FINDS.size():
-		if not pet.milestones.has("yard_find_%d" % index):
-			sniff_spot = index
-			break
-	if spot >= 0: sniff_spot = spot
-	_travel_left = 90.0
-	activity = "sniff_walk"
-	activity_left = 0
-	destination_requested.emit(Vector2(350 + sniff_spot * 400, 302))
-	clip_requested.emit("walk")
-	say("Prowadzi mnie ciekawy zapach…")
-	changed.emit()
-	return true
+	return YardActivities.start_sniff(self, spot)
 
 func _finish_sniff() -> void:
-	if not in_yard or sniff_spot < 0 or suspended or not writable: return
-	NeedsSystem.change(pet, {"hygiene": -8})
-	var key := "yard_find_%d" % sniff_spot
-	var label: String = YARD_FINDS[sniff_spot]
-	var fresh := not pet.milestones.has(key)
-	if fresh:
-		pet.remember(key, "Znalezisko: " + label, "Pierwszy skarb odkryty podczas węszenia na podwórku.")
-		NeedsSystem.change(pet, {"play": 5, "energy": -2})
-		sound_requested.emit("success")
-	sniff_spot = -1
-	activity = "idle"
-	activity_left = 0
-	clip_requested.emit("tail_wag_stand")
-	say("Znalezione: %s! Pamiątka czeka w Albumie." % label if fresh else "Znajomy zapach. Ten skarb jest już w Albumie — sprawdź też pozostałe krzaki.")
-	flush()
-	changed.emit()
+	YardActivities._finish_sniff(self)
 
 func bath_readiness() -> String:
-	if not writable or suspended or is_sleeping() or busy(): return "Kąpiel poczeka, aż piesek będzie gotowy."
-	if float(pet.needs.energy) < 35: return "Najpierw odpoczynek. Kąpiel kosztuje 5 energii."
-	if float(pet.needs.fullness) < 30: return "Najpierw posiłek, potem kąpiel."
-	if float(pet.needs.hygiene) >= 80: return "Sierść jest dość czysta. Wystarczy delikatne czesanie."
-	return ""
+	return BathCare.bath_readiness(self)
 
 func start_bath() -> bool:
-	var reason := bath_readiness()
-	if not reason.is_empty():
-		say(reason)
-		return false
-	_cancel_motion()
-	invitation.clear()
-	in_yard = false
-	in_bath = true
-	activity = "bath"
-	activity_left = 0
-	bath.start()
-	changed.emit()
-	return true
+	return BathCare.start_bath(self)
 
 func finish_bath() -> bool:
-	if not in_bath or not bath.active or bath.stage != 3 or bath.settled or not writable or suspended: return false
-	bath.settled = true
-	NeedsSystem.change(pet, {"hygiene": 45, "energy": -5, "fullness": -2})
-	pet.remember("first_bath", "Pierwsza kąpiel", "Piana, woda, miękki ręcznik i radosne otrzepywanie.")
-	sound_requested.emit("success")
-	say("Kąpiel skończona: +45 czystości, −5 energii, −2 sytości.")
-	flush()
-	changed.emit()
-	return true
+	return BathCare.finish_bath(self)
 
 func cancel_bath() -> void:
-	bath.cancel()
-	in_bath = false
-	activity = "idle"
-	activity_left = 0
-	clip_requested.emit("idle")
-	changed.emit()
+	BathCare.cancel_bath(self)
 
 func _tick_travel(delta: float) -> void:
 	if not writable or suspended: return
@@ -1116,107 +1044,25 @@ func _tick_travel(delta: float) -> void:
 			move_to(target, false)
 
 func _tick_yard(delta: float) -> void:
-	if not writable or suspended: return
-	if _return_tired(): return
-	if DailyRhythm.phase(pet, _local_now()) != "night" or busy():
-		_yard_dark_idle = 0
-		return
-	_yard_dark_idle += delta
-	if _yard_dark_idle < 30: return
-	if change_yard(false):
-		_start_behavior("night")
-		say("Za ciemno. Wracamy do domu, pora spać.")
+	YardActivities._tick_yard(self, delta)
 
 func start_hide(kind: String, seed_value: int = 0) -> bool:
-	if not in_yard: return false
-	var reason := play_readiness()
-	if not reason.is_empty():
-		say(reason)
-		return false
-	if DailyRhythm.phase(pet, _local_now()) == "night":
-		say("Za ciemno na chowanego, pora spać.")
-		return false
-	if not hide_game.start(kind, seed_value): return false
-	player_activity()
-	_cancel_invitation()
-	_cancel_motion()
-	_follow_target = Vector2.INF
-	activity = "hide"
-	activity_left = 0
-	pose = "stand"
-	clip_requested.emit("idle")
-	say(hide_game.hint())
-	changed.emit()
-	return true
+	return YardActivities.start_hide(self, kind, seed_value)
 
 func choose_hide_bush(spot: int) -> bool:
-	if not writable or suspended or not in_yard or not hide_game.active(): return false
-	var event := hide_game.select(spot)
-	if event.is_empty(): return false
-	player_activity()
-	_handle_hide_event(event)
-	return true
+	return YardActivities.choose_hide_bush(self, spot)
 
 func _tick_hide(delta: float) -> void:
-	if not writable or suspended or not hide_game.active(): return
-	_handle_hide_event(hide_game.advance(delta))
+	YardActivities._tick_hide(self, delta)
 
 func _handle_hide_event(event: String) -> void:
-	if event.is_empty(): return
-	match event:
-		"timeout":
-			cancel_hide()
-			say("Chowany poczeka. Piesek wrócił — możecie zacząć jeszcze raz.")
-		"walk":
-			_cancel_motion()
-			activity = "hide_walk"
-			activity_left = 0
-			_travel_left = 90
-			destination_requested.emit(Vector2(350 + hide_game.search_spot() * 400, 302))
-			clip_requested.emit("walk")
-			say(hide_game.hint())
-		"guess": say(hide_game.hint())
-		"wrong": say("Tutaj go nie ma. Rozejrzyj się za machającym ogonem!")
-		"found": _finish_hide()
-	changed.emit()
+	YardActivities._handle_hide_event(self, event)
 
 func _finish_hide() -> void:
-	if hide_game.phase != "found" or not writable or suspended: return
-	var mode := hide_game.kind
-	var spot := hide_game.hiding_spot
-	hide_game.reset() # Consume the result before emitting any signals or granting rewards.
-	_cancel_motion()
-	_follow_target = Vector2.INF
-	if mode == "dog": hide_revealed.emit(spot)
-	var now := Time.get_unix_time_from_system()
-	var rewarded := now - float(pet.social.last_reward_at) >= TouchPlaySystem.REWARD_INTERVAL
-	if rewarded:
-		pet.social.last_reward_at = maxf(float(pet.social.last_reward_at), now)
-		_apply_care_effects("play", {"play": 12, "contact": 6, "energy": -2})
-		pet.bond = minf(100, pet.bond + 0.5)
-		_note("play")
-	pet.remember("yard_hide_" + mode, "Smakołyk w krzakach" if mode == "treat" else "Ogon zdradził kryjówkę", "Pierwsza ukończona runda chowanego na podwórku.", now)
-	activity = "happy"
-	activity_left = 1.4
-	clip_requested.emit("tail_wag_stand")
-	sound_requested.emit("success")
-	say(("Smakołyk znaleziony!" if mode == "treat" else "Jest piesek! Ogon go zdradził!") + (" +0,5 więzi." if rewarded else " Brawo! Nagrody odpoczywają 30 s."))
-	flush()
-	changed.emit()
+	YardActivities._finish_hide(self)
 
 func cancel_hide() -> void:
-	if not hide_game.active(): return
-	hide_game.reset()
-	_cancel_motion()
-	_follow_target = Vector2.INF
-	activity = "idle"
-	activity_left = 0
-	clip_requested.emit("idle")
-	changed.emit()
+	YardActivities.cancel_hide(self)
 
 func _return_tired() -> bool:
-	if not in_yard or busy() or float(pet.needs.energy) >= 28: return false
-	if not change_yard(false): return false
-	act("rest", false)
-	say("Łapki potrzebują odpoczynku. Wracamy do legowiska.")
-	return true
+	return YardActivities._return_tired(self)

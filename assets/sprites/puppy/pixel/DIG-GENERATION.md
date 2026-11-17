@@ -1,0 +1,7 @@
+# Kopanie — dig-v1
+
+Wbudowane image_gen, 17 listopada 2026. Referencja postaci: `sheets/yard-run-sniff-v1.png`. Oryginał RGBA skopiowany bez edycji pikseli do `sheets/dig-v1.png`; 1536×1024, 3×2 klatki po 512 px. Manifest wyznacza podparcie z dolnej krawędzi sylwetki przy progu alfa 0,5; skala 1,15, 8 klatek/s. Istniejący shader odcina półprzezroczystą otoczkę. Produkcyjny pakiet przebudowano: 28 klipów / 172 klatki. Obejrzano klip w scenie testowej przy 320 px.
+
+## Prompt
+
+Create a production sprite sheet for this exact pixel-art golden retriever puppy, using attached image ONLY as character/style reference. Transparent background, no glow, no shadows, no labels, no gridlines. 1536x1024 canvas in exactly 3 columns and 2 rows of equal 512x512 cells, six sequential animation frames read left to right then down. Each puppy faces RIGHT, same scale, paws baseline at y=448 relative to each cell, central body anchor x=256. Puppy occupies roughly 300x220 pixels of each cell. SIX DISTINCT phases of a looping digging motion: lowered front torso, rear paws planted, front paws alternating scooping backward into sand, head lowered watching ground, tail raised. Exaggerate front paw alternation enough to read in a small mobile sprite. Keep body size stable, character intact fully within each cell, match reference warm golden coat, pale muzzle, floppy ears, dark pixel outline. No ground mound or dirt flying outside the body; dirt will be drawn by game. Crisp pixel-art edges. Return image and local file path for integration.

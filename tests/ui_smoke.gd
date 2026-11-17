@@ -37,7 +37,7 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	check(game.pet != null and game.save_ok, "startup creates and saves a puppy")
-	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 27, "new puppy uses the complete pixel animation pack")
+	check(game.pet.skin == "pixel" and app.room.animator.real_clip and app.room.animator.skin.frames.get_animation_names().size() == 28, "new puppy uses the complete pixel animation pack")
 	await _test_music()
 	_test_effects()
 	await capture("01-care.png")

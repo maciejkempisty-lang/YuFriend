@@ -6,6 +6,10 @@
 
 Decyzja użytkownika z 17 listopada 2026: rozwijamy wyjście na potrzebę i ogródek równolegle z testami, bez czekania na koniec tygodnia. Poniższa pierwotna kolejność pozostaje historią planu; testy z ludźmi nadal są otwarte i nie są warunkiem wdrożenia tych dwóch funkcji.
 
+### Aktualizacja po ogródku
+
+Na polecenie użytkownika zrealizowano kolejne kroki bez czekania na tydzień testów: build 18 z ogródkiem i wyjściem zainstalowany na iPhonie; wydzielone systemy podwórka, kąpieli i ich panele; poziomy więzi oraz kopanie z 12 znaleziskami gotowe w buildzie 19. Weryfikacja urządzenia i bieżący schemat są opisane w [testach iOS](test-ios.md). Poniższe listy kolejności zachowują kontekst wcześniejszych ustaleń; zakończone punkty nie są ponownym zleceniem.
+
 ### Plan wykonawczy — zatwierdzona kolejność wdrażania
 
 Polecenie rozpoczęcia wdrożenia: 17 listopada 2026. Realizujemy kolejno:

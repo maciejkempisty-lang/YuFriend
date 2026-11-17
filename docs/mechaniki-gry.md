@@ -309,3 +309,14 @@ Decyzją użytkownika wdrażane bez oczekiwania na koniec tygodnia testów. Osob
 - **Zapis:** v12 dodaje wyłącznie `yard_routines`. Migracja v11 zachowuje wcześniejsze pola i archiwum. Brak tego pola w pliku deklarującym v12 jest traktowany jako uszkodzenie. Widget akceptuje v12.
 
 Grafika grządki, sadzonek i kwiatów jest rysowana w kodzie w stylu istniejącego podwórka. Pies używa obecnego chodu i węszenia. Nie dodano animacji fizjologicznej ani rozkopywania roślin.
+
+
+## Poziomy więzi i kopanie — build 19
+
+Więź nie jest resetowana: progi 0 / 25 / 50 / 75 / 100 oznaczają Poznajecie się, Zaufanie, Przyjaźń, Bliskość i Nierozłączni. Przy 25 odblokowuje się poduszka przyjaźni, przy 50 girlanda, przy 75 spokojna chwila (+8 potrzeby bliskości raz dziennie, bez dodatkowej więzi). Dotychczasowe zabawy i odblokowania pozostają dostępne. Poziomy są widoczne z karty pieska; dekoracje w Albumie.
+
+Piaskownica to ósme stałe miejsce podwórka. Pies dochodzi na miejsce i kopie przez 4 sekundy nową animacją. Ukończenie kosztuje 4 energii i 10 czystości, daje 8 zabawy oraz jedno znalezisko; wymagane co najmniej 35 energii, dzień i zakończenie poprzedniej czynności. Maksymalnie trzy ukończone próby na dzień. Przerwanie przed końcem niczego nie nalicza. Cofnięcie daty i ponowne uruchomienie nie odnawiają limitu.
+
+Kolekcja w Albumie obejmuje 12 przedmiotów: sześć pospolitych (waga 6), cztery niezwykłe (waga 3), dwa rzadkie (waga 1). Losowanie zależy od ziarna pieska i trwałego licznika ukończonych prób, więc anulowanie nie zmienia kolejnego wyniku. Duplikat daje jeden punkt wymiany, trzy punkty pozwalają wybrać brakujący skarb. Nie ma płatnej waluty ani premii więzi za kopanie.
+
+Schemat v13 dodaje `exploration` z kolekcją i limitami. Starsze dane migrują bez zmiany wcześniejszych pól. `YardActivities`, `BathCare` i `OutdoorPanels` wydzielają istniejącą logikę z sesji i głównego widoku; `DiggingSystem`, `BondLevels` i `ProgressionPanels` obsługują nowe funkcje.

@@ -761,6 +761,20 @@ func _sync_layers() -> void:
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
 		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
 		marker.visible = in_yard and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < (content_bottom if content_bottom > 0 else size.y)
+	# Nearby new stations must retain separate touch targets on narrow screens.
+	if in_yard and not overview:
+		var visible_markers: Array = []
+		for marker in yard_markers.values():
+			if marker.visible: visible_markers.append(marker)
+		visible_markers.sort_custom(func(a: Button, b: Button): return a.position.x < b.position.x)
+		for i in visible_markers.size():
+			var marker: Button = visible_markers[i]
+			var cell := (size.x - 24) / visible_markers.size()
+			if cell < 84:
+				marker.text = ""
+				marker.custom_minimum_size = Vector2(44, 44)
+				marker.size = Vector2(44, 44)
+			marker.position.x = 12 + cell * i + (cell - marker.size.x) / 2
 	effect_label.visible = effect_left > 0
 	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
 	effect_label.modulate.a = minf(1, effect_left)

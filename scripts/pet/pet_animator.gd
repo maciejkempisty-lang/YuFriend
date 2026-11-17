@@ -6,6 +6,7 @@ signal clip_started(clip: String)
 
 # start pose, end pose, seconds, loop. These IDs match the sprite brief.
 const CLIPS := {
+	"dig": ["stand", "stand", 0.75, true],
 	"spin": ["stand", "stand", 0.8, false], "roll": ["stand", "stand", 0.8, false],
 	"shake": ["stand", "stand", 0.9, false],
 	"run": ["stand", "stand", 0.45, true], "sniff": ["stand", "stand", 0.8, true],
