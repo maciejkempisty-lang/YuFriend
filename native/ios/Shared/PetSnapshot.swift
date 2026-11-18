@@ -62,9 +62,11 @@ struct PetSnapshot: Codable, Equatable {
     let resting: Bool
     let sociability: Double
     let mood: String
+    var outingDay: Int? = nil
+    var yardMess: Bool? = nil
 
     var isValid: Bool {
-        version == 1 && !petID.isEmpty && petID.count <= 200 &&
+        version == 1 && (outingDay == nil || outingDay! >= -1) && !petID.isEmpty && petID.count <= 200 &&
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && name.count <= 100 &&
         savedAt.isFinite && savedAt >= 0 && sociability.isFinite && (0...1).contains(sociability) &&
         Self.moods[mood] != nil && PetNeed.allCases.allSatisfy {
@@ -90,6 +92,8 @@ struct PetSnapshot: Codable, Equatable {
             struct Pet: Decodable {
                 struct Traits: Decodable { let sociability: Double }
                 struct Life: Decodable { let mood: String }
+                struct Yard: Decodable { let outday: Int; let mess: Bool? }
+                let yard_routines: Yard?
                 let pet_id: String
                 let pet_name: String
                 let last_seen_at: Double
@@ -105,7 +109,8 @@ struct PetSnapshot: Codable, Equatable {
               let save = try? JSONDecoder().decode(Save.self, from: data), save.schema_version >= 4 else { return nil }
         let pet = save.pet
         let result = Self(version: 1, petID: pet.pet_id, name: pet.pet_name, savedAt: pet.last_seen_at,
-                          needs: pet.needs, resting: pet.resting, sociability: pet.traits.sociability, mood: pet.life.mood)
+                          needs: pet.needs, resting: pet.resting, sociability: pet.traits.sociability, mood: pet.life.mood,
+                          outingDay: pet.yard_routines?.outday, yardMess: pet.yard_routines?.mess)
         return result.isValid ? result : nil
     }
 

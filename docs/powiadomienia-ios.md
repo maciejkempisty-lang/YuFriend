@@ -23,7 +23,7 @@ iOS może opóźnić lub ukryć prezentację z powodu ustawień systemowych, Try
 
 Planista `PetReminderPlan.swift` jest niezależny od interfejsu. Kontroler serializuje operacje `UNUserNotificationCenter`; spóźnione ukończenie planowania nie przywróci powiadomień po wyłączeniu opcji lub powrocie do gry. Zgoda systemowa jest sprawdzana ponownie przy wznowieniu. Obsługa istotnej zmiany czasu przelicza plan w działającej aplikacji; już zarejestrowane terminy pozostają ustalone, jeśli aplikacja nie działa podczas zmiany strefy.
 
-`Documents/reminder-ledger.json` przechowuje rezerwacje i wykorzystane terminy poza zapisem gry. Przyszłe terminy są zwalniane przy anulowaniu; minione zostają w limicie. Rezerwacje są zapisane przed rejestracją w iOS, więc awaria może zachowawczo zużyć limit, ale nie zresetuje go. Uszkodzony licznik blokuje planowanie i pozostaje zachowany; cofnięcie zegara również nie odnawia limitu. Żaden plik natywny nie zmienia `pet.json` ani schematu 4.
+`Documents/reminder-ledger.json` przechowuje rezerwacje i wykorzystane terminy poza zapisem gry. Przyszłe terminy są zwalniane przy anulowaniu; minione zostają w limicie. Rezerwacje są zapisane przed rejestracją w iOS, więc awaria może zachowawczo zużyć limit, ale nie zresetuje go. Uszkodzony licznik blokuje planowanie i pozostaje zachowany; cofnięcie zegara również nie odnawia limitu. Żaden plik natywny nie zmienia `pet.json`.
 
 Eksport: `sh tools/export_ios.sh`, domyślnie do `exports/ios-reminders-v10/`. Instalator dodaje źródła przypomnień do targetu aplikacji; rozszerzenie widgetu nie planuje powiadomień. Wygenerowane eksporty i wyniki testów są wykluczone z paczki gry. Po zmianach Godota nadal trzeba sprawdzić punkt inicjalizacji i instalator.
 
@@ -43,3 +43,12 @@ Wcześniejsza weryfikacja pierwszej implementacji:
 Build **0.1.0 (10)** zbudowano, podpisano, zainstalowano i uruchomiono na iPhonie 15 Pro Max. Użytkownik potwierdził włączenie opcji oraz zaakceptowanie zgody iOS. Odczyt natywnego `reminders-status.json` z urządzenia potwierdził `enabled: true`, `status: on`; harmonogram był wówczas pusty (`pending: 0`). Nie potwierdzono jeszcze doręczenia prawdziwego powiadomienia. [Dowody i zachowanie zapisu Glorii](test-ios.md#aktualizacja-010-10--lokalne-przypomnienia).
 
 Atrapa centrum w testach nie potwierdza dostarczenia komunikatu przez iOS. Ręczna próba: włącz opcję, zaakceptuj zgodę, pozostaw niską potrzebę i wyjdź z gry. Pierwszy możliwy termin jest po 30 minutach, między 09:00 a 21:00. Sprawdź otwarcie gry po dotknięciu komunikatu, anulowanie po powrocie oraz wyłączenie opcji. Nie zmieniaj ręcznie zapisu Glorii na potrzeby tego testu.
+
+
+## Prośba o wyjście na potrzebę
+
+Planista odczytuje istniejący `yard_routines.outday` i opcjonalne `mess`. Jeśli dzisiaj nie było jeszcze wyjścia, pies nie śpi i nie czeka wcześniejsza kupa, pierwszeństwo ma wiadomość „Chcę wyjść się załatwić. Pójdziemy na podwórko?”. Jest to lokalne powiadomienie iOS, bez serwera. Korzysta z obecnej zgody i przełącznika „Przypomnienia od pieska”. Nie tworzy dodatkowej puli powiadomień: nadal obowiązują minimum 30 minut, godziny 09:00–21:00, odstęp 4 godzin, dwa terminy na dzień i 24 godziny oraz istniejący horyzont do południa następnego dnia. Jedna nieobecność daje najwyżej jedną prośbę o wyjście.
+
+Dotknięcie otwiera grę. W domu opis podpowiada wyjście, a na podwórku przycisk „Na potrzebę” rozpoczyna czynność. Po wykonaniu i zapisaniu wyjścia nie powstaje ponowna prośba na ten sam dzień. Niezebrana kupa blokuje prośbę o nowe wyjście także kolejnego dnia. Wznowienie gry i wyłączenie przypomnień nadal anulują oczekujące terminy. Stare snapshoty widgetu bez pól wyjścia nadal się odczytują; widget zachowuje dotychczasowe pięć wskaźników.
+
+Testy planisty obejmują termin, ciszę nocną, wspólny limit, brak powtórzeń, zapisany bałagan, odczyt danych gry i roundtrip formatu widgetu. Testy nie potwierdzają rzeczywistego doręczenia przez iOS — wymaga to próby na telefonie po zainstalowaniu tej wersji.

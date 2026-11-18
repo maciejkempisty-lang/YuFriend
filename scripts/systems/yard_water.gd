@@ -79,6 +79,7 @@ func arrived(s: GameSession) -> void:
 		# Each completed crossing commits immediately: leaving cannot undo the mud.
 		var before := s.pet.to_dict()
 		NeedsSystem.change(s.pet, {"play": 4, "energy": -2, "hygiene": -12 if kind == "puddle" else -3})
+		s._note("play", false)
 		s.pet.remember("water_" + kind, "Pierwsze pluski: " + LABELS[kind], "Woda, małe łapki i radosne otrzepywanie. Błoto zmyjemy w łazience.")
 		if not s.flush():
 			s.pet = PetState.from_dict(before)

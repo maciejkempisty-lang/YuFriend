@@ -26,7 +26,7 @@ func run() -> void:
 	root.size = Vector2i(320, 680)
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
-	app.save_path_override = "/tmp/yuf-outdoor-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-outdoor-ui-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
 	var s := app.session

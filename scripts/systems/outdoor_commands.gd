@@ -37,10 +37,12 @@ func start(s: GameSession, guided: bool, roll: float = -1) -> bool:
 		return false
 	var before := s.pet.to_dict()
 	PracticeSystem.sync(s.pet, s._local_now())
+	var tired := s.pet.fatigue >= 50
 	var result := trial.begin(s.pet, command, guided, roll)
 	if not result.ok:
 		s.say(result.message)
 		return false
+	s.record_training_start(guided, tired)
 	if not s.flush():
 		s.pet = PetState.from_dict(before)
 		trial.cancel()
@@ -78,6 +80,7 @@ func advance(s: GameSession, delta: float) -> void:
 		return
 	if not running(): return
 	var result := trial.advance(delta, arrived)
+	if not result.is_empty(): s.record_training_outcome(result.event)
 	if result.is_empty(): return
 	if result.event == "ready":
 		phase = "praise"
@@ -99,6 +102,7 @@ func praise(s: GameSession) -> bool:
 	var old_form := PracticeSystem.form(s.pet, command)
 	var result := trial.reward(s.pet, "praise")
 	if not result.ok: return false
+	s._note("reward_praise")
 	var daily := PracticeSystem.record(s.pet, command, s._local_now())
 	var adventure_completed := DailyAdventure.record(s.pet, "trick", s._local_now())
 	cancel() # Consume the opportunity even if storage fails; no double reward.

@@ -11,7 +11,7 @@ func game() -> GameSession:
 	s.pet = PetState.create(42)
 	s.pet.needs.hygiene = 100
 	s.pet.needs.energy = 90
-	s.storage = SaveSystem.new("/tmp/yuf-water-%s/pet.json" % Time.get_ticks_usec())
+	s.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-water-%s/pet.json" % Time.get_ticks_usec())
 	s.storage.save_pet(s.pet)
 	s.pet = s.storage.load_pet().pet
 	s.weather.override_kind = "after_rain"
@@ -49,7 +49,8 @@ func _initialize() -> void:
 	check(s.last_message.contains("Kąpiel"), "dirty dog offered bath")
 	check(not s.water.start(s, "sprinkler"), "shared water cooldown")
 	for key in before:
-		if key not in ["needs", "journal", "milestones", "last_seen_at"]: check(s.pet.to_dict()[key] == before[key], "preserves " + key)
+		if key not in ["needs", "journal", "milestones", "last_seen_at", "history", "life"]: check(s.pet.to_dict()[key] == before[key], "preserves " + key)
+	check(s.pet.history[-1].events.get("play", 0) == 3, "completed splashes record three play events")
 	check(s.start_bath(), "puddle followed by existing bath")
 	s.bath.stage = 3
 	check(s.finish_bath(), "bath completes")

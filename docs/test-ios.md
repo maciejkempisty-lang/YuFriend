@@ -286,3 +286,32 @@ Zbudowano, podpisano, zainstalowano i uruchomiono build 28 na MagicPhone. Aplika
 Świeża kopia zapisu zachowała 29/29 pól w próbie odczytu i zapisu. Po samej instalacji zapis pozostał identyczny. Po uruchomieniu zachowano 27/29 pól dokładnie; zmieniły się jedynie potrzeby i czas zapisu. Wszystkie wcześniejsze pliki Documents pozostają obecne. Schemat nadal v15. Nie odinstalowywano gry.
 
 Archiwa: `exports/iphone-backups/2026-11-17-before-v28.zip`, `2026-11-17-before-v28-final.zip`, `2026-11-17-after-v28.zip`. Raport i dowody: `exports/ios-rest-v28/verification.json`, `evidence.zip`. Eksport i kompilacja: `/tmp/yufriend-rest-v28` i `/tmp/yufriend-rest-v28-build`. Przeszły wcześniejsze 29 zestawów logiki oraz 23 interfejsu. Animację i układ 320 px oceniono na komputerze; instalacja i uruchomienie nie zastępują ręcznej oceny nowej zabawy na telefonie.
+
+
+## Aktualizacja 0.1.0 (29) — 18 listopada 2026
+
+Zbudowano, podpisano, zainstalowano bez odinstalowania i uruchomiono build 29 na MagicPhone. Aplikacja i widget zachowują bundle ID, zespół P665WUWCN4 i App Group; oba mają numer 29. Podpis i zgodność PCK z eksportem zweryfikowano. Pierwsza instalacja przekroczyła czas połączenia; ponowienie zakończyło się sukcesem. Potwierdzono działające procesy aplikacji i widgetu.
+
+Świeży zapis przeszedł odczyt i ponowny zapis bez zmiany 29 pól. Po instalacji wszystkie 29 plików Documents pozostało identycznych. Po uruchomieniu 23/29 pól bez zmian, w tym tożsamość, więź, sztuczki, forma, cechy, osiągnięcia, zdjęcia i kolekcje. Zmieniły się potrzeby, czas, odpoczynek, historia wizyty, raport nieobecności i dziennik. Nowy raport zastąpił jeden najstarszy nietrwały raport away_1794853541 zgodnie z istniejącym limitem dziennika; trwałe wspomnienia zachowano. Wszystkie wcześniejsze pliki są obecne, fotografie identyczne bajtowo. Schemat v15 bez migracji.
+
+Kopie: exports/iphone-backups/2026-11-18-before-v29.zip, 2026-11-18-before-v29-final.zip, 2026-11-18-after-v29.zip. Raport i dowody: exports/ios-stage1-v29/verification.json oraz evidence.zip. Nie wykonywano aktywności ani nie edytowano danych gracza. Ręczna ocena dotyku i wyglądu pozostaje osobną próbą.
+
+
+## Aktualizacja 0.1.0 (30) — 18 listopada 2026
+
+Zbudowano, podpisano, zainstalowano jako aktualizację i uruchomiono build 30 na MagicPhone. Aplikacja i widget mają numer 30, dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Podpis, zgodność PCK z eksportem i niezmienność źródeł podczas budowania zweryfikowano. Lista aplikacji potwierdza build 30; działają procesy gry i widgetu. Wersja zawiera drugi etap: pierwsze spotkanie nowych psów, kadr, priorytety komunikatów i akcje podwórka.
+
+Świeża kopia Glorii przeszła odczyt i zapis bez zmiany wszystkich 29 pól. Bezpośrednio przed instalacją ponowiono kopię. Po samej instalacji wszystkie 29 plików Documents było identycznych bajtowo. Po uruchomieniu 26/29 pól pozostało identycznych: zmieniły się wyłącznie potrzeby, czas ostatniej wizyty i historia (dodana jedna nocna wizyta, wszystkie wcześniejsze wpisy zachowane). Cały trwały postęp, imię, tożsamość, więź, umiejętności, wspomnienia i kolekcje zachowano. Wszystkie wcześniejsze pliki są obecne; fotografie i ui.cfg są identyczne. Schemat nadal v15. Nie usuwano aplikacji ani nie edytowano danych gracza.
+
+Zweryfikowane kopie ZIP: `exports/iphone-backups/2026-11-18-before-v30.zip`, `2026-11-18-before-v30-final.zip`, `2026-11-18-after-v30.zip`. Raport i dowody: `exports/ios-stage2-v30/verification.json`, `evidence.zip`. Eksport i kompilacja w `/private/tmp/yufriend-v30-export` oraz `/private/tmp/yufriend-v30-build`. Przed wydaniem przeszło 30 zestawów logiki i 24 UI (część powtórzona). Na urządzeniu potwierdzono instalację, uruchomienie i zachowanie danych; ręczna ocena dotyku i klawiatury pierwszego spotkania pozostaje osobną próbą.
+
+
+## Aktualizacja 0.1.0 (31) — 19 listopada 2026
+
+Build 31 zbudowano, podpisano i zainstalowano jako aktualizację na MagicPhone. Lista aplikacji potwierdza numer 31. Aplikacja i widget zachowują bundle ID, zespół P665WUWCN4 i App Group; oba mają numer 31. PCK odpowiada eksportowi, a manifest 647 plików potwierdza zgodność źródeł roboczych z eksportowaną kopią.
+
+Wydanie obejmuje zachowane zmiany Etapów 1–2, poprawki po przeglądzie, mechanikę wyjścia i sprzątania oraz uporządkowany dom, większego psa, jedno wejście Dziś i karty imienia, zabaw oraz sztuczek. Zestawy logiki 31/31 i UI 25/25 przeszły w końcowych przebiegach; testy natywne oraz kompilacja i podpis również przeszły.
+
+Przed instalacją pobrano świeżą kopię Documents, sprawdzono odczyt i ponowny zapis wszystkich 29 pól Glorii bez zmian oraz ponowiono backup tuż przed aktualizacją. Po instalacji wszystkie 29 plików Documents jest identycznych bajtowo. Kopie: `exports/iphone-backups/2026-11-19-before-v31.zip` i `2026-11-19-before-v31-final.zip`. Raport: `exports/ios-ux-v31/verification.json`. Pierwsza próba uruchomienia została odrzucona przez iOS z powodu blokady telefonu; kontrola zapisu po uruchomieniu czeka na odblokowanie.
+
+Układ i symulowaną klawiaturę sprawdzono na komputerze. Rzeczywista klawiatura pierwszego spotkania oraz doręczenie powiadomienia o potrzebie wyjścia wymagają odrębnej próby na urządzeniu; nie resetowano Glorii w celu wywołania powitania.

@@ -29,6 +29,7 @@ static func finish_bath(s: GameSession) -> bool:
 	if not s.in_bath or not s.bath.active or s.bath.stage != 3 or s.bath.settled or not s.writable or s.suspended: return false
 	s.bath.settled = true
 	NeedsSystem.change(s.pet, {"hygiene": 45, "energy": -5, "fullness": -2})
+	s._note("clean", false)
 	s.pet.remember("first_bath", "Pierwsza kąpiel", "Piana, woda, miękki ręcznik i radosne otrzepywanie.")
 	s.sound_requested.emit("success")
 	s.say("Kąpiel skończona: +45 czystości, −5 energii, −2 sytości.")

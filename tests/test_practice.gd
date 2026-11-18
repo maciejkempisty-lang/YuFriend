@@ -65,7 +65,7 @@ func _initialize() -> void:
 	for key in pet.practice.targets.duplicate(): PracticeSystem.record(pet, key, now + 3 * 86400)
 	check(pet.practice.streak == 1 and pet.practice.total_days == 3, "new streak preserves total completed days")
 	var game := GameSession.new()
-	game.storage = SaveSystem.new("/tmp/yuf-practice-session-%s/pet.json" % Time.get_ticks_usec())
+	game.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-practice-session-%s/pet.json" % Time.get_ticks_usec())
 	game.pet = pet
 	game.local_clock = func(): return now + 4 * 86400
 	PracticeSystem.sync(pet, game._local_now())
@@ -83,7 +83,7 @@ func _initialize() -> void:
 	game.free()
 	var legacy := pet.to_dict()
 	legacy.erase("practice")
-	var path := "/tmp/yuf-practice-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-practice-%s/pet.json" % Time.get_ticks_usec()
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"schema_version": 8, "pet": legacy}))

@@ -27,6 +27,7 @@ var writable: bool = true
 var save_ok: bool = true
 var suspended: bool = false
 var active: bool = false
+var newly_created := false
 var pose: String = "stand"
 var activity: String = "idle"
 var activity_left: float = 0.0
@@ -59,6 +60,8 @@ var _pending_action: String = ""
 var _pending_by_player: bool = false
 var _sleep_elapsed: float = 0.0
 var _discovery_message: String = ""
+# A discovery is announced only after the save that contains it succeeds.
+var _pending_discovery: String = ""
 var invitation: Dictionary = {}
 var attention_available := true
 # The top bubble may temporarily show a more urgent need instead of this offer.
@@ -100,6 +103,7 @@ func _apply_care_effects(action: String, changes: Dictionary) -> void:
 func start(save_path: String = "user://pet.json") -> void:
 	storage = SaveSystem.new(save_path)
 	var loaded := storage.load_pet()
+	newly_created = loaded.status == "new"
 	pet = loaded.pet
 	# Seed only a new mobile playtest pet; existing saves keep their name.
 	if loaded.status == "new" and OS.has_feature("gloria_playtest"):
@@ -177,8 +181,7 @@ func _process(delta: float) -> void:
 	var result := training.advance(delta, performance_done)
 	if not result.is_empty():
 		say(result.message)
-		if result.event == "miss": _note("miss")
-		elif result.event == "expired": _note("reward_missed")
+		record_training_outcome(result.event)
 		if result.event == "ready":
 			clip_requested.emit("sit_idle" if pose == "sit" else "idle")
 		elif result.event in ["miss", "expired"]:
@@ -190,9 +193,7 @@ func _process(delta: float) -> void:
 			if activity == "digging":
 				DiggingSystem.finish(self)
 			elif activity == "outing_pause":
-				activity = "outing_praise"
-				activity_left = 20
-				say("Gotowe! Możesz pochwalić pieska przy płocie.")
+				YardRoutines.finish_outing(self)
 			elif activity == "sniff":
 				_finish_sniff()
 			elif not _sequence_id.is_empty():
@@ -228,16 +229,26 @@ func _process(delta: float) -> void:
 func _local_now() -> float:
 	return float(local_clock.call())
 
-func _note(event: String) -> void:
+# observe=false records temperament events without revealing quirks whose
+# descriptions belong to another activity (e.g. digging is not ball play).
+func _note(event: String, observe: bool = true) -> void:
 	if writable:
 		PersonalitySystem.record(pet, event, _local_now())
-		_observe(event)
+		if observe: _observe(event)
+
+func record_training_start(guided: bool, tired: bool) -> void:
+	_note("train_guided" if guided else "train_free")
+	if tired: _note("train_tired")
+
+func record_training_outcome(event: String) -> void:
+	if event == "miss": _note("miss")
+	elif event == "expired": _note("reward_missed")
 
 func _observe(event: String) -> void:
 	if not writable: return
 	var found := LifeSystem.observe(pet, event, Time.get_unix_time_from_system())
 	if not found.is_empty():
-		_discovery_message = "Poznajesz małe dziwactwo: %s. Zajrzyj do Albumu." % ", ".join(PackedStringArray(found))
+		_pending_discovery = "Poznajesz małe dziwactwo: %s. Zajrzyj do Albumu." % ", ".join(PackedStringArray(found))
 
 func _update_life(seen: float, now: float, was_resting: bool) -> bool:
 	if not writable: return false
@@ -268,7 +279,7 @@ func _spontaneous(roll: float = -1.0) -> void:
 	if DailyRhythm.phase(pet, _local_now()) == "morning" and YardRoutines.due(self) and float(cooldowns.get("outing", 0)) <= 0:
 		cooldowns["outing"] = 3600
 		move_to(RoomLayout.STATIONS.door.stand, false)
-		say("Może wyjdziemy na chwilę? Czekam przy drzwiach.")
+		say("Chcę wyjść się załatwić. Czekam przy drzwiach — pójdziemy na podwórko?")
 		return
 	for need in [["fullness", "hungry"], ["play", "bored"]]:
 		# At night boredom asks for quiet company instead of a ball.
@@ -469,7 +480,7 @@ func _pet() -> bool:
 	# Touch always gets a response; only stat gains have a cooldown.
 	if float(cooldowns.get("pet", 0)) <= 0:
 		_apply_care_effects("pet", {"contact": 18, "play": 3})
-		pet.bond = minf(100, pet.bond + 0.6)
+		pet.bond = minf(100, pet.bond + BondLevels.petting_gain(pet, _local_now()))
 		cooldowns.pet = CARE_COOLDOWNS.pet
 		pet.remember("pet", "Coraz bliżej", "Pierwsze głaskanie i odrobina zaufania.")
 		_note("pet")
@@ -593,8 +604,9 @@ func destination_reached() -> void:
 		_travel_left = 0
 		activity = "outing_pause"
 		activity_left = 4
-		clip_requested.emit("sniff")
+		clip_requested.emit("sit_idle")
 		say("Chwila prywatności w trawie…")
+		changed.emit()
 		return
 	if in_yard and activity == "hide_walk" and hide_game.arrive():
 		_travel_left = 0
@@ -641,8 +653,7 @@ func begin_training(key: String, guided: bool) -> bool:
 	_answer_action("training")
 	_cancel_motion()
 	activity_left = 0
-	_note("train_guided" if guided else "train_free")
-	if tired: _note("train_tired")
+	record_training_start(guided, tired)
 	activity = "idle"
 	performance_done = false
 	pose = "sit" if key in ["sit", "paw", "stay"] and training.will_succeed else "stand"
@@ -658,7 +669,6 @@ func give_reward(kind: String) -> bool:
 	if suspended or not writable: return false
 	player_activity()
 	var before := pet.to_dict()
-	var discovery_before := _discovery_message
 	var result := training.reward(pet, kind)
 	if not result.ok:
 		say(result.message)
@@ -669,7 +679,6 @@ func give_reward(kind: String) -> bool:
 	_note("reward_" + kind)
 	if not flush():
 		pet = PetState.from_dict(before)
-		_discovery_message = discovery_before
 		say("Nie udało się zapisać ćwiczenia. Postęp pozostaje bez zmian.")
 		changed.emit()
 		return false
@@ -703,6 +712,9 @@ func flush() -> bool:
 		return false
 	pet.last_seen_at = maxf(pet.last_seen_at, Time.get_unix_time_from_system())
 	save_ok = storage.save_pet(pet)
+	# A failed save is usually rolled back by the caller; never announce its discovery.
+	if save_ok and not _pending_discovery.is_empty(): _discovery_message = _pending_discovery
+	_pending_discovery = ""
 	save_status.emit(save_ok)
 	return save_ok
 
@@ -926,7 +938,7 @@ func _settle_touch_game() -> void:
 		if in_yard: yard_rest.note_play()
 	say(play.hint())
 	if fetch_round:
-		say("Aport %.1f m! %s%s" % [fetch_distance, "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dobry chwyt." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
+		say(("Aport %.1f m! " % fetch_distance).replace(".", ",") + "%s%s" % [ "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dobry chwyt." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
 	fetch.reset()
 	if fetch_round: outdoor_commands.offer_recall(fetch_origin)
 	if kind == "ball": play.reset()
@@ -1041,7 +1053,9 @@ func _advance_behavior() -> void:
 		activity = "idle"
 		activity_left = 0
 		_brain_left = randf_range(9, 15)
-		if not event.is_empty(): _observe(event)
+		if not event.is_empty():
+			_observe(event)
+			if not _pending_discovery.is_empty(): flush()
 		clip_requested.emit(PetAnimator.BASE.get(pose, "idle"))
 		return
 	var step: Dictionary = _sequence.pop_front()

@@ -9,7 +9,7 @@ func check(ok: bool, label: String) -> void:
 func game() -> GameSession:
 	var s := GameSession.new()
 	s.pet = PetState.create(42)
-	s.storage = SaveSystem.new("/tmp/yuf-command-%s/pet.json" % Time.get_ticks_usec())
+	s.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-command-%s/pet.json" % Time.get_ticks_usec())
 	s.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	s.active = true
 	s._brain_left = INF
@@ -86,7 +86,7 @@ func _initialize() -> void:
 	check(not s.outdoor_commands.praise(s), "failed save rejects reward")
 	check(s.pet.to_dict() == before_failure, "failed save restores skills form bond and daily credit")
 	check(not s.outdoor_commands.praise(s), "failed reward cannot repeat")
-	s.storage = SaveSystem.new("/tmp/yuf-command-flower-%s/pet.json" % Time.get_ticks_usec())
+	s.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-command-flower-%s/pet.json" % Time.get_ticks_usec())
 	for plant in YardRoutines.PLANTS:
 		check(not KeepsakeSystem.unlock_reason(s.pet, plant).is_empty(), "ungrown flower locked")
 		s.pet.yard_routines.flowers.append(plant)

@@ -3,7 +3,7 @@ extends SceneTree
 var passed := 0
 var failed := 0
 var now := 100 * 86400.0 + 12 * 3600.0
-var directory := "/tmp/yufriend-rhythm-%s" % Time.get_ticks_usec()
+var directory := preload("res://tests/helper_paths.gd").data_root() + "/yufriend-rhythm-%s" % Time.get_ticks_usec()
 
 func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(directory)

@@ -25,6 +25,7 @@ var yard_water := YardWaterView.new()
 var yard_weather := YardWeatherView.new()
 var yard_course := YardCourseView.new()
 var yard_rest := YardRestView.new()
+var yard_potty := YardPottyView.new()
 var jump_motion := PuppyJump.new()
 var jump_lift := 0.0
 var jump_clip := ""
@@ -63,7 +64,7 @@ var ball_target: Vector2 = ball_world
 var portal_speed := 0.0
 var moving := false
 var mood_walk_speed: float = 1.0
-var presentation_scale: float = RoomLayout.PUPPY_SCALE
+var presentation_scale: float = RoomLayout.PUPPY_SCALE * 1.15
 var hud_bottom := 0.0
 var content_bottom := 0.0
 var overlay_right := 0.0
@@ -145,6 +146,9 @@ func _ready() -> void:
 	yard_rest.z_index = -1
 	yard_rest.hide()
 	world.add_child(yard_rest)
+	yard_potty.z_index = 2
+	yard_potty.hide()
+	world.add_child(yard_potty)
 	water_drops.effects_only = true
 	water_drops.z_index = 5
 	water_drops.hide()
@@ -307,7 +311,7 @@ func _pointer_move(point: Vector2, id: int) -> void:
 		var drag := (point - _press_point) / _press_zoom
 		_throw_target = YardFetch.target(ball_world, drag) if in_yard else RoomLayout.clamp_walk(ball_world + Vector2(drag.x * 2.0, 0))
 		if in_yard:
-			throw_power.text = "Siła %d%% · %.1f m" % [roundi(minf(1, drag.length() * 3 / YardFetch.MAX_DISTANCE) * 100), ball_world.distance_to(_throw_target) / 100]
+			throw_power.text = ("Siła %d%% · %.1f m" % [roundi(minf(1, drag.length() * 3 / YardFetch.MAX_DISTANCE) * 100), ball_world.distance_to(_throw_target) / 100]).replace(".", ",")
 			throw_power.position = Vector2(clampf(point.x - 65, 8, size.x - 145), maxf(hud_bottom + 8, point.y - 50))
 			throw_power.show()
 		var points := PackedVector2Array()
@@ -365,6 +369,7 @@ func action_at(point: Vector2) -> String:
 			return RoomLayout.STATIONS[id].action
 	var where := screen_to_world(point)
 	if in_yard:
+		if yard_potty.mess and _screen_rect(Rect2(YardPottyView.SPOT - Vector2(24, 36), Vector2(48, 42))).grow(12).has_point(point): return "yard_outing"
 		if catch_active and Rect2(pet_world - Vector2(90, 170) * presentation_scale, Vector2(180, 190) * presentation_scale).has_point(where): return "catch"
 		if ball_touch_rect().has_point(point): return "play"
 		if _hits_pet(where): return "pet"
@@ -485,9 +490,11 @@ func update_placement() -> void:
 	shadow.scale = Vector2.ONE * presentation_scale
 	room_hint.position = Vector2(20, hud_bottom + 54)
 	room_hint.text = (YardWeather.LABELS[yard_weather.kind] + " · wybierz miejsce" if in_yard else "Dotknij miejsca, aby przybliżyć") if overview else (YardWeather.LABELS[yard_weather.kind] + " · przesuń ↔" if in_yard else "Przesuń pokój ↔")
-	overview_button.text = "Do pieska" if overview else ("Podwórko" if in_yard else "Cały pokój")
-	overview_button.position = Vector2(overlay_left, hud_bottom)
-	overview_button.size = Vector2(112, 44)
+	overview_button.text = "Do pieska" if overview else ("Całe podwórko" if in_yard else "Cały pokój")
+	if overview_button.get_parent() == self:
+		overview_button.position = Vector2(overlay_left, hud_bottom)
+		overview_button.size = Vector2(112, 44)
+	room_hint.visible = in_yard and not pan_hint_dismissed
 	return_button.position = Vector2((overlay_right if overlay_right > 0 else size.x - 12) - 100, hud_bottom)
 	return_button.size = Vector2(100, 44)
 	if not _camera_initialized:
@@ -546,12 +553,13 @@ func _world_bottom() -> float:
 	if content_bottom <= 0: return RoomLayout.SIZE.y
 	var scene_bottom := content_bottom
 	if not overview and size.y > size.x:
-		# Place the decorated room beneath the toolbar. Surplus height becomes floor
-		# below the puppy instead of a large blank wall above the window.
+		# Bring the puppy closer to the care panel, with a cap on empty wall
+		# so tall phones keep the decorated room in the usable scene.
 		var scene_top := hud_bottom + 72.0
 		var art_height := (RoomLayout.SIZE.y - DECORATION_TOP) * screen_scale().y
 		var spare_height := maxf(0, scene_bottom - scene_top - art_height)
-		scene_bottom -= spare_height * 0.75
+		scene_bottom -= spare_height * 0.40
+		scene_bottom = minf(scene_bottom, hud_bottom + 160.0 + (RoomLayout.SIZE.y - 75.0) * screen_scale().y)
 	return RoomLayout.SIZE.y + maxf(0, size.y - scene_bottom) / screen_scale().y
 
 func _set_camera_center(point: Vector2) -> void:
@@ -782,6 +790,7 @@ func _process(delta: float) -> void:
 	_sync_layers()
 
 func _sync_layers() -> void:
+	yard_potty.visible = in_yard and not yard_course.playing
 	yard_rest.visible = in_yard and not yard_course.playing
 	yard_course.visible = in_yard
 	animator.position.y = -roundf(jump_lift / 3) * 3
@@ -817,7 +826,7 @@ func _sync_layers() -> void:
 	for id in yard_markers:
 		var marker: Button = yard_markers[id]
 		var point := world_to_screen(RoomLayout.YARD_STATIONS[id].point)
-		marker.text = RoomLayout.YARD_STATIONS[id].label
+		marker.text = "Sprzątnij" if id == "outing" and yard_potty.mess else RoomLayout.YARD_STATIONS[id].label
 		marker.custom_minimum_size = Vector2(82, 44)
 		marker.size = Vector2(82, 44)
 		marker.position = point - Vector2(41, 44)
@@ -828,7 +837,7 @@ func _sync_layers() -> void:
 			var index := RoomLayout.YARD_STATIONS.keys().find(id)
 			marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
-		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
+		marker.accessibility_name = "Sprzątnij kupę" if id == "outing" and yard_potty.mess else RoomLayout.YARD_STATIONS[id].label
 		marker.visible = in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < ((content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y)
 	# Nearby new stations must retain separate touch targets on narrow screens.
 	if in_yard and not overview:

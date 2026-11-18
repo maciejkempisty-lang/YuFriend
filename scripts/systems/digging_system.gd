@@ -61,6 +61,7 @@ static func finish(s: GameSession) -> bool:
 	state.rounds = int(state.rounds) + 1
 	if duplicate: state.tokens = int(state.tokens) + 1
 	NeedsSystem.change(s.pet, {"energy": -4, "hygiene": -10, "play": 8})
+	s._note("play", false)
 	s.pet.remember("dig_" + id, "Odkopane: " + ITEMS[id][0], "Znalezisko z naszej piaskownicy.")
 	var adventure_completed := DailyAdventure.record(s.pet, "treasure", s._local_now())
 	if not s.flush():

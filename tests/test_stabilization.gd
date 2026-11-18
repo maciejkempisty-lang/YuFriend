@@ -37,7 +37,7 @@ func _initialize() -> void:
 	check(not game.finish_bath() and game.pet.needs.energy == 55, "duplicate completion cannot charge twice")
 	game.cancel_bath()
 	check(not game.start_bath(), "clean dog is directed to brushing instead of repeated baths")
-	var path := "/tmp/yuf-stabilization-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-stabilization-%s/pet.json" % Time.get_ticks_usec()
 	game.storage = SaveSystem.new(path)
 	game.pet.skills.sit.mastery = 100
 	game.pet.yard_record = 4.5

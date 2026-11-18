@@ -6,8 +6,12 @@ const GROW_TIME := 3.0 * 86400
 static func initial() -> Dictionary:
 	return {"plant": "", "growth": 0.0, "checked_at": 0.0, "water_until": 0.0, "watered_day": -1, "outday": -1, "flowers": []}
 
+static func has_mess(session: GameSession) -> bool:
+	return session.pet.yard_routines.get("mess", false)
+
 static func valid(value: Variant) -> bool:
 	if not value is Dictionary: return false
+	if value.has("mess") and not value.mess is bool: return false
 	if not value.get("plant") is String or (value.plant != "" and not PLANTS.has(value.plant)): return false
 	for key in ["growth", "checked_at", "water_until", "outday"]:
 		if not PetState.valid_number(value.get(key)): return false
@@ -93,26 +97,54 @@ static func available(session: GameSession) -> bool:
 	return session.writable and not session.suspended and session.in_yard and not session.busy(false) and not session.is_sleeping() and DailyRhythm.phase(session.pet, session._local_now()) != "night"
 
 static func due(session: GameSession) -> bool:
-	return PersonalitySystem.day_of(session._local_now()) > int(session.pet.yard_routines.outday)
+	return not has_mess(session) and PersonalitySystem.day_of(session._local_now()) > int(session.pet.yard_routines.outday)
 
 static func start_outing(session: GameSession) -> bool:
 	if not available(session) or not due(session): return false
-	session.move_to(Vector2(1220, 560))
+	session.move_to(Vector2(1220, 322))
 	session.activity = "outing_walk"
-	session.say("Idziemy w spokojne miejsce przy płocie.")
+	session.say("Chcę się załatwić. Idziemy w spokojne miejsce przy płocie.")
 	return true
 
-static func praise(session: GameSession) -> bool:
-	if not session.writable or session.suspended or not session.in_yard or session.activity != "outing_praise" or not due(session): return false
+static func finish_outing(session: GameSession) -> bool:
+	if not session.writable or session.suspended or not session.in_yard or session.activity != "outing_pause" or not due(session): return false
 	var before := session.pet.to_dict()
 	session.pet.yard_routines.outday = PersonalitySystem.day_of(session._local_now())
+	session.pet.yard_routines["mess"] = true
+	if not session.flush():
+		session.pet = PetState.from_dict(before)
+		session.activity = "idle"
+		session.activity_left = 0
+		session.clip_requested.emit("idle")
+		session.say("Nie udało się zapisać wyjścia. Spróbuj ponownie po odzyskaniu zapisu.")
+		session.changed.emit()
+		return false
+	session.activity = "outing_praise"
+	session.activity_left = 0
+	session.clip_requested.emit("idle")
+	session.say("Uff, gotowe! Teraz zbierz kupę do woreczka — dotknij Sprzątnij.")
+	session.changed.emit()
+	return true
+
+# The legacy entry point remains for station callers; the reward now requires cleanup.
+static func praise(session: GameSession) -> bool:
+	return clean_up(session)
+
+static func clean_up(session: GameSession) -> bool:
+	if not session.writable or session.suspended or not session.in_yard or not has_mess(session): return false
+	if session.activity != "outing_praise" and session.busy(false): return false
+	var before := session.pet.to_dict()
+	session.pet.yard_routines["mess"] = false
 	session.pet.bond = minf(100, session.pet.bond + 0.5)
 	if not session.flush():
 		session.pet = PetState.from_dict(before)
+		session.changed.emit()
 		return false
-	session.activity = "idle"
-	session.activity_left = 0
-	session.clip_requested.emit("idle")
-	session.say("Dobry piesek! Spokojne wyjście razem · +0,5 więzi.")
+	session.player_activity()
+	if session.activity == "outing_praise":
+		session.activity = "idle"
+		session.activity_left = 0
+		session.clip_requested.emit("idle")
+	session.say("Posprzątane! Dziękuję za wspólne wyjście · +0,5 więzi.")
 	session.changed.emit()
 	return true

@@ -10,7 +10,7 @@ func check(ok: bool, label: String) -> void:
 func game() -> GameSession:
 	var s := GameSession.new()
 	s.pet = PetState.create(42)
-	s.storage = SaveSystem.new("/tmp/yuf-memory-%s/pet.json" % Time.get_ticks_usec())
+	s.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-memory-%s/pet.json" % Time.get_ticks_usec())
 	s.storage.save_pet(s.pet)
 	s.pet = s.storage.load_pet().pet
 	s.local_clock = func(): return day * 86400.0 + 12 * 3600

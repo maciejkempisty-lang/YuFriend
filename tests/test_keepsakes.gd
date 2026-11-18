@@ -17,7 +17,7 @@ func _initialize() -> void:
 	legacy.skills.erase("spin")
 	legacy.skills.erase("roll")
 	var copy: Dictionary = legacy.duplicate(true)
-	var path := "/tmp/yuf-keepsakes-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-keepsakes-%s/pet.json" % Time.get_ticks_usec()
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"schema_version": 7, "pet": legacy}))

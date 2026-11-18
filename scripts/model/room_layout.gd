@@ -13,7 +13,7 @@ const YARD_STATIONS := {
 	"course": {"label": "Tor", "icon": "paw", "point": Vector2(1010, 205)},
 	"puddle": {"label": "Kałuża", "icon": "water", "point": Vector2(420, 205)},
 	"sprinkler": {"label": "Zraszacz", "icon": "sprinkler", "point": Vector2(1230, 205)},
-	"gate": {"label": "Dom", "icon": "home", "point": Vector2(150, 205)},
+	"gate": {"label": "Do domu", "icon": "home", "point": Vector2(150, 205)},
 	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205)},
 	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205)},
 	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205)},

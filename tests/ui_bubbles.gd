@@ -73,7 +73,12 @@ func _run() -> void:
 					if layout.x in [390, 320, 1080] and x == RoomLayout.START.x and clip == "sit_idle":
 						await RenderingServer.frame_post_draw
 						root.get_texture().get_image().save_png("res://test-results/bubbles-%d-%s.png" % [layout.x, "close" if closeup else "normal"])
-	for key in shown: check(shown[key] >= 20, "%s remains readable in ordinary layouts (%d cases)" % [key, shown[key]])
+	for key in ["feedback", "gain"]: check(shown[key] >= 20, "%s remains readable in ordinary layouts (%d cases)" % [key, shown[key]])
+	check(shown.thought == 0, "passive thoughts yield to immediate feedback at every size")
+	app.bubble_left = 0
+	app._refresh_companion()
+	app._position_feedback()
+	check(app.companion_card.visible and app.companion_card.modulate.a > 0, "thought returns after feedback expires")
 	app.session.active = false
 	app.queue_free()
 	await process_frame

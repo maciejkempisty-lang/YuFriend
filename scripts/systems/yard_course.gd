@@ -71,11 +71,13 @@ func stay(s: GameSession, guided: bool = true, roll: float = -1) -> bool:
 	if phase != "stay_ready" or not safe(s): return false
 	var before := s.pet.to_dict()
 	PracticeSystem.sync(s.pet, s._local_now())
+	var tired := s.pet.fatigue >= 50
 	var result := trial.begin(s.pet, "stay", guided, roll)
 	if not result.ok:
 		s.pet = PetState.from_dict(before)
 		s.say(result.message)
 		return false
+	s.record_training_start(guided, tired)
 	if not s.flush():
 		s.pet = PetState.from_dict(before)
 		trial.cancel()
@@ -91,6 +93,7 @@ func praise(s: GameSession) -> bool:
 	var before := s.pet.to_dict()
 	var result := trial.reward(s.pet, "praise")
 	if not result.ok: return false
+	s._note("reward_praise")
 	var daily := PracticeSystem.record(s.pet, "stay", s._local_now())
 	DailyAdventure.record(s.pet, "trick", s._local_now())
 	NeedsSystem.change(s.pet, {"play": 10})
@@ -113,6 +116,7 @@ func advance(s: GameSession, delta: float) -> void:
 		return
 	if phase in ["stay", "praise"]:
 		var result := trial.advance(delta)
+		if not result.is_empty(): s.record_training_outcome(result.event)
 		if result.is_empty(): return
 		if result.event == "ready":
 			phase = "praise"

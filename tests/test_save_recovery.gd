@@ -11,7 +11,7 @@ func write(path: String, data: Dictionary, version: int) -> void:
 	file.store_string(JSON.stringify({"schema_version": version, "pet": data}))
 	file.close()
 func _initialize() -> void:
-	var dir := "/tmp/yuf-recovery-%s" % Time.get_ticks_usec()
+	var dir := preload("res://tests/helper_paths.gd").data_root() + "/yuf-recovery-%s" % Time.get_ticks_usec()
 	DirAccess.make_dir_recursive_absolute(dir)
 	var pet := PetState.create(42)
 	PracticeSystem.sync(pet, 100 * 86400)

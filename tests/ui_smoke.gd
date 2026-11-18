@@ -43,7 +43,7 @@ func _run() -> void:
 	_test_effects()
 	await capture("01-care.png")
 	check_pixel_grid("390 x 844")
-	check(app.room.content_bottom / app.size.y >= 0.74 and app.room.size == app.size, "home room fills the screen with at least 74 percent above care controls")
+	check(app.room.content_bottom / app.size.y >= 0.66 and app.room.size == app.size, "home room fills the screen with at least two thirds above the consolidated care controls")
 	check(app.care_buttons.size() == 5 and app.needs_ui.fullness == app.care_buttons.feed, "one row owns both the need level and its action")
 	await _test_redesigned_ui()
 	await process_frame
@@ -84,7 +84,7 @@ func _run() -> void:
 	for child in app.get_children():
 		if child is AcceptDialog and child.title == "Sztuczki pieska": tricks_dialog = child
 	check(tricks_dialog != null and tricks_dialog.visible, "trick catalogue opens")
-	var rows := tricks_dialog.get_child(0).get_child(0)
+	var rows := tricks_dialog.find_children("*", "ScrollContainer", true, false)[0].get_child(0)
 	check(rows.get_child_count() == 10 and rows.get_child(4).disabled, "catalogue lists nine tricks and locks advanced ones")
 	await capture("24-trick-catalogue.png")
 	tricks_dialog.hide()
@@ -265,12 +265,16 @@ func _test_life_ui() -> void:
 	check(app.profile_life.text.contains("Patrol przy oknie") and app.profile_life.text.contains("Jeszcze nieznane"), "profile separates a discovered quirk from a hidden one")
 	await capture("22-life-profile.png")
 	app.profile_dialog.hide()
+	# Mood is the idle fallback after today's toilet trip.
+	var previous_outday = game.pet.yard_routines.outday
+	game.pet.yard_routines.outday = PersonalitySystem.day_of(game._local_now())
 	game.pet.life.mood = "sleepy"
 	app._refresh()
 	var slow: float = app.room.mood_walk_speed
 	game.pet.life.mood = "playful"
 	app._refresh()
 	check(slow < app.room.mood_walk_speed and app.care_status.text.contains("Ochota na psoty"), "daily mood reaches both care status and room movement")
+	game.pet.yard_routines.outday = previous_outday
 	game.suspend_session()
 	game.pet.last_seen_at = Time.get_unix_time_from_system() - 3600
 	game.pet.life.away_report = {}

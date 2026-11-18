@@ -75,7 +75,7 @@ func _initialize() -> void:
 	check(is_equal_approx(FetchRewards.award(pet, true, 301 * 86400).bond, 1.35), "next day renews budget")
 	var legacy := pet.to_dict()
 	legacy.erase("fetch_rewards")
-	var path := "/tmp/yuf-balance-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-balance-%s/pet.json" % Time.get_ticks_usec()
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"schema_version": 10, "pet": legacy}))

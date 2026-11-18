@@ -8,24 +8,33 @@ func check(ok: bool, text: String) -> void:
 		failures += 1
 		push_error(text)
 	else: print("PASS " + text)
+# Losing OS window focus (common while other suites open windows) closes the
+# gesture dialog by design. Reopen it instead of reading a freed window.
+func open_gesture(app) -> TrainingGesture:
+	for attempt in 3:
+		if not (is_instance_valid(app.gesture_dialog) and app.gesture_dialog.visible): app._train(true)
+		await process_frame
+		await RenderingServer.frame_post_draw
+		if is_instance_valid(app.gesture_dialog) and app.gesture_dialog.visible:
+			return app.gesture_dialog.get_child(0)
+	return null
 func run() -> void:
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
 	var app = load("res://scenes/Main.tscn").instantiate()
-	app.save_path_override = "/tmp/yuf-training-%s/pet.json" % Time.get_ticks_usec()
+	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-training-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	app.session.set_process(false)
 	app.session.pet.skills.sit.mastery = 100
 	app._select_tab("training")
 	for key in ["lie", "stay"]:
 		app._choose_trick(key)
-		app._train(true)
-		await process_frame
-		var dialog: AcceptDialog = app.gesture_dialog
-		var gesture: TrainingGesture = dialog.get_child(0)
+		var gesture: TrainingGesture = await open_gesture(app)
+		check(gesture != null, "%s gesture dialog opens" % key)
+		if gesture == null: continue
 		check(app.session.training.phase == "idle", "gesture waits before charging energy")
-		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("/tmp/yuf-gesture-%s.png" % key)
 		var start := gesture.point(0.5 if key == "stay" else 0.0)
 		gesture.press(start, 0)

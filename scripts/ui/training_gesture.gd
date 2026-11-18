@@ -72,7 +72,7 @@ func _gui_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if pointer == -2 or not hold_mode or finished: return
 	elapsed += minf(delta, 0.1)
-	message = "Puść teraz!" if elapsed >= 2 else "Jeszcze chwila… %.1f s" % (2 - elapsed)
+	message = "Puść teraz!" if elapsed >= 2 else ("Jeszcze chwila… %.1f s" % (2 - elapsed)).replace(".", ",")
 	if elapsed > 3:
 		reset()
 		message = "Za długo. Spróbuj ponownie."

@@ -2,9 +2,10 @@ import Foundation
 
 struct PetReminder: Equatable {
     let date: Date
-    let need: PetNeed
+    let need: PetNeed?
     let name: String
     var body: String {
+        guard let need else { return "Chcę wyjść się załatwić. Pójdziemy na podwórko?" }
         switch need {
         case .fullness: return "Burczy mi w brzuchu. Zjemy coś?"
         case .energy: return "Oczka mi się kleją. Pomożesz mi się ułożyć?"
@@ -58,7 +59,14 @@ enum PetReminderPlan {
             let spaced = history.allSatisfy { abs(date.timeIntervalSince($0)) >= minimumGap }
             if (9..<21).contains(hour) && today < 2 && recent < 2 && spaced {
                 let status = snapshot.projected(at: date)
-                if let need = status.priorities.first(where: { need in
+                // Match Godot's local calendar day. Existing saves without yard data
+                // keep their old plan; a waiting mess must be cleaned in the game.
+                let localDay = Int(floor((date.timeIntervalSince1970 + Double(calendar.timeZone.secondsFromGMT(for: date))) / 86400))
+                let outingDue = snapshot.outingDay.map { localDay > $0 } ?? false
+                if outingDue && snapshot.yardMess != true && !status.resting && !result.contains(where: { $0.need == nil }) {
+                    result.append(PetReminder(date: date, need: nil, name: snapshot.name))
+                    if date >= nextDay { break }
+                } else if let need = status.priorities.first(where: { need in
                     status.value(need) < 30 && !result.contains(where: { $0.need == need })
                 }) {
                     result.append(PetReminder(date: date, need: need, name: snapshot.name))

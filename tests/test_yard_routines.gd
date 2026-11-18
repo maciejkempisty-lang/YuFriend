@@ -20,7 +20,7 @@ func _initialize() -> void:
 	check(not YardRoutines.valid(s), "duplicate flowers rejected")
 	var game := GameSession.new()
 	game.pet = PetState.create(42)
-	game.storage = SaveSystem.new("/tmp/yuf-routines-%s/pet.json" % Time.get_ticks_usec())
+	game.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-routines-%s/pet.json" % Time.get_ticks_usec())
 	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	game.weather.override_kind = "sun"
 	game.active = true

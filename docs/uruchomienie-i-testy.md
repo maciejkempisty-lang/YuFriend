@@ -172,3 +172,25 @@ Projekt ma konfigurację iOS i wcześniejszą instalację testową opisaną w [t
 Kontrola audio obejmuje 22 rzeczywiste nagrania, brak pętli efektów, wyzwalanie po przyjęciu czynności, ograniczenie jednoczesnego odtwarzania, zatrzymanie w tle i niezależne preferencje muzyki/efektów. `tests/test_audio.gd` działa bez okna i sprawdza szczekanie przy drzwiach/misce oraz pisk przy głaskaniu, jego odstępy, odmowy i wyciszenie. Odsłuch i balans na telefonie pozostają do oceny użytkownika.
 
 Wydzielony zakres audio przed publikacją sprawdzono osobno na bazie `c23df29`: **274/274** (104 logiki, 38 animacji, 132 UI). Obejmuje komplet 20 nagrań, kroki tylko podczas ruchu, limit 160 ms, brak dźwięku po odrzuconej opiece, zatrzymanie efektów w tle oraz niezależne wyciszenie. Te testy nie stanowią oceny naturalności nagrań.
+
+
+## Zbiorcze uruchamianie regresji
+
+Po imporcie projektu: `python3 tools/run_game_tests.py` uruchamia logikę, a `python3 tools/run_game_tests.py --ui` uruchamia testy okien w sesji graficznej. Opcjonalnie ustaw `GODOT_BIN`. Uruchamiaj oba polecenia kolejno. Runner wymusza katalog tymczasowy dla testów obsługujących `YUFRIEND_TEST_ROOT`; pozostałe testy używają własnych ścieżek `/tmp`. Nie używa zapisu gracza. Błąd skryptu lub parsowania oznacza porażkę również przy kodzie wyjścia Godota równym zero. Limit procesu wynosi 120 sekund; testy mogą mieć własne krótsze limity.
+
+`test_stage1.gd` sprawdza dzienny limit głaskania, odczyt istniejącego modelu, cofnięcie zegara, rejestrowanie treningu podwórkowego oraz uwagę i przyciemnienie przy panelach. Testy kąpieli, zdjęć i gestów mają stały dzienny zegar.
+
+
+`ui_stage2.gd` sprawdza pierwsze spotkanie i wznowienie po przerwaniu, odrzucenie pustego imienia, trwałość imienia i tożsamości po restarcie, brak ponownego powitania, układ podwórka przy 320 punktach szerokości, czytelność odmowy oraz akcję zaproszenia i powrót do domu. `ui_bubbles.gd` sprawdza pierwszeństwo odpowiedzi przed myślą i powrót myśli po jej wygaśnięciu.
+
+Etap 2 sprawdzono na odizolowanej kopii projektu. Odczyt i zapis kopii Glorii pobranej po uruchomieniu builda 29 zachował identyczne wszystkie 29 pól `pet` (schemat 15). Nie modyfikowano danych na telefonie. Zmiany etapu 2 wymagają jeszcze nowego eksportu i sprawdzenia na iPhonie, w szczególności klawiatury podczas nadawania imienia.
+
+Weryfikacja etapu 2: 30/30 zestawów logiki i 24/24 zestawów UI przeszło (trzy testy UI ponowiono po przekroczeniu czasu renderowania; test kadru ponowiono po poprawce marginesu). Runner UI uruchamia okno na wierzchu, bez VSync, z limitem 60 FPS; zmniejsza to zależność oczekiwania na klatkę od zasłonięcia okna na macOS.
+
+
+Mechanika wyjścia i sprzątania: `test_potty.gd` sprawdza cały cykl, zachowanie kupy po odczycie zapisu, ograniczenie dzienne, cofnięcie daty, przerwanie, dwukrotne dotknięcie i rollback przy błędzie zapisu. `ui_potty.gd` sprawdza przycisk wyjścia, animację, klikalną kupę i woreczek przy szerokości 320 punktów. Planista iOS jest objęty `tools/test_ios_reminders.sh`, zgodność widgetu przez `tools/test_ios_widget.sh`.
+
+Weryfikacja wyjścia i sprzątania: 31 zestawów logiki oraz 25 UI przeszło po poprawkach i powtórzeniu testów dotkniętych zmianami. Planista: 1078 sprawdzeń, kontroler: 18, widget: 1546 (252 prognozy zgodne z Godotem); natywny kod przeszedł typecheck iOS. Kopia Glorii z buildu 30 zachowała wszystkie 29 pól w próbie odczytu i ponownego zapisu. Raporty i obrazy: `exports/potty-verification/`. Mechanika nie została jeszcze zainstalowana na iPhonie; rzeczywiste doręczenie jej powiadomienia pozostaje do sprawdzenia.
+
+
+Build 31: końcowe uruchomienia całych pakietów dały 31/31 zestawów logiki i 25/25 UI. Planista przypomnień: 1078 sprawdzeń; kontroler: 18; widget: 1546, w tym 252 prognozy zgodne z Godotem. Kompilacja iOS i kontrola podpisu przeszły. Testy UI obejmują jedyny przycisk Dziś, karty okien, miejsce nad symulowaną klawiaturą, większego psa, powrót z podwórka i pełną widoczność akcji domu. Rzeczywistej klawiatury pierwszego spotkania ani doręczenia powiadomienia o wyjściu nie potwierdzono na fizycznym urządzeniu.

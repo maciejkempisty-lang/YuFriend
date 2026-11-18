@@ -51,6 +51,9 @@ func _run() -> void:
 	check(is_equal_approx(float(game.invitation.remaining), time_left), "reading the dog card does not count as ignoring the invitation")
 	app.profile_dialog.hide()
 	step(0.02)
+	await process_frame
+	await process_frame
+	app._position_companion()
 	var accept_point: Vector2 = app.companion_action.get_global_rect().get_center()
 	await touch(accept_point, true, 0)
 	await touch(accept_point, false, 0)

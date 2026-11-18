@@ -10,7 +10,7 @@ func check(ok: bool, label: String) -> void:
 func game() -> GameSession:
 	var s := GameSession.new()
 	s.pet = PetState.create(42)
-	s.storage = SaveSystem.new("/tmp/yuf-calm-%s/pet.json" % Time.get_ticks_usec())
+	s.storage = SaveSystem.new(preload("res://tests/helper_paths.gd").data_root() + "/yuf-calm-%s/pet.json" % Time.get_ticks_usec())
 	s.local_clock = func(): return local_time
 	s.weather.override_kind = "after_rain"
 	s.active = true

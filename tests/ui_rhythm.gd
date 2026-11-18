@@ -4,7 +4,7 @@ var passed := 0
 var failed := 0
 var app: Control
 var now := 100 * 86400.0 + 23 * 3600
-var directory := "/tmp/yufriend-ui-rhythm-%s" % Time.get_ticks_usec()
+var directory := preload("res://tests/helper_paths.gd").data_root() + "/yufriend-ui-rhythm-%s" % Time.get_ticks_usec()
 
 func _initialize() -> void:
 	call_deferred("_run")

@@ -8,6 +8,15 @@ const CREAM := Color("fff9ed")
 const NEED_LABELS := {"fullness": "Sytość", "energy": "Energia", "hygiene": "Czystość", "play": "Zabawa", "contact": "Bliskość"}
 const REWARD_LABELS := {"treat": "Smakołyk", "praise": "Pochwała", "play": "Zabawa"}
 const NEED_ICONS := {"fullness": "bowl", "energy": "moon", "hygiene": "brush", "play": "ball", "contact": "heart"}
+var first_meeting: AcceptDialog
+var first_name: LineEdit
+var first_error: Label
+# While true the puppy has no chosen name yet; the header avoids the default one.
+var naming_pending := false
+var enable_test_onboarding := false
+var potty_action: Button
+var care_actions: HBoxContainer
+var _yard_layout_key := ""
 var session := GameSession.new()
 var music := BackgroundMusic.new()
 var music_toggle: CheckButton
@@ -56,7 +65,9 @@ var mastery_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
 var guided_button: Button
-var adventure_button: Button
+var today_home: HBoxContainer
+var album_actions: HBoxContainer
+var keyboard_height_override := -1.0
 var visitor_album_status: Label
 var journal_list: VBoxContainer
 var selected_trick: String = "come"
@@ -67,6 +78,7 @@ var name_edit: LineEdit
 var profile_traits: Label
 var profile_bars: VBoxContainer
 var profile_badges: HFlowContainer
+var modal_shade: ColorRect
 var settings_dialog: PanelContainer
 var settings_close: Button
 var settings_close_top: Button
@@ -129,6 +141,7 @@ func _ready() -> void:
 	add_child(yard_transition)
 	yard_transition.setup(self)
 	resized.connect(_fit_room)
+	sheet.minimum_size_changed.connect(func(): _fit_room.call_deferred())
 	_fit_room()
 	add_child(session)
 	session.changed.connect(_refresh)
@@ -180,6 +193,100 @@ func _ready() -> void:
 	reminders_status.text = reminders.status_text()
 	_refresh()
 	_show_feedback(session.last_message)
+	if save_path_override.is_empty() or enable_test_onboarding: _first_meeting_if_needed()
+
+func _first_meeting_if_needed() -> void:
+	if not session.writable: return
+	var config := ConfigFile.new()
+	config.load(ui_settings_path)
+	if session.newly_created:
+		config.set_value("tutorial", "naming_pending", true)
+		config.save(ui_settings_path)
+	if not config.get_value("tutorial", "naming_pending", false): return
+	first_meeting = AcceptDialog.new()
+	first_meeting.title = "Pierwsze spotkanie"
+	first_meeting.exclusive = true
+	first_meeting.dialog_hide_on_ok = false
+	first_meeting.get_ok_button().text = "Poznajmy się"
+	# Naming is the one required step: Escape or the title-bar close cannot skip it.
+	first_meeting.dialog_close_on_escape = false
+	first_meeting.canceled.connect(func():
+		if naming_pending: _reopen_first_meeting.call_deferred())
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	box.custom_minimum_size.x = 240
+	box.size.x = 260
+	var greeting := _label("Mały przyjaciel czeka na Ciebie. Jak ma na imię?", 18)
+	greeting.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	greeting.custom_minimum_size.x = 240
+	box.add_child(greeting)
+	first_name = LineEdit.new()
+	first_name.placeholder_text = "Imię pieska"
+	first_name.max_length = 24
+	first_name.custom_minimum_size = Vector2(240, 48)
+	box.add_child(first_name)
+	first_error = _label("Możesz później zmienić imię w karcie pieska.", 13, MUTED)
+	first_error.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	first_error.custom_minimum_size.x = 240
+	box.add_child(first_error)
+	first_meeting.add_child(box)
+	add_child(first_meeting)
+	first_meeting.confirmed.connect(_finish_first_meeting)
+	first_name.text_submitted.connect(func(_text): _finish_first_meeting())
+	first_meeting.visibility_changed.connect(_update_attention)
+	naming_pending = true
+	name_label.text = "Piesek"
+	_position_dialog(first_meeting, Vector2i(340, 290))
+	first_meeting.popup()
+	bubble_left = 0
+	_update_attention()
+
+func _reopen_first_meeting() -> void:
+	if not naming_pending or not is_instance_valid(first_meeting) or first_meeting.visible: return
+	first_meeting.popup()
+	_position_dialog(first_meeting, Vector2i(340, 290))
+	first_name.grab_focus()
+
+func _finish_first_meeting() -> void:
+	var value := first_name.text.strip_edges()
+	if value.is_empty():
+		first_error.text = "Wpisz imię, żebyśmy mogli się poznać."
+		return
+	var previous := session.pet.pet_name
+	if not session.rename_pet(value) or not session.save_ok:
+		session.pet.pet_name = previous
+		first_error.text = "Nie udało się zapisać imienia. Spróbuj ponownie."
+		return
+	var config := ConfigFile.new()
+	config.load(ui_settings_path)
+	config.set_value("tutorial", "naming_pending", false)
+	if config.save(ui_settings_path) != OK:
+		first_error.text = "Nie udało się zakończyć spotkania. Spróbuj ponownie."
+		return
+	naming_pending = false
+	first_meeting.hide()
+	session.say("Dobrze, że jesteś. Dotknij pieska, żeby się przywitać.")
+	_refresh()
+
+func _sync_yard_actions() -> void:
+	var camera_parent: Node = room if session.in_yard else yard_toolbar
+	if room.overview_button.get_parent() != camera_parent:
+		room.overview_button.reparent(camera_parent)
+	var container: Node = panels.care
+	if yard_toolbar.get_parent() != container:
+		yard_toolbar.reparent(container)
+		visitor_toolbar.reparent(container)
+		container.move_child(yard_toolbar, 1)
+		container.move_child(visitor_toolbar, 2)
+		_fit_room()
+	var occupied := session.in_yard and (session.busy() or not session.invitation.is_empty() or session.visitors.active() or YardRoutines.has_mess(session))
+	care_actions.visible = not occupied
+	var layout_key := "%s|%s" % [care_actions.visible, session.in_yard and session.visitors.active()]
+	if layout_key != _yard_layout_key:
+		_yard_layout_key = layout_key
+		_fit_room()
+	for key in care_buttons:
+		care_buttons[key].visible = not session.in_yard or key in ["pet", "play", "rest"]
 
 func _build_theme() -> void:
 	var app_theme := Theme.new()
@@ -330,6 +437,7 @@ func _build_ui() -> void:
 	today_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	today_button.custom_minimum_size.x = 54
 	header_row.add_child(today_button)
+	today_home = header_row
 	header_row.add_child(settings)
 	bubble = PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
@@ -460,9 +568,14 @@ func _build_care() -> VBoxContainer:
 	var outdoors := HBoxContainer.new()
 	yard_toolbar = outdoors
 	add_child(outdoors)
+	potty_action = _button("Na potrzebę", func():
+		if YardRoutines.has_mess(session): YardRoutines.clean_up(session)
+		else: YardRoutines.start_outing(session))
+	outdoors.add_child(potty_action)
+	potty_action.hide()
 	yard_button = _button("Podwórko", _toggle_yard)
 	outdoors.add_child(yard_button)
-	sniff_button = _button("Krzaki", _show_yard_games)
+	sniff_button = _button("Chowany", _show_yard_games)
 	outdoors.add_child(sniff_button)
 	yard_bath_button = _button("Kąpiel", _show_bath)
 	outdoors.add_child(yard_bath_button)
@@ -505,6 +618,7 @@ func _build_care() -> VBoxContainer:
 	care_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(care_status)
 	var actions := HBoxContainer.new()
+	care_actions = actions
 	actions.add_theme_constant_override("separation", 2)
 	box.add_child(actions)
 	var colors := {"feed": Color("f6ddb0"), "pet": Color("f3d7c8"), "play": Color("e2e9bd"), "clean": Color("d5e6dc"), "rest": Color("e0def0")}
@@ -524,7 +638,6 @@ func _build_training() -> VBoxContainer:
 	choices.add_theme_constant_override("separation", 4)
 	box.add_child(choices)
 	choices.add_child(_button("Lista sztuczek", _show_tricks))
-	choices.add_child(_button("Dziś", func(): AdventurePanel.show_plan(self)))
 	choices.add_child(_icon_button("keyboard", "Wpisz komendę", _show_command))
 	var progress_row := HBoxContainer.new()
 	box.add_child(progress_row)
@@ -591,14 +704,12 @@ func _build_journal() -> VBoxContainer:
 	heading.add_child(title)
 	album_count = _label("", 12, MUTED)
 	heading.add_child(album_count)
-	var album_actions := HBoxContainer.new()
+	album_actions = HBoxContainer.new()
 	box.add_child(album_actions)
 	album_actions.add_child(_button("Zrób zdjęcie", func():
 		_select_tab("care")
 		_take_photo()))
 	album_actions.add_child(_button("Dekoracje", _show_decor))
-	adventure_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
-	box.add_child(adventure_button)
 	box.add_child(_button("Kolekcja wykopanych skarbów", func(): ProgressionPanels.collection(self)))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -628,6 +739,7 @@ func _build_journal() -> VBoxContainer:
 
 func _build_dialogs() -> void:
 	var shade := ColorRect.new()
+	modal_shade = shade
 	shade.color = Color(0.15, 0.20, 0.16, 0.22)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shade.z_index = 100
@@ -781,9 +893,6 @@ func _build_play_dialogs() -> void:
 	choices.add_theme_constant_override("separation", 12)
 	play_menu.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	choices.add_child(_button("Dziś", func():
-		play_menu.hide()
-		AdventurePanel.show_plan(self)))
 	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · schowaj smakołyk"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
@@ -821,11 +930,13 @@ func _build_play_dialogs() -> void:
 		if not play_dialog.visible: session.cancel_touch_game())
 
 func _dialog_open() -> bool:
+	if is_instance_valid(settings_dialog) and settings_dialog.visible: return true
 	for dialog in get_children():
 		if dialog is Window and dialog.visible: return true
 	return false
 
 func _update_attention() -> void:
+	if is_instance_valid(modal_shade): modal_shade.visible = _dialog_open()
 	session.set_training_view(selected_tab == "training")
 	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview
 	if room.ambient_life.is_node_ready() and session.pet != null:
@@ -888,7 +999,10 @@ func _fit_room() -> void:
 	var panel_x := safe_rect.end.x - rail + (rail - panel_width) / 2
 	var nav_y := safe_rect.end.y - 68
 	var warning_space := 46.0 if footer_label.visible else 0.0
-	var panel_height := 134.0 if selected_tab == "care" else 274.0
+	# Outdoors the panel holds instructions and context actions; it shrinks when
+	# an activity hides the care buttons instead of leaving an empty card.
+	var yard_height := 192.0 if care_actions.visible else (160.0 if session.visitors.active() else 112.0)
+	var panel_height := (yard_height if session.in_yard else 192.0) if selected_tab == "care" else 274.0
 	var panel_top := nav_y - panel_height - 8 - warning_space
 	if selected_tab == "journal":
 		panel_x = safe_rect.position.x + 12
@@ -896,10 +1010,8 @@ func _fit_room() -> void:
 		panel_top = safe_rect.position.y + 8
 		panel_height = nav_y - panel_top - 8 - warning_space
 	yard_toolbar.visible = selected_tab == "care"
-	_place(yard_toolbar, Rect2(panel_x, safe_rect.position.y + 196, panel_width, 44))
 	visitor_toolbar.visible = selected_tab == "care" and session.visitors.active()
-	_place(visitor_toolbar, Rect2(panel_x, panel_top - 52, panel_width, 44))
-	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
+	room.yard_controls_bottom = header.get_rect().end.y + 64
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
 	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
 	var scene_width := safe_rect.end.x - rail if layout_wide else size.x
@@ -923,6 +1035,7 @@ func _fit_room() -> void:
 	_position_companion()
 	for dialog in [profile_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
 		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
+	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 290))
 	if settings_dialog != null and settings_dialog.visible: _fit_settings()
 
 func _safe_content_rect() -> Rect2:
@@ -937,10 +1050,42 @@ func _safe_content_rect() -> Rect2:
 	var local := Rect2(inverse * physical.position, inverse.basis_xform(physical.size))
 	return full.intersection(local) if full.intersects(local) else full
 
+func _prepare_card_dialog(dialog: AcceptDialog) -> void:
+	if dialog.has_meta("card_title"): return
+	dialog.borderless = true
+	dialog.transparent_bg = true
+	dialog.transparent = true
+	var children := dialog.get_children()
+	var wrapper := VBoxContainer.new()
+	wrapper.custom_minimum_size.x = 240
+	wrapper.add_theme_constant_override("separation", 12)
+	var title := _label(dialog.title, 20, INK, true)
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.custom_minimum_size.x = 240
+	wrapper.add_child(title)
+	dialog.set_meta("card_title", title)
+	for child in children:
+		if child is Control:
+			child.reparent(wrapper)
+			if child is ScrollContainer:
+				child.custom_minimum_size.y = 0
+				child.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	dialog.add_child(wrapper)
+	dialog.get_ok_button().custom_minimum_size.y = 48
+
 func _position_dialog(dialog: AcceptDialog, wanted: Vector2i) -> void:
-	var available := Vector2i(safe_rect.size - Vector2(24, 64))
+	if dialog == first_meeting or dialog == play_menu or dialog.title == "Sztuczki pieska":
+		_prepare_card_dialog(dialog)
+	var area := safe_rect
+	if dialog == first_meeting:
+		var keyboard := 0.0
+		if DisplayServer.has_feature(DisplayServer.FEATURE_VIRTUAL_KEYBOARD):
+			keyboard = float(DisplayServer.virtual_keyboard_get_height()) / get_viewport().get_final_transform().get_scale().y
+		if keyboard_height_override >= 0: keyboard = keyboard_height_override
+		if keyboard > 0: area.size.y = maxf(280, minf(area.end.y, size.y - keyboard) - area.position.y)
+	var available := Vector2i(area.size - Vector2(24, 32))
 	dialog.size = wanted.min(available)
-	dialog.position = Vector2i(safe_rect.position + (safe_rect.size - Vector2(dialog.size)) / 2 + Vector2(0, 12))
+	dialog.position = Vector2i(area.position + (area.size - Vector2(dialog.size)) / 2)
 
 func _show_tricks(daily: bool = false) -> void:
 	if daily:
@@ -1014,7 +1159,14 @@ func _train(guided: bool) -> void:
 		return
 	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
 	var reason := session.training.readiness(session.pet, selected_trick)
-	if not reason.is_empty() or session.busy(false) or not session.writable: return
+	if not session.writable: return
+	# The button is normally disabled here; a typed command still deserves an answer.
+	if not reason.is_empty():
+		session.say(reason)
+		return
+	if session.busy(false):
+		session.say("Poczekaj, aż piesek skończy tę czynność.")
+		return
 	var key := selected_trick
 	gesture_dialog = AcceptDialog.new()
 	var dialog := gesture_dialog
@@ -1029,7 +1181,9 @@ func _train(guided: bool) -> void:
 			session.begin_training(key, true))
 	add_child(dialog)
 	dialog.visibility_changed.connect(func():
-		if not dialog.visible: dialog.queue_free())
+		if not dialog.visible:
+			if gesture_dialog == dialog: gesture_dialog = null
+			dialog.queue_free())
 	_position_dialog(dialog, Vector2i(320, 330))
 	dialog.popup()
 
@@ -1124,6 +1278,7 @@ func _submit_command() -> void:
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
+	_sync_yard_actions()
 	if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
 	if room.backdrop.decor != pet.decor:
 		room.backdrop.decor = pet.decor.duplicate()
@@ -1143,7 +1298,7 @@ func _refresh() -> void:
 	play_again.disabled = session.play.phase != "result" or session.busy()
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
-	name_label.text = pet.pet_name
+	name_label.text = "Piesek" if naming_pending else pet.pet_name
 	bond_label.text = BondLevels.summary(pet)
 	bond_bar.value = pet.bond
 	for key in care_buttons:
@@ -1165,13 +1320,15 @@ func _refresh() -> void:
 	yard_bath_button.visible = command.is_empty()
 	yard_command_button.text = "Pochwal" if session.outdoor_commands.phase == "praise" else TrainingSystem.LABELS.get(command, "Komenda")
 	yard_command_button.disabled = session.outdoor_commands.phase == "perform" or (command == "come" and session.busy() and not session.outdoor_commands.running())
-	yard_button.text = "Dom" if session.in_yard else "Podwórko"
+	# "Dom" is the navigation tab; the yard exit says where it leads.
+	yard_button.text = "Do domu" if session.in_yard else "Podwórko"
 	sniff_button.visible = session.in_yard
-	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
+	sniff_button.text = "Przerwij" if session.hide_game.active() else "Chowany"
 	sniff_button.disabled = (session.busy(false) and not session.hide_game.active()) or not session.writable
-	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
+	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else fetch_hint(pet.yard_record)) if session.in_yard else _activity_status()
 	if session.activity in ["dig_walk", "digging"]: care_status.text = "Idzie do piaskownicy…" if session.activity == "dig_walk" else "Kopie… jeszcze %d s" % ceili(session.activity_left)
-	if session.activity == "outing_praise": care_status.text = "Gotowe! Dotknij miejsca Na potrzebę, by pochwalić."
+	if session.activity == "outing_walk": care_status.text = "Idzie w spokojne miejsce…"
+	if session.activity == "outing_pause": care_status.text = "Chwila prywatności…"
 	var garden_view := pet.yard_routines.duplicate(true)
 	YardRoutines.update(garden_view, Time.get_unix_time_from_system())
 	var garden_key := "%s:%d" % [garden_view.plant, int(garden_view.growth / 3600)]
@@ -1185,7 +1342,7 @@ func _refresh() -> void:
 	var visiting := session.visitors.active() and session.in_yard
 	room.fence_visitor.present(session.visitors.kind if visiting else "")
 	visitor_toolbar.visible = visiting and selected_tab == "care"
-	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
+	room.yard_controls_bottom = header.get_rect().end.y + 64
 	visitor_soothe_button.visible = visiting
 	visitor_recall_button.visible = visiting
 	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe"]
@@ -1211,6 +1368,7 @@ func _refresh() -> void:
 		yard_command_button.hide()
 		care_status.text = session.water.hint()
 	var yard_offer := session.in_yard and str(session.invitation.get("kind", "")).begins_with("yard_")
+	yard_invite_accept.text = YardInvitations.WORDS[session.invitation.kind][1] if yard_offer else "Zabawmy się"
 	yard_invite_accept.visible = yard_offer
 	yard_invite_later.visible = yard_offer
 	if yard_offer:
@@ -1243,6 +1401,21 @@ func _refresh() -> void:
 		yard_bath_button.hide()
 		yard_command_button.hide()
 		care_status.text = session.yard_rest.hint(session)
+	var potty_busy := session.activity in ["outing_walk", "outing_pause", "outing_praise"]
+	var cleanup_ready := not session.visitors.active() and session.invitation.is_empty() and YardRoutines.has_mess(session) and (not session.busy(false) or session.activity == "outing_praise")
+	var potty_ready := not session.visitors.active() and session.invitation.is_empty() and YardRoutines.due(session) and YardRoutines.available(session)
+	potty_action.visible = session.in_yard and (potty_busy or cleanup_ready or potty_ready)
+	potty_action.text = "Sprzątnij" if cleanup_ready else "Na potrzebę"
+	potty_action.disabled = not (cleanup_ready or potty_ready) or not session.writable
+	if potty_action.visible:
+		sniff_button.hide()
+		if potty_busy or cleanup_ready:
+			yard_bath_button.hide()
+			yard_command_button.hide()
+		if potty_ready: care_status.text = "Chcę się załatwić · wybierz Na potrzebę"
+		if cleanup_ready: care_status.text = "Zbierz kupę do woreczka · Sprzątnij"
+	room.yard_potty.present(YardRoutines.has_mess(session), 1.0 - session.activity_left / 4.0 if session.activity == "outing_pause" else 0.0)
+	room.yard_potty.animate = app_foreground and not _dialog_open()
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
@@ -1284,7 +1457,9 @@ func _refresh() -> void:
 	if had_warning != footer_label.visible: _fit_room()
 	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
 	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
-	adventure_button.text = "Dziś · pomysły na wspólną chwilę"
+	var today_parent: Node = album_actions if selected_tab == "journal" else today_home
+	if today_button.get_parent() != today_parent:
+		today_button.reparent(today_parent)
 	var visitor_lines: PackedStringArray = []
 	for guest in YardVisitors.KINDS:
 		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
@@ -1356,6 +1531,11 @@ func _notification(what: int) -> void:
 		app_foreground = true
 		_update_attention()
 
+# No record before the first fetch; distances use the Polish decimal comma.
+static func fetch_hint(record: float) -> String:
+	if record <= 0: return "Aport · przeciągnij piłkę i puść"
+	return ("Aport · rekord %.1f m · przeciągnij piłkę" % record).replace(".", ",")
+
 func _activity_status() -> String:
 	if session.activity == "sniff_walk": return "Podąża za zapachem…"
 	if session.activity == "sniff": return "Węszy… jeszcze %d s" % ceili(session.activity_left)
@@ -1368,6 +1548,8 @@ func _activity_status() -> String:
 		return {"feed": "Idzie do miski…", "rest": "Idzie do legowiska…", "play": "Łapie piłkę…"}.get(session._pending_action, "Odkrywa pokój…")
 	if session.activity_left > 0 and session.activity in ["feed", "clean", "play", "happy"]:
 		return "%s · jeszcze %d s" % [{"feed": "Zajada", "clean": "Czesanie", "play": "Bawi się", "happy": "Cieszy się z nagrody"}[session.activity], ceili(session.activity_left)]
+	if YardRoutines.has_mess(session): return "Na podwórku czeka kupa do posprzątania"
+	if YardRoutines.due(session) and not DailyRhythm.quiet(session.pet, session._local_now()): return "Chcę wyjść na potrzebę · wybierz Podwórko"
 	return LifeSystem.mood_label(session.pet) + " · dotknij, by zadbać"
 
 func _show_feedback(text: String) -> void:
@@ -1413,6 +1595,7 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 	_position_feedback()
 
 func _process(delta: float) -> void:
+	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 330))
 	reminder_poll -= delta
 	if settings_dialog.visible and reminder_poll <= 0:
 		reminder_poll = 0.5
@@ -1447,13 +1630,13 @@ func _position_companion() -> void:
 	companion_tail.position = Vector2(clampf(pet_bounds.get_center().x - companion_card.position.x, 20, companion_card.size.x - 38), 0 if below else companion_card.size.y)
 	companion_tail.scale.y = -1 if below else 1
 	# Only move this UI hint; room bounds, camera and the approved framing stay intact.
-	if companion_card.visible and not room.overview:
+	if companion_card.visible and not room.overview and session.in_yard:
 		room.room_hint.position = Vector2(room.overview_button.get_rect().end.x + 12, room.hud_bottom + 14)
 
 func _place_pet_overlay(control: Control, preferred: Vector2, obstacles: Array[Rect2]) -> bool:
 	var left := maxf(12, safe_rect.position.x + 8)
 	var right := minf(room.size.x - 12, safe_rect.end.x - 8)
-	var top := room.overview_button.get_rect().end.y + 8
+	var top := room.overview_button.get_rect().end.y + 8 if session.in_yard else room.hud_bottom + 8
 	var bottom := minf(safe_rect.end.y - 12, room.content_bottom - 12)
 	var area := Rect2(left, top, maxf(0, right - left), maxf(0, bottom - top))
 	var xs: Array[float] = [clampf(preferred.x, left, maxf(left, right - control.size.x)), left, right - control.size.x]
@@ -1491,19 +1674,20 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
-	gain_label.visible = gain_left > 0 and on_screen and not session.hide_game.active()
+	var yard_instruction := session.in_yard and (session.activity in ["outing_walk", "outing_pause", "outing_praise"] or session.water.active() or session.course.active() or session.yard_rest.active() or str(session.invitation.get("kind", "")).begins_with("yard_"))
+	bubble.visible = not yard_instruction and not _dialog_open() and not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
+	gain_label.visible = not _dialog_open() and gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
 	var obstacles: Array[Rect2] = [pet_bounds.grow(12)]
 	if session.in_yard:
-		obstacles.append(yard_toolbar.get_rect().grow(4))
+		obstacles.append(yard_toolbar.get_global_rect().grow(4))
 		for marker in room.yard_markers.values():
 			if marker.visible: obstacles.append(marker.get_global_rect().grow(4))
 	var fixed_obstacles := obstacles.size()
 	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(10))
-	if bubble.visible and safe_rect.size.x < 360 and companion_card.modulate.a > 0 and companion_data.get("kind") in ["thought", "memory"]:
-		# Narrow phones: a passing thought yields to the immediate reply instead
+	if bubble.visible and companion_card.modulate.a > 0 and companion_data.get("kind") in ["thought", "memory"]:
+		# A passing thought yields to the immediate reply at every screen width instead
 		# of stacking two speech overlays above the dog.
 		companion_card.position = Vector2(-10000, -10000)
 		companion_card.modulate.a = 0
@@ -1589,7 +1773,7 @@ func _room_care_action(action: String) -> void:
 		elif place in YardWater.SPOTS: session.water.start(session, place)
 		elif place == "garden": _show_garden()
 		elif place == "outing":
-			if session.activity == "outing_praise": YardRoutines.praise(session)
+			if YardRoutines.has_mess(session): YardRoutines.clean_up(session)
 			elif not YardRoutines.start_outing(session): session.say("Dziś już byliśmy. Możecie spokojnie pobyć na podwórku." if not YardRoutines.due(session) else "Zakończmy obecną czynność przed wyjściem.")
 		elif place == "fetch":
 			if session.play_readiness().is_empty(): _aim_ball()

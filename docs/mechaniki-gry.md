@@ -303,7 +303,7 @@ Zapis pozostaje v11. Nowy `test_stabilization` przechodzi 17 sprawdzeń; zestawy
 
 Decyzją użytkownika wdrażane bez oczekiwania na koniec tygodnia testów. Osobny `YardRoutines` przechowuje reguły obu czynności; sesja obsługuje dojście, krótką pauzę i powrót do zwykłych aktywności. Nowe miejsca są dostępne na mapie podwórka, także na 320 px.
 
-- **Na potrzebę:** rano pies może podejść do drzwi i poprosić o wyjście. Przy miejscu „Na potrzebę” podchodzi do spokojnego fragmentu trawy, czeka 4 sekundy, po czym przez 20 sekund można go pochwalić dotknięciem tego samego miejsca. Pochwała daje +0,5 więzi raz dziennie. Pominięcie, przerwanie i brak pochwały nie powodują kary. Cofnięcie daty nie odnawia premii. Nocny zakaz wejścia na podwórko pozostaje.
+- **Na potrzebę:** rano pies może podejść do drzwi i poprosić o wyjście. Na podwórku dostępny jest przycisk „Na potrzebę” oraz miejsce przy płocie. Pies podchodzi, przyjmuje siedzącą pozę, a przez 4 sekundy pojawia się animowana kupa w stylu pixel art. Ukończenie zapisuje dzisiejsze wyjście i `yard_routines.mess = true`. Kupa pozostaje do zebrania także po wyjściu z podwórka, restarcie i zmianie dnia. Dotknięcie kupy, jej miejsca albo „Sprzątnij” zbiera ją do animowanego woreczka i daje +0,5 więzi tylko raz. Kolejny cykl jest dostępny następnego lokalnego dnia, po posprzątaniu poprzedniego. Przerwanie przed końcem animacji nie zalicza wyjścia. Błąd zapisu cofa zmianę; dwukrotne dotknięcie nie powiela nagrody. Cofnięcie daty nie odnawia premii. Brak kary i automatycznych wypadków podczas nieobecności; nocny zakaz wejścia na podwórko pozostaje.
 - **Ogródek:** jedna grządka, stokrotka, mak lub lawenda. Po posadzeniu trzeba podlać. Woda wystarcza na 24 godziny rzeczywistego wzrostu; nie można jej gromadzić wielokrotnymi kliknięciami. Pełny wzrost wymaga 72 podlanych godzin. Bez wody roślina czeka i nie ginie. Wzrost po nieobecności nalicza tylko okres objęty podlewaniem. Cofnięcie zegara nie nalicza ponownie czasu; przestawienie zegara w przyszłość może wykorzystać dostępną dobę wody, bez dodatkowych nagród.
 - **Kwiaty:** zebranie dojrzałego kwiatu zapisuje gatunek w kolekcji i pierwsze osiągnięcie w Albumie. Odblokowuje istniejącą dekorację słonecznika, bez zabierania dotychczasowych odblokowań. Grządka jest wtedy wolna pod kolejne nasiona. Posadzonej rośliny nie można przypadkowo zastąpić.
 - **Zapis:** v12 dodaje wyłącznie `yard_routines`. Migracja v11 zachowuje wcześniejsze pola i archiwum. Brak tego pola w pliku deklarującym v12 jest traktowany jako uszkodzenie. Widget akceptuje v12.
@@ -396,3 +396,32 @@ To wyłącznie dekoracja. Nie ma zadań, dziennych liczników, nagród, wpisów 
 Jednocześnie są najwyżej dwie postacie na podwórku albo jeden ptak za oknem. `AmbientLife` przechowuje wyłącznie stan ulotny, a `AmbientLifeView` animuje małe sprite’y 16 × 16 z dwiema klatkami motyla, czterema ptaka oraz trzema ślimaka i wiewiórki. Wszystkie korzystają ze wspólnej palety i siatki otoczenia. Tekstury powstają raz; ruch wykorzystuje siatkę pikseli otoczenia. Nie zmienia to pamięci prawdziwych gości ani schematu v15.
 
 Rozszerzenie o ślimaka i wiewiórkę z 17 listopada 2026 sprawdzono lokalnie; nie jest jeszcze częścią zainstalowanego buildu 26. To mały zakres: bez sezonowości, rzadkich zdarzeń, nowych reakcji psa ani przebudowy animacji prawdziwego kota przy płocie.
+
+
+## Spójność reguł — 18 listopada 2026
+
+Trening w domu, komendy na podwórku i Zostań na torze zapisują wspólnie zdarzenia rozpoczęcia, zmęczenia, nagrody oraz nieudanych/przegapionych prób dla modelu charakteru. Ukończone pluski i kopanie liczą się jako zabawa, kąpiel jako pielęgnacja.
+
+Głaskanie zachowuje reakcję niezależnie od nagrody. Pierwszych pięć naliczeń dziennie daje po 0,6 więzi, następnych pięć po 0,1; dalsze nie zwiększają więzi. Obowiązuje dotychczasowy czterosekundowy odstęp. Limit korzysta z istniejącej historii i przetrwa restart oraz cofnięcie zegara. Istniejąca więź i pozostały postęp nie są obniżane; schemat pozostaje v15.
+
+Ustawienia i okna dynamiczne wspólnie blokują uwagę gracza i przyciemniają tło. Nie zatrzymuje to całej symulacji potrzeb.
+
+
+## Etap 2 — pierwsze spotkanie i czytelność
+
+Nowy zapis otwiera pierwsze spotkanie z nadaniem imienia (1–24 znaki po obcięciu skrajnych spacji). Po zapisaniu imienia pies zaprasza do powitania dotykiem. Niedokończone spotkanie wraca po ponownym uruchomieniu; stan ten jest lokalną preferencją `tutorial/naming_pending` w `ui.cfg`. Istniejące zapisy bez tej flagi omijają powitanie. Imię można nadal zmienić w karcie psa. Schemat 15 i wszystkie dane postępu pozostają bez migracji.
+
+Kadr pionowy umieszcza psa bliżej opieki, zachowując widoczność psa, miski i piłki oraz ograniczając pustą ścianę nad oknem. Zwykłe myśli i wspomnienia ustępują bieżącej odpowiedzi na wszystkich szerokościach; wracają po jej wygaśnięciu. Dialogi chowają dymek odpowiedzi i etykietę przyrostu.
+
+Na podwórku przyciski znajdują się pod opisem bieżącej czynności w dolnym panelu. Karmienie i czesanie są dostępne w domu. Podczas zajęcia, zaproszenia lub wizyty ogólne przyciski opieki znikają; pozostają przyciski kontekstowe. Zaproszenie nazywa akcję, np. „Do kałuży”. Opis zabawy wodą, toru, odpoczynku i zaproszenia zastępuje powtarzający go dymek. Odmowy przy wolnym podwórku pozostają widoczne.
+
+Opcjonalna flaga `yard_routines.mess` jest zgodna ze schematem 15. Jej brak w starym zapisie oznacza czyste podwórko; sam odczyt nie dopisuje pola i nie zmienia wcześniejszego `outday`, imienia, tożsamości ani postępu.
+
+
+## Uporządkowanie interfejsu — build 31
+
+W domu Podwórko, Kąpiel i Cały pokój są w dolnym panelu, obok opieki. Pies jest prezentowany o 15% większy; współrzędne świata i zapisy pozostają takie same. Panel ponownie dopasowuje szerokość po zmianie widocznych akcji, także po powrocie z zaproszenia na podwórku.
+
+Dziś ma jeden współdzielony przycisk: na górze Domu i Treningu, a w Albumie w jego pasku akcji. Usunięto dodatkowe wejścia z wyboru zabaw i listy treningowej. Pierwsze spotkanie, menu zabaw i katalog sztuczek są kartami z własnym nagłówkiem i przyciskiem na dole, bez systemowego paska tytułu. Katalog nadal przewija dziewięć sztuczek. Pierwsze spotkanie uwzględnia wysokość klawiatury i nie pozwala pominąć nadania imienia.
+
+Przejrzano trwałość sprzątania, ograniczenie nagrody, przerwanie czynności, błędy zapisu i plan powiadomień. Zmiany napięcia potrzeb, ekonomii treningu, gestów pozostałych sztuczek i architektury stanów nie wchodzą w to wydanie.

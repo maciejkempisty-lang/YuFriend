@@ -67,7 +67,7 @@ func _initialize() -> void:
 	check(not session.fetch.active and session.pet.yard_record == 5 and not session.in_yard, "background during catch cancels without changing record")
 	check(not session.catch_ball(), "background cannot accept a catch")
 	var data := session.pet.to_dict()
-	var path := "/tmp/yuf-fetch-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-fetch-%s/pet.json" % Time.get_ticks_usec()
 	var store := SaveSystem.new(path)
 	check(store.save_pet(session.pet) and store.load_pet().pet.yard_record == 5, "record survives real save and reload")
 	data.yard_record = -1

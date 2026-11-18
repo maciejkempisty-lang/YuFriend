@@ -20,8 +20,9 @@ func run() -> void:
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
-	app.save_path_override = "/tmp/yuf-extra-%s/pet.json" % Time.get_ticks_usec()
+	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-extra-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
 	var game: GameSession = app.session
 	game.set_process(false)
@@ -75,7 +76,7 @@ func run() -> void:
 	await shot("tricks-narrow")
 	for child in app.get_children():
 		if child is AcceptDialog and child.title == "Sztuczki pieska":
-			check(child.size.y <= 576 and child.get_child(0) is ScrollContainer, "nine tricks use scrollable phone catalogue")
+			check(child.size.y <= 576 and not child.find_children("*", "ScrollContainer", true, false).is_empty(), "nine tricks use scrollable phone catalogue")
 	close_windows()
 	app._show_decor()
 	await shot("decor-narrow")

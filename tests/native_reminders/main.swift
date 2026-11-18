@@ -99,8 +99,41 @@ for start in ["2026-03-28T00:00:00+01:00", "2026-03-29T00:00:00+01:00", "2026-10
         for item in results {
             check((9..<21).contains(calendar.component(.hour, from: item.date)), "Local quiet hours at \(item.date)")
             check(item.date >= time.addingTimeInterval(1800) && item.date < end, "Bounded horizon")
-            check(pet(at: time, low: PetNeed.allCases).projected(at: item.date).value(item.need) < 30, "Real projected need")
+            check(pet(at: time, low: PetNeed.allCases).projected(at: item.date).value(item.need!) < 30, "Real projected need")
         }
     }
 }
 print("Reminders: \(checks) checks passed")
+
+// Toilet reminders share the same consent, quiet hours and budget as all reminders.
+var outingPet = pet(low: [])
+outingPet.outingDay = -1
+outingPet.yardMess = false
+let outingPlan = plan(outingPet)
+check(outingPlan.filter { $0.need == nil }.count == 1, "One toilet reminder per absence")
+check(outingPlan.first?.need == nil && outingPlan.first?.body.contains("załatwić") == true, "Clear toilet invitation")
+check(outingPlan.first?.date == now.addingTimeInterval(1800), "Toilet respects minimum delay")
+outingPet.yardMess = true
+check(plan(outingPet).allSatisfy { $0.need != nil }, "Pending cleanup never asks for another toilet trip")
+outingPet.yardMess = false
+outingPet.outingDay = Int(floor((now.timeIntervalSince1970 + Double(calendar.timeZone.secondsFromGMT(for: now))) / 86400))
+check(plan(outingPet).filter { $0.need == nil }.allSatisfy { !calendar.isDate($0.date, inSameDayAs: now) }, "Today's trip is not repeated")
+outingPet.outingDay! += 1
+check(plan(outingPet).allSatisfy { $0.need != nil }, "Future outing day cannot reset after clock rollback")
+var lateOuting = pet(at: evening, low: [])
+lateOuting.outingDay = -1
+check(plan(lateOuting, at: evening).first?.date == date("2026-11-16T09:00:00+01:00"), "Toilet respects quiet night")
+check(plan(outingPet, consumed: [now, now.addingTimeInterval(-3600)]).filter { calendar.isDate($0.date, inSameDayAs: now) }.isEmpty, "Toilet shares daily budget")
+print("Including toilet: \(checks) planner checks passed")
+
+let saveObject: [String: Any] = ["schema_version": 15, "pet": [
+    "pet_id": "legacy", "pet_name": "Gloria", "last_seen_at": now.timeIntervalSince1970,
+    "needs": pet(low: []).needs, "resting": false, "traits": ["sociability": 0.5],
+    "life": ["mood": "calm"], "yard_routines": ["outday": -1, "mess": true]
+]]
+let parsedOuting = PetSnapshot.fromGameSave(try! JSONSerialization.data(withJSONObject: saveObject))
+check(parsedOuting?.outingDay == -1 && parsedOuting?.yardMess == true, "Native bridge reads persisted outing and cleanup")
+check(plan(parsedOuting).allSatisfy { $0.need != nil }, "Saved mess suppresses toilet notification through the real decoder")
+let snapshotRoundtrip = try! JSONDecoder().decode(PetSnapshot.self, from: JSONEncoder().encode(parsedOuting!))
+check(snapshotRoundtrip == parsedOuting, "Shared snapshot roundtrip retains toilet state")
+print("Toilet decoder included: \(checks) checks passed")

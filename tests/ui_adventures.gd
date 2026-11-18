@@ -20,7 +20,7 @@ func run() -> void:
 	root.size = Vector2i(320, 680)
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
-	app.save_path_override = "/tmp/yuf-today-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-today-ui-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return day * 86400.0 + hour * 3600
 	root.add_child(app)
@@ -54,9 +54,9 @@ func run() -> void:
 	DailyAdventure.record(app.session.pet, "treasure", app.session._local_now())
 	app._select_tab("journal")
 	await process_frame
-	check(app.adventure_button.text == "Dziś · pomysły na wspólną chwilę", "album uses shared Today without progress badge")
+	check(app.today_button.get_parent() == app.album_actions, "album uses shared Today without progress badge")
 	check(app.session.pet.milestones.has("adventure_1"), "existing keepsakes preserved")
-	app.adventure_button.pressed.emit()
+	app.today_button.pressed.emit()
 	await process_frame
 	dialog = today()
 	check(dialog != null, "album opens same Today panel")

@@ -90,7 +90,7 @@ func _initialize() -> void:
 	check(not session.hide_game.active() and session.pet.bond == bond, "timeout cancels without reward")
 	for key in ["pet_id", "skills", "practice", "photos", "decor", "yard_record"]:
 		check(session.pet.to_dict()[key] == original[key], "previous progress preserved: " + key)
-	var path := "/tmp/yuf-hide-%s/pet.json" % Time.get_ticks_usec()
+	var path := preload("res://tests/helper_paths.gd").data_root() + "/yuf-hide-%s/pet.json" % Time.get_ticks_usec()
 	var store := SaveSystem.new(path)
 	check(store.save_pet(session.pet), "game result saves")
 	var loaded := store.load_pet()
