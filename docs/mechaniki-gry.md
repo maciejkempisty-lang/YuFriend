@@ -425,3 +425,41 @@ W domu Podwórko, Kąpiel i Cały pokój są w dolnym panelu, obok opieki. Pies 
 Dziś ma jeden współdzielony przycisk: na górze Domu i Treningu, a w Albumie w jego pasku akcji. Usunięto dodatkowe wejścia z wyboru zabaw i listy treningowej. Pierwsze spotkanie, menu zabaw i katalog sztuczek są kartami z własnym nagłówkiem i przyciskiem na dole, bez systemowego paska tytułu. Katalog nadal przewija dziewięć sztuczek. Pierwsze spotkanie uwzględnia wysokość klawiatury i nie pozwala pominąć nadania imienia.
 
 Przejrzano trwałość sprzątania, ograniczenie nagrody, przerwanie czynności, błędy zapisu i plan powiadomień. Zmiany napięcia potrzeb, ekonomii treningu, gestów pozostałych sztuczek i architektury stanów nie wchodzą w to wydanie.
+
+
+### Prototyp znacznika i „Siad” — build 32
+
+Ekran Treningu oraz wpisana komenda „Siad” używają nowego przebiegu:
+naprowadzenie → oznaczenie siadu przyciskiem „Klik!” → spokojny wybór nagrody.
+Poniższe reguły zastępują dla tego przebiegu opisane wyżej losowanie wykonania
+oraz ograniczone czasowo okno podania nagrody. Pozostałe sztuczki zachowują
+wcześniejsze zasady; komendy na podwórku nie są tym prototypem.
+
+- Poniżej 40% opanowania: pełna ścieżka smakołyka, płynnie przez 0,7–3 s.
+- Od 40% do poniżej 80%: domyślnie krótszy sygnał, przez 0,25–1,5 s.
+- Od 80%: domyślnie sama komenda. „Pełny gest” pozwala wrócić do ćwiczenia.
+- Zbyt szybki, powolny lub urwany gest wymaga powtórzenia. Energia i zmęczenie
+  zmieniają się dopiero po rozpoczęciu wykonania sztuczki.
+- Początek pomiaru wyznacza klatka 3 animacji `sit_down` (pierwszy kontakt pupy
+  z podłogą). Znacznik reaguje na naciśnięcie, bez czekania na puszczenie.
+- „Idealnie”: do 180 ms od kontaktu, +10 punktów opanowania; „Dobrze”: do
+  650 ms, +6 punktów. „Łagodny czas” poszerza te granice do 300 i 1000 ms.
+- Kliknięcie przed kontaktem albo po oknie nie daje nagrody ani przyrostu,
+  ale nie odejmuje opanowania. Brak kliknięcia również kończy próbę.
+- Przyrost jest zatwierdzany po podaniu nagrody, najwyżej raz na próbę.
+  Wybór nagrody nie ma kolejnego odliczania. Ulubiona nagroda nadal wpływa
+  na więź, lecz nie zwiększa wyniku opanowania zależnego od znacznika.
+- Opanowanie kończy się na 100%; znane sztuczki zachowują dotychczasowy stan.
+  Nadal obowiązują koszty zmęczenia, potrzeby oraz korzyści powtórek dla formy.
+- Wyjście z Treningu albo utrata aktywności aplikacji anuluje niezakończoną
+  próbę; nie zapisujemy rozgrzebanego okna znacznika między uruchomieniami.
+
+To prototyp jednej sztuczki: gest ma ilustrację i ścieżkę, a wykonanie siadu
+odbywa się w głównej scenie. Nie dodaje jeszcze alternatywnych zachowań psa
+ani osobnych minigier pozostałych sztuczek. Progi czasowe wymagają oceny gracza
+na telefonie. Format zapisu pozostaje bez zmian; nie resetujemy danych Glorii.
+
+Testy: `test_sit_marker.gd` sprawdza granice czasu, przyrosty, brak utraty
+postępu, anulowanie, wielokrotne nagrody i tempo gestu; `ui_sit_marker.gd`
+łączy prawdziwą animację z kliknięciem, nagrodą i zapisem oraz sprawdza
+390 i 320 px. `ui_smoke.gd` przechodzi nową sekwencję w teście całej gry.

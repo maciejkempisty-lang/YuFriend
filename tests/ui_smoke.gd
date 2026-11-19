@@ -97,7 +97,14 @@ func _run() -> void:
 			await capture("25-mastery.png")
 			child.hide()
 	app.guided_button.pressed.emit()
-	check(game.training.phase == "attempt", "guided button begins selected sit trial")
+	check(is_instance_valid(app.gesture_dialog), "new sit starts with lure before charging a trial")
+	var lure: SitLure = app.gesture_dialog.find_children("*", "Control", true, false).filter(func(node): return node is SitLure)[0]
+	lure.press(lure.point(0), 0)
+	for i in range(1, 11):
+		lure._process(0.1)
+		lure.move(lure.point(i / 10.0), 0)
+	lure.release(lure.point(1), 0)
+	check(game.training.phase == "attempt", "completed lure begins selected sit trial")
 	app.command_edit.text = "podaj łapę"
 	app._submit_command()
 	check(app.selected_trick == "sit" and game.training.trick == "sit", "text command cannot switch an ongoing training trial")
@@ -105,7 +112,11 @@ func _run() -> void:
 	game._process(game.training.time_left + 0.05)
 	check(game.training.phase == "attempt", "reward waits for completed animation")
 	step_game(1.3)
-	check(game.training.phase == "reward" and not app.reward_buttons.praise.disabled, "reward controls activate at correct moment")
+	# This suite advances simulation without rendering sprite frames. The dedicated
+	# ui_sit_marker suite verifies the real animation contact and its exact frame.
+	game.training.sitting_contact(game.training.trial_id)
+	app.marker_button.button_down.emit()
+	check(game.training.phase == "reward" and not app.reward_buttons.praise.disabled, "marked sit activates reward controls")
 	await capture("02-training-reward.png")
 	check(visible_above_navigation(app.reward_buttons.praise), "reward buttons fit above navigation without scrolling")
 	check(not app.bubble.visible and app.sheet.size.y <= 280, "training uses a compact panel without a duplicate bubble over the puppy")

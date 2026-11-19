@@ -14,6 +14,12 @@ static func unlock_reason(pet: PetState, key: String) -> String:
 	return ""
 
 const REWARDS := ["treat", "praise", "play"]
+# Marker timing is measured from the rendered sitting-contact frame, not a trial timer.
+var marker_mode := false
+var marker_gentle := false
+var marker_grade := ""
+var marker_contact_at := -1.0
+var marker_clock: Callable = func(): return Time.get_ticks_usec() / 1000000.0
 var phase: String = "idle"
 var trick: String = ""
 var guided: bool = true
@@ -33,9 +39,13 @@ func readiness(pet: PetState, key: String) -> String:
 	if not locked.is_empty(): return "Odblokowanie: " + locked
 	return ""
 
-func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0) -> Dictionary:
+func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0, use_marker: bool = false, gentle: bool = false) -> Dictionary:
 	var reason := readiness(pet, key)
 	if not reason.is_empty(): return {"ok": false, "message": reason}
+	marker_mode = use_marker and key == "sit"
+	marker_gentle = gentle
+	marker_grade = ""
+	marker_contact_at = -1.0
 	trick = key
 	guided = use_guidance
 	phase = "attempt"
@@ -46,14 +56,25 @@ func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0) -
 	var distraction := pet.fatigue * (0.0008 + float(pet.traits.sensitivity) * 0.0012)
 	var chance := clampf(0.16 + float(pet.skills[key].mastery) * 0.007 + pet.bond * 0.001 - distraction, 0.12, 0.96)
 	chance *= 0.5 + 0.5 * PracticeSystem.form(pet, key) / 100.0
-	will_succeed = guided or (randf() if roll < 0 else roll) < chance
+	will_succeed = marker_mode or guided or (randf() if roll < 0 else roll) < chance
 	pet.skills[key].attempts = int(pet.skills[key].attempts) + 1
 	pet.fatigue = minf(100, pet.fatigue + 12)
 	NeedsSystem.change(pet, {"energy": -2})
-	return {"ok": true, "message": "Pokaż spokojnie gest i zaczekaj…" if guided else "Sprawdźmy, czy pamięta komendę…"}
+	return {"ok": true, "message": "Kliknij, gdy pupa dotknie podłogi." if marker_mode else ("Pokaż spokojnie gest i zaczekaj…" if guided else "Sprawdźmy, czy pamięta komendę…")}
 
 func advance(seconds: float, performance_done: bool = true) -> Dictionary:
 	if phase == "idle" or seconds <= 0: return {}
+	if marker_mode:
+		if phase == "reward": return {} # Marking is the skill; feeding is not another timer.
+		time_left -= seconds
+		if marker_contact_at >= 0 and float(marker_clock.call()) - marker_contact_at > marker_window():
+			phase = "idle"
+			marker_grade = "late"
+			return {"event": "marker_miss", "message": "Za późno — piesek już siedzi. Spróbuj ponownie."}
+		if marker_contact_at < 0 and time_left < -12:
+			phase = "idle"
+			return {"event": "marker_miss", "message": "Ruch został przerwany. Spróbuj ponownie."}
+		return {}
 	time_left -= seconds
 	# Presentation can take longer than the puppy's minimum reaction time.
 	# Wait for the animation/movement without consuming the reward window.
@@ -84,7 +105,7 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 	var favorite := kind == pet.favorite_reward
 	if favorite:
 		pet.remember("favorite_reward", "Ulubiona nagroda", "Już wiesz, co najbardziej cieszy Twojego pieska: %s." % {"treat": "smakołyk", "praise": "pochwała", "play": "zabawa"}[kind])
-	var gain := (8.0 if guided else 12.0) + (2.0 if favorite else 0.0)
+	var gain := (10.0 if marker_grade == "perfect" else 6.0) if marker_mode else (8.0 if guided else 12.0) + (2.0 if favorite else 0.0)
 	var before: float = pet.skills[trick].mastery
 	pet.skills[trick].mastery = minf(100, before + gain)
 	pet.skills[trick].successes = int(pet.skills[trick].successes) + 1
@@ -100,9 +121,34 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 		pet.practice.forms[trick].value = 100.0
 		pet.remember("mastered_" + trick, "Umiem: %s!" % LABELS[trick], "Wspólnie osiągnęliście 100% opanowania.")
 	return {"ok": true, "mastered": mastered, "gain": float(pet.skills[trick].mastery) - before,
-		"message": "To ulubiona nagroda!" if favorite else "Dobrze wyczuty moment. Zapamiętuje!"}
+		"message": (("Idealnie!" if marker_grade == "perfect" else "Dobrze!") + " Nagroda podana. Jeszcze jedna próba?") if marker_mode else ("To ulubiona nagroda!" if favorite else "Dobrze wyczuty moment. Zapamiętuje!")}
+
+func marker_window() -> float:
+	return 1.0 if marker_gentle else 0.65
+
+func sitting_contact(id: int) -> void:
+	if marker_mode and phase == "attempt" and id == trial_id and marker_contact_at < 0:
+		marker_contact_at = float(marker_clock.call())
+
+func mark_sit() -> Dictionary:
+	if not marker_mode or phase != "attempt": return {"ok": false, "message": "Najpierw rozpocznij próbę Siad."}
+	var elapsed := float(marker_clock.call()) - marker_contact_at
+	if marker_contact_at < 0 or elapsed < 0:
+		phase = "idle"
+		marker_grade = "early"
+		return {"ok": false, "message": "Za wcześnie — pupa była jeszcze w górze."}
+	if elapsed > marker_window():
+		phase = "idle"
+		marker_grade = "late"
+		return {"ok": false, "message": "Za późno — piesek już siedzi. Spróbuj ponownie."}
+	marker_grade = "perfect" if elapsed <= (0.3 if marker_gentle else 0.18) else "good"
+	phase = "reward"
+	time_left = INF
+	return {"ok": true, "message": ("Idealnie — klik w chwili siadu." if marker_grade == "perfect" else "Dobrze — siad rozpoznany.") + " Teraz nagroda, bez pośpiechu."}
 
 func cancel() -> void:
+	marker_mode = false
+	marker_contact_at = -1
 	phase = "idle"
 	time_left = 0
 	trial_id += 1

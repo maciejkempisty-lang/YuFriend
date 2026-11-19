@@ -3,6 +3,9 @@ extends Node2D
 
 signal request_completed(request_id: int)
 signal clip_started(clip: String)
+signal sitting_contact(request_id: int)
+const SIT_CONTACT_FRAME := 3 # First authored sit_down frame with the rump on the floor.
+var _sit_contact_sent := false
 
 # start pose, end pose, seconds, loop. These IDs match the sprite brief.
 const CLIPS := {
@@ -42,6 +45,7 @@ func _ready() -> void:
 	add_child(sprite)
 	sprite.centered = false
 	sprite.frame_changed.connect(_apply_transform)
+	sprite.frame_changed.connect(_check_sitting_contact)
 
 func set_skin(value: PetSkin) -> void:
 	skin = value.duplicate()
@@ -96,6 +100,7 @@ func _start(name: String, request_id: int = 0) -> void:
 	if skin == null: return
 	current = name
 	current_id = request_id
+	_sit_contact_sent = false
 	var spec: Array = CLIPS[name]
 	remaining = 0.0 if spec[3] else float(spec[2])
 	real_clip = skin.frames != null and skin.frames.has_animation(name) and skin.frames.get_frame_count(name) > 0
@@ -121,6 +126,11 @@ func _start(name: String, request_id: int = 0) -> void:
 		var finished := current_id
 		current_id = 0
 		request_completed.emit(finished)
+
+func _check_sitting_contact() -> void:
+	if current == "sit_down" and current_id > 0 and sprite.animation == "sit_down" and sprite.frame >= SIT_CONTACT_FRAME and not _sit_contact_sent:
+		_sit_contact_sent = true
+		sitting_contact.emit(current_id)
 
 func _process(delta: float) -> void:
 	clock += delta

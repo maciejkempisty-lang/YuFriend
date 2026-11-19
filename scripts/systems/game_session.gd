@@ -636,7 +636,7 @@ func performance_finished(trial_id: int) -> void:
 	if trial_id == training.trial_id and training.phase == "attempt" and not suspended:
 		performance_done = true
 
-func begin_training(key: String, guided: bool) -> bool:
+func begin_training(key: String, guided: bool, marker: bool = false, gentle: bool = false) -> bool:
 	if not writable or suspended: return false
 	player_activity()
 	if is_sleeping():
@@ -646,7 +646,7 @@ func begin_training(key: String, guided: bool) -> bool:
 		say("Poczekaj, aż piesek skończy tę czynność.")
 		return false
 	var tired := pet.fatigue >= 50
-	var result := training.begin(pet, key, guided)
+	var result := training.begin(pet, key, guided, -1, marker, gentle)
 	if not result.ok:
 		say(result.message)
 		return false
@@ -664,6 +664,14 @@ func begin_training(key: String, guided: bool) -> bool:
 	flush()
 	changed.emit()
 	return true
+
+func mark_sit() -> bool:
+	if suspended or not writable or not training_view_active: return false
+	var result := training.mark_sit()
+	say(result.message)
+	if result.ok: sound_requested.emit("ui")
+	changed.emit()
+	return result.ok
 
 func give_reward(kind: String) -> bool:
 	if suspended or not writable: return false
@@ -968,7 +976,9 @@ func walk_speed() -> float:
 func set_training_view(value: bool) -> void:
 	if training_view_active == value: return
 	training_view_active = value
-	if not value: return
+	if not value:
+		if training.marker_mode: training.cancel()
+		return
 	player_activity()
 	if not _sequence_id.is_empty():
 		_cancel_motion()

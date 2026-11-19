@@ -64,6 +64,8 @@ var mastery_label: Label
 var mastery_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
+var marker_button: Button
+var marker_gentle: CheckButton
 var guided_button: Button
 var today_home: HBoxContainer
 var album_actions: HBoxContainer
@@ -159,6 +161,7 @@ func _ready() -> void:
 	room.station_reached.connect(session.arrive_at)
 	room.destination_reached.connect(session.destination_reached)
 	room.performance_finished.connect(session.performance_finished)
+	room.animator.sitting_contact.connect(session.training.sitting_contact)
 	session.save_status.connect(func(_ok: bool): _refresh())
 	room.floor_tapped.connect(session.move_to)
 	room.room_viewed.connect(session.follow_room)
@@ -680,11 +683,22 @@ func _build_training() -> VBoxContainer:
 		guidance_toggle.text = "Z podpowiedzią" if value else "Bez podpowiedzi"
 		training_feedback_left = 0
 		_refresh())
-	training_actions.add_child(guidance_toggle)
+	var guidance_options := VBoxContainer.new()
+	training_actions.add_child(guidance_options)
+	guidance_options.add_child(guidance_toggle)
+	marker_gentle = CheckButton.new()
+	marker_gentle.text = "Łagodny czas"
+	marker_gentle.add_theme_font_size_override("font_size", 12)
+	marker_gentle.custom_minimum_size.y = 40
+	guidance_options.add_child(marker_gentle)
 	guided_button = _button("Pokaż gest", func(): _train(guidance_toggle.button_pressed), true)
 	guided_button.add_theme_font_size_override("font_size", 13)
 	guided_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	training_actions.add_child(guided_button)
+	marker_button = _button("Klik! — oznacz siad", func(): pass, true)
+	marker_button.custom_minimum_size.y = 88
+	marker_button.button_down.connect(func(): session.mark_sit())
+	box.add_child(marker_button)
 	rewards_row = HBoxContainer.new()
 	rewards_row.add_theme_constant_override("separation", 8)
 	box.add_child(rewards_row)
@@ -1139,6 +1153,7 @@ func _celebrate_mastery() -> void:
 func _choose_trick(key: String) -> void:
 	if session.training.phase != "idle": return
 	selected_trick = key
+	if key == "sit": guidance_toggle.set_pressed_no_signal(false)
 	training_feedback_left = 0
 	_refresh()
 
@@ -1154,6 +1169,9 @@ func _care_action(key: String) -> void:
 	else: session.act(key)
 
 func _train(guided: bool) -> void:
+	if selected_trick == "sit":
+		_train_sit(guided)
+		return
 	if not guided or selected_trick not in ["lie", "stay"]:
 		session.begin_training(selected_trick, guided)
 		return
@@ -1185,6 +1203,48 @@ func _train(guided: bool) -> void:
 			if gesture_dialog == dialog: gesture_dialog = null
 			dialog.queue_free())
 	_position_dialog(dialog, Vector2i(320, 330))
+	dialog.popup()
+
+func _train_sit(full_gesture: bool) -> void:
+	var mastery := float(session.pet.skills.sit.mastery)
+	if mastery >= 80 and not full_gesture:
+		session.begin_training("sit", false, true, marker_gentle.button_pressed)
+		return
+	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
+	var reason := session.training.readiness(session.pet, "sit")
+	if not session.writable or session.busy(false) or not reason.is_empty():
+		session.say(reason if not reason.is_empty() else "Dokończmy bieżącą czynność.")
+		return
+	var dialog := AcceptDialog.new()
+	gesture_dialog = dialog
+	dialog.title = "Siad · naprowadzenie"
+	dialog.ok_button_text = "Przerwij"
+	var box := VBoxContainer.new()
+	box.custom_minimum_size.x = 240
+	var hint := _label("Prowadź smakołyk w górę i za głowę.", 14)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size.x = 240
+	box.add_child(hint)
+	var lure := SitLure.new()
+	lure.short_signal = mastery >= 40 and not full_gesture
+	box.add_child(lure)
+	dialog.add_child(box)
+	var timer := Timer.new()
+	timer.wait_time = 0.1
+	dialog.add_child(timer)
+	timer.timeout.connect(func(): hint.text = lure.message)
+	lure.completed.connect(func():
+		dialog.hide()
+		if not session.suspended and selected_tab == "training" and selected_trick == "sit":
+			session.begin_training("sit", true, true, marker_gentle.button_pressed))
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible:
+			if gesture_dialog == dialog: gesture_dialog = null
+			dialog.queue_free())
+	timer.start()
+	_prepare_card_dialog(dialog)
+	_position_dialog(dialog, Vector2i(340, 380))
 	dialog.popup()
 
 func _reward(kind: String) -> void:
@@ -1429,27 +1489,34 @@ func _refresh() -> void:
 		trick_buttons[key].add_theme_stylebox_override("normal", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
 		trick_buttons[key].add_theme_stylebox_override("disabled", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
 		trick_buttons[key].add_theme_color_override("font_disabled_color", INK if key == selected_trick else Color("9b9e8c"))
+	marker_gentle.visible = selected_trick == "sit"
+	guidance_toggle.text = ("Pełny gest" if guidance_toggle.button_pressed else "Według nauki") if selected_trick == "sit" else ("Z podpowiedzią" if guidance_toggle.button_pressed else "Bez podpowiedzi")
+	if selected_trick == "sit": guided_button.text = "Ćwicz Siad"
+	var marking := session.training.marker_mode and session.training.phase == "attempt"
+	marker_button.visible = marking
+	marker_button.disabled = not session.writable or session.suspended
 	var rewarding := session.training.phase == "reward"
 	var attempting := session.training.phase == "attempt"
 	training_actions.visible = not rewarding and not attempting
-	rewards_row.visible = rewarding or attempting
+	rewards_row.visible = rewarding or (attempting and not marking)
 	for index in training_steps.size():
 		training_steps[index].selected = index == (2 if rewarding else (1 if attempting else 0))
-	training_steps[0].caption = "1. Gest" if guidance_toggle.button_pressed else "1. Komenda"
+	training_steps[1].caption = "2. Klik" if selected_trick == "sit" else "2. Czekaj"
+	training_steps[0].caption = "1. Gest" if guidance_toggle.button_pressed or (selected_trick == "sit" and float(pet.skills.sit.mastery) < 80) else "1. Komenda"
 	for key in reward_buttons:
 		var button: IconActionButton = reward_buttons[key]
 		button.disabled = not rewarding or not session.writable
-		button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1) if rewarding else 0.0
+		button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1) if rewarding and not session.training.marker_mode else 0.0
 		button.favorite = pet.milestones.has("favorite_reward") and pet.favorite_reward == key
 		button.accent = Color("dce8cb") if button.favorite else Color("ecebd7")
 		button.accessibility_name = REWARD_LABELS[key] + (", ulubiona nagroda" if button.favorite else "") + (", nagródź teraz" if rewarding else ", czekaj na wykonanie")
 		button.queue_redraw()
-	if rewarding: training_hint.text = "Udało się! Wybierz nagrodę, zanim zniknie obwódka."
-	elif attempting: training_hint.text = "Poczekaj, aż piesek skończy ruch."
+	if rewarding: training_hint.text = session.last_message if session.training.marker_mode else "Udało się! Wybierz nagrodę, zanim zniknie obwódka."
+	elif attempting: training_hint.text = "Kliknij, gdy pupa dotknie podłogi." if marking else "Poczekaj, aż piesek skończy ruch."
 	elif training_feedback_left > 0: training_hint.text = training_feedback
 	elif not reason.is_empty(): training_hint.text = reason
 	elif session.busy(): training_hint.text = _activity_status()
-	else: training_hint.text = "Gest pomaga się uczyć." if guidance_toggle.button_pressed else "Sama komenda sprawdza, co już pamięta."
+	else: training_hint.text = "Oznacz moment siadu, potem podaj nagrodę." if selected_trick == "sit" else ("Gest pomaga się uczyć." if guidance_toggle.button_pressed else "Sama komenda sprawdza, co już pamięta.")
 	training_hint.add_theme_color_override("font_color", Color("8a5f24") if rewarding else INK)
 	training_footer.text = "Skupienie %d%%" % roundi(100 - pet.fatigue)
 	var had_warning := footer_label.visible
@@ -1522,6 +1589,9 @@ func _notification(what: int) -> void:
 		music.set_backgrounded(false)
 		effects.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if session.training.marker_mode and session.training.phase != "idle":
+			session.training.cancel()
+			session.say("Próba przerwana. Opanowanie pozostaje bez zmian.")
 		if is_instance_valid(bath_dialog): bath_dialog.hide()
 		if is_instance_valid(gesture_dialog): gesture_dialog.hide()
 		app_foreground = false
@@ -1613,7 +1683,7 @@ func _process(delta: float) -> void:
 				button.cooldown_left = left
 				button.cooldown_ratio = clampf(left / float(GameSession.CARE_COOLDOWNS.get(key, 1)), 0, 1)
 				button.queue_redraw()
-		if session.training.phase == "reward":
+		if session.training.phase == "reward" and not session.training.marker_mode:
 			for button in reward_buttons.values():
 				button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1)
 				button.queue_redraw()

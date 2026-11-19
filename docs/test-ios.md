@@ -320,3 +320,33 @@ Układ i symulowaną klawiaturę sprawdzono na komputerze. Rzeczywista klawiatur
 Po uruchomieniu buildu 31 porównano zapis z kopią bezpośrednio sprzed instalacji. 20/29 pól jest identycznych, w tym tożsamość, imię, więź, opanowanie sztuczek, osiągnięcia, zdjęcia, kolekcje, ogródek i stan wyjścia. Pozostałe pola zmieniły się zgodnie z upływem czasu i przekroczeniem północy: potrzeby, czas, historia (jedna nocna wizyta), raport nieobecności, dziennik, forma dzienna, podsumowanie charakteru i rytm. Przeliczenie `practice`, `traits`, `reflected_day` i `rhythm` odtworzono na izolowanej kopii i otrzymano dokładnie dane z telefonu. Forma Siad i Podaj łapę spadła z 100 do 90 według istniejącej reguły pominiętego dnia; opanowanie wszystkich sztuczek pozostało identyczne.
 
 Nowy raport `away_1795047927` zastąpił najstarszy nietrwały raport `away_1794868572` zgodnie z limitem dziennika; żaden wspólny wpis nie został zmodyfikowany, a trwałe wspomnienia pozostały zachowane. Wszystkie 29 wcześniejszych plików Documents nadal istnieje; zdjęcie i ui.cfg są identyczne bajtowo. Zapis pozostaje w schemacie 15. Zweryfikowana kopia po uruchomieniu: `exports/iphone-backups/2026-11-19-after-v31.zip`; raport i archiwum dowodów uzupełniono. Nie wykonywano czynności ani nie edytowano danych Glorii.
+
+
+## Build 32 — znacznik i „Siad” (2026-11-19)
+
+Zbudowany, podpisany i zainstalowany jako aktualizacja na MagicPhone. Po
+odblokowaniu aplikacja uruchomiła się; zrzut potwierdza nowy ekran treningu
+Glorii. Aplikacja i widget mają numer 32; bundle ID, zespół i App Group są
+zachowane. Podpis i zgodność PCK z eksportem zweryfikowano.
+
+Świeże archiwum Documents powstało przed aktualizacją. Wszystkie 29 plików
+bezpośrednio po finalnej instalacji było identycznych bajt po bajcie.
+Aktualny PetState odczytuje i serializuje kopię bez zmiany wartości danych.
+Po uruchomieniu zachowano wszystkie poziomy opanowania (Siad 100%), sukcesy,
+tożsamość, osiągnięcia, zdjęcia, dekoracje i postęp podwórka. Późniejszy zapis
+zawiera cztery nowe próby Siad, zmęczenie, potrzeby, czas i wpisy sesji.
+Nie przywracano starszej kopii ani nie nadpisywano nowych prób.
+
+Testy: 32/32 zestawy logiki; 26/26 zestawów UI po dostosowaniu starego
+ui_smoke do sekwencji gest → znacznik → nagroda. Powtórzony ui_smoke:
+242 sprawdzenia, zero błędów. Nowy test UI używa prawdziwej animacji,
+sprawdza klatkę kontaktu, nagrodę i zapis oraz układy 390 i 320 px.
+Nie zastępuje to ludzkiej oceny zrozumiałości instrukcji i trudności na
+telefonie. Użytkownik zgłosił, że przebieg jest niejasny: kolejnym zadaniem
+powinno być wprowadzenie do pierwszej próby i wyjaśnienie pomijania gestu
+przy opanowaniu >=80%. Nie dodano jeszcze minigier pozostałych sztuczek.
+
+Kopie, logi, manifest runtime i zrzuty telefonu znajdują się lokalnie w
+`exports/ios-sit-marker-v32/` (ignorowane przez Git). Build oparto na izolowanej
+kopii źródeł. Równoległe, późniejsze zmiany systemu więzi w katalogu roboczym
+nie należą do tej paczki ani do commita prototypu.
