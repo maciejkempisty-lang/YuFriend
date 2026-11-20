@@ -29,6 +29,7 @@ func _run() -> void:
 	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
+	app.sit_tutorial_seen = true
 	var game: GameSession = app.session
 	game.set_process(false)
 	game.initiatives_enabled = false # This suite drives autonomous behaviour explicitly.

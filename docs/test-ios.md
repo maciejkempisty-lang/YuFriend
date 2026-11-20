@@ -350,3 +350,30 @@ Kopie, logi, manifest runtime i zrzuty telefonu znajdują się lokalnie w
 `exports/ios-sit-marker-v32/` (ignorowane przez Git). Build oparto na izolowanej
 kopii źródeł. Równoległe, późniejsze zmiany systemu więzi w katalogu roboczym
 nie należą do tej paczki ani do commita prototypu.
+
+
+## Build 33 — pokaz pierwszego „Siad” (2026-11-20)
+
+Aplikacja i widget zostały zbudowane i podpisane jako wersja 33. Aktualizacja
+zachowuje dotychczasowy bundle ID i App Group. Zweryfikowano podpis oraz
+zgodność PCK z eksportem. Build iOS zakończył się powodzeniem.
+
+Przed instalacją utworzono świeże archiwum Documents Glorii. Po instalacji
+wszystkie 29 plików są identyczne bajt po bajcie. Kopia zachowuje Siad 100%,
+21 prób i 14 sukcesów; wszystkie pola zapisu przeszły również odczyt i ponowną
+serializację bez zmiany wartości. Lista aplikacji potwierdza zainstalowaną
+aktualizację 33. Pierwszą próbę uruchomienia iOS zablokował z powodu blokady
+ekranu; poproszono użytkownika o odblokowanie. Nie traktujemy instalacji jako
+potwierdzenia ręcznego przejścia pokazu na fizycznym telefonie.
+
+Testy: 32/32 zestawy logiki i 27/27 zestawów UI. Nowy ui_sit_tutorial sprawdza
+pierwsze wejście, przerwanie i ponowienie, zbyt wczesny klik, zatrzymanie na
+klatce kontaktu, spokojną nagrodę, zapis ukończenia w ui.cfg, ponowne odczytanie
+preferencji, wyjaśnienia dla trzech poziomów opanowania oraz ekran 320 × 640.
+Porównanie stanu przed i po pokazie potwierdza brak zmian pól rozgrywki,
+w szczególności umiejętności, więzi, energii i zmęczenia.
+
+Dowody i kopie danych: lokalny `exports/ios-sit-tutorial-v33/` (ignorowany
+przez Git). Kod zainstalowanego buildu pochodzi z izolowanej kopii main oraz
+zmian pokazu. Równoległe zmiany systemu więzi pozostają w katalogu roboczym
+i nie wchodzą do tej aktualizacji ani jej commita.

@@ -64,6 +64,8 @@ var mastery_label: Label
 var mastery_bar: ProgressBar
 var training_hint: Label
 var training_footer: Label
+var sit_tutorial_seen := false
+var sit_help_button: Button
 var marker_button: Button
 var marker_gentle: CheckButton
 var guided_button: Button
@@ -641,6 +643,9 @@ func _build_training() -> VBoxContainer:
 	choices.add_theme_constant_override("separation", 4)
 	box.add_child(choices)
 	choices.add_child(_button("Lista sztuczek", _show_tricks))
+	sit_help_button = _button("Jak ćwiczyć?", _show_sit_tutorial)
+	sit_help_button.add_theme_font_size_override("font_size", 12)
+	choices.add_child(sit_help_button)
 	choices.add_child(_icon_button("keyboard", "Wpisz komendę", _show_command))
 	var progress_row := HBoxContainer.new()
 	box.add_child(progress_row)
@@ -1205,7 +1210,51 @@ func _train(guided: bool) -> void:
 	_position_dialog(dialog, Vector2i(320, 330))
 	dialog.popup()
 
+func _sit_explanation() -> String:
+	var mastery := float(session.pet.skills.sit.mastery)
+	if mastery >= 80:
+		return "%s zna Siad (%d%%). Gest nie jest potrzebny — wystarczy komenda." % [session.pet.pet_name, roundi(mastery)]
+	if mastery >= 40: return "Siad jest już znajome. Wystarczy krótki gest ręką."
+	return "Najpierw poprowadź smakołyk w górę i za głowę pieska."
+
+func _show_sit_tutorial() -> void:
+	if session.suspended or session.training.phase != "idle": return
+	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
+	var dialog := AcceptDialog.new()
+	gesture_dialog = dialog
+	dialog.title = "Siad · próba pokazowa"
+	dialog.ok_button_text = "Wróć"
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	var lead := _label(_sit_explanation() + "\nPokaz nie zużywa energii ani nie zmienia postępów.", 13)
+	lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lead.custom_minimum_size.x = 240
+	box.add_child(lead)
+	var demo := SitTutorial.new()
+	box.add_child(demo)
+	dialog.add_child(box)
+	demo.completed.connect(func():
+		sit_tutorial_seen = true
+		var config := ConfigFile.new()
+		config.load(ui_settings_path)
+		config.set_value("tutorial", "sit_marker_demo", true)
+		if config.save(ui_settings_path) != OK: push_warning("Could not save sit tutorial preference.")
+		dialog.ok_button_text = "Do treningu"
+		_refresh())
+	add_child(dialog)
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible:
+			if gesture_dialog == dialog: gesture_dialog = null
+			dialog.queue_free())
+	_prepare_card_dialog(dialog)
+	_position_dialog(dialog, Vector2i(340, 510))
+	dialog.popup()
+
 func _train_sit(full_gesture: bool) -> void:
+	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
+	if not sit_tutorial_seen:
+		_show_sit_tutorial()
+		return
 	var mastery := float(session.pet.skills.sit.mastery)
 	if mastery >= 80 and not full_gesture:
 		session.begin_training("sit", false, true, marker_gentle.button_pressed)
@@ -1489,9 +1538,13 @@ func _refresh() -> void:
 		trick_buttons[key].add_theme_stylebox_override("normal", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
 		trick_buttons[key].add_theme_stylebox_override("disabled", _style(Color("e0e9cf") if key == selected_trick else Color("f1efe2"), 13, 10))
 		trick_buttons[key].add_theme_color_override("font_disabled_color", INK if key == selected_trick else Color("9b9e8c"))
+	sit_help_button.visible = selected_trick == "sit"
+	sit_help_button.disabled = session.training.phase != "idle"
 	marker_gentle.visible = selected_trick == "sit"
 	guidance_toggle.text = ("Pełny gest" if guidance_toggle.button_pressed else "Według nauki") if selected_trick == "sit" else ("Z podpowiedzią" if guidance_toggle.button_pressed else "Bez podpowiedzi")
-	if selected_trick == "sit": guided_button.text = "Ćwicz Siad"
+	if selected_trick == "sit":
+		guided_button.text = "Ćwicz Siad" if sit_tutorial_seen else "Zacznij od pokazu"
+		if not sit_tutorial_seen: guided_button.disabled = session.suspended or not session.writable
 	var marking := session.training.marker_mode and session.training.phase == "attempt"
 	marker_button.visible = marking
 	marker_button.disabled = not session.writable or session.suspended
@@ -1516,7 +1569,7 @@ func _refresh() -> void:
 	elif training_feedback_left > 0: training_hint.text = training_feedback
 	elif not reason.is_empty(): training_hint.text = reason
 	elif session.busy(): training_hint.text = _activity_status()
-	else: training_hint.text = "Oznacz moment siadu, potem podaj nagrodę." if selected_trick == "sit" else ("Gest pomaga się uczyć." if guidance_toggle.button_pressed else "Sama komenda sprawdza, co już pamięta.")
+	else: training_hint.text = _sit_explanation() if selected_trick == "sit" else ("Gest pomaga się uczyć." if guidance_toggle.button_pressed else "Sama komenda sprawdza, co już pamięta.")
 	training_hint.add_theme_color_override("font_color", Color("8a5f24") if rewarding else INK)
 	training_footer.text = "Skupienie %d%%" % roundi(100 - pet.fatigue)
 	var had_warning := footer_label.visible
@@ -1781,6 +1834,7 @@ func _load_ui_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(ui_settings_path) == OK:
 		room.pan_hint_dismissed = config.get_value("tutorial", "room_dragged", false) == true
+		sit_tutorial_seen = config.get_value("tutorial", "sit_marker_demo", false) == true
 	room.room_hint.visible = not room.pan_hint_dismissed
 
 func _remember_pan() -> void:

@@ -463,3 +463,24 @@ Testy: `test_sit_marker.gd` sprawdza granice czasu, przyrosty, brak utraty
 postępu, anulowanie, wielokrotne nagrody i tempo gestu; `ui_sit_marker.gd`
 łączy prawdziwą animację z kliknięciem, nagrodą i zapisem oraz sprawdza
 390 i 320 px. `ui_smoke.gd` przechodzi nową sekwencję w teście całej gry.
+
+
+### Pokaz pierwszego „Siad” — build 33
+
+Pierwsze naciśnięcie „Zacznij od pokazu” otwiera próbę pokazową. Animacja jest
+zwolniona i zatrzymuje się na tej samej klatce kontaktu co rzeczywisty znacznik.
+Napis „TERAZ — klik!” wskazuje moment oznaczenia. Zbyt wczesne kliknięcie
+wyjaśnia, że trzeba poczekać; nie kończy pokazu błędem. Po oznaczeniu gracz
+podaje pokazową nagrodę, bez odliczania. Zakończenie wyjaśnia, że w prawdziwym
+treningu ruch będzie szybszy i bez zatrzymania. „Do treningu” zamyka pokaz;
+rozpoczęcie rzeczywistej próby wymaga osobnego naciśnięcia „Ćwicz Siad”.
+
+Pokaz nie uruchamia TrainingSystem, nie zmienia energii, zmęczenia, opanowania,
+więzi ani liczników. Zapamiętuje ukończenie wyłącznie w `ui.cfg`, pod kluczem
+`tutorial/sit_marker_demo`. Przerwanie nie oznacza ukończenia. „Jak ćwiczyć?”
+pozwala wrócić do pokazu; jest dostępne także podczas przerwy od treningu.
+
+Instrukcja dopasowuje się do opanowania: poniżej 40% wyjaśnia prowadzenie
+smakołyka, od 40% krótki gest, a od 80% informuje, że pies zna Siad i wystarczy
+komenda. Przy Glorii ze 100% ekran pokazuje jej imię, poziom i powód pominięcia
+gestu. Nie resetujemy umiejętności ani nie uruchamiamy migracji zapisu psa.

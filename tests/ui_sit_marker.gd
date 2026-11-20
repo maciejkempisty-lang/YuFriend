@@ -20,6 +20,7 @@ func run() -> void:
 	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-marker-%s/pet.json" % Time.get_ticks_usec()
 	app.session.local_clock = func(): return 20000 * 86400.0 + 12 * 3600
 	root.add_child(app)
+	app.sit_tutorial_seen = true
 	app.session.set_process(false)
 	app.room.ambient_life.life.autoplay = false
 	app.session.pet.skills.sit.mastery = 100
