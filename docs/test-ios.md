@@ -404,3 +404,11 @@ potwierdzenie ludzkiej oceny tempa na fizycznym iPhonie.
 Dowody, logi i kopie: `exports/ios-sit-tempo-v34/` (lokalne, ignorowane przez
 Git). Aktualizacja pochodzi z izolowanej kopii main. Równoległe zmiany systemu
 więzi w katalogu roboczym nie należą do tego buildu ani commita.
+
+
+Po odblokowaniu telefonu build 34 został poprawnie uruchomiony. Zrzut ekranu
+potwierdza działającą grę z Glorią. Ponowne pobranie Documents po uruchomieniu
+potwierdza identyczne wszystkie umiejętności, sukcesy, osiągnięcia, zdjęcia,
+dekoracje, więź, formę i postęp podwórka. Zmieniły się tylko potrzeby, zmęczenie,
+stan odpoczynku, czas ostatniej sesji oraz historia. Starszej kopii nie
+przywracano. Kod zainstalowanej paczki: `c56516e`.
