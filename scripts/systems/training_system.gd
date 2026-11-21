@@ -15,6 +15,8 @@ static func unlock_reason(pet: PetState, key: String) -> String:
 
 const REWARDS := ["treat", "praise", "play"]
 # Marker timing is measured from the rendered sitting-contact frame, not a trial timer.
+const MARKER_PREPARE_SECONDS := 1.2
+var marker_prepare_left := 0.0
 var marker_mode := false
 var marker_gentle := false
 var marker_grade := ""
@@ -43,6 +45,7 @@ func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0, u
 	var reason := readiness(pet, key)
 	if not reason.is_empty(): return {"ok": false, "message": reason}
 	marker_mode = use_marker and key == "sit"
+	marker_prepare_left = MARKER_PREPARE_SECONDS if marker_mode else 0.0
 	marker_gentle = gentle
 	marker_grade = ""
 	marker_contact_at = -1.0
@@ -60,20 +63,25 @@ func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0, u
 	pet.skills[key].attempts = int(pet.skills[key].attempts) + 1
 	pet.fatigue = minf(100, pet.fatigue + 12)
 	NeedsSystem.change(pet, {"energy": -2})
-	return {"ok": true, "message": "Kliknij, gdy pupa dotknie podłogi." if marker_mode else ("Pokaż spokojnie gest i zaczekaj…" if guided else "Sprawdźmy, czy pamięta komendę…")}
+	return {"ok": true, "message": "Przygotuj się. Obserwuj pupę pieska — ruch za chwilę." if marker_mode else ("Pokaż spokojnie gest i zaczekaj…" if guided else "Sprawdźmy, czy pamięta komendę…")}
 
 func advance(seconds: float, performance_done: bool = true) -> Dictionary:
 	if phase == "idle" or seconds <= 0: return {}
 	if marker_mode:
 		if phase == "reward": return {} # Marking is the skill; feeding is not another timer.
+		if marker_prepare_left > 0:
+			marker_prepare_left = maxf(0, marker_prepare_left - seconds)
+			if marker_prepare_left == 0:
+				return {"event": "marker_start", "message": "Patrz na ruch. Kliknij, gdy pupa dotknie podłogi."}
+			return {}
 		time_left -= seconds
 		if marker_contact_at >= 0 and float(marker_clock.call()) - marker_contact_at > marker_window():
 			phase = "idle"
-			marker_grade = "late"
-			return {"event": "marker_miss", "message": "Za późno — piesek już siedzi. Spróbuj ponownie."}
+			marker_grade = "missed"
+			return {"event": "marker_miss", "message": "Nie było kliknięcia. Kliknij, gdy pupa dotknie podłogi."}
 		if marker_contact_at < 0 and time_left < -12:
 			phase = "idle"
-			return {"event": "marker_miss", "message": "Ruch został przerwany. Spróbuj ponownie."}
+			return {"event": "marker_miss", "message": "Ruch nie dobiegł końca. Rozpocznij nową próbę."}
 		return {}
 	time_left -= seconds
 	# Presentation can take longer than the puppy's minimum reaction time.
@@ -127,26 +135,28 @@ func marker_window() -> float:
 	return 1.0 if marker_gentle else 0.65
 
 func sitting_contact(id: int) -> void:
-	if marker_mode and phase == "attempt" and id == trial_id and marker_contact_at < 0:
+	if marker_mode and marker_prepare_left <= 0 and phase == "attempt" and id == trial_id and marker_contact_at < 0:
 		marker_contact_at = float(marker_clock.call())
 
 func mark_sit() -> Dictionary:
 	if not marker_mode or phase != "attempt": return {"ok": false, "message": "Najpierw rozpocznij próbę Siad."}
+	if marker_prepare_left > 0: return {"ok": false, "message": "Jeszcze czekaj — ruch zacznie się za chwilę."}
 	var elapsed := float(marker_clock.call()) - marker_contact_at
 	if marker_contact_at < 0 or elapsed < 0:
 		phase = "idle"
 		marker_grade = "early"
-		return {"ok": false, "message": "Za wcześnie — pupa była jeszcze w górze."}
+		return {"ok": false, "message": "Za wcześnie. Kliknij dopiero, gdy pupa dotknie podłogi."}
 	if elapsed > marker_window():
 		phase = "idle"
 		marker_grade = "late"
-		return {"ok": false, "message": "Za późno — piesek już siedzi. Spróbuj ponownie."}
+		return {"ok": false, "message": "Za późno. Kliknij przy siadaniu, nie gdy pies już siedzi."}
 	marker_grade = "perfect" if elapsed <= (0.3 if marker_gentle else 0.18) else "good"
 	phase = "reward"
 	time_left = INF
 	return {"ok": true, "message": ("Idealnie — klik w chwili siadu." if marker_grade == "perfect" else "Dobrze — siad rozpoznany.") + " Teraz nagroda, bez pośpiechu."}
 
 func cancel() -> void:
+	marker_prepare_left = 0
 	marker_mode = false
 	marker_contact_at = -1
 	phase = "idle"

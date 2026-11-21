@@ -377,3 +377,30 @@ Dowody i kopie danych: lokalny `exports/ios-sit-tutorial-v33/` (ignorowany
 przez Git). Kod zainstalowanego buildu pochodzi z izolowanej kopii main oraz
 zmian pokazu. Równoległe zmiany systemu więzi pozostają w katalogu roboczym
 i nie wchodzą do tej aktualizacji ani jej commita.
+
+
+## Build 34 — przygotowanie i wyjaśnienia pomyłek „Siad” (2026-11-22)
+
+Build aplikacji i widżetu 34 zbudowano, podpisano oraz zainstalowano jako
+aktualizację na MagicPhone. Zachowano bundle ID, zespół podpisujący i App Group.
+Zweryfikowano podpis oraz zgodność PCK z eksportem. Lista aplikacji na urządzeniu
+potwierdza build 34. Pierwsze uruchomienie iOS zablokował z powodu blokady
+ekranu; poproszono użytkownika o odblokowanie telefonu.
+
+Przed aktualizacją pobrano świeże Documents i zweryfikowano archiwum ZIP.
+Wszystkie 29 plików po instalacji są identyczne bajt po bajcie. Gloria zachowuje
+cały zapis, w tym Siad 100%, 21 prób i 14 sukcesów. Nie przywracano starszej
+kopii, nie odinstalowywano aplikacji i nie wykonywano migracji modelu psa.
+
+Testy: 32/32 zestawy logiki i 27/27 zestawów UI. Dodatkowy przebieg testu
+znacznika potwierdza treść wyjaśnień zbyt wczesnego i późnego kliknięcia oraz
+braku kliknięcia. Testy przygotowania sprawdzają próg 1,2 s, jedno żądanie
+animacji, ignorowanie kliknięć i sygnałów kontaktu podczas przygotowania,
+brak dodatkowych kosztów oraz anulowanie oczekującego ruchu po wyjściu.
+Test UI łączy przygotowanie z prawdziwą animacją siadu, oceną i zapisem nagrody.
+Zrzut fazy przygotowania przejrzano na ekranie testowym. Nie jest to jeszcze
+potwierdzenie ludzkiej oceny tempa na fizycznym iPhonie.
+
+Dowody, logi i kopie: `exports/ios-sit-tempo-v34/` (lokalne, ignorowane przez
+Git). Aktualizacja pochodzi z izolowanej kopii main. Równoległe zmiany systemu
+więzi w katalogu roboczym nie należą do tego buildu ani commita.

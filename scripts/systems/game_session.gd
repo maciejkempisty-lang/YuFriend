@@ -182,7 +182,9 @@ func _process(delta: float) -> void:
 	if not result.is_empty():
 		say(result.message)
 		record_training_outcome(result.event)
-		if result.event == "ready":
+		if result.event == "marker_start":
+			performance_requested.emit("sit_down", training.trial_id)
+		elif result.event == "ready":
 			clip_requested.emit("sit_idle" if pose == "sit" else "idle")
 		elif result.event in ["miss", "expired"]:
 			clip_requested.emit("sit_idle" if pose == "sit" else "head_tilt_stand")
@@ -659,7 +661,7 @@ func begin_training(key: String, guided: bool, marker: bool = false, gentle: boo
 	pose = "sit" if key in ["sit", "paw", "stay"] and training.will_succeed else "stand"
 	var clip: String = {"come": "walk", "sit": "sit_down", "paw": "give_paw", "lie": "lie_down", "bow": "play_bow", "bark": "bark_stand", "stay": "sit_down", "spin": "spin", "roll": "roll"}[key] if training.will_succeed else "head_tilt_stand"
 	attention_requested.emit(true)
-	performance_requested.emit(clip, training.trial_id)
+	if not training.marker_mode: performance_requested.emit(clip, training.trial_id)
 	say(result.message)
 	flush()
 	changed.emit()

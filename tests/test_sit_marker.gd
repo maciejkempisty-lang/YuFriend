@@ -12,8 +12,25 @@ func trial(gentle := false) -> Array:
 	var training := TrainingSystem.new()
 	training.marker_clock = func(): return now
 	check(training.begin(pet, "sit", false, 0.99, true, gentle).ok and training.will_succeed, "marker trial does not roll for success")
+	check(training.advance(TrainingSystem.MARKER_PREPARE_SECONDS).get("event") == "marker_start", "preparation ends with a single movement event")
 	return [pet, training]
 func _initialize() -> void:
+	var prep_pet := PetState.create(123)
+	var prep := TrainingSystem.new()
+	prep.begin(prep_pet, "sit", true, 1.0, true)
+	var prep_before := prep_pet.to_dict()
+	prep.sitting_contact(prep.trial_id)
+	check(prep.marker_contact_at < 0, "old animation cannot start timing during preparation")
+	check(not prep.mark_sit().ok and prep.phase == "attempt", "preparation click is ignored without failing trial")
+	check(prep.advance(0.6).is_empty(), "no movement in first half of preparation")
+	check(prep.advance(0.6).get("event") == "marker_start", "movement starts after 1.2 seconds")
+	check(prep.advance(0.1).is_empty(), "movement is requested only once")
+	check(prep_pet.to_dict() == prep_before, "preparation never charges additional costs")
+	prep.cancel()
+	prep_pet.fatigue = 0
+	prep.begin(prep_pet, "sit", false, 1.0, true)
+	prep.cancel()
+	check(prep.advance(5).is_empty(), "canceled preparation cannot start delayed movement")
 	for entry in [[0.0, "perfect", 10.0], [0.18, "perfect", 10.0], [0.4, "good", 6.0], [0.64, "good", 6.0]]:
 		now = 10
 		var pair := trial()
@@ -38,7 +55,9 @@ func _initialize() -> void:
 		var training: TrainingSystem = pair[1]
 		if delay >= 0: training.sitting_contact(training.trial_id); now += delay
 		var before := pet.to_dict()
-		check(not training.mark_sit().ok and not training.reward(pet, "treat").ok, "early/late marker earns no reward")
+		var mistake := training.mark_sit()
+		check(not mistake.ok and not training.reward(pet, "treat").ok, "early/late marker earns no reward")
+		check(mistake.message.contains("Za wcześnie" if delay < 0 else "Za późno") and mistake.message.contains("Kliknij"), "mistake explains cause and next action")
 		check(pet.to_dict() == before, "mistake removes no progress")
 	now = 10
 	var pair := trial(true)
@@ -52,6 +71,7 @@ func _initialize() -> void:
 	pet.skills.sit.mastery = 100
 	pet.fatigue = 0
 	training.begin(pet, "sit", false, 1.0, true)
+	training.advance(TrainingSystem.MARKER_PREPARE_SECONDS)
 	training.sitting_contact(training.trial_id)
 	training.mark_sit()
 	training.reward(pet, "praise")
@@ -61,7 +81,9 @@ func _initialize() -> void:
 	training = pair[1]
 	training.sitting_contact(training.trial_id)
 	now += 0.7
-	check(training.advance(0.7).get("event") == "marker_miss" and training.phase == "idle", "unmarked sit expires without reward")
+	var missing := training.advance(0.7)
+	check(missing.get("event") == "marker_miss" and training.phase == "idle", "unmarked sit expires without reward")
+	check(missing.message.begins_with("Nie było kliknięcia") and training.marker_grade == "missed", "no click is distinguished from a late click")
 	pair = trial()
 	training = pair[1]
 	check(training.advance(20).get("event") == "marker_miss", "missing animation cannot leave a stuck trial")

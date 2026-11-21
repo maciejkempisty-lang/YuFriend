@@ -1307,7 +1307,7 @@ func _reward(kind: String) -> void:
 		gain_left = 1.8
 		if selected_tab == "training":
 			training_feedback = gain_label.text + " · " + session.last_message
-			training_feedback_left = 4.0
+			training_feedback_left = 8.0 if session.training.marker_mode and session.training.marker_grade in ["early", "late", "missed"] else 4.0
 			_refresh()
 		_position_feedback()
 		if before < 100 and float(session.pet.skills[selected_trick].mastery) >= 100:
@@ -1547,7 +1547,8 @@ func _refresh() -> void:
 		if not sit_tutorial_seen: guided_button.disabled = session.suspended or not session.writable
 	var marking := session.training.marker_mode and session.training.phase == "attempt"
 	marker_button.visible = marking
-	marker_button.disabled = not session.writable or session.suspended
+	marker_button.disabled = not session.writable or session.suspended or session.training.marker_prepare_left > 0
+	marker_button.text = "Przygotuj się…" if session.training.marker_prepare_left > 0 else "Klik! — oznacz siad"
 	var rewarding := session.training.phase == "reward"
 	var attempting := session.training.phase == "attempt"
 	training_actions.visible = not rewarding and not attempting
@@ -1565,7 +1566,9 @@ func _refresh() -> void:
 		button.accessibility_name = REWARD_LABELS[key] + (", ulubiona nagroda" if button.favorite else "") + (", nagródź teraz" if rewarding else ", czekaj na wykonanie")
 		button.queue_redraw()
 	if rewarding: training_hint.text = session.last_message if session.training.marker_mode else "Udało się! Wybierz nagrodę, zanim zniknie obwódka."
-	elif attempting: training_hint.text = "Kliknij, gdy pupa dotknie podłogi." if marking else "Poczekaj, aż piesek skończy ruch."
+	elif attempting:
+		training_hint.text = "Kliknij, gdy pupa dotknie podłogi." if marking else "Poczekaj, aż piesek skończy ruch."
+		if marking and session.training.marker_prepare_left > 0: training_hint.text = "Obserwuj pupę pieska. Ruch zacznie się za chwilę."
 	elif training_feedback_left > 0: training_hint.text = training_feedback
 	elif not reason.is_empty(): training_hint.text = reason
 	elif session.busy(): training_hint.text = _activity_status()
@@ -1679,7 +1682,7 @@ func _show_feedback(text: String) -> void:
 	if selected_tab == "training":
 		# Keep instructions and outcomes in one place, clear of the puppy.
 		training_feedback = text
-		training_feedback_left = 4.0
+		training_feedback_left = 8.0 if session.training.marker_mode and session.training.marker_grade in ["early", "late", "missed"] else 4.0
 		bubble_left = 0
 		_refresh()
 		_position_feedback()

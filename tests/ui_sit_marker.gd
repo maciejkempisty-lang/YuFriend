@@ -51,6 +51,10 @@ func run() -> void:
 			check(app.room.animator.sprite.frame == PetAnimator.SIT_CONTACT_FRAME, "marker uses authored contact frame")
 			app.marker_button.button_down.emit())
 	app._train(false)
+	check(app.marker_button.disabled and app.session.training.marker_prepare_left > 0, "prepare phase protects against accidental click")
+	await shot("prepare")
+	app.session._process(TrainingSystem.MARKER_PREPARE_SECONDS)
+	check(not app.marker_button.disabled, "click activates when movement starts")
 	await shot("attempt")
 	for i in 300:
 		if observed: break
@@ -71,8 +75,13 @@ func run() -> void:
 	await shot("narrow")
 	check(app.guided_button.get_global_rect().end.x <= 320, "sit controls fit narrow phone")
 	check(app.training_actions.get_global_rect().end.y <= app.navigation.position.y, "controls clear navigation")
+	var requests := [0]
+	app.session.performance_requested.connect(func(_clip, _id): requests[0] += 1)
 	app._train(false)
+	check(requests[0] == 0, "begin does not emit animation before preparation")
 	app._select_tab("care")
+	app.session._process(2)
+	check(requests[0] == 0, "leaving during preparation prevents delayed animation")
 	check(app.session.training.phase == "idle", "leaving training cancels marker trial")
 	app.queue_free()
 	await process_frame

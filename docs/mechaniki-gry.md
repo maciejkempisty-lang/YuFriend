@@ -484,3 +484,24 @@ Instrukcja dopasowuje się do opanowania: poniżej 40% wyjaśnia prowadzenie
 smakołyka, od 40% krótki gest, a od 80% informuje, że pies zna Siad i wystarczy
 komenda. Przy Glorii ze 100% ekran pokazuje jej imię, poziom i powód pominięcia
 gestu. Nie resetujemy umiejętności ani nie uruchamiamy migracji zapisu psa.
+
+
+### Tempo „Siad” — build 34
+
+Po rozpoczęciu rzeczywistej próby, również po naprowadzeniu, gracz ma 1,2 s
+na przygotowanie. Przycisk pokazuje „Przygotuj się…” i jest nieaktywny;
+instrukcja kieruje uwagę na pupę pieska. Dopiero po przygotowaniu sesja
+uruchamia animację i udostępnia „Klik!”. Nie poszerza to okna oceny: nadal
+liczy się czas od rzeczywistej klatki kontaktu z podłogą.
+
+Dotknięcie podczas przygotowania nie oznacza pomyłki. Zbyt wczesny klik
+podpowiada, żeby poczekać na kontakt pupy z podłogą; zbyt późny — kliknąć
+przy siadaniu, zamiast gdy pies już siedzi. Brak kliknięcia ma osobny komunikat.
+Te wyjaśnienia pozostają w panelu przez 8 s, zamiast dotychczasowych 4 s.
+Przerwanie animacji nie jest opisywane jako pomyłka gracza.
+
+Przygotowanie nie dolicza energii, zmęczenia ani prób; istniejący koszt jest
+naliczany raz, przy rozpoczęciu treningu. Wyjście z treningu lub anulowanie
+uniemożliwia późniejszy start ruchu. Schemat zapisu i wcześniejsze opanowanie
+pozostają bez zmian. Testy obejmują granicę 1,2 s, pojedyncze uruchomienie ruchu,
+ignorowanie starych sygnałów animacji, anulowanie i rozróżnienie komunikatów.
