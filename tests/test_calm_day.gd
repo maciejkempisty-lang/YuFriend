@@ -48,7 +48,7 @@ func _initialize() -> void:
 		check(s.visitors.active(), "scheduled guest " + str(i))
 		s.visitors.finish(s, "")
 	s.visitors.advance(s, 10000)
-	check(not s.visitors.active() and not s.visitors.start(s, "cat"), "at most two visits per yard stay")
+	check(not s.visitors.active() and not s.visitors.start(s, "cat"), "at most three visits per yard stay")
 	s.change_yard(true)
 	check(not s.visitors.start(s, "cat"), "reselecting yard cannot reset quota")
 	s.change_yard(false)

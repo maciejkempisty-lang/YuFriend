@@ -16,9 +16,21 @@ func _initialize() -> void:
 					pet.needs = {"fullness": 26.0, "energy": energy, "hygiene": 100.0, "play": 0.0, "contact": 55.0}
 					pet.traits.sociability = sociability
 					pet.resting = sleeping
-					var save := {"schema_version": SaveSystem.VERSION, "pet": pet.to_dict()}
+					var save := {"schema_version": 16, "pet": pet.to_dict()}
 					NeedsSystem.catch_up(pet, 1000000 + elapsed)
 					fixtures.append({"save": save, "at": 1000000 + elapsed, "needs": pet.needs.duplicate(), "resting": pet.resting})
+	for offset in [-30, 0, 90, 180]:
+		for hour in [0, 6, 7, 9, 12, 13, 21, 22]:
+			for elapsed in [-100, 0, 1, 1800, 7200, 28800, 604800]:
+				for override in [false, true]:
+					var start: float = 100 * 86400.0 + hour * 3600
+					var pet := PetState.create(42, start)
+					pet.rhythm.offset_minutes = offset
+					pet.rhythm.awake_until = start + 600 if override else 0.0
+					pet.needs.energy = 55
+					var save := {"schema_version": SaveSystem.VERSION, "pet": pet.to_dict()}
+					NeedsSystem.catch_up_rhythm(pet, start + elapsed, start + elapsed)
+					fixtures.append({"save": save, "at": start + elapsed, "needs": pet.needs.duplicate(), "resting": pet.resting, "utc": true})
 	var output := FileAccess.open(args[0], FileAccess.WRITE)
 	if output == null:
 		quit(1)

@@ -22,12 +22,23 @@ static func panel(app: GameUI, title: String) -> Dictionary:
 static func bond(app: GameUI) -> void:
 	var ui := panel(app, "Nasza więź")
 	ui.box.add_child(app._label(BondLevels.summary(app.session.pet), 18, app.INK, true))
+	var detail := app._label(BondLevels.detail(app.session.pet, app.session._local_now()), 13, app.MUTED)
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ui.box.add_child(detail)
+	for number in range(2, 6):
+		var unlocked := BondLevels.heart(app.session.pet) >= number
+		var label := app._label("%s ♥%d · %s" % ["✓" if unlocked else "○", number, BondLevels.HEART_REWARDS[number - 2]], 14, app.MUTED)
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ui.box.add_child(label)
+	var later := app._label("Od ♥6 każde kolejne serce odświeża wspólną pamiątkę w Albumie. Zdobyta więź nigdy nie spada.", 13, app.MUTED)
+	later.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ui.box.add_child(later)
 	var rewards := ["Poznawanie pieska i wszystkie dotychczasowe zabawy", "Poduszka przyjaźni do pokoju", "Girlanda łapek do pokoju", "Spokojna chwila razem", "Tytuł: Nierozłączni"]
 	for i in BondLevels.THRESHOLDS.size():
 		var label := app._label("%s %d · %s\n%s" % ["✓" if app.session.pet.bond >= BondLevels.THRESHOLDS[i] else "○", BondLevels.THRESHOLDS[i], BondLevels.NAMES[i], rewards[i]], 14, app.MUTED)
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		ui.box.add_child(label)
-	var ritual := app._button("Spokojna chwila", func():
+	var ritual := app._button("Blisko serca" if BondLevels.heart(app.session.pet) >= 3 else "Spokojna chwila", func():
 		if BondLevels.ritual(app.session):
 			ui.dialog.hide()
 			bond(app))

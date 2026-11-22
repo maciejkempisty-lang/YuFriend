@@ -8,11 +8,12 @@ import UserNotifications
     var holdAdd = false
     var continuation: CheckedContinuation<Void, Never>?
     var failAdd = false
+    var failAfter: Int?
     func authorization() async -> UNAuthorizationStatus { allowed }
     func requestAuthorization() async throws { prompts += 1; allowed = .authorized }
     func add(_ request: UNNotificationRequest) async throws {
         if holdAdd { await withCheckedContinuation { continuation = $0 } }
-        if failAdd { throw NSError(domain: "test", code: 1) }
+        if failAdd || failAfter.map({ requests.count >= $0 }) == true { throw NSError(domain: "test", code: 1) }
         requests[request.identifier] = request
     }
     func removePending(_ identifiers: [String]) { for id in identifiers { requests.removeValue(forKey: id) } }
@@ -102,6 +103,10 @@ import UserNotifications
         fresh.update(snapshot: snapshot, foreground: false)
         await settle()
         check(center.continuation != nil, "Race fixture has an in-flight add")
+        var drained = false
+        Task { await fresh.finishPendingUpdates(); drained = true }
+        await settle()
+        check(!drained, "Background completion waits for in-flight notification registration")
         try preference(false, "off-during-add")
         fresh.update(snapshot: snapshot, foreground: false)
         center.holdAdd = false
@@ -109,6 +114,9 @@ import UserNotifications
         center.continuation = nil
         await settle()
         check(center.requests.isEmpty && status() == "off", "Late add completion cannot undo opt-out")
+        check(drained, "Background completion resumes after the revised queue finishes")
+        await fresh.finishPendingUpdates()
+        check(center.requests.isEmpty, "Already idle controller completes without another update")
         try preference(true, "enable-3")
         center.failAdd = true
         fresh.update(snapshot: snapshot, foreground: false)
@@ -130,6 +138,47 @@ import UserNotifications
         fresh.update(snapshot: eveningSnapshot, foreground: true)
         await settle()
         check(center.requests.isEmpty, "Return before morning cancels the overnight request")
+        now = ISO8601DateFormatter().date(from: "2026-11-18T08:00:00Z")!
+        let wakeSnapshot = PetSnapshot(version: 1, petID: "test", name: "Gloria", savedAt: now.timeIntervalSince1970,
+            needs: snapshot.needs, resting: true, sociability: 0.5, mood: "calm", rhythmOffset: 0, awakeUntil: 0)
+        fresh.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        check(center.requests.count == 28 && center.requests.values.allSatisfy { $0.content.body.hasPrefix("Już nie śpię!") },
+              "All seven days of wake requests reach the notification center")
+        let wakeLedger = try JSONDecoder().decode(PetReminderLedger.self,
+            from: Data(contentsOf: directory.appendingPathComponent("reminder-ledger.json")))
+        check(wakeLedger.isValid && wakeLedger.pending.count == 28, "Seven days of wake reservations are durable")
+        let wakeRestart = PetReminderController(documents: directory, center: center, defaults: defaults, clock: { now }, calendar: calendar)
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        check(center.requests.count == 28 && status() == "on", "Restart reads and replans a 28-request ledger")
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: true)
+        await settle()
+        check(center.requests.isEmpty, "Foreground return cancels the entire seven-day queue")
+        center.failAfter = 10
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        check(center.requests.isEmpty && status() == "error", "Failure deep in a weekly queue clears every partially scheduled request")
+        center.failAfter = nil
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: false, force: true)
+        await settle()
+        check(center.requests.count == 28, "Weekly queue can be rebuilt after scheduling error")
+        try preference(false, "disable-week")
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        check(center.requests.isEmpty && status() == "off", "Opt-out cancels every day of the queue")
+        try preference(true, "restore-week")
+        wakeRestart.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        now = now.addingTimeInterval(3 * 86400)
+        let multiDayRestart = PetReminderController(documents: directory, center: center, defaults: defaults, clock: { now }, calendar: calendar)
+        multiDayRestart.update(snapshot: wakeSnapshot, foreground: false)
+        await settle()
+        check(center.requests.count == 16 && status() == "on", "Restart after three days retains only the remaining four days")
+        let afterDays = try JSONDecoder().decode(PetReminderLedger.self,
+            from: Data(contentsOf: directory.appendingPathComponent("reminder-ledger.json")))
+        check(afterDays.isValid && !afterDays.consumed.isEmpty && afterDays.pending.count == 16,
+              "Multiday return preserves consumed budget and remaining reservations")
         try Data("broken-ledger".utf8).write(to: directory.appendingPathComponent("reminder-ledger.json"))
         let broken = PetReminderController(documents: directory, center: center, defaults: defaults, clock: { now }, calendar: calendar)
         broken.update(snapshot: snapshot, foreground: false)

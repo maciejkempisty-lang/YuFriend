@@ -57,6 +57,7 @@ var tab_buttons: Dictionary = {}
 var panels: Dictionary = {}
 var name_label: Button
 var bond_label: Label
+var bond_detail: Label
 var message_label: Label
 var footer_label: Label
 var practice_label: Label
@@ -182,6 +183,7 @@ func _ready() -> void:
 	ui_settings_path = path.get_base_dir().path_join("ui.cfg")
 	_load_ui_preferences()
 	room.first_pan.connect(_remember_pan)
+	room.yard_place_used.connect(_remember_yard_place)
 	add_child(music)
 	music.start(path.get_base_dir().path_join("audio.cfg"))
 	music_toggle.set_pressed_no_signal(music.enabled)
@@ -435,6 +437,9 @@ func _build_ui() -> void:
 	identity.add_child(bond_label)
 	bond_bar = _bar(Color("779565"), 6)
 	identity.add_child(bond_bar)
+	bond_detail = _label("", 10, MUTED)
+	bond_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	identity.add_child(bond_detail)
 	var settings := _icon_button("settings", "Ustawienia", _show_settings)
 	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	today_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
@@ -548,7 +553,7 @@ func _refresh_companion(delta: float = 0.0) -> void:
 		companion_action.accessibility_name = "%s. %s" % [data.text, data.label]
 		companion_later.visible = data.kind == "invitation"
 	# Renaming the dog also updates the bubble without restarting its quiet timer.
-	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz"}[data.kind]]
+	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz", "wake": "po pobudce"}[data.kind]]
 	_position_companion()
 	session.invitation_presented = session.attention_available and (str(session.invitation.get("kind", "")).begins_with("yard_") or (companion_card.visible and companion_card.modulate.a > 0 and data.get("kind") == "invitation"))
 
@@ -562,6 +567,8 @@ func _companion_act() -> void:
 	var action: String = current.action
 	if action.begins_with("invite:"): session.accept_invitation()
 	elif action == "album": _select_tab("journal")
+	elif action == "yard": _toggle_yard()
+	elif action == "outing": YardRoutines.start_outing(session)
 	elif action == "play": _show_play_menu()
 	elif not action.is_empty(): session.act(action)
 	_update_attention()
@@ -912,7 +919,7 @@ func _build_play_dialogs() -> void:
 	choices.add_theme_constant_override("separation", 12)
 	play_menu.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · raz Ty, raz ja"], ["cups", "Kubki · schowaj smakołyk"]]:
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
@@ -1038,8 +1045,12 @@ func _fit_room() -> void:
 	var header_x := safe_rect.position.x + 12
 	var header_width := minf(minf(scene_width, safe_rect.end.x) - header_x - 12, 420)
 	var training_open := selected_tab == "training"
+	var header_style := header.get_theme_stylebox("panel") as StyleBoxFlat
+	header_style.content_margin_top = 12 if training_open else 4
+	header_style.content_margin_bottom = 12 if training_open else 4
 	bond_label.visible = not training_open
 	bond_bar.visible = not training_open
+	bond_detail.visible = not training_open
 	name_label.add_theme_font_size_override("font_size", 22 if training_open else 27)
 	_place(header, Rect2(header_x, safe_rect.position.y + 8, header_width, 68 if training_open else 100))
 	header.visible = selected_tab != "journal"
@@ -1401,15 +1412,16 @@ func _refresh() -> void:
 	room.ball_throw_enabled = session.play_readiness().is_empty()
 	_refresh_companion()
 	play_hint.text = session.play.hint()
-	play_cue.visible = session.play.kind == "cups" and session.play.phase in ["ready", "found"]
-	play_cue.text = "Brawo!" if session.play.phase == "found" else "Szukaj!"
+	play_cue.visible = (session.play.kind == "cups" and session.play.phase in ["ready", "found"]) or (session.play.kind == "tug" and session.play.phase == "demo_done")
+	play_cue.text = "Zagraj rundę" if session.play.kind == "tug" else ("Brawo!" if session.play.phase == "found" else "Szukaj!")
 	play_again.visible = session.play.phase == "result"
-	play_again.disabled = session.play.phase != "result" or session.busy()
+	play_again.disabled = session.play.phase != "result" or (session.busy() and session.play.kind != "tug")
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = "Piesek" if naming_pending else pet.pet_name
 	bond_label.text = BondLevels.summary(pet)
-	bond_bar.value = pet.bond
+	bond_bar.value = BondLevels.progress(pet)
+	bond_detail.text = BondLevels.detail(pet, session._local_now())
 	for key in care_buttons:
 		var button: IconActionButton = care_buttons[key]
 		var need: String = ACTION_NEEDS[key]
@@ -1587,7 +1599,7 @@ func _refresh() -> void:
 	for guest in YardVisitors.KINDS:
 		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
 	visitor_album_status.text = "\n\n".join(visitor_lines)
-	var signature := str(pet.journal.size()) + (str(pet.journal[0].key) if not pet.journal.is_empty() else "")
+	var signature := JSON.stringify(pet.journal)
 	if journal_signature != signature:
 		journal_signature = signature
 		journal_count = pet.journal.size()
@@ -1669,7 +1681,11 @@ func _activity_status() -> String:
 	if not session.invitation.is_empty(): return session.pet.pet_name + " zaprasza Cię do wspólnej chwili"
 	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
 	if session.training.phase == "attempt": return "Wykonuje komendę · otwórz Trening"
-	if session.is_sleeping(): return "Odpoczywa · dotknij słońca, aby obudzić"
+	if session.is_sleeping(): return "Śpi · pobudka o " + DailyRhythm._time_label(int(DailyRhythm.next_wake(session.pet, session._local_now()) / 60)) if session.scheduled_sleep else "Odpoczywa"
+	# Close-ups can leave no safe space for a bubble; the wake report is still
+	# visible in the care panel, above the same actionable need buttons.
+	if session.wake_report_left > 0 and companion_card.modulate.a == 0 and not session.busy():
+		return CompanionVoice.wake_report(session).text
 	if session.activity == "approach":
 		return {"feed": "Idzie do miski…", "rest": "Idzie do legowiska…", "play": "Łapie piłkę…"}.get(session._pending_action, "Odkrywa pokój…")
 	if session.activity_left > 0 and session.activity in ["feed", "clean", "play", "happy"]:
@@ -1838,7 +1854,16 @@ func _load_ui_preferences() -> void:
 	if config.load(ui_settings_path) == OK:
 		room.pan_hint_dismissed = config.get_value("tutorial", "room_dragged", false) == true
 		sit_tutorial_seen = config.get_value("tutorial", "sit_marker_demo", false) == true
+		if config.has_section("yard_seen"):
+			for id in config.get_section_keys("yard_seen"):
+				if config.get_value("yard_seen", id, false) == true: room.yard_seen[id] = true
 	room.room_hint.visible = not room.pan_hint_dismissed
+
+func _remember_yard_place(id: String) -> void:
+	var config := ConfigFile.new()
+	config.load(ui_settings_path)
+	config.set_value("yard_seen", id, true)
+	if config.save(ui_settings_path) != OK: push_warning("Could not save yard place hint.")
 
 func _remember_pan() -> void:
 	var config := ConfigFile.new()
@@ -1919,6 +1944,18 @@ func _show_bath() -> void:
 
 func _take_photo() -> void:
 	if taking_photo or not session.writable or session.suspended or session.in_bath: return
+	if BondLevels.heart(session.pet) < 4:
+		await _capture_photo(false)
+		return
+	var ui := ProgressionPanels.panel(self, "Zdjęcie razem")
+	for framed in [false, true]:
+		ui.box.add_child(_button("Z ramką: Nasze serca" if framed else "Bez ramki", func():
+			ui.dialog.hide()
+			_capture_photo(framed)))
+	ui.dialog.popup()
+
+func _capture_photo(heart_frame: bool) -> void:
+	if taking_photo or not session.writable or session.suspended or session.in_bath: return
 	if session.pet.photos.size() >= KeepsakeSystem.MAX_PHOTOS:
 		session.say("Album mieści 24 zdjęcia. Twoje fotografie pozostają zachowane.")
 		return
@@ -1929,7 +1966,7 @@ func _take_photo() -> void:
 		taking_photo = false
 		return
 	var picture := room.viewport.get_texture().get_image()
-	KeepsakeSystem.save_photo(session, picture, "%s · %s" % [session.pet.pet_name, "Podwórko" if outside else "Dom"])
+	KeepsakeSystem.save_photo(session, picture, "%s · %s" % [session.pet.pet_name, "Podwórko" if outside else "Dom"], heart_frame)
 	taking_photo = false
 
 func _refresh_photos() -> void:

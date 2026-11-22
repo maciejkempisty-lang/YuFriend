@@ -12,7 +12,9 @@ for (index, fixture) in fixtures.enumerated() {
     let data = try JSONSerialization.data(withJSONObject: fixture["save"]!)
     guard let snapshot = PetSnapshot.fromGameSave(data) else { fatalError("Fixture \(index) rejected") }
     let at = fixture["at"] as! Double
-    let status = snapshot.projected(at: Date(timeIntervalSince1970: at))
+    var fixtureCalendar = Calendar.current
+    if fixture["utc"] as? Bool == true { fixtureCalendar.timeZone = TimeZone(secondsFromGMT: 0)! }
+    let status = snapshot.projected(at: Date(timeIntervalSince1970: at), calendar: fixtureCalendar)
     let expected = fixture["needs"] as! [String: Double]
     for need in PetNeed.allCases {
         check(abs(status.value(need) - expected[need.rawValue]!) < 0.00001, "Godot parity fixture \(index): \(need)")

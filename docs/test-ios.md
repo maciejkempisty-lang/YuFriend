@@ -412,3 +412,93 @@ potwierdza identyczne wszystkie umiejętności, sukcesy, osiągnięcia, zdjęcia
 dekoracje, więź, formę i postęp podwórka. Zmieniły się tylko potrzeby, zmęczenie,
 stan odpoczynku, czas ostatniej sesji oraz historia. Starszej kopii nie
 przywracano. Kod zainstalowanej paczki: `c56516e`.
+
+## Build 35 — automatyczny sen i pojawianie się NPC (2026-11-22)
+
+Zbudowano i zainstalowano 0.1.0 (35) jako aktualizację na MagicPhone. Aplikacja
+została uruchomiona przez `devicectl`; lista aplikacji potwierdza build 35.
+Główny katalog to `/Volumes/KINGSTON/YuFriend`. Paczka zawiera stan main
+`d94bebae` wraz z bieżącymi lokalnymi zmianami (w tym więź i linę), utrwalony
+w osobnej kopii źródeł przed eksportem. Weryfikacja SHA-256 potwierdziła brak
+zmiany plików wykonywalnej logiki względem tej kopii podczas kompilacji,
+zgodność PCK z eksportem oraz poprawny podpis aplikacji i widgetu.
+
+Pies sam przesypia około 18 godzin na dobę, budzi się według rytmu dnia
+i komunikuje potrzeby. Samo otwarcie aplikacji nie przerywa drzemki. Kolejka
+gości podwórka jest zapisywana między wizytami, a limit trzech gości pozwala
+dotrzeć także do kota. Motyl i ślimak pojawiają się wcześniej i dłużej zostają;
+spokojne chodzenie psa nie przerywa już automatycznie ich obecności. Ograniczenia
+pogody, pory dnia i zajęcia psa pozostają częścią mechaniki.
+
+Przed instalacją wykonano i sprawdzono pełny ZIP Documents. Wszystkie 29 plików
+po instalacji, jeszcze przed uruchomieniem, było identycznych bajtowo.
+Migracja kopii rzeczywistego zapisu v15 → v17 zachowała wszystkie 29 istniejących
+pól. Po uruchomieniu na telefonie potwierdzono zachowanie tożsamości Glorii,
+wszystkich umiejętności i ich liczników, więzi, osiągnięć, fotografii, dekoracji,
+osobowości, zabaw i postępu podwórka. Oryginalny zapis v15 istnieje jako archiwum
+identyczne bajtowo. Zmiany potrzeb, zmęczenia, czasu, rytmu, historii odwiedzin
+i raportu nieobecności wynikają z normalnej pracy gry. Istniejący limit dziesięciu
+ostatnich raportów nieobecności zastąpił jeden najstarszy raport nowym;
+osiągnięcia albumu pozostały bez zmian, a pełna historia sprzed aktualizacji
+jest w kopii i archiwum v15. Nie odinstalowywano gry ani nie przywracano
+starszego zapisu na urządzenie.
+
+Weryfikacja: 35/35 zestawów logiki i 30/30 zestawów UI (pierwszy przebieg 17/30,
+a pozostałe przeszły po ustawieniu zegara testowego przed startem sesji
+lub zakończeniu powitania w scenariuszach niezwiązanych z pobudką).
+Automatyczny test NPC bez ręcznego wywołania pojawienia potwierdza motyla,
+ślimaka i dojście kolejki do kota przy szerokości 390 i 320 px. Native:
+4234 kontrole widgetu, 700 porównań projekcji, 1150 kontroli planowania
+powiadomień i 22 kontrolera.
+
+Na prawdziwym telefonie, po przejściu do tła, kontroler zgłosił powiadomienia
+włączone i jedno zaplanowane na 23 listopada o 09:00 czasu warszawskiego.
+Dotychczasowy budżet powiadomień jest zachowany. Jest to potwierdzenie planowania,
+nie faktycznego wyświetlenia alertu w przyszłości. Po kontroli przywrócono grę
+na ekran telefonu. Ludzkiej oceny wyglądu NPC i odbioru powiadomień nie zastępują
+testy na Macu ani sama instalacja.
+
+Kopie, zamrożone źródła, podpisana aplikacja, manifesty i logi:
+`exports/ios-sleep-npc-v35/` (lokalne, ignorowane przez Git).
+
+## Build 36 — tydzień powiadomień bez otwierania gry (2026-11-22)
+
+Zainstalowano 0.1.0 (36) na MagicPhone jako aktualizację, z tym samym bundle ID,
+zespołem i App Group. Lista aplikacji potwierdza numer 36. Kompilacja i podpis
+aplikacji oraz widgetu przeszły, PCK jest identyczny z eksportem. Źródła pochodzą
+z `/Volumes/KINGSTON/YuFriend`; manifest potwierdza zachowanie wszystkich zmian
+buildu 35, w tym interakcji z przedmiotami i błysków zamiast plakietek podwórka.
+Zmieniły się planista, kontroler i integracja tła powiadomień, opis ustawień
+oraz numer buildu. Kopia źródeł jest utrwalona przed eksportem.
+
+Plan obejmuje siedem lokalnych dni od ostatniego zapisu, do 28 terminów łącznie,
+z dotychczasowym limitem czterech na dzień i ruchome 24 godziny, ciszą nocną
+oraz przewidywaniem potrzeb. Kontroler obsługuje całą kolejkę, a zadanie tła
+czeka na zakończenie jej rejestrowania. Nie zmieniano schematu zapisu ani
+mechaniki spadku potrzeb.
+
+Przed instalacją pobrano Documents po przejściu gry do tła, sprawdzono ZIP
+i zapisano kopię na KINGSTON. Wszystkie **31 plików po instalacji, przed
+uruchomieniem, pozostało identycznych bajtowo**, w tym cały zapis v17 Glorii,
+zdjęcia i archiwa. Nie odinstalowywano aplikacji ani nie przywracano kopii.
+
+Testy: 3422 kontrole planisty, 30 kontrolera, 10 ustawień Godota i 52 UI;
+kontrola typów iOS z ostrzeżeniami jako błędami. Sprawdzono widok ustawień
+320 px. Nie powtarzano pełnej regresji niezmienionej mechaniki gry.
+
+Pierwszą próbę uruchomienia zatrzymał zablokowany ekran. Po odblokowaniu przez
+użytkownika build 36 został uruchomiony i sprawdzony na iPhonie. Po przejściu
+do tła kontroler potwierdził `status: on`, `enabled: true`, `pending: 26`.
+Kolejka zawiera terminy od **23 listopada 09:00 do 29 listopada 12:00** czasu
+warszawskiego; w pełnych dniach o 09, 12, 15 i 18. Dotychczasowy wykorzystany
+budżet pozostał zachowany. Jest to potwierdzenie zarejestrowania harmonogramu,
+nie obserwacja doręczenia przyszłych alertów.
+
+Odczyt Documents po uruchomieniu potwierdza tę samą Glorię, wszystkie
+umiejętności i ich liczniki, więź, osiągnięcia, zdjęcia, zabawy, osobowość
+oraz postęp podwórka. Nie brakuje żadnego pliku; archiwa i fotografie są
+identyczne bajtowo. Zmieniły się wyłącznie potrzeby, czas ostatniego zapisu,
+historia wizyty i rytm podczas normalnej pracy gry. Format pozostaje v17.
+
+Kopie, zamrożone źródła, podpisana aplikacja, manifesty i logi:
+`exports/ios-week-reminders-v36/` (lokalne, ignorowane przez Git).

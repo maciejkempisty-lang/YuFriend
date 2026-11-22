@@ -31,7 +31,7 @@ func _process(_delta: float) -> void:
 	if model == null: return
 	puppy.visible = model.kind in ["tug", "cups"]
 	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
-	var clip := "play_bow"
+	var clip := "play_bow" if model.phase in ["warning", "demo_warning"] else ("shake" if model.phase == "dog_pull" else "idle")
 	if model.kind == "cups":
 		puppy.scale *= 0.75
 		var point := model.dog_point() * size
@@ -102,8 +102,23 @@ func _draw_rope() -> void:
 	draw_circle(end, 15, Color("efcf93"))
 	draw_arc(end, 18, 0, TAU, 24, Color("9a7246"), 3, true)
 	var font := get_theme_default_font()
-	draw_string(font, Vector2(size.x * 0.1, size.y * 0.87), "Raz Ty, raz ja", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("315d49"))
-	if model.phase == "result": return
+	draw_string(font, Vector2(size.x * 0.1, size.y * 0.87), "Pokaz" if model.phase.begins_with("demo") else "Wymiana %d/5 · udane %d" % [mini(5, model.tug_round + 1), model.tug_good], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("315d49"))
+	var tension := 0.9 if model.phase == "dog_pull" and model.held else (0.6 if model.phase in ["warning", "demo_warning"] else 0.2)
+	draw_rect(Rect2(20, 18, size.x - 40, 12), Color("c6cfb8"))
+	draw_rect(Rect2(20, 18, (size.x - 40) * tension, 12), Color("a45f41") if tension > 0.5 else Color("779565"))
+	if model.phase == "result":
+		for star in 3:
+			var shape := PackedVector2Array()
+			var center := Vector2(size.x / 2 + (star - 1) * 38, 48)
+			for vertex in 10:
+				var angle := -PI / 2 + vertex * PI / 5
+				shape.append(center + Vector2(cos(angle), sin(angle)) * (14 if vertex % 2 == 0 else 6))
+			draw_colored_polygon(shape, Color("bd8b38") if star < model.tug_stars() else Color("bcc5ad"))
+		return
+	if model.phase in ["warning", "demo_warning"]:
+		draw_string(font, Vector2(20, size.y * 0.97), "PUŚĆ PALEC", HORIZONTAL_ALIGNMENT_CENTER, size.x - 40, 16, Color("8a4c30"))
+		return
+	if model.phase.begins_with("demo"): return
 	var direction := -1.0 if model.phase == "dog_pull" else 1.0
 	var arrow := end + Vector2(direction * 44, 0)
 	draw_line(arrow - Vector2(direction * 10, 0), arrow, Color("315d49"), 3, true)

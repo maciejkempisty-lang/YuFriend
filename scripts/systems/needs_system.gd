@@ -41,3 +41,34 @@ static func change(pet: PetState, effects: Dictionary) -> void:
 	for key in effects:
 		if pet.needs.has(key):
 			pet.needs[key] = clampf(float(pet.needs[key]) + float(effects[key]), 0, 100)
+
+# Scheduled sleep uses the same rates in foreground and background. Manual
+# recovery naps retain the legacy fast recovery used by short care activities.
+static func advance_sleep(pet: PetState, seconds: float) -> void:
+	if not is_finite(seconds) or seconds <= 0: return
+	for key in PetState.NEED_KEYS:
+		var rate: float = -13.0 if key == "energy" else float(LOSS_PER_HOUR[key]) * 0.35
+		if key == "contact": rate *= 0.7 + float(pet.traits.sociability) * 0.6
+		pet.needs[key] = clampf(float(pet.needs[key]) - rate * seconds / 3600.0, 15.0, 100.0)
+	pet.fatigue = maxf(0, pet.fatigue - seconds * 0.35)
+
+static func catch_up_rhythm(pet: PetState, now: float, local_now: float) -> float:
+	var elapsed := clampf(now - pet.last_seen_at, 0, MAX_OFFLINE_SECONDS)
+	var cursor := local_now - maxf(0, now - pet.last_seen_at)
+	var remaining := elapsed
+	# Hour boundaries include every sleep/wake transition, even with a half-hour offset.
+	while remaining > 0.000001:
+		var offset := float(pet.rhythm.offset_minutes) * 60
+		var boundary: float = (floor((cursor - offset) / 3600) + 1) * 3600 + offset
+		if float(pet.rhythm.awake_until) > cursor:
+			boundary = minf(boundary, float(pet.rhythm.awake_until))
+		var step := minf(remaining, maxf(0.000001, boundary - cursor))
+		pet.resting = DailyRhythm.should_sleep(pet, cursor)
+		if pet.resting: advance_sleep(pet, step)
+		else: _advance_chunk(pet, step, true)
+		cursor += step
+		remaining -= step
+	# Needs freeze after eight hours; the displayed rhythm still follows today's clock.
+	pet.resting = DailyRhythm.should_sleep(pet, local_now)
+	pet.last_seen_at = maxf(pet.last_seen_at, now)
+	return elapsed

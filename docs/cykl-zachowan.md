@@ -1,30 +1,22 @@
 # Cykl zachowań YuFriend
 
-Wdrożenie z 15 listopada 2026. Logika: `DailyRhythm`, `BehaviorSystem` i `GameSession`. Rytm wpływa na inicjatywę psa; wieczór i noc nie blokują zabawy ani treningu rozpoczętego przez gracza. Dotychczasowe wymagania energii i zmęczenia nadal obowiązują.
+## Automatyczny sen — 22 listopada 2026
 
-## Pory i wybór
+Pies sam zasypia i budzi się według lokalnego zegara, także poza aplikacją. Domyślnie śpi około **18 godzin na dobę**. Okna czuwania to **06–07, 09–10, 12–13, 15–16, 18–19 i 21–22**. Pomiędzy nimi trwają dwugodzinne drzemki, a nocą sen 22–06. Istniejące stopniowe dopasowanie do nawyków przesuwa cały harmonogram; aktualne godziny pobudek pokazuje profil.
 
-| Pora bez przesunięcia | Aktywne | Spokojne | Drzemka |
-|---|---:|---:|---:|
-| 6–9 | 60 | 35 | 5 |
-| 9–13 | 70 | 25 | 5 |
-| 13–15 | 15 | 35 | 50 |
-| 15–19 | 60 | 35 | 5 |
-| 19–22 | 15 | 60 | 25 |
+Otwarcie gry ani powrót z tła nie budzą śpiącego psa. Podczas snu dymek i pasek opieki pokazują godzinę następnej pobudki. Po 20 sekundach zapowiedzi pies sam idzie do legowiska, również z podwórka. Rozpoczęta czynność, trening lub gra kończą się przed snem; sama otwarta zakładka treningu ani pozostawiony wynik zakończonej gry nie blokują zaśnięcia. Dotknięcie pieska albo „Obudź” daje dziesięć minut wspólnego czasu. Ten termin jest zapisany, nie odnawia go kolejne głaskanie ani restart. Potem pies wraca do swojego rytmu. Przycisk drzemki pozostaje opcjonalny; nie jest potrzebny do zwykłego snu.
 
-To początkowe wagi grup przy wyborze, a nie procent czasu spędzonego w danym stanie. Nastrój koryguje grupy, a cechy, nawyki i dziwactwa — wybór wewnątrz grupy. Wieczorem waga drzemki stopniowo rośnie. Trzy ostatnie zachowania mają mnożnik 0,08; to samo miejsce dodatkowo 0,12. Pozostaje możliwość wyboru przy małej puli. Cała scenka stanowi jedną decyzję, więc dwukrotne zajrzenie do kosza jest dozwolone wewnątrz sekwencji.
+W zaplanowanym śnie energia odzyskuje **13 punktów na godzinę netto**, a pozostałe potrzeby maleją z **35% zwykłego tempa**. Pełna energia nie kończy snu. Reguły są takie same w grze i w projekcji nieobecności/widgetu. Potrzeby poza aplikacją nadal zmieniają się najwyżej przez osiem godzin; aktualny stan snu wynika z bieżącego zegara nawet po dłuższej nieobecności. Dodatkowy krótki odpoczynek wybrany przy zmęczeniu w oknie czuwania zachowuje wcześniejszą szybką regenerację w otwartej grze.
 
-Pilny głód i niska energia mają pierwszeństwo przed losowaniem. Nuda wieczorem i nocą nie uruchamia zaczepki z piłką. Wieczorne i nocne zaproszenia dotyczą wyłącznie bliskości. W dzień zaproszenia zachowują dotychczasowy odstęp i pamięć reakcji.
+Po pobudce pies mówi **„Już nie śpię!”** i przez minutę pokazuje maksymalnie dwie aktualne potrzeby. Prośba o wyjście uwzględnia wykonane wyjście i niezebrany bałagan. Pozostałe potrzeby są wybierane poniżej 60 punktów, od najniższej; energia nie jest prośbą o ręczne zarządzanie snem. Jeśli potrzeby są zaspokojone, pies mówi, że wszystko jest w porządku. Przycisk dymka prowadzi do odpowiedniej czynności. Jeśli na małym ekranie nie ma miejsca na dymek, komunikat pojawia się w panelu opieki nad przyciskami potrzeb. Powrót do tej samej pobudki nie odtwarza komunikatu ponownie.
 
-Automatyczna drzemka trwa co najmniej 60 sekund, kończy się po osiągnięciu 85 energii lub po 180 sekundach. Kolejna może się rozpocząć po co najmniej 30 minutach od poprzedniego zaśnięcia; w sjeście najwyżej jedna na lokalny dzień. Ręczny odpoczynek i pilna potrzeba energii pozostają dostępne niezależnie od limitu. Dotknięcie psa lub przycisku Obudź kończy odpoczynek.
+Po włączeniu „Przypomnień od pieska” i zgodzie iOS telefon planuje wiadomości o potrzebach na pobudki w godzinach **09–21**, najwyżej cztery na dzień i ruchome 24 godziny. Nie budzi opiekuna nocą. Szczegóły i ograniczenia: [powiadomienia iOS](powiadomienia-ios.md).
 
-## Noc i budzenie
+Schemat zapisu **v17** dodaje do `rhythm` wyłącznie `awake_until` oraz `wake_notice_at`. Migracja zachowuje pozostały postęp i archiwizuje oryginał starszego zapisu. Widget odczytuje harmonogram v17, a starsze snapshoty nadal obsługuje według poprzednich zasad.
 
-Domyślnie noc trwa 22–6. Nocny sen nie jest losowany. Otwarcie aplikacji w nocy budzi psa na powitanie, również przy pierwszym uruchomieniu i zanim powstaną nawyki. Powrót po co najmniej minucie w tle również uruchamia powitanie; krótkie przełączenie aplikacji zachowuje trwający sen. Powitanie nie zmienia potrzeb ani więzi i rozpoczyna nowe trzy minuty do automatycznego snu. Podczas otwartej gry pies idzie spać po 180 sekundach bez opieki/akcji; 20 sekund wcześniej pokazuje zapowiedź z przyciskiem głaskania. Zabawa, otwarta runda z wynikiem, trening, karmienie, czesanie i głaskanie chronią przed zaśnięciem. Odliczanie bezczynności jest wstrzymane, gdy widok opieki nie jest dostępny (np. dialog, przegląd pokoju).
+## Zachowania w czasie czuwania
 
-Zapowiedź „Chce mi się spać” i komunikat „Jeszcze chwila na rozbudzenie” są neutralne i pasują także do Glorii. Dotyk budzi bez zmiany więzi i bez natychmiastowej zmiany potrzeb. Pierwszy dotyk służy obudzeniu, kolejny głaskaniu. Przez trzy minuty pies chodzi wolniej, ale może się bawić i ćwiczyć. Po obudzeniu nocny powrót do legowiska następuje po 120 sekundach bezczynności. Zapowiedź również pojawia się 20 sekund wcześniej. Rano pies budzi się według harmonogramu. Przerwana droga do legowiska nie może później uśpić psa przez spóźniony sygnał dojścia.
-
-`night_sleep` opisuje widoczny sen, a zapisane `resting` — regenerację. W otwartej grze regeneracja nocna kończy się przy 85 energii, ale sen trwa do pobudki. Potem energia może znowu maleć pomimo śpiącej animacji. To świadome zachowanie zachowujące dotychczasowe obliczenia `NeedsSystem`, projekcje widgetu i planisty przypomnień. Poza aplikacją nie symulujemy nowego harmonogramu regeneracji. Widget czyta zapisy v4/v5 i nadal przedstawia odpoczynek wynikający z projekcji potrzeb; nie dodano osobnej nocnej prezentacji widgetu.
+`BehaviorSystem` wybiera scenki aktywne i spokojne z uwzględnieniem pory, nastroju, cech i historii. Sen nie jest już wynikiem losowania. Wieczorem i nocą pies sam nie proponuje piłki. W czasie jawnie rozpoczętej krótkiej pobudki można grać i trenować, o ile pozwalają na to energia i zmęczenie.
 
 ## Dopasowanie do gracza
 
@@ -45,8 +37,10 @@ Katalog obejmuje patrol, okno, drzwi, kosz, piłkę, oglądanie miski, dywan, cz
 
 Po minucie bezczynności, gdy skończy się bieżąca scenka, pies może usiąść i zwrócić uwagę na gracza. Po jedzeniu i zakończonej animacji zabawy wybiera odpoczynek na dywanie. Nagroda treningowa kończy się pozostaniem w bieżącej pozycji; otwarta zakładka treningu wstrzymuje samodzielne spacery i scenki także między próbami. Po wyjściu do pokoju samodzielne zachowania wracają. Po przesunięciu pokoju może po trzech sekundach podejść w oglądaną stronę; nowa akcja i przycisk powrotu do psa anulują oczekujące podążanie. Przesunięcie nie budzi śpiącego psa.
 
-Pełne osobne scenki pozostałych dziwactw, dokładna godzina oczekiwania na gracza, picie, nowe animacje i nocna prezentacja widgetu pozostają kolejnymi rozszerzeniami.
+Pełne osobne scenki pozostałych dziwactw i nowe animacje pozostają możliwymi rozszerzeniami.
 
 ## Weryfikacja
 
-`tests/test_rhythm.gd` wstrzykuje lokalny zegar i sprawdza granice pór, adaptację, losowanie, blokady drzemek, noc, budzenie, przerywanie sekwencji, odczyt starego zapisu i trwałość nowego. `tests/ui_rhythm.gd` sprawdza rzeczywiste połączenia widoku, ruchu i animatora oraz generuje obrazy `test-results/rhythm-*.png`. Dodatkowo uruchamiane są dotychczasowe zestawy logiki, interfejsu oraz zgodność Swift/Godot.
+`tests/test_auto_sleep.gd` sprawdza 18 godzin snu dla każdego przesunięcia nawyków, granice drzemek, potrzeby po pobudce, restart, krótkie obudzenie, cofnięcie zegara oraz zachowanie wszystkich wcześniejszych pól przy migracji v16. `test_rhythm.gd` zachowuje testy pór, adaptacji, sekwencji i treningu. `ui_rhythm.gd` sprawdza prawdziwe przejścia animatora, dymek snu, pobudkę i przycisk karmienia.
+
+`tools/test_ios_widget.sh` porównuje obliczenia Godota i Swifta dla starego oraz nowego rytmu. `tools/test_ios_reminders.sh` sprawdza terminy pobudek, przesunięcia, zmiany czasu, ciszę nocną, zgodę i trwały limit. Rzeczywiste doręczenie na iPhonie wymaga próby po instalacji nowej wersji.

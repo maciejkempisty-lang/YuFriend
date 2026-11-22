@@ -23,6 +23,8 @@ func run() -> void:
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-visitor-ui-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
+	# Set the daytime fixture before startup synchronizes automatic sleep.
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	root.add_child(app)
 	var s := app.session
 	s.local_clock = func(): return 100 * 86400.0 + 12 * 3600
@@ -81,8 +83,14 @@ func run() -> void:
 	app.room.look_at_world(Vector2(650, 315))
 	app.room.update_placement()
 	await process_frame
-	check(app.room.yard_markers.dig.visible, "digging marker remains visible during a visit")
-	app.room.yard_markers.dig.pressed.emit()
+	# The dog may stand on the sandbox: touch a visible part of it, as a player would.
+	var sandbox := Vector2.INF
+	var area: Rect2 = app.room._screen_rect(RoomLayout.YARD_STATIONS.dig.bounds).grow(10)
+	for y in range(int(area.position.y), int(area.end.y), 4):
+		for x in range(int(area.position.x), int(area.end.x), 4):
+			if sandbox == Vector2.INF and app.room.action_at(Vector2(x, y)) == "yard_dig": sandbox = Vector2(x, y)
+	check(sandbox != Vector2.INF, "sandbox stays touchable in the scene during a visit")
+	app.room._interact(sandbox)
 	check(s.activity == "dig_walk" and not s.visitors.active(), "first sandbox tap starts digging during a visit")
 	print("UI VISITORS RESULTS: %d passed, %d failed" % [passed, failed])
 	app.queue_free()

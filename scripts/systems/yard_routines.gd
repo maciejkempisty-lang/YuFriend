@@ -12,6 +12,7 @@ static func has_mess(session: GameSession) -> bool:
 static func valid(value: Variant) -> bool:
 	if not value is Dictionary: return false
 	if value.has("mess") and not value.mess is bool: return false
+	if value.has("visitor_next") and (not PetState.valid_number(value.visitor_next) or value.visitor_next != floor(value.visitor_next) or value.visitor_next < 0 or value.visitor_next >= 3): return false
 	if not value.get("plant") is String or (value.plant != "" and not PLANTS.has(value.plant)): return false
 	for key in ["growth", "checked_at", "water_until", "outday"]:
 		if not PetState.valid_number(value.get(key)): return false
@@ -135,7 +136,7 @@ static func clean_up(session: GameSession) -> bool:
 	if session.activity != "outing_praise" and session.busy(false): return false
 	var before := session.pet.to_dict()
 	session.pet.yard_routines["mess"] = false
-	session.pet.bond = minf(100, session.pet.bond + 0.5)
+	BondLevels.add(session.pet, 0.5, session._local_now())
 	if not session.flush():
 		session.pet = PetState.from_dict(before)
 		session.changed.emit()

@@ -14,6 +14,8 @@ func run() -> void:
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-memory-ui-%s/pet.json" % Time.get_ticks_usec()
 	app.room.ambient_life.life.autoplay = false
+	# Set the daytime fixture before startup synchronizes automatic sleep.
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	root.add_child(app)
 	app.session.set_process(false)
 	app.session.pet.pet_name = "Gloria"

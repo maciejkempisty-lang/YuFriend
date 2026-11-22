@@ -4,7 +4,7 @@ extends Button
 var caption: String = "":
 	set(value):
 		caption = value
-		tooltip_text = value
+		# The caption is drawn on the button; a hover tooltip on a phone only repeats it.
 		accessibility_name = value
 		queue_redraw()
 var icon_name: String = "paw"

@@ -512,6 +512,13 @@ func _draw_yard() -> void:
 		_pixel_rect(Rect2(x + 15, 305, 3, 9), Color("78965a"))
 
 func _draw_decor() -> void:
+	if decor.has("heart"):
+		_pixel_rect(Rect2(410, 120, 72, 72), Color("795646"))
+		_pixel_rect(Rect2(416, 126, 60, 60), Color("f6e6c8"))
+		var rows := ["0110110", "1111111", "1111111", "0111110", "0011100", "0001000"]
+		for y in rows.size():
+			for x in rows[y].length():
+				if rows[y][x] == "1": _pixel_rect(Rect2(425 + x * 6, 138 + y * 6, 6, 6), Color("c87879"))
 	for i in YardRoutines.PLANTS.size():
 		var flower: String = YardRoutines.PLANTS.keys()[i]
 		if not decor.has(flower): continue

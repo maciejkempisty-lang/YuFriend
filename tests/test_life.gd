@@ -162,7 +162,7 @@ func _test_migration_and_resume() -> void:
 	var reports: Array = []
 	game.away_report_ready.connect(func(): reports.append(true))
 	game.start(session_path)
-	check(reports.size() == 1 and game.last_message.contains("spokojnie Cię obwąchuje"), "startup keeps the real absence length beyond the eight-hour need cap")
+	check(reports.size() == 1 and float(game.pet.life.away_report.until) - float(game.pet.life.away_report.from) >= 4 * 86400, "startup keeps the real absence length beyond the eight-hour need cap")
 	check(game.pet.pet_id == pet.pet_id and game.pet.bond == pet.bond and game.pet.skills == pet.skills, "long return preserves the same dog, bond and skills")
 	game.suspend_session()
 	game.resume_session()

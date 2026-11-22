@@ -687,6 +687,7 @@ func _test_effects() -> void:
 	var game := GameSession.new()
 	root.add_child(game)
 	game.set_process(false)
+	game.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	game.start(directory + "/effects-pet.json")
 	game.sound_requested.connect(func(id: String): heard.append(id))
 	game.pet.needs.fullness = 100

@@ -34,7 +34,7 @@ Ikony opieki w zakładce Dom i dotknięcia przedmiotów korzystają z reguł ses
 | Czesanie | `clean` | Czystość +25, bliskość +5 | 12 s |
 | Odpoczynek / budzenie | `rest` | Ustawia `resting` po dojściu do legowiska; budzenie kończy odpoczynek | Bez osobnego czasu ponownego użycia |
 
-W odpoczynku przyrost energii wynosi 0,8 punktu na sekundę aktywnej gry lub 18 punktów na godzinę nieobecności. W tym samym czasie działa zwykły pasywny ubytek energii. Pies sam budzi się przy energii co najmniej 85 po minimum 6 sekundach aktywnej drzemki; można go też obudzić wcześniej. Przeliczenie nieobecności kończy sen po dojściu do 85 i liczy resztę czasu już na jawie. Przykład: z energią 20 pies po 5 godzinach osiąga 85, a po kolejnych 3 godzinach czuwania ma 70. Nieobecność nadal jest ograniczona do 8 godzin.
+Pies sam przesypia około 18 godzin doby: noc 22–06 i drzemki między jednogodzinnymi oknami czuwania o 06, 09, 12, 15, 18 i 21 (godziny przesuwa istniejący rytm nawyków). W zaplanowanym śnie odzyskuje 13 energii na godzinę netto, a pozostałe potrzeby maleją z 35% zwykłego tempa. Pełna energia nie kończy snu; otwarcie aplikacji nie budzi psa. Po pobudce dymek pokazuje aktualne potrzeby. Ręczne obudzenie pozwala na dziesięć minut wspólnego czasu. Krótki dodatkowy odpoczynek w oknie czuwania zachowuje szybką regenerację 0,8 punktu na sekundę pomniejszoną o pasywny ubytek. Nieobecność nadal zmienia potrzeby najwyżej przez osiem godzin. Szczegóły: [cykl zachowań](cykl-zachowan.md).
 
 Trening i wykonywana opieka chronią swoje czynności przed nakładaniem. Zaproszenia wynikające z potrzeb lub nawyków oraz zwykły spacer można od razu przerwać opieką, treningiem lub nowym celem na podłodze. Dotyczy to spaceru samodzielnego i zleconego przez gracza. Dojście do wybranej stacji oraz rozpoczęty trening pozostają chronione. Śpiącego psa trzeba obudzić przed opieką i treningiem. Przy problemie z odczytem zapisu zmiany stanu są zablokowane.
 
@@ -112,10 +112,10 @@ Naprowadzanie gestem gwarantuje poprawne wykonanie po spełnieniu warunków rozp
 
 ```text
 rozproszenie = fatigue × (0.0008 + sensitivity × 0.0012)
-szansa = clamp(0.16 + mastery × 0.007 + bond × 0.001 − rozproszenie, 0.12, 0.96)
+szansa = clamp(0.16 + mastery × 0.007 + min(bond, 100) × 0.001 − rozproszenie, 0.12, 0.96)
 ```
 
-`mastery`, `bond` i `fatigue` mają skalę 0–100, a `sensitivity` 0–1. Przykład: opanowanie 50, więź 20, zmęczenie 20 i wrażliwość 0,5 dają szansę 50,2%. Nawet 100% opanowania nie oznacza wykonania przy każdej samodzielnej próbie.
+`mastery`, `min(bond, 100)` i `fatigue` mają skalę 0–100 w tym wzorze, a `sensitivity` 0–1. Przykład: opanowanie 50, więź 20, zmęczenie 20 i wrażliwość 0,5 dają szansę 50,2%. Nawet 100% opanowania nie oznacza wykonania przy każdej samodzielnej próbie.
 
 Minimalny czas reakcji wynosi `2 + (1 − patience) × 0,4` sekundy; dla łapy bazą jest 2,8 zamiast 2. Gra czeka także na zakończenie animacji, a przy przywołaniu na dotarcie do celu. Dłuższa animacja nie zużywa wcześniej okna nagrody.
 
@@ -130,7 +130,7 @@ Po udanej próbie okno nagrody trwa `2,7 + patience × 0,7` sekundy. Można nagr
 | Z naprowadzaniem | Opanowanie +8, więź +1 | Opanowanie +10, więź +1,5 |
 | Samodzielnie | Opanowanie +12, więź +1 | Opanowanie +14, więź +1,5 |
 
-Smakołyk dodatkowo zwiększa sytość o 2, pochwała bliskość o 4, a zabawa potrzebę zabawy o 4. Opanowanie i więź są ograniczone do 100. Udana nagroda zwiększa licznik `successes`; jest to licznik **nagrodzonych prób**, nie wszystkich poprawnych ruchów psa.
+Smakołyk dodatkowo zwiększa sytość o 2, pochwała bliskość o 4, a zabawa potrzebę zabawy o 4. Opanowanie jest ograniczone do 100. Więź rośnie także powyżej 100; jej wpływ na szansę samodzielnej komendy jest ograniczony do 100. Udana nagroda zwiększa licznik `successes`; jest to licznik **nagrodzonych prób**, nie wszystkich poprawnych ruchów psa.
 
 Interfejs opisuje opanowanie jako „Poznaje gest” poniżej 25%, „Ćwiczy z Tobą” od 25% do wartości poniżej 75% oraz „Coraz pewniej” od 75%. Pierwsza nagrodzona próba i przekroczenie 75% dodają jednorazowe wspomnienia.
 
@@ -215,7 +215,7 @@ Weryfikacja: `tests/test_keepsakes.gd` (migracja rzeczywistego pliku v7, odbloko
 
 Opanowanie sztuczki pozostaje trwałe: osiągnięte 100%, wspomnienia i odblokowania nie znikają. Osobna **forma** każdej sztuczki wynosi 50–100%. Po pełnym dniu bez jej nagrodzonego wykonania spada o 10 punktów; udana, nagrodzona próba przywraca 25 punktów (maksymalnie 100%). Dzień pierwszego uruchomienia po aktualizacji jest okresem ochronnym. Przy formie 50% czas na nagrodę jest o 20% krótszy niż przy 100%; nie dodajemy losowych porażek do poprawnych gestów.
 
-„Na dziś” utrwala do trzech dostępnych sztuczek na cały lokalny dzień. Nowe odblokowanie nie zmienia rozpoczętej listy. Wykonane pozycje są oznaczone, a ukończenie całej listy daje raz dziennie +2 więzi (do limitu 100) i dzień serii. Pominięcie dnia zeruje serię, zachowując łączną liczbę ukończonych dni. Ponowne uruchomienie, powtórzenie nagrody i cofnięcie zegara nie odnawiają dziennego bonusu. Sama próba bez poprawnej nagrody nie zalicza ćwiczenia. Początkujący pies może mieć tylko dwie dostępne komendy, więc lista nie wymaga zablokowanej sztuczki.
+„Na dziś” utrwala do trzech dostępnych sztuczek na cały lokalny dzień. Nowe odblokowanie nie zmienia rozpoczętej listy. Wykonane pozycje są oznaczone, a ukończenie całej listy daje raz dziennie +2 więzi i dzień serii. Pominięcie dnia zeruje serię, zachowując łączną liczbę ukończonych dni. Ponowne uruchomienie, powtórzenie nagrody i cofnięcie zegara nie odnawiają dziennego bonusu. Sama próba bez poprawnej nagrody nie zalicza ćwiczenia. Początkujący pies może mieć tylko dwie dostępne komendy, więc lista nie wymaga zablokowanej sztuczki.
 
 Noc, zgodna z indywidualnym rytmem psa, blokuje wejście na podwórko komunikatem „Za ciemno, pora spać”. Jeśli noc zastanie psa na zewnątrz, po 30 sekundach bezczynności wraca do domu i idzie spać. Trwająca zabawa i węszenie mogą się zakończyć; dotyk gracza odnawia czas bezczynności. Limit dojścia 90 sekund oraz podążanie za oglądanym miejscem działają także na podwórku. Komunikat spaceru mówi teraz o podwórku, nie pokoju.
 
@@ -465,6 +465,26 @@ postępu, anulowanie, wielokrotne nagrody i tempo gestu; `ui_sit_marker.gd`
 390 i 320 px. `ui_smoke.gd` przechodzi nową sekwencję w teście całej gry.
 
 
+## Kolejne serca więzi — zapis v16
+
+Więź nigdy nie spada za nieobecność. Dotychczasowe progi 0/25/50/75/100 i ich odblokowania pozostają. Przy 100 zaczyna się „Nierozłączni ♥1”; kolejne serca wymagają 40, 50, 60, 70, a potem zawsze 80 punktów. Progi sumaryczne: 100, 140, 190, 250, 320, 400, 480… Pasek od początku gry pokazuje postęp w bieżącym etapie. Po awansie zaczyna następny etap od zera, zachowując całą łączną więź. Pod nim widnieje cel, procent i „dziś +…” z jednym miejscem po przecinku; przed osiągnięciem progu procent nie zaokrągla się do 100.
+
+Wszystkie przyrosty przechodzą przez `BondLevels.add`: głaskanie, zabawy dotykowe, aport i chwyt, chowany, trening w domu i na podwórku, tor oraz bonus „Na dziś” i sprzątanie po wyjściu. Dotychczasowe kwoty, dzienne budżety i odstępy pozostają. Nie ma obietnicy awansu co konkretną liczbę dni: inne zabawy i trening nie mają wspólnego dziennego limitu więzi. Wzór szansy treningu korzysta z `min(bond, 100)`, więc kolejne serca nie zwiększają szansy powodzenia.
+
+Nagrody:
+- ♥2: nowa myśl w zwykłej rotacji dymka oraz wspomnienie w Albumie.
+- ♥3: „Blisko serca”, trzy warianty tekstu spokojnej chwili wybierane według dnia. Nadal +8 kontaktu raz dziennie, bez dodatkowej więzi.
+- ♥4: opcjonalna ramka „Nasze serca” przy robieniu nowego zdjęcia. Zostaje w zapisanym PNG; dotychczasowe fotografie nie są modyfikowane.
+- ♥5: dekoracja pokoju „Serce przyjaźni”, włączana w Albumie.
+- Od ♥6: każde serce aktualizuje jedną trwałą pamiątkę ostatniego awansu. Myśli korzystają z rotujących wariantów. Nie ma nieograniczonego tworzenia nowych osiągnięć ani obietnicy nowego przedmiotu na każdym poziomie: cała seria zużywa najwyżej pięć kluczy wspomnień.
+
+Zapis v16 dodaje `bond_progress` z lokalnym dniem i sumą rzeczywiście przyznanych punktów. Restart zachowuje sumę; odczyt kolejnego dnia pokazuje zero bez odejmowania więzi. Cofnięcie zegara nie resetuje sumy: nowe punkty dopisywane są do ostatniego zapisanego dnia, a dla wcześniejszej daty ekran pokazuje zero. Odczyt v16 z uszkodzonym licznikiem podlega zwykłemu odzyskiwaniu z kopii, zamiast cichego zerowania pola.
+
+Migracja v15 → v16 dodaje pusty licznik, zachowuje tożsamość, więź, umiejętności, osobowość, historię, zdjęcia, kolekcje i cały pozostały postęp. Zapis z więzią 100 pozostaje na 100 (♥1, droga do ♥2). Nie odtwarza się dawnych nadwyżek ani dzisiejszych punktów sprzed aktualizacji. Istniejący mechanizm przechowuje oryginalny plik jako `.v15` (lub wariant z hashem przy kolizji). Starsza wersja gry odrzuca nagłówek v16 zamiast obciąć więź. Widżet nadal korzysta z osobnego kontraktu bez więzi.
+
+Weryfikacja wdrożenia: 33/33 zestawy testów logiki (w tym 214 sprawdzeń nowych serc), 7/7 zestawów UI: serca, kopanie, Album, dymki, trening, znacznik Siad i smoke. Widżet: 1546 sprawdzeń, 252 projekcje zgodne z Godotem. Migracja osobnej kopii rzeczywistego zapisu Glorii z buildu 32 zachowała wszystkie 29 dotychczasowych pól, identyczną kopię v15 i przyrost ponad 100 po ponownym odczycie v16. Oryginalna kopia zapisu pozostała niezmieniona. Weryfikacja UI obejmuje komputerowe okno Godota; ta zmiana nie została jeszcze zainstalowana na iPhonie.
+
+
 ### Pokaz pierwszego „Siad” — build 33
 
 Pierwsze naciśnięcie „Zacznij od pokazu” otwiera próbę pokazową. Animacja jest
@@ -505,3 +525,23 @@ naliczany raz, przy rozpoczęciu treningu. Wyjście z treningu lub anulowanie
 uniemożliwia późniejszy start ruchu. Schemat zapisu i wcześniejsze opanowanie
 pozostają bez zmian. Testy obejmują granicę 1,2 s, pojedyncze uruchomienie ruchu,
 ignorowanie starych sygnałów animacji, anulowanie i rozróżnienie komunikatów.
+
+
+## Miejsca na podwórku bez plakietek — 22 listopada 2026
+
+W zwykłym widoku podwórka nie ma już podpisanych plakietek nad miejscami. Gracz dotyka samego przedmiotu: krzaka, kałuży, ogródka, piaskownicy, cienia drzewa, furtki, tabliczki toru, lewej chorągiewki aportu, zraszacza lub słupka wyjścia na potrzebę. Obszary dotyku są zapisane jako `bounds` w `RoomLayout.YARD_STATIONS`. Małe przedmioty mają cel dotyku co najmniej 44×44 punkty, a duże krzaki zachowują własny rozmiar. Kolejność sprawdzania zaczyna się od małych przedmiotów, więc tabliczka wygrywa z trawnikiem za nią. Pies, piłka, chwyt aportu i sprzątanie mają pierwszeństwo przed miejscem pod nimi. Dotknięcie poza przedmiotami nadal prowadzi psa w wybrane miejsce.
+
+Miejsce jeszcze niewypróbowane ma nad sobą mały migoczący złoty błysk (`YardSparkle`), który nie przyjmuje dotyku. Po pierwszym użyciu błysk znika na stałe; lista wypróbowanych miejsc jest w `ui.cfg`, w sekcji `yard_seen`, a nie w zapisie psa. Błyski znikają też podczas toru, zabaw w wodzie, okna chwytu i chowanego.
+
+„Całe podwórko” nadal pokazuje mapę dwunastu przycisków o polu 44×44, bez nakładania się. Przyciski z podpisem pod ikoną (`IconActionButton`) i wskaźniki potrzeb nie mają już podpowiedzi wyświetlanych po najechaniu, bo powtarzały widoczny tekst. Opis dla czytników ekranu pozostaje w `accessibility_name`.
+
+Test: `tests/ui_yard_places.gd` sprawdza brak plakietek, błyski, dotknięcie krzaka i tabliczki, zapamiętanie po restarcie oraz mapę w podglądzie. `ui_visitors` dotyka widocznej części piaskownicy zamiast plakietki. Pozostałe zestawy podwórka mają te same wyniki co wersja bez tej zmiany. Na dzień zmiany część z nich nie przechodzi niezależnie od niej, bo równoległa przeróbka snu nie pozwala psu w testach wyjść na podwórko. Zmiany nie sprawdzono jeszcze na iPhonie.
+
+
+## Pojawianie się NPC — build 35
+
+Pierwszy gość przy płocie może przyjść po 15 sekundach obserwacji podwórka; kolejni po 75 sekundach od zakończenia spotkania. Jedno wejście dopuszcza trzech gości. Kolejka ptak → motyl → kot jest zapisywana razem ze spotkaniem w opcjonalnym `yard_routines.visitor_next`; restart nie zaczyna jej od ptaka. Starszy zapis bez tego pola pozostaje poprawny. Nieudany zapis nie zużywa spotkania ani kolejki. Czas spokojnego spaceru odlicza oczekiwanie, a gość podchodzi po zakończeniu ruchu. Rozpoczęta czynność, gra, trening i sen mają pierwszeństwo.
+
+Motyl nad grządką pojawia się po 4–8 sekundach, ślimak po 10–14 sekundach widocznej, spokojnej sceny. Zostają odpowiednio do 20 i 40 sekund. Zwykłe chodzenie psa, rozglądanie i głaskanie nie usuwają całego otoczenia. Zabawy nadal płoszą zwierzęta, a wróbel odlatuje przy zbyt bliskim psie. Pogoda, noc, widoczność miejsca i limit dwóch zwierząt tła pozostają respektowane.
+
+`test_npc_schedule.gd` obejmuje kolejkę wszystkich trzech gości podczas jednego wejścia, restart, ruch, limit, uszkodzone dane i błąd zapisu. `ui_npc_schedule.gd` obserwuje prawdziwe automatyczne pojawianie się, bez wywoływania `start()` zwierząt, na ekranach 390 i 320 px.

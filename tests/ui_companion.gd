@@ -25,6 +25,7 @@ func _run() -> void:
 	game.set_process(false)
 	game.initiatives_enabled = false
 	game._brain_left = INF
+	game.wake_report_left = 0 # This suite exercises the regular voice after the wake report.
 	app.set_process(false)
 	app.room.set_process(false)
 	app.room.animator.set_process(false)
@@ -97,6 +98,7 @@ func _run() -> void:
 	await tap(app.companion_action)
 	check(app.play_menu.visible and not app.companion_card.visible, "play need opens the game chooser and yields to the dialog")
 	app.play_menu.hide()
+	await settle() # Refresh attention after closing the modal.
 	game.pet.needs.play = 80
 	game.initiatives_enabled = true
 	game.offer_initiative("ball")

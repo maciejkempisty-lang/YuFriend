@@ -63,9 +63,9 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 	if game.pet == null: return {}
 	var pet := game.pet
 	if game.is_sleeping():
-		return _line("activity", "Ciii… zbieram siły na kolejne przygody.", "rest", "Obudź", game)
+		return _line("activity", DailyRhythm.sleep_label(pet, game._local_now()) if game.scheduled_sleep else "Ciii… zbieram siły na kolejne przygody.", "rest", "Obudź", game)
 	if game.sleep_warning:
-		return _line("activity", "Za chwilę pójdę spać. Jeszcze chwila razem?", "pet", "Pogłaszcz", game)
+		return _line("activity", "Za chwilę samodzielnie pójdę spać. Po pobudce dam znać.", "", "", game)
 	if game.busy():
 		var text: String = {
 			"feed": "Mniam! Teraz pora na jedzenie.",
@@ -76,6 +76,9 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 			text = {"feed": "Już idę do miski!", "rest": "Już idę do legowiska.",
 				"touch_ball": "Biegnę po piłkę!"}.get(game._pending_action, "Już biegnę!")
 		return _line("activity", text, "", "", game)
+	if game.wake_report_left > 0:
+		var report := wake_report(game)
+		return _line("wake", report.text, report.action, report.label, game)
 	# Exhaustion prevents play even when the play meter is the lowest one.
 	var need := "energy" if float(pet.needs.energy) < 28 or pet.fatigue >= 75 else ""
 	var lowest := NEED_LIMIT
@@ -96,7 +99,7 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 			memories.append({"kind": "memory", "text": MEMORIES[entry.key], "action": "album", "label": "Zobacz album"})
 			if memories.size() == 3: break
 	var mood: String = pet.life.get("mood", "calm")
-	var context := str([pet.pet_id, mood, pet.life.discovered, memories])
+	var context := str([pet.pet_id, mood, pet.life.discovered, memories, BondLevels.heart(pet)])
 	if context != _context:
 		_context = context
 		_quiet_index = 0
@@ -106,6 +109,8 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 	quiet.append({"kind": "thought", "text": words[0], "action": words[1], "label": words[2]})
 	for quirk in pet.life.discovered:
 		quiet.append({"kind": "thought", "text": QUIRKS[quirk], "action": "", "label": ""})
+	if BondLevels.heart(pet) >= 2:
+		quiet.append({"kind": "thought", "text": BondLevels.thought(pet), "action": "pet", "label": "Pogłaszcz"})
 	quiet.append_array(memories.slice(1))
 	_quiet_left -= maxf(0, visible_delta)
 	if _quiet_left <= 0:
@@ -120,3 +125,23 @@ func _line(kind: String, text: String, action: String, label: String, game: Game
 	elif action == "play": enabled = enabled and game.play_readiness().is_empty()
 	elif action != "pet" and float(game.cooldowns.get(action, 0)) > 0: enabled = false
 	return {"kind": kind, "text": text, "action": action, "label": label, "enabled": enabled}
+
+static func wake_report(game: GameSession) -> Dictionary:
+	var pet := game.pet
+	var priorities: Array = ["fullness", "hygiene", "play", "contact"]
+	priorities.sort_custom(func(a: String, b: String): return float(pet.needs[a]) < float(pet.needs[b]))
+	var texts: PackedStringArray = []
+	var action := ""
+	var label := ""
+	if YardRoutines.due(game) and not DailyRhythm.quiet(pet, game._local_now()):
+		texts.append("Potrzebuję wyjść.")
+		action = "outing" if game.in_yard else "yard"
+		label = "Na potrzebę" if game.in_yard else "Na podwórko"
+	for key in priorities:
+		if float(pet.needs[key]) >= 60 or texts.size() >= 2: continue
+		texts.append({"fullness": "Chcę coś zjeść.", "hygiene": "Czas na czesanie.", "play": "Pobawimy się?", "contact": "Chcę głaski."}[key])
+		if action.is_empty():
+			action = NEEDS[key][1]
+			label = NEEDS[key][2]
+	if texts.is_empty(): texts.append("Wszystko w porządku. Pobędziemy razem?")
+	return {"text": "Już nie śpię! " + " ".join(texts), "action": action, "label": label}

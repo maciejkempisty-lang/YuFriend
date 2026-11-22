@@ -27,7 +27,7 @@ func run() -> void:
 	var game: GameSession = app.session
 	game.set_process(false)
 	game.pet.yard_routines.flowers = ["daisy", "poppy", "lavender"]
-	game.pet.bond = 75 # This suite previews every unlocked decoration.
+	game.pet.bond = 320 # This suite previews every unlocked decoration, including heart five.
 	game.pet.skills.sit.mastery = 100
 	game.pet.skills.bow.mastery = 100
 	game.pet.skills.lie.mastery = 100
@@ -42,7 +42,7 @@ func run() -> void:
 	close_windows()
 	app.room.show_overview()
 	await shot("decor-room")
-	await app._take_photo()
+	await app._capture_photo(false)
 	check(game.pet.photos.size() == 1, "camera saves actual scene")
 	var photo: Dictionary = game.pet.photos[0]
 	print("PHOTO_PATH ", KeepsakeSystem.photo_path(game.storage.path, photo.id))
@@ -51,7 +51,7 @@ func run() -> void:
 	check(app.photos_list.get_child_count() == 1, "album renders captured photo")
 	app._select_tab("care")
 	app._toggle_yard(false)
-	await app._take_photo()
+	await app._capture_photo(false)
 	check(game.pet.photos.size() == 2 and game.pet.photos[0].caption.ends_with("Podwórko"), "camera also saves outdoor scene")
 	app._select_tab("training")
 	for key in ["spin", "roll"]:

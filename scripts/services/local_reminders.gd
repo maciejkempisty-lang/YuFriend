@@ -37,12 +37,12 @@ func set_enabled(value: bool) -> bool:
 func status_text() -> String:
 	if not supported: return "Powiadomienia są dostępne na iPhonie."
 	if write_error: return "Nie udało się zapisać ustawienia. Spróbuj ponownie."
-	if not enabled: return "Wyjścia na potrzebę i inne prośby: do 2 dziennie, 9:00–21:00."
+	if not enabled: return "Potrzeby po pobudce przez 7 dni bez otwierania gry: do 4 dziennie, 9:00–21:00."
 	var response := _read("reminders-status.json")
 	if response.get("request", "") != request:
 		return "Czekam na potwierdzenie z iOS…"
 	match response.get("status", ""):
-		"on": return "Wyjścia na potrzebę i inne prośby: do 2 dziennie, 9:00–21:00."
+		"on": return "Potrzeby po pobudce przez 7 dni bez otwierania gry: do 4 dziennie, 9:00–21:00."
 		"denied": return "Zezwól na powiadomienia YuFriend w Ustawieniach iPhone’a."
 		"storage_error": return "Powiadomienia wstrzymane: nie można odczytać lub zapisać ich ustawień."
 		"clock_error": return "Powiadomienia wstrzymane do wyrównania czasu urządzenia."

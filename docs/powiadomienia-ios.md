@@ -6,14 +6,15 @@ Od buildu 11 ustawienia są panelem wewnątrz gry, mieszczącym się w bezpieczn
 
 Powiadomienie ma imię psa w tytule i krótkie zaproszenie w pierwszej osobie, np. „Burczy mi w brzuchu. Zjemy coś?”. Dotknięcie otwiera grę. Nie wymaga internetu, konta ani serwera.
 
-## Reguły
+## Reguły — automatyczny sen, 22 listopada 2026
 
-- Prognoza korzysta z tego samego `PetSnapshot.projected` co widget, zgodnego z `NeedsSystem` Godota.
-- Przypomnienia są planowane w tle po zapisie gry, dla potrzeby **poniżej 30%**, co najmniej **30 minut** po opuszczeniu gry. Kandydaci są sprawdzani co 15 minut.
-- Najwyżej **dwa na dzień lokalny**, dodatkowo najwyżej dwa w ruchomym oknie 24 godzin. Między nimi są co najmniej **cztery godziny**. Podczas jednej nieobecności ta sama potrzeba nie jest powtarzana.
-- Cisza nocna **21:00–09:00** według lokalnego czasu. Następnego dnia po zapisie możliwe jest **jedno poranne przypomnienie, od 09:00 do przed 12:00**, w ramach tych samych limitów i odstępów. Wykorzystany limit może przesunąć poranny termin albo całkowicie go wykluczyć.
-- Horyzont planowania kończy się **o 12:00 następnego lokalnego dnia po zapisie**; ponowne przeliczenie tego samego zapisu go nie przedłuża. Spadek potrzeb nadal zatrzymuje się po **8 godzinach** — poranny komunikat korzysta z zamrożonego stanu. Nie ma bezterminowych ani codziennie powtarzanych alarmów. Pies zaspokojony albo zapis z przyszłości nie wywołują przypomnień. Podczas snu energia nie jest powodem do alarmu.
-- Powrót do gry usuwa oczekujące przypomnienia; kolejne wyjście przelicza je na podstawie nowego stanu. Błędny zapis również anuluje wcześniejszy plan.
+- Prognoza korzysta z `PetSnapshot.projected`, zgodnego z rytmem i potrzebami Godota.
+- Dla zapisów v17 wiadomości „Już nie śpię!” są planowane na najbliższe pobudki według harmonogramu psa, co najmniej minutę po wyjściu z gry. Zawierają aktualną prośbę o wyjście albo najniższą potrzebę poniżej 60 punktów. Nie proszą o ręczne usypianie.
+- Najwyżej **cztery na lokalny dzień i ruchome 24 godziny**, z odstępem co najmniej dwóch godzin. Niezaspokojona potrzeba może wrócić przy kolejnej pobudce.
+- Cisza nocna **21:00–09:00**. Domyślnie wiadomości mogą pojawić się o 09, 12, 15 i 18; nawyki przesuwają te terminy razem z rytmem psa. Nie ma komunikatów podczas snu.
+- Od buildu 36 plan obejmuje **7 dni od ostatniego zapisu wizyty**, najwyżej 28 oczekujących terminów. iOS otrzymuje całą kolejkę przy wyjściu do tła; kolejne dni nie wymagają działania gry. Ponowne otwarcie i wyjście odświeża plan zgodnie z nowym stanem Glorii. Stary snapshot nie przesuwa końca tego okna. Potrzeby zamrażają się po ośmiu godzinach. Nie ma bezterminowych alarmów; zaspokojone potrzeby i wykonane wyjście nie tworzą wymyślonych próśb.
+- Powrót do gry i wyłączenie opcji anulują oczekujące terminy. Wykorzystany limit przetrwa restart.
+- Starsze snapshoty bez rytmu zachowują zgodność z poprzednią regułą dwóch próśb dziennie, progu 30 punktów i minimum 30 minut.
 
 iOS może opóźnić lub ukryć prezentację z powodu ustawień systemowych, Trybu skupienia lub podsumowania powiadomień. Limity dotyczą planowanych terminów. Upłynięty termin zużywa limit również wtedy, gdy system nie pokazał komunikatu — aplikacja nie ponawia go jako „niedostarczonego”.
 
@@ -42,13 +43,37 @@ Wcześniejsza weryfikacja pierwszej implementacji:
 
 Build **0.1.0 (10)** zbudowano, podpisano, zainstalowano i uruchomiono na iPhonie 15 Pro Max. Użytkownik potwierdził włączenie opcji oraz zaakceptowanie zgody iOS. Odczyt natywnego `reminders-status.json` z urządzenia potwierdził `enabled: true`, `status: on`; harmonogram był wówczas pusty (`pending: 0`). Nie potwierdzono jeszcze doręczenia prawdziwego powiadomienia. [Dowody i zachowanie zapisu Glorii](test-ios.md#aktualizacja-010-10--lokalne-przypomnienia).
 
-Atrapa centrum w testach nie potwierdza dostarczenia komunikatu przez iOS. Ręczna próba: włącz opcję, zaakceptuj zgodę, pozostaw niską potrzebę i wyjdź z gry. Pierwszy możliwy termin jest po 30 minutach, między 09:00 a 21:00. Sprawdź otwarcie gry po dotknięciu komunikatu, anulowanie po powrocie oraz wyłączenie opcji. Nie zmieniaj ręcznie zapisu Glorii na potrzeby tego testu.
+Atrapa centrum w testach nie potwierdza dostarczenia komunikatu przez iOS. Ręczna próba: włącz opcję, zaakceptuj zgodę, pozostaw niską potrzebę i wyjdź z gry. W nowej wersji pierwszym możliwym terminem jest kolejna dzienna pobudka, między 09:00 a 21:00, co najmniej minutę po opuszczeniu gry. Sprawdź otwarcie gry po dotknięciu komunikatu, anulowanie po powrocie oraz wyłączenie opcji. Nie zmieniaj ręcznie zapisu Glorii na potrzeby tego testu.
 
 
 ## Prośba o wyjście na potrzebę
 
-Planista odczytuje istniejący `yard_routines.outday` i opcjonalne `mess`. Jeśli dzisiaj nie było jeszcze wyjścia, pies nie śpi i nie czeka wcześniejsza kupa, pierwszeństwo ma wiadomość „Chcę wyjść się załatwić. Pójdziemy na podwórko?”. Jest to lokalne powiadomienie iOS, bez serwera. Korzysta z obecnej zgody i przełącznika „Przypomnienia od pieska”. Nie tworzy dodatkowej puli powiadomień: nadal obowiązują minimum 30 minut, godziny 09:00–21:00, odstęp 4 godzin, dwa terminy na dzień i 24 godziny oraz istniejący horyzont do południa następnego dnia. Jedna nieobecność daje najwyżej jedną prośbę o wyjście.
+Planista odczytuje istniejący `yard_routines.outday` i opcjonalne `mess`. Jeśli dzisiaj nie było jeszcze wyjścia, pies nie śpi i nie czeka wcześniejsza kupa, pierwszeństwo ma wiadomość „Chcę wyjść się załatwić. Pójdziemy na podwórko?”. Jest to lokalne powiadomienie iOS, bez serwera. Korzysta z obecnej zgody i przełącznika „Przypomnienia od pieska”. Nie tworzy dodatkowej puli powiadomień: korzysta ze wspólnych limitów i godzin opisanych powyżej. W v17 niezrealizowana prośba może wrócić przy kolejnej dziennej pobudce.
 
 Dotknięcie otwiera grę. W domu opis podpowiada wyjście, a na podwórku przycisk „Na potrzebę” rozpoczyna czynność. Po wykonaniu i zapisaniu wyjścia nie powstaje ponowna prośba na ten sam dzień. Niezebrana kupa blokuje prośbę o nowe wyjście także kolejnego dnia. Wznowienie gry i wyłączenie przypomnień nadal anulują oczekujące terminy. Stare snapshoty widgetu bez pól wyjścia nadal się odczytują; widget zachowuje dotychczasowe pięć wskaźników.
 
 Testy planisty obejmują termin, ciszę nocną, wspólny limit, brak powtórzeń, zapisany bałagan, odczyt danych gry i roundtrip formatu widgetu. Testy nie potwierdzają rzeczywistego doręczenia przez iOS — wymaga to próby na telefonie po zainstalowaniu tej wersji.
+
+## Weryfikacja automatycznego snu
+
+Planista: 1150 sprawdzeń; kontroler: 22 sprawdzenia. Kontrola typów dla iOS traktuje ostrzeżenia jako błędy. Widget: 4234 sprawdzenia i 700 projekcji zgodnych z Godotem. Nie potwierdza to doręczenia na fizycznym telefonie.
+
+## Weryfikacja planowania na siedem dni — build 36
+
+`PetReminderPlan` planuje do 28 terminów w ciągu siedmiu lokalnych dni od
+ostatniego zapisu. Kolejka jest rejestrowana od razu przy przejściu do tła;
+nie wymaga codziennego uruchamiania gry ani pracy procesu w tle. Wykorzystane
+limity, cisza nocna, progi potrzeb i zamrożenie ich spadku po ośmiu godzinach
+pozostają zachowane. Starsza czteroelementowa kolejka jest nadal odczytywana.
+Powrót do gry, wyłączenie opcji i błędy rejestracji usuwają całą tygodniową
+kolejkę. Zadanie tła UIKit kończy się dopiero po zakończeniu asynchronicznych
+operacji kontrolera; wcześniejszy callback sceny nie kończy nowszego zadania.
+
+Testy: **3422 sprawdzenia planisty, 30 kontrolera, 10 ustawień Godota i 52 UI**.
+Obejmują ostatni dzień bez ponownego otwarcia, wygaśnięcie starego snapshotu,
+limity dzienne i ruchome 24 godziny, odstępy, obie zmiany czasu, przesunięcia
+rytmu, zachowanie czteroelementowego licznika, restart po trzech dniach,
+anulowanie 28 terminów oraz błąd po częściowym zapisaniu dłuższej kolejki.
+Kontrola typów dla iOS z ostrzeżeniami jako błędami, eksport, kompilacja
+aplikacji i widgetu oraz kontrola podpisu przechodzą. Dłuższy opis ustawień
+sprawdzono także wizualnie na ekranie 320 px.

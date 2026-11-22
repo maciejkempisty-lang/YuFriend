@@ -100,7 +100,7 @@ func praise(s: GameSession) -> bool:
 	var before := s.pet.to_dict()
 	var command := key
 	var old_form := PracticeSystem.form(s.pet, command)
-	var result := trial.reward(s.pet, "praise")
+	var result := trial.reward(s.pet, "praise", s._local_now())
 	if not result.ok: return false
 	s._note("reward_praise")
 	var daily := PracticeSystem.record(s.pet, command, s._local_now())

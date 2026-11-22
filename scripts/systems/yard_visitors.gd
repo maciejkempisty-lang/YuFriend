@@ -2,9 +2,9 @@ class_name YardVisitors
 extends RefCounted
 
 # Runtime encounters are temporary; VisitorMemory stores bounded album milestones.
-const SESSION_LIMIT := 2
-const FIRST_WAIT := 60.0
-const BETWEEN_VISITS := 240.0
+const SESSION_LIMIT := 3
+const FIRST_WAIT := 15.0
+const BETWEEN_VISITS := 75.0
 const KINDS := ["bird", "butterfly", "cat"]
 const LABELS := {"bird": "Ptak przy płocie", "butterfly": "Motyl przy płocie", "cat": "Kot sąsiada"}
 const FENCE := Vector2(1010, 205)
@@ -17,7 +17,6 @@ var remaining := 0.0
 var response_left := 0.0
 var wait_left := FIRST_WAIT
 var visits := 0
-var next_guest := 0
 
 func begin_visit() -> void:
 	visits = 0
@@ -39,15 +38,18 @@ func available(s: GameSession) -> bool:
 
 func start(s: GameSession, guest: String) -> bool:
 	if guest not in KINDS or visits >= SESSION_LIMIT or not available(s): return false
+	# Save the rotation together with the meeting, so restarting never starves
+	# the third guest. Failed storage must not consume a visit or its turn.
+	var was_known := VisitorMemory.known(s.pet, guest)
+	if not VisitorMemory.record(s, guest, false, (KINDS.find(guest) + 1) % KINDS.size()): return false
 	s._cancel_motion()
 	s.invitation.clear()
 	s._follow_target = Vector2.INF
 	visits += 1
 	kind = guest
 	phase = "watch"
-	familiar = VisitorMemory.known(s.pet, guest)
+	familiar = was_known
 	reaction = reaction_for(s.pet.traits, guest, VisitorMemory.level(s.pet, guest))
-	VisitorMemory.record(s, guest, false)
 	remaining = 30
 	s.activity = "visitor"
 	s.activity_left = 0
@@ -106,11 +108,13 @@ func advance(s: GameSession, delta: float) -> void:
 				return
 		if remaining <= 0: finish(s, "Gość rusza dalej. Znowu spokojne podwórko.")
 		return
-	# Only time spent watching the yard counts; games and panels pause the wait.
-	if visits >= SESSION_LIMIT or not s.attention_available or not available(s): return
+	# A spontaneous stroll counts as watching. Arrival still waits for idle,
+	# preserving player actions, training, games and the sleep schedule.
+	if visits >= SESSION_LIMIT or not s.attention_available or not s.in_yard or s.suspended or not s.writable or s.is_sleeping() or s.busy() or s.training_view_active or s.outdoor_commands.phase != "" or float(s.pet.needs.energy) < 35 or DailyRhythm.phase(s.pet, s._local_now()) == "night": return
+	if s.activity not in ["idle", "walk"]: return
 	wait_left = maxf(0, wait_left - delta)
-	if wait_left == 0 and start(s, KINDS[next_guest]):
-		next_guest = (next_guest + 1) % KINDS.size()
+	if wait_left == 0 and available(s):
+		start(s, KINDS[int(s.pet.yard_routines.get("visitor_next", 0))])
 
 func cancel() -> void:
 	if not active(): return

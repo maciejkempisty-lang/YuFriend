@@ -68,6 +68,7 @@ func _initialize() -> void:
 	s.visitors.advance(s, 50)
 	check(not s.visitors.active() and s.visitors.wait_left == 1, "hidden yard pauses schedule")
 	s.attention_available = true
+	s.pet.yard_routines.visitor_next = 0
 	for guest in YardVisitors.KINDS:
 		s.visitors.begin_visit()
 		s.visitors.advance(s, YardVisitors.FIRST_WAIT)

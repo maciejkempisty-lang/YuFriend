@@ -41,7 +41,7 @@ func _initialize() -> void:
 	life.configure("yard", true, true, true, 270, Vector2(860, 325), ALL)
 	check(life.actors.sparrow.leaving, "nearby dog makes sparrow fly away")
 	life.advance(0.8)
-	check(life.actors.is_empty() and not life.start("sparrow"), "sparrow never spawns under the dog")
+	check(not life.actors.has("sparrow") and not life.start("sparrow"), "sparrow never spawns under the dog")
 	life = setup("room")
 	check(life.start("window_bird") and not life.start("butterfly"), "only window bird appears indoors")
 	life.advance(2)

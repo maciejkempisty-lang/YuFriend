@@ -52,6 +52,10 @@ func _run() -> void:
 	response.close()
 	app._process(1)
 	check(app.reminders_status.text.contains("Ustawieniach iPhone"), "Native denial updates the visible settings")
+	response = FileAccess.open(directory.path_join("reminders-status.json"), FileAccess.WRITE)
+	response.store_string(JSON.stringify({"request": app.reminders.request, "status": "on"}))
+	response.close()
+	app._process(1)
 	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(860, 1864), Vector2i(1290, 2796), Vector2i(1100, 720), Vector2i(844, 390)]:
 		root.size = layout
 		root.content_scale_size = Vector2i(430, 932) if layout.x in [860, 1290] else layout

@@ -91,7 +91,7 @@ func stay(s: GameSession, guided: bool = true, roll: float = -1) -> bool:
 func praise(s: GameSession) -> bool:
 	if phase != "praise" or not safe(s): return false
 	var before := s.pet.to_dict()
-	var result := trial.reward(s.pet, "praise")
+	var result := trial.reward(s.pet, "praise", s._local_now())
 	if not result.ok: return false
 	s._note("reward_praise")
 	var daily := PracticeSystem.record(s.pet, "stay", s._local_now())

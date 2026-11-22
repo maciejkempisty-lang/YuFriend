@@ -155,7 +155,7 @@ static func _finish_hide(s: GameSession) -> void:
 	if rewarded:
 		s.pet.social.last_reward_at = maxf(float(s.pet.social.last_reward_at), now)
 		s._apply_care_effects("play", {"play": 12, "contact": 6, "energy": -2})
-		s.pet.bond = minf(100, s.pet.bond + 0.5)
+		BondLevels.add(s.pet, 0.5, s._local_now())
 		s._note("play")
 	s.yard_rest.note_play()
 	s.pet.remember("yard_hide_" + mode, "Smakołyk w krzakach" if mode == "treat" else "Ogon zdradził kryjówkę", "Pierwsza ukończona runda chowanego na podwórku.", now)

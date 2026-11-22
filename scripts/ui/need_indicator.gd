@@ -6,8 +6,7 @@ var icon_name: String = "paw"
 var value: float = 100.0:
 	set(next):
 		value = next
-		tooltip_text = "%s · %d%%" % [caption, roundi(value)]
-		accessibility_name = tooltip_text
+		accessibility_name = "%s · %d%%" % [caption, roundi(value)]
 		queue_redraw()
 
 static func level_color(amount: float) -> Color:

@@ -65,9 +65,12 @@ func _initialize() -> void:
 	soothe(s, "cat")
 	check(VisitorMemory.level(s.pet, "cat") == 3 and s.pet.journal.size() == count, "bounded memories after completion")
 	check(VisitorMemory.level(s.pet, "bird") == 0, "guests have independent memories")
+	var preserved := s.pet.to_dict()
+	preserved.yard_routines.erase("visitor_next")
 	for key in original:
 		if key not in ["journal", "milestones", "last_seen_at"]:
-			check(original[key] == s.pet.to_dict()[key], "preserves " + key)
+			check(original[key] == preserved[key], "preserves " + key)
+	check(int(s.pet.yard_routines.visitor_next) == 0, "cat meeting stores the next bird turn")
 	var shy := {"curiosity": 0.4, "patience": 0.8, "sociability": 0.25, "sensitivity": 0.85}
 	check(YardVisitors.reaction_for(shy, "cat", 0) == "shy", "new cat frightening")
 	check(YardVisitors.reaction_for(shy, "cat", 1) == "wary", "known cat watched cautiously")

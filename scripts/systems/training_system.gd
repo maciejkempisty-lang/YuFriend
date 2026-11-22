@@ -57,7 +57,7 @@ func begin(pet: PetState, key: String, use_guidance: bool, roll: float = -1.0, u
 	time_left = (2.8 if key == "paw" else 2.0) + (1.0 - float(pet.traits.patience)) * 0.4
 	reward_duration = (2.7 + float(pet.traits.patience) * 0.7)
 	var distraction := pet.fatigue * (0.0008 + float(pet.traits.sensitivity) * 0.0012)
-	var chance := clampf(0.16 + float(pet.skills[key].mastery) * 0.007 + pet.bond * 0.001 - distraction, 0.12, 0.96)
+	var chance := clampf(0.16 + float(pet.skills[key].mastery) * 0.007 + minf(pet.bond, 100.0) * 0.001 - distraction, 0.12, 0.96)
 	chance *= 0.5 + 0.5 * PracticeSystem.form(pet, key) / 100.0
 	will_succeed = marker_mode or guided or (randf() if roll < 0 else roll) < chance
 	pet.skills[key].attempts = int(pet.skills[key].attempts) + 1
@@ -105,7 +105,7 @@ func advance(seconds: float, performance_done: bool = true) -> Dictionary:
 	phase = "idle"
 	return {"event": "expired", "message": "Nagroda przyszłaby za późno. Spróbuj ponownie."}
 
-func reward(pet: PetState, kind: String) -> Dictionary:
+func reward(pet: PetState, kind: String, local_seconds: float = -1.0) -> Dictionary:
 	if phase != "reward" or time_left <= 0 or not REWARDS.has(kind):
 		return {"ok": false, "message": "Nagródź zaraz po poprawnym wykonaniu."}
 	# Consume eligibility before mutating any persistent data (one reward per trial).
@@ -117,7 +117,7 @@ func reward(pet: PetState, kind: String) -> Dictionary:
 	var before: float = pet.skills[trick].mastery
 	pet.skills[trick].mastery = minf(100, before + gain)
 	pet.skills[trick].successes = int(pet.skills[trick].successes) + 1
-	pet.bond = minf(100, pet.bond + (1.5 if favorite else 1.0))
+	BondLevels.add(pet, 1.5 if favorite else 1.0, local_seconds)
 	if kind == "treat": NeedsSystem.change(pet, {"fullness": 2})
 	if kind == "praise": NeedsSystem.change(pet, {"contact": 4})
 	if kind == "play": NeedsSystem.change(pet, {"play": 4})

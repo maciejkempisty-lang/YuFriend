@@ -72,7 +72,7 @@ static func record(pet: PetState, key: String, local_seconds: float) -> bool:
 	state.streak = int(state.streak) + 1 if int(state.last_completed) == int(state.day) - 1 else 1
 	state.last_completed = int(state.day)
 	state.total_days = int(state.total_days) + 1
-	pet.bond = minf(100, pet.bond + 2.0)
+	BondLevels.add(pet, 2.0, local_seconds)
 	return true
 
 static func form(pet: PetState, key: String) -> float:

@@ -25,10 +25,13 @@ static func describe(pet: PetState, guest: String) -> String:
 	if not known(pet, guest): return "Jeszcze się nie poznali"
 	return ["Znajomy widok", "Pierwsze spokojne spotkanie", "Coraz swobodniej", "Dobrze znany gość"][level(pet, guest)]
 
-static func record(s: GameSession, guest: String, peaceful: bool) -> bool:
+static func record(s: GameSession, guest: String, peaceful: bool, next_guest: int = -1) -> bool:
 	if guest not in YardVisitors.KINDS or not s.writable or s.suspended: return false
 	var before := s.pet.to_dict()
 	var changed := s.pet.remember("visitor_%s_met" % guest, YardVisitors.LABELS[guest], "Pierwsze spotkanie przy płocie. Każda znajomość zaczyna się od ciekawości.")
+	if next_guest >= 0 and next_guest < YardVisitors.KINDS.size():
+		s.pet.yard_routines.visitor_next = next_guest
+		changed = true
 	if peaceful:
 		var completed := days(s.pet, guest)
 		var day := int(floor(s._local_now() / 86400.0))

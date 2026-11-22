@@ -20,6 +20,7 @@ func run() -> void:
 	check(BondLevels.petting_gain(pet, now + 86400) == 0.6, "next day renews budget")
 	check(pet.skills == original.skills and pet.bond == original.bond, "budget lookup preserves progress")
 	var s := GameSession.new()
+	s.local_clock = func(): return now
 	s.start(preload("res://tests/helper_paths.gd").data_root() + "/yuf-stage1-%s/pet.json" % Time.get_ticks_usec())
 	s.local_clock = func(): return now
 	s.pet.history = []
@@ -35,6 +36,7 @@ func run() -> void:
 	# Quirk discoveries: only matching activities reveal them, and only a saved
 	# discovery is announced.
 	s = GameSession.new()
+	s.local_clock = func(): return now
 	s.start(preload("res://tests/helper_paths.gd").data_root() + "/yuf-stage1-quirk-%s/pet.json" % Time.get_ticks_usec())
 	s.local_clock = func(): return now
 	s.pet.life.quirks = ["ball_guard", "bed_circles"]

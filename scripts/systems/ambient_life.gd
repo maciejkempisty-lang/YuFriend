@@ -4,8 +4,8 @@ extends RefCounted
 # Presentation only: no pet state, rewards, daily counters or activity locks.
 const KINDS := ["butterfly", "sparrow", "snail", "squirrel", "window_bird"]
 const ANCHORS := {"butterfly": Vector2(550, 260), "sparrow": Vector2(850, 338), "window_bird": Vector2(771, 210), "snail": Vector2(645, 344), "squirrel": Vector2(585, 252)}
-const DURATION := {"butterfly": 13.0, "sparrow": 9.0, "window_bird": 8.0, "snail": 24.0, "squirrel": 9.0}
-const FIRST_WAIT := {"butterfly": 12.0, "sparrow": 22.0, "window_bird": 15.0, "snail": 34.0, "squirrel": 46.0}
+const DURATION := {"butterfly": 20.0, "sparrow": 9.0, "window_bird": 8.0, "snail": 40.0, "squirrel": 9.0}
+const FIRST_WAIT := {"butterfly": 4.0, "sparrow": 22.0, "window_bird": 15.0, "snail": 10.0, "squirrel": 30.0}
 var actors: Dictionary = {}
 var waits: Dictionary = {}
 var location := ""
@@ -27,7 +27,7 @@ func _init(seed_value: int = 0) -> void:
 
 func _reset_waits() -> void:
 	for kind in KINDS:
-		waits[kind] = FIRST_WAIT[kind] + rng.randf_range(0, 8)
+		waits[kind] = FIRST_WAIT[kind] + rng.randf_range(0, 4)
 
 func configure(place: String, watching: bool, idle: bool, plant: bool, blossom_y: float, pet_position: Vector2, visible_kinds: Array[String]) -> void:
 	if location != place:

@@ -38,6 +38,7 @@ var practice: Dictionary = PracticeSystem.initial()
 var photos: Array = []
 var decor: Array = []
 var bond: float = 12.0
+var bond_progress: Dictionary = BondLevels.initial()
 var fatigue: float = 0.0
 var resting: bool = false
 var last_seen_at: float = 0.0
@@ -184,7 +185,7 @@ func to_dict() -> Dictionary:
 	return {"adventure": adventure.duplicate(true), "exploration": exploration.duplicate(true), "yard_routines": yard_routines.duplicate(true), "fetch_rewards": fetch_rewards.duplicate(true), "yard_record": yard_record, "practice": practice.duplicate(true), "photos": photos.duplicate(true), "decor": decor.duplicate(), "pet_id": pet_id, "pet_name": pet_name, "life_stage": life_stage,
 		"skin": skin, "personality_seed": personality_seed, "traits": traits.duplicate(true),
 		"favorite_reward": favorite_reward, "needs": needs.duplicate(true),
-		"skills": skills.duplicate(true), "bond": bond, "fatigue": fatigue,
+		"skills": skills.duplicate(true), "bond": bond, "bond_progress": bond_progress.duplicate(true), "fatigue": fatigue,
 		"resting": resting, "last_seen_at": last_seen_at,
 		"journal": journal.duplicate(true), "milestones": milestones.duplicate(),
 		"history": history.duplicate(true), "habits": habits.duplicate(), "reflected_day": reflected_day,
@@ -194,6 +195,7 @@ static func valid_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
 
 static func from_dict(data: Dictionary) -> PetState:
+	if not BondLevels.valid(data.get("bond_progress")): return null
 	if not DailyAdventure.valid(data.get("adventure")): return null
 	if not DiggingSystem.valid(data.get("exploration")): return null
 	if not YardRoutines.valid(data.get("yard_routines")): return null
@@ -304,7 +306,8 @@ static func from_dict(data: Dictionary) -> PetState:
 	pet.personality_seed = int(data.personality_seed)
 	pet.resting = data.resting
 	pet.last_seen_at = float(data.last_seen_at)
-	pet.bond = clampf(data.bond, 0, 100)
+	pet.bond = maxf(data.bond, 0)
+	pet.bond_progress = data.bond_progress.duplicate(true)
 	pet.fatigue = clampf(data.fatigue, 0, 100)
 	for key in NEED_KEYS:
 		pet.needs[key] = clampf(data.needs[key], 0, 100)

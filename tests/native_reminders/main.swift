@@ -137,3 +137,85 @@ check(plan(parsedOuting).allSatisfy { $0.need != nil }, "Saved mess suppresses t
 let snapshotRoundtrip = try! JSONDecoder().decode(PetSnapshot.self, from: JSONEncoder().encode(parsedOuting!))
 check(snapshotRoundtrip == parsedOuting, "Shared snapshot roundtrip retains toilet state")
 print("Toilet decoder included: \(checks) checks passed")
+
+// Scheduled sleep: notifications coincide with wake time, never during a nap.
+var scheduled = pet(at: date("2026-11-15T08:00:00+01:00"), low: [.fullness])
+scheduled.rhythmOffset = 0
+scheduled.awakeUntil = 0
+let wakes = plan(scheduled, at: date("2026-11-15T08:00:00+01:00"))
+check(wakes.filter { calendar.isDate($0.date, inSameDayAs: now) }.map { calendar.component(.hour, from: $0.date) } == [9, 12, 15, 18], "Four daytime wake notices each day")
+check(wakes.allSatisfy { $0.body.hasPrefix("Już nie śpię!") && !$0.body.contains("ułożyć") }, "Wake notice reports care, not manual bedtime")
+check(wakes.allSatisfy { !scheduled.projected(at: $0.date, calendar: calendar).resting }, "No alert while asleep")
+check(plan(scheduled, at: date("2026-11-15T08:00:00+01:00"), consumed: wakes.map(\.date)).allSatisfy { !wakes.map(\.date).contains($0.date) }, "Durable budget prevents rescheduling consumed wake alerts")
+scheduled.rhythmOffset = 90
+check(plan(scheduled, at: date("2026-11-15T08:00:00+01:00")).first?.date == date("2026-11-15T10:30:00+01:00"), "Habit offset moves real wake notification")
+var rested = pet(at: date("2026-11-15T08:59:00+01:00"), low: [])
+rested.rhythmOffset = 0
+rested.awakeUntil = 0
+check(plan(rested, at: date("2026-11-15T08:59:00+01:00")).isEmpty, "Healthy wake does not invent an unmet need")
+var sleepLedger = PetReminderLedger()
+sleepLedger.pending = wakes.map(\.date)
+check(sleepLedger.isValid, "Four wake reservations persist")
+sleepLedger.cancelPending(at: wakes[1].date)
+check(sleepLedger.consumed.count == 2 && sleepLedger.pending.isEmpty, "Wake reservations survive return to foreground")
+for offset in [-30, 0, 90, 180] {
+    for stamp in ["2026-03-29T00:00:00+01:00", "2026-10-25T00:00:00+02:00"] {
+        let departure = date(stamp)
+        var snapshot = pet(at: departure, low: [.fullness])
+        snapshot.rhythmOffset = offset
+        for reminder in plan(snapshot, at: departure) {
+            check(!snapshot.projected(at: reminder.date, calendar: calendar).resting, "DST wake is awake")
+            check((9..<21).contains(calendar.component(.hour, from: reminder.date)), "DST respects quiet hours")
+        }
+    }
+}
+print("Automatic sleep: \(checks) planner checks passed")
+
+// A single background transition must schedule the whole week, without
+// refreshing the snapshot or simulating extra loss of needs after eight hours.
+scheduled.rhythmOffset = 0
+let weekStart = date("2026-11-15T08:00:00+01:00")
+let week = plan(scheduled, at: weekStart)
+check(week.count == 28, "Seven days of four requests are queued on departure")
+check(week.last?.date == date("2026-11-21T18:00:00+01:00"), "Last day remains scheduled without another launch")
+check(plan(scheduled, at: date("2026-11-22T08:00:00+01:00")).isEmpty, "Expired snapshot cannot start another week")
+check(plan(scheduled, at: date("2026-11-20T08:00:00+01:00")).count == 8, "Late replan keeps the original end date")
+check(scheduled.projected(at: week.last!.date, calendar: calendar).needs == scheduled.projected(at: weekStart.addingTimeInterval(8 * 3600), calendar: calendar).needs,
+      "A week of alerts does not add a week of need decay")
+var fullLedger = PetReminderLedger()
+fullLedger.pending = week.map(\.date)
+let fullRoundtrip = try! JSONDecoder().decode(PetReminderLedger.self, from: JSONEncoder().encode(fullLedger))
+check(fullRoundtrip.isValid && fullRoundtrip.pending == fullLedger.pending, "All 28 reservations survive serialization")
+fullLedger.pending.append(weekStart)
+check(!fullLedger.isValid, "Oversized queue rejected")
+fullLedger.pending = Array(week.prefix(4).map(\.date))
+check(fullLedger.isValid, "Existing build-35 four-request ledger remains readable")
+var toiletWeek = pet(at: weekStart, low: [])
+toiletWeek.rhythmOffset = 0
+toiletWeek.outingDay = -1
+toiletWeek.yardMess = false
+check(plan(toiletWeek, at: weekStart).contains { $0.date > weekStart.addingTimeInterval(5 * 86400) && $0.need == nil }, "Outdoor need reaches later days too")
+toiletWeek.yardMess = true
+check(plan(toiletWeek, at: weekStart).allSatisfy { $0.need != nil }, "Uncollected mess suppresses toilet alerts for the whole week")
+for stamp in ["2026-03-28T08:00:00+01:00", "2026-10-24T08:00:00+02:00", "2026-11-15T20:45:00+01:00"] {
+    for offset in [-30, 0, 90, 180] {
+        let departure = date(stamp)
+        var snapshot = pet(at: departure, low: [.fullness])
+        snapshot.rhythmOffset = offset
+        let end = calendar.date(byAdding: .day, value: 7, to: departure)!
+        let used = [departure.addingTimeInterval(-3600), departure.addingTimeInterval(-4 * 3600), departure.addingTimeInterval(-7 * 3600)]
+        let reminders = plan(snapshot, at: departure, consumed: used)
+        let allDates = used + reminders.map(\.date)
+        check(reminders.count <= 28 && reminders.last!.date > departure.addingTimeInterval(6 * 86400), "Bounded queue still reaches day seven across DST")
+        check(reminders == plan(snapshot, at: departure, consumed: used), "Planning is deterministic")
+        for reminder in reminders {
+            check(reminder.date >= departure.addingTimeInterval(60) && reminder.date < end, "Every request lies in the seven-calendar-day window")
+            check((9..<21).contains(calendar.component(.hour, from: reminder.date)), "Whole week respects local quiet hours")
+            check(!snapshot.projected(at: reminder.date, calendar: calendar).resting, "Whole week respects wake times")
+            check(allDates.filter { calendar.isDate($0, inSameDayAs: reminder.date) }.count <= 4, "Daily limit includes pre-existing consumed alerts")
+            check(allDates.filter { $0 > reminder.date.addingTimeInterval(-86400) && $0 <= reminder.date }.count <= 4, "Rolling 24-hour budget across midnight and DST")
+            check(allDates.filter { $0 != reminder.date }.allSatisfy { abs($0.timeIntervalSince(reminder.date)) >= 7200 }, "Two-hour minimum includes old reservations")
+        }
+    }
+}
+print("Seven-day reminders: \(checks) planner checks passed")

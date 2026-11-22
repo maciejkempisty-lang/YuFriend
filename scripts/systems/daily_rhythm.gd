@@ -9,7 +9,7 @@ const PHASES := {
 }
 
 static func initial() -> Dictionary:
-	return {"offset_minutes": 0, "updated_day": -1, "nap_day": -1, "nap_at": 0.0}
+	return {"offset_minutes": 0, "updated_day": -1, "nap_day": -1, "nap_at": 0.0, "awake_until": 0.0, "wake_notice_at": 0.0}
 
 static func valid(value: Variant) -> bool:
 	if not value is Dictionary: return false
@@ -18,6 +18,8 @@ static func valid(value: Variant) -> bool:
 	if value.offset_minutes != floor(value.offset_minutes) or value.offset_minutes < -30 or value.offset_minutes > 180: return false
 	for key in ["updated_day", "nap_day"]:
 		if value[key] < -1 or value[key] != floor(value[key]): return false
+	for key in ["awake_until", "wake_notice_at"]:
+		if not PetState.valid_number(value.get(key)) or value[key] < 0: return false
 	return value.nap_at >= 0
 
 static func adapt(pet: PetState, local_seconds: float) -> bool:
@@ -78,8 +80,37 @@ static func proportions(pet: PetState, local_seconds: float) -> Array:
 
 static func schedule_label(pet: PetState) -> String:
 	var offset := int(pet.rhythm.offset_minutes)
-	return "Zwykły sen: %s–%s" % [_time_label(22 * 60 + offset), _time_label(6 * 60 + offset)]
+	var windows: PackedStringArray = []
+	for hour in WAKE_HOURS: windows.append(_time_label(hour * 60 + offset))
+	return "Około 18 godzin snu na dobę. Pobudki: %s (około godziny razem)." % ", ".join(windows)
 
 static func _time_label(minutes: int) -> String:
 	minutes = posmod(minutes, 1440)
 	return "%02d:%02d" % [minutes / 60, minutes % 60]
+
+# Six one-hour wake windows, eighteen hours of sleep. All times are local,
+# shifted together by the existing gradual habit adaptation.
+const WAKE_HOURS := [6, 9, 12, 15, 18, 21]
+const VISIT_SECONDS := 10.0 * 60.0
+
+static func scheduled_sleep(pet: PetState, local_seconds: float) -> bool:
+	var hour := fposmod(local_seconds / 3600.0 - float(pet.rhythm.offset_minutes) / 60.0, 24.0)
+	return int(floor(hour)) not in WAKE_HOURS
+
+static func should_sleep(pet: PetState, local_seconds: float) -> bool:
+	return scheduled_sleep(pet, local_seconds) and local_seconds >= float(pet.rhythm.awake_until)
+
+static func wake_slot(pet: PetState, local_seconds: float) -> float:
+	var shifted := local_seconds - float(pet.rhythm.offset_minutes) * 60
+	return floor(shifted / 3600) * 3600 + float(pet.rhythm.offset_minutes) * 60
+
+static func next_wake(pet: PetState, local_seconds: float) -> float:
+	var offset := float(pet.rhythm.offset_minutes) * 60
+	var day: float = floor((local_seconds - offset) / 86400) * 86400 + offset
+	for hour in WAKE_HOURS:
+		var candidate: float = day + hour * 3600
+		if candidate > local_seconds: return candidate
+	return day + 86400 + WAKE_HOURS[0] * 3600
+
+static func sleep_label(pet: PetState, local_seconds: float) -> String:
+	return "Śpię do %s. Odezwę się po pobudce." % _time_label(int(next_wake(pet, local_seconds) / 60))

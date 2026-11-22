@@ -34,7 +34,9 @@ func _ready() -> void:
 
 func sync(room: RoomView, session: GameSession, watching: bool) -> void:
 	var active := watching and not session.suspended and not session.portal_active and not session.in_bath and not session.visitors.active() and DailyRhythm.phase(session.pet, session._local_now()) != "night"
-	var calm := not session.busy() and session.activity in ["idle", "sleep"] and not room.moving and not room._drag_ball
+	# Ordinary strolling and looking around are not a reason for the whole
+	# garden to vanish. Fetch, training and other busy actions still take priority.
+	var calm := not session.busy() and session.activity in ["idle", "sleep", "walk", "pet", "habit", "need", "initiative", "behavior"] and not room._drag_ball
 	var visible_kinds: Array[String] = []
 	for kind in AmbientLife.KINDS:
 		if session.in_yard != (kind != "window_bird"): continue

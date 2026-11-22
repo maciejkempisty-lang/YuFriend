@@ -9,18 +9,18 @@ const WALK_AREA := Rect2(95, 286, 1250, 42)
 const PUPPY_SCALE := 0.64
 const START := Vector2(670, 322)
 const YARD_STATIONS := {
-	"shade": {"label": "Cień", "icon": "moon", "point": Vector2(240, 205)},
-	"course": {"label": "Tor", "icon": "paw", "point": Vector2(1010, 205)},
-	"puddle": {"label": "Kałuża", "icon": "water", "point": Vector2(420, 205)},
-	"sprinkler": {"label": "Zraszacz", "icon": "sprinkler", "point": Vector2(1230, 205)},
-	"gate": {"label": "Do domu", "icon": "home", "point": Vector2(150, 205)},
-	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205)},
-	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205)},
-	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205)},
-	"dig": {"label": "Kopanie", "icon": "search", "point": Vector2(650, 205)},
-	"garden": {"label": "Ogródek", "icon": "flower", "point": Vector2(550, 205)},
-	"outing": {"label": "Na potrzebę", "icon": "paw", "point": Vector2(1300, 205)},
-	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205)}
+	"shade": {"label": "Cień", "icon": "moon", "point": Vector2(240, 205), "bounds": Rect2(195, 185, 110, 115)},
+	"course": {"label": "Tor", "icon": "paw", "point": Vector2(1010, 205), "bounds": Rect2(976, 230, 60, 66)},
+	"puddle": {"label": "Kałuża", "icon": "water", "point": Vector2(420, 205), "bounds": Rect2(357, 298, 126, 40)},
+	"sprinkler": {"label": "Zraszacz", "icon": "sprinkler", "point": Vector2(1230, 205), "bounds": Rect2(1228, 296, 84, 32)},
+	"gate": {"label": "Do domu", "icon": "home", "point": Vector2(150, 205), "bounds": Rect2(105, 185, 90, 95)},
+	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205), "bounds": Rect2(278, 205, 144, 92)},
+	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205), "bounds": Rect2(678, 205, 144, 92)},
+	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205), "bounds": Rect2(832, 268, 36, 46)},
+	"dig": {"label": "Kopanie", "icon": "search", "point": Vector2(650, 205), "bounds": Rect2(625, 278, 90, 48)},
+	"garden": {"label": "Ogródek", "icon": "flower", "point": Vector2(550, 205), "bounds": Rect2(485, 262, 138, 63)},
+	"outing": {"label": "Na potrzebę", "icon": "paw", "point": Vector2(1300, 205), "bounds": Rect2(1272, 258, 45, 42)},
+	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205), "bounds": Rect2(1078, 205, 144, 92)}
 }
 const STATIONS := {
 	"bed": {"label": "Legowisko", "action": "rest", "position": Vector2(205, 322), "stand": Vector2(205, 306), "bounds": Rect2(-88, -52, 176, 68), "clip": "sleep", "need": "energy", "effects": {}, "facing_left": false},

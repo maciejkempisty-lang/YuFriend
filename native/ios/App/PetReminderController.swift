@@ -29,12 +29,13 @@ import OSLog
     private let defaults: UserDefaults
     private let clock: () -> Date
     private let calendar: Calendar
-    private let identifiers = ["yufriend.need.0", "yufriend.need.1"]
+    private let identifiers = (0..<PetReminderPlan.maximumPending).map { "yufriend.need.\($0)" }
     private var snapshot: PetSnapshot?
     private var preference: Preference?
     private var foreground = true
     private var revision = 0
     private var working = false
+    private var idleWaiters: [CheckedContinuation<Void, Never>] = []
     private var initialized = false
     private var ledger = PetReminderLedger()
     private var ledgerReadable = true
@@ -74,6 +75,12 @@ import OSLog
         }
     }
 
+    // Let the UIKit background task cover every async request in the queue.
+    func finishPendingUpdates() async {
+        guard working else { return }
+        await withCheckedContinuation { idleWaiters.append($0) }
+    }
+
     private func persistLedger() -> Bool {
         guard ledgerReadable else { return false }
         do {
@@ -102,6 +109,9 @@ import OSLog
             if current == revision { break }
         }
         working = false
+        let waiters = idleWaiters
+        idleWaiters.removeAll()
+        for waiter in waiters { waiter.resume() }
     }
 
     private func apply(_ current: Int) async {

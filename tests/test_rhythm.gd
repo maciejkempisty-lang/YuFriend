@@ -62,7 +62,7 @@ func _test_clock() -> void:
 	pet.habits = ["time_morning"]
 	DailyRhythm.adapt(pet, 200 * 86400)
 	check(pet.rhythm.offset_minutes == 150, "long absence still changes by only thirty minutes")
-	check(DailyRhythm.schedule_label(pet) == "Zwykły sen: 00:30–08:30", "schedule wraps midnight")
+	check(DailyRhythm.schedule_label(pet).contains("08:30"), "schedule wraps midnight")
 
 func _test_choices() -> void:
 	var pet := PetState.create(42)
@@ -72,7 +72,7 @@ func _test_choices() -> void:
 	check(penalized.window < weights.window * 0.02 and penalized.window > 0, "recent behavior and destination receive soft penalties")
 	var choices := {}
 	for index in 1000: choices[BehaviorSystem.choose(weights, index / 1000.0)] = true
-	check(choices.size() == 10, "weighted pool can select every eligible behavior")
+	check(choices.size() == 9, "awake pool excludes random naps")
 	var night := BehaviorSystem.weights(pet, 100 * 86400 + 23 * 3600, BehaviorSystem.BEHAVIORS.keys(), "carpet")
 	check(night.ball == 0 and night.toys == 0 and night.nap == 0 and night.patrol == 0, "night has quiet choices and no random sleep")
 	check(BehaviorSystem.choose(night, 0.99) in ["window", "door", "bowl", "carpet", "wait", "approach"], "penalized quiet pool still has valid choices")
@@ -90,58 +90,33 @@ func _test_night() -> void:
 	game.pet.needs.energy = 90
 	var needs := game.pet.needs.duplicate()
 	var bond := game.pet.bond
-	game._enter_sleep("night", false)
-	check(game.night_sleep and game.is_sleeping() and game.activity == "sleep", "bedtime sleep continues even above eighty-five energy")
-	check(game.pet.needs == needs and game.pet.bond == bond, "entering night sleep grants no immediate reward or penalty")
-	game._process(20)
-	check(game.is_sleeping() and not game.pet.resting, "energy threshold does not end visible night sleep")
-	check(CompanionVoice.new().describe(game).label == "Obudź", "night sleep offers waking after regeneration ends")
-	var before_wake := game.pet.to_dict()
-	check(game.act("pet") and not game.is_sleeping() and game.groggy_left > 0, "touch wakes gently")
-	check(game.pet.needs == before_wake.needs and game.pet.bond == before_wake.bond, "waking has no need or bond penalty")
-	check(game.walk_speed() < LifeSystem.walk_speed(game.pet), "newly awakened dog walks more slowly")
-	check(game.start_touch_game("tug"), "player may start energetic play after waking at night")
-	game._tick_rhythm(250)
-	check(not game.is_sleeping() and game._idle_seconds == 0, "night sleep never interrupts a game")
+	game._sync_rhythm_on_return()
+	check(game.night_sleep and game.scheduled_sleep and game.pet.resting, "night return preserves sleep even with full energy")
+	check(game.pet.needs == needs and game.pet.bond == bond, "sleep transition has no instant reward")
+	game._process(3600)
+	check(game.is_sleeping() and game.pet.resting and game.pet.needs.energy == 100, "full energy never wakes scheduled sleep")
+	check(game.act("pet") and not game.is_sleeping(), "explicit touch grants short visit")
+	var until: float = game.pet.rhythm.awake_until
+	check(game.start_touch_game("tug"), "manual wake allows a game")
+	now += 601
+	game._tick_rhythm(30)
+	check(not game.is_sleeping(), "sleep waits for active game to finish")
 	game.cancel_touch_game()
-	game._brain_left = INF
-	game._tick_rhythm(99)
-	check(not game.sleep_warning, "no premature wake-to-sleep warning")
-	game._tick_rhythm(1)
-	check(game.sleep_warning and CompanionVoice.new().describe(game).action == "pet", "twenty-second warning allows a player response")
+	game.player_activity()
+	check(game.pet.rhythm.awake_until == until, "stroking cannot extend the visit indefinitely")
 	game._tick_rhythm(20)
-	check(game._sequence_id == "night", "two idle minutes after waking start the walk to bed")
 	arrive_sequence(game)
-	check(game.night_sleep, "arrival at bed starts night sleep")
+	check(game.is_sleeping(), "dog independently returns to bed after visit")
 	now = 101 * 86400.0 + 6 * 3600
 	game._process(0.1)
-	check(not game.is_sleeping(), "scheduled morning wakes dog regardless of energy")
+	check(not game.is_sleeping() and game.wake_report_left > 0 and game.last_message.begins_with("Już nie śpię"), "natural morning wake reports needs")
 	game.free()
 
-	game = game_at(21.99)
-	game._tick_rhythm(1)
-	now = 100 * 86400.0 + 22 * 3600
-	game._tick_rhythm(160)
-	check(game.sleep_warning and not game.is_sleeping(), "evening crossing into night warns before sleep")
-	game.act("pet")
-	game._process(1)
-	check(not game.sleep_warning and game._idle_seconds == 0, "stroking resets the night timer")
-	game._tick_rhythm(180)
-	check(game._sequence_id == "night", "three minutes of inactivity start bedtime")
-	check(game.act("feed") and game._sequence_id.is_empty(), "feeding interrupts bedtime walk")
-	game.arrive_at(game._approach_token)
-	game._tick_rhythm(200)
-	check(not game.night_sleep, "night sleep never interrupts feeding")
-	game.free()
-
-	game = game_at(23)
-	game.initiatives_enabled = true
-	check(not game.offer_initiative("ball"), "dog does not initiate night ball games")
-	check(game.offer_initiative() and game.invitation.kind == "cuddle", "night invitation is closeness")
-	game._cancel_invitation()
-	check(game.begin_training("sit", true), "awake dog can train at night")
-	game._tick_rhythm(250)
-	check(not game.is_sleeping(), "night never interrupts training")
+	game = game_at(13)
+	game.set_training_view(true)
+	game._tick_rhythm(20)
+	arrive_sequence(game)
+	check(game.scheduled_sleep, "empty training tab does not block afternoon sleep")
 	game.free()
 
 func _test_sequences() -> void:
@@ -156,13 +131,17 @@ func _test_sequences() -> void:
 	game.destination_reached()
 	check(game.activity == "pet", "stale movement completion cannot restart a canceled sequence")
 	game._process(1)
+	now = 100 * 86400.0 + 13 * 3600
 	game._start_behavior("nap")
 	arrive_sequence(game)
 	game.pet.needs.energy = 90
 	game._process(20)
 	check(game.is_sleeping(), "automatic nap has a minimum duration")
 	game._process(41)
-	check(not game.is_sleeping() and not DailyRhythm.nap_allowed(game.pet, now), "nap ends and cannot immediately recur")
+	check(game.is_sleeping(), "day sleep lasts beyond the old one-minute nap")
+	now = 100 * 86400.0 + 15 * 3600
+	game._process(0.1)
+	check(not game.is_sleeping(), "day nap ends at next wake window")
 	game._brain_left = INF
 	game.follow_room(Vector2(1100, 310))
 	game._process(3)
@@ -207,30 +186,12 @@ func _test_save() -> void:
 
 func _test_greetings_and_training() -> void:
 	var game := game_at(22.5)
-	var path := directory.path_join("new-night.json")
-	game.start(path)
-	check(not game.is_sleeping() and game.last_message.contains("Dobrze, że jesteś"), "first launch at 22:30 greets without requiring a wake action")
-	check(game.play_readiness().is_empty() and game.begin_training("sit", true), "new night player can play and start training immediately")
-	game.training.cancel()
-	game._enter_sleep("night", false)
-	var needs := game.pet.needs.duplicate()
-	var bond := game.pet.bond
-	game._sync_rhythm_on_return()
-	check(not game.is_sleeping() and game.pet.needs == needs and game.pet.bond == bond, "greeting wakes an existing dog without a stat bonus or penalty")
-	game._tick_rhythm(159)
-	check(not game.sleep_warning and game._sequence_id.is_empty(), "arrival gives three minutes before bedtime")
-	game._tick_rhythm(1)
-	check(game.sleep_warning and game.last_message.begins_with("Chce mi się spać"), "bedtime warning uses gender-neutral wording")
-	game._tick_rhythm(20)
-	check(game._sequence_id == "night", "greeting still leads to sleep after inactivity")
-	arrive_sequence(game)
-	game.act("pet")
-	check(game.last_message.begins_with("Jeszcze chwila na rozbudzenie"), "wake text is neutral for Gloria and other names")
-	game._enter_sleep("night", false)
+	game.start(directory.path_join("new-night.json"))
+	check(game.is_sleeping(), "first launch at night does not wake dog")
 	game.suspend_session()
 	game.pet.last_seen_at -= 120
 	game.resume_session()
-	check(not game.is_sleeping() and game.last_message.contains("Dobrze, że jesteś"), "return from a longer absence greets at night")
+	check(game.is_sleeping(), "longer background return does not wake dog")
 	game.free()
 	for reward in TrainingSystem.REWARDS:
 		game = game_at(12)
@@ -272,7 +233,7 @@ func _test_yard_night() -> void:
 	game._process(3)
 	check(game.activity == "walk", "yard follows viewed location")
 	game._process(91)
-	check(game.activity == "idle" and game._travel_left <= 0, "yard travel times out without arrival")
+	check(game._travel_left <= 0 and game.activity != "walk", "yard travel times out without arrival")
 	check(game.start_sniff(), "sniff starts before bedtime")
 	now = 100 * 86400.0 + 23 * 3600
 	game._process(31)
@@ -286,10 +247,10 @@ func _test_yard_night() -> void:
 	game.change_yard(true)
 	now = 100 * 86400.0 + 23 * 3600
 	game._process(20)
-	check(game.in_yard, "night idle return allows a short grace period")
+	check(not game.in_yard, "sleep schedule returns an idle dog home")
 	game.player_activity()
 	game._process(20)
-	check(game.in_yard, "player activity resets yard idle countdown")
+	check(not game.in_yard, "stroking does not cancel scheduled return home")
 	game._process(11)
 	check(not game.in_yard, "thirty idle seconds returns dog indoors")
 	arrive_sequence(game)

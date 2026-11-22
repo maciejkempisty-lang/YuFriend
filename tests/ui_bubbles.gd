@@ -16,6 +16,8 @@ func _run() -> void:
 	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 12.0 * 3600
 	root.add_child(app)
+	# These scenarios begin after the greeting on waking.
+	app.session.player_activity()
 	app.session.set_process(false)
 	app.session.initiatives_enabled = false
 	app.set_process(false)

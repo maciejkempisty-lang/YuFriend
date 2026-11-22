@@ -34,8 +34,8 @@ func _run() -> void:
 	app.app_foreground = true
 	await process_frame
 	advance(5)
-	check(not app.session.is_sleeping() and app.room.animator.pose == "stand", "real night startup greets with an awake dog")
-	check(app.session.play_readiness().is_empty(), "new night player can play immediately")
+	check(app.session.is_sleeping() and app.room.animator.pose == "sleep", "real night startup preserves sleep")
+	check(not app.session.play_readiness().is_empty(), "sleeping dog does not offer play")
 	await capture("rhythm-night-greeting-390.png")
 	app.session._brain_left = INF
 	for index in 6000:
@@ -54,13 +54,13 @@ func _run() -> void:
 	check(app.play_dialog.visible and not app.session.night_sleep, "night game panel remains available")
 	await capture("rhythm-night-play-390.png")
 	app.session.cancel_touch_game()
-	app.session._idle_seconds = 100
-	app.session._woken_at_night = true
+	now += 601
+	app.session._bedtime_seconds = 0
 	advance(0.2)
-	check(app.session.sleep_warning and app.companion_data.action == "pet", "night warning renders an actionable cuddle button")
+	check(app.session.sleep_warning and app.companion_data.action == "", "sleep warning does not ask player to manage bedtime")
 	await capture("rhythm-warning-390.png")
 	app.session.player_activity()
-	now = 101 * 86400.0 + 20 * 3600
+	now = 101 * 86400.0 + 21 * 3600
 	app.session._start_behavior("carpet")
 	advance(45)
 	check(app.room.animator.pose == "lie" and app.room.pet_world.distance_to(Vector2(640, 324)) < 1, "evening sequence reaches carpet and lying pose")
@@ -97,6 +97,29 @@ func _run() -> void:
 	app.session.suspend_session()
 	check(app.session._sequence.is_empty() and not app.room.moving, "background cancels queued movement in both logic and view")
 	app.session.resume_session()
+	now = 103 * 86400.0 + 13 * 3600
+	app.session._sync_rhythm_on_return()
+	app.session.pet.needs.fullness = 20
+	app.session.pet.needs.contact = 30
+	app.session.pet.yard_routines.outday = 103
+	now = 103 * 86400.0 + 15 * 3600
+	advance(1)
+	check(app.companion_data.kind == "wake" and app.companion_data.action == "feed", "wake bubble renders actual needs and feeding action")
+	await capture("rhythm-wake-needs-390.png")
+	root.size = Vector2i(320, 640)
+	root.content_scale_size = root.size
+	await process_frame
+	app._fit_room()
+	advance(0.1)
+	await capture("rhythm-wake-needs-320.png")
+	check(app.care_status.text.begins_with("Już nie śpię!") and app.safe_rect.encloses(app.care_status.get_global_rect()), "small-screen care panel shows wake needs when bubble has no room")
+	root.size = Vector2i(390, 844)
+	root.content_scale_size = root.size
+	await process_frame
+	app._fit_room()
+	advance(0.1)
+	app._companion_act()
+	check(app.session._pending_action == "feed", "wake bubble leads to real feeding")
 	app.queue_free()
 	await process_frame
 	for file in DirAccess.get_files_at(directory): DirAccess.remove_absolute(directory.path_join(file))

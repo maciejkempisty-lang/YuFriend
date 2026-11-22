@@ -29,6 +29,8 @@ func _run() -> void:
 	app.room.ambient_life.life.autoplay = false
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 	root.add_child(app)
+	# These scenarios begin after the greeting on waking.
+	app.session.player_activity()
 	var game: GameSession = app.session
 	game.set_process(false)
 	game._brain_left = INF
@@ -95,21 +97,31 @@ func _run() -> void:
 	await process_frame
 	check(app.play_dialog.visible and game.play.kind == "tug", "rope selection opens an interactive scene")
 	var view: TouchPlayView = app.play_view
+	check(game.play.phase == "demo_pull", "first rope round teaches the gesture")
+	var demo_before := game.pet.needs.duplicate()
 	control_touch(view, game.play.tug_handle, true, 0)
 	control_drag(view, Vector2(0.84, 0.54), 0)
+	check(game.play.phase == "demo_warning", "demo waits for release after warning")
 	control_touch(view, Vector2(0.84, 0.54), false, 0)
-	step(0.4)
-	check(game.play.strokes == 1 and game.play.phase == "dog_pull" and game.play.tug_handle.x < 0.84, "touch pull is followed by a visible dog response")
-	await capture("34-rope.png")
-	step(0.6)
-	for index in 2:
+	app._refresh()
+	check(app.play_cue.visible and game.pet.needs == demo_before, "demonstration unlocks round without changing needs")
+	app.play_cue.pressed.emit()
+	for index in 5:
 		control_touch(view, game.play.tug_handle, true, 0)
+		control_drag(view, Vector2(0.84, 0.54), 1)
+		check(not game.play.tug_pulled, "second finger cannot pull rope")
 		control_drag(view, Vector2(0.84, 0.54), 0)
+		step(2)
+		if index == 0: await capture("34-rope.png")
 		control_touch(view, Vector2(0.84, 0.54), false, 0)
-		step(1)
-	control_touch(view, game.play.tug_handle, false, 0)
-	check(game.play.phase == "result" and game.pet.social.games.tug == 1, "three exchanges complete exactly one rope round")
+		step(2)
+	check(game.play.phase == "result" and game.pet.social.games.tug == 1 and game.play.tug_good == 5, "five timed exchanges settle one round")
+	check(game.play.tug_best == 5 and TugRecord.read(game.storage.path).best == 5, "record saved after actual round")
 	await capture("35-rope-result.png")
+	check(not app.play_again.disabled, "rope replay is immediately available")
+	app.play_again.pressed.emit()
+	check(game.play.phase == "pull" and game.play.tug_best == 5, "replay skips completed demo and retains record")
+	app.play_dialog.hide()
 	step(2)
 	app.play_dialog.hide()
 	game.pet.social.last_offer_at = 0
@@ -166,6 +178,13 @@ func _run() -> void:
 		check(app.play_cue.visible and action_rect.position.y >= 0 and action_rect.end.y <= app.play_dialog.size.y - 40, "search action stays visible without scrolling at " + str(viewport_size))
 		check(app.play_dialog.position.x >= 0 and app.play_dialog.position.y >= 0 and app.play_dialog.position.x + app.play_dialog.size.x <= root.size.x and app.play_dialog.position.y + app.play_dialog.size.y <= root.size.y, "touch play dialog fits " + str(viewport_size))
 		check(view.size.x >= 240 and view.size.y >= 220, "play surface remains usable at " + str(viewport_size))
+		app.play_dialog.hide()
+		game.start_touch_game("tug")
+		step(20)
+		await capture("41-rope-result-%d.png" % viewport_size.x)
+		check(game.play.phase == "result" and game.play.tug_good == 0 and game.play.tug_best == 5, "idle replay keeps previous record")
+		check(app.play_again.visible and not app.play_again.disabled and app.play_again.get_global_rect().end.y <= app.play_dialog.size.y - 40, "rope replay remains visible on " + str(viewport_size))
+		check(app.play_dialog.position.y + app.play_dialog.size.y <= root.size.y, "rope result fits small and wide windows")
 		app.play_dialog.hide()
 	game.active = false
 	app.queue_free()

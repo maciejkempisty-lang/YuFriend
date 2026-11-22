@@ -10,10 +10,13 @@ signal sound_requested(effect: String)
 signal room_viewed(point: Vector2)
 signal first_pan
 signal ball_thrown(target: Vector2)
+signal yard_place_used(id: String)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
 const DRAG_THRESHOLD := 9.0
 const YARD_COLUMNS := 6
+# Small props first, so a sign or flag wins over a bush or lawn behind it.
+const YARD_HIT_ORDER := ["outing", "sprinkler", "course", "fetch", "gate", "dig", "garden", "puddle", "shade", "bush_0", "bush_1", "bush_2"]
 # The initial bowl-to-ball span, including both silhouettes, fits in 480 world units.
 const HOME_FRAME_WIDTH := 480.0
 const DECORATION_TOP := 60.0
@@ -40,6 +43,9 @@ var actors := Node2D.new()
 var puppy := Node2D.new()
 var camera := Camera2D.new()
 var yard_markers: Dictionary = {}
+var yard_sparkles: Dictionary = {}
+# Places the player has already tried; untried ones get a quiet twinkle.
+var yard_seen: Dictionary = {}
 var yard_controls_bottom := 0.0
 var hide_phase := ""
 var hide_spot := -1
@@ -229,10 +235,17 @@ func _ready() -> void:
 		badge.set_corner_radius_all(10)
 		marker.add_theme_stylebox_override("normal", badge)
 		marker.custom_minimum_size = Vector2(82, 44)
-		marker.pressed.connect(func(): care_requested.emit("yard_" + id))
+		marker.pressed.connect(func():
+			mark_yard_place(id)
+			care_requested.emit("yard_" + id))
 		marker.hide()
 		add_child(marker)
 		yard_markers[id] = marker
+		var sparkle := YardSparkle.new()
+		sparkle.phase = yard_markers.size() * 0.37
+		sparkle.hide()
+		add_child(sparkle)
+		yard_sparkles[id] = sparkle
 	for id in ["food", "bed", "ball"]:
 		var marker := PanelContainer.new()
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -355,6 +368,8 @@ func _interact(point: Vector2) -> void:
 		look_at_world(screen_to_world(point))
 		return
 	var action := action_at(point)
+	if action.begins_with("yard_") and RoomLayout.YARD_STATIONS.has(action.trim_prefix("yard_")):
+		mark_yard_place(action.trim_prefix("yard_"))
 	if not action.is_empty():
 		var id := RoomLayout.station_id(action)
 		if not id.is_empty(): prop_bounces[id] = 0.36
@@ -373,7 +388,8 @@ func action_at(point: Vector2) -> String:
 		if catch_active and Rect2(pet_world - Vector2(90, 170) * presentation_scale, Vector2(180, 190) * presentation_scale).has_point(where): return "catch"
 		if ball_touch_rect().has_point(point): return "play"
 		if _hits_pet(where): return "pet"
-		return ""
+		var place := yard_place_at(point)
+		return "" if place.is_empty() else "yard_" + place
 	if ball_touch_rect().has_point(point): return "play"
 	# Crate/bowl in front of the puppy keep the same priority as Y-sorted rendering.
 	for id in ["toys", "food"]:
@@ -384,6 +400,21 @@ func action_at(point: Vector2) -> String:
 		if id != "ball" and station_touch_rect(id).has_point(point): return RoomLayout.STATIONS[id].action
 	if Rect2(pet_world - Vector2(100, 190) * presentation_scale, Vector2(200, 200) * presentation_scale).has_point(where): return "pet"
 	return ""
+
+func yard_place_at(point: Vector2) -> String:
+	if not in_yard or overview or yard_course.playing or not yard_water.kind.is_empty() or catch_active or not hide_phase.is_empty(): return ""
+	for id in YARD_HIT_ORDER:
+		# Small props keep a finger-sized target without growing the large bushes.
+		var place := _screen_rect(RoomLayout.YARD_STATIONS[id].bounds)
+		var target := place.size.max(Vector2(44, 44))
+		if Rect2(place.get_center() - target / 2, target).has_point(point): return id
+	return ""
+
+func mark_yard_place(id: String) -> void:
+	if yard_seen.has(id): return
+	yard_seen[id] = true
+	yard_place_used.emit(id)
+	_sync_layers()
 
 func _hits_pet(where: Vector2) -> bool:
 	if not puppy.visible: return false
@@ -823,36 +854,23 @@ func _sync_layers() -> void:
 	hide_tail.visible = in_yard and hide_phase == "guess" and hide_spot >= 0
 	if hide_tail.visible: hide_tail.position = Vector2(350 + hide_spot * 400 + 70, 250)
 	catch_ring.visible = in_yard and catch_active
+	# Places are touched directly in the scene. Labelled buttons appear only on the
+	# whole-yard map; in the normal view an untried place gets a quiet twinkle.
+	var yard_free := in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and hide_phase.is_empty()
+	var lower_limit := (content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y
 	for id in yard_markers:
 		var marker: Button = yard_markers[id]
-		var point := world_to_screen(RoomLayout.YARD_STATIONS[id].point)
-		marker.text = "Sprzątnij" if id == "outing" and yard_potty.mess else RoomLayout.YARD_STATIONS[id].label
-		marker.custom_minimum_size = Vector2(82, 44)
-		marker.size = Vector2(82, 44)
-		marker.position = point - Vector2(41, 44)
-		if overview:
-			marker.text = str(int(id.trim_prefix("bush_")) + 1) if id.begins_with("bush_") else ""
-			marker.custom_minimum_size = Vector2(44, 44)
-			marker.size = Vector2(44, 44)
-			var index := RoomLayout.YARD_STATIONS.keys().find(id)
-			marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
-		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
+		marker.text = str(int(id.trim_prefix("bush_")) + 1) if id.begins_with("bush_") else ""
+		marker.custom_minimum_size = Vector2(44, 44)
+		marker.size = Vector2(44, 44)
+		var index := RoomLayout.YARD_STATIONS.keys().find(id)
+		marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
 		marker.accessibility_name = "Sprzątnij kupę" if id == "outing" and yard_potty.mess else RoomLayout.YARD_STATIONS[id].label
-		marker.visible = in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < ((content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y)
-	# Nearby new stations must retain separate touch targets on narrow screens.
-	if in_yard and not overview:
-		var visible_markers: Array = []
-		for marker in yard_markers.values():
-			if marker.visible: visible_markers.append(marker)
-		visible_markers.sort_custom(func(a: Button, b: Button): return a.position.x < b.position.x)
-		for i in visible_markers.size():
-			var marker: Button = visible_markers[i]
-			var cell := (size.x - 24) / visible_markers.size()
-			if cell < 84:
-				marker.text = ""
-				marker.custom_minimum_size = Vector2(44, 44)
-				marker.size = Vector2(44, 44)
-			marker.position.x = 12 + cell * i + (cell - marker.size.x) / 2
+		marker.visible = overview and in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < lower_limit
+		var sparkle: Control = yard_sparkles[id]
+		var place := _screen_rect(RoomLayout.YARD_STATIONS[id].bounds)
+		sparkle.position = Vector2(place.get_center().x - sparkle.size.x / 2, place.position.y - sparkle.size.y - 2)
+		sparkle.visible = yard_free and not overview and not yard_seen.has(id) and sparkle.position.x >= 2 and sparkle.position.x + sparkle.size.x <= size.x - 2 and sparkle.position.y >= hud_bottom + 8 and sparkle.position.y + sparkle.size.y < lower_limit
 	effect_label.visible = effect_left > 0
 	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
 	effect_label.modulate.a = minf(1, effect_left)

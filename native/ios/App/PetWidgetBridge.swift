@@ -84,9 +84,15 @@ import OSLog
         }
         publish()
         // The engine's pause notification may commit after the UIKit observer.
+        let task = backgroundTask
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-            self?.publish()
-            self?.finishBackgroundTask()
+            guard let self, self.backgroundTask == task else { return }
+            self.publish()
+            Task { @MainActor in
+                await self.reminders?.finishPendingUpdates()
+                // A second scene callback may have opened a newer task.
+                if self.backgroundTask == task { self.finishBackgroundTask() }
+            }
         }
     }
 

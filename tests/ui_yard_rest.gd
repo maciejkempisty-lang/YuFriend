@@ -28,6 +28,7 @@ func run() -> void:
 	root.content_scale_size = root.size
 	app = load("res://scenes/Main.tscn").instantiate()
 	app.save_path_override = preload("res://tests/helper_paths.gd").data_root() + "/yuf-rest-ui-%s/pet.json" % Time.get_ticks_usec()
+	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	root.add_child(app)
 	app.session.set_process(false)
 	app.room.set_process(false)
