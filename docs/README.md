@@ -26,6 +26,8 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 | [Rozwój projektu](rozwoj-projektu.md) | Priorytety, kryteria ukończenia, decyzje otwarte i planowane AI |
 | [Lista sprite’ów szczeniaka](lista-spriteow-szczeniaka.md) | Brief 22 animacji, pozy, kierunki i kolejność produkcji |
 | [Integracja sprite’ów](integracja-spriteow.md) | Foldery PNG, manifest, importer i podpinanie częściowych zestawów |
+| [Audyt grafik 18.11.2026](audyt-grafik-2026-11-18.md) | Aktualny inwentarz obrazów, braki jakościowe i kolejność prac graficznych |
+| [Ogród — wariant 1](ogrod-wariant-1-implementacja.md) | Gotowe tło, warstwy dynamiczne, kadrowanie i podgląd w grze |
 | [Dźwięk](../assets/audio/sfx/README.md) | Muzyka, efekty ElevenLabs, źródła i obróbka |
 | [Test iOS](test-ios.md) | Instalacja i aktualizacje na fizycznym iPhonie |
 | [Widget iOS](widget-ios.md) | Rozmiary widgetu, stan psa, App Groups, eksport i testy |

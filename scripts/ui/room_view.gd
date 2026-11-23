@@ -10,6 +10,7 @@ signal sound_requested(effect: String)
 signal room_viewed(point: Vector2)
 signal first_pan
 signal ball_thrown(target: Vector2)
+signal yard_station_selected(id: String)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
 const DRAG_THRESHOLD := 9.0
@@ -39,6 +40,7 @@ var actors := Node2D.new()
 var puppy := Node2D.new()
 var camera := Camera2D.new()
 var yard_markers: Dictionary = {}
+var yard_nodes: Dictionary = {}
 var yard_controls_bottom := 0.0
 var hide_phase := ""
 var hide_spot := -1
@@ -130,19 +132,30 @@ func _ready() -> void:
 	world.add_child(backdrop)
 	# Extra floor continues behind the floating controls; gameplay coordinates stay fixed.
 	backdrop.configure(Vector2(RoomLayout.SIZE.x, 960))
-	wall_clock.position = Vector2(471, 141)
+	for id in RoomLayout.YARD_STATIONS:
+		var station := YardStationView.new()
+		station.configure(id)
+		station.z_index = -1
+		station.hide()
+		world.add_child(station)
+		yard_nodes[id] = station
+	wall_clock.position = Vector2(607, 81)
+	wall_clock.radius = 24
 	wall_clock.z_index = -4
 	world.add_child(wall_clock)
 	yard_water.z_index = -2
+	yard_water.draw_ground_base = false
 	yard_water.hide()
 	world.add_child(yard_water)
 	yard_weather.z_index = -1
 	yard_weather.hide()
 	world.add_child(yard_weather)
 	yard_course.z_index = -1
+	yard_course.draw_sign = false
 	yard_course.hide()
 	world.add_child(yard_course)
 	yard_rest.z_index = -1
+	yard_rest.draw_static = false
 	yard_rest.hide()
 	world.add_child(yard_rest)
 	water_drops.effects_only = true
@@ -350,6 +363,11 @@ func _interact(point: Vector2) -> void:
 	if overview:
 		look_at_world(screen_to_world(point))
 		return
+	if in_yard and not catch_active and not _hits_pet(screen_to_world(point)):
+		var yard_id := yard_station_at(point)
+		if not yard_id.is_empty():
+			yard_station_selected.emit(yard_id)
+			return
 	var action := action_at(point)
 	if not action.is_empty():
 		var id := RoomLayout.station_id(action)
@@ -357,6 +375,20 @@ func _interact(point: Vector2) -> void:
 		care_requested.emit(action)
 	elif screen_to_world(point).y >= RoomLayout.FLOOR_Y:
 		floor_tapped.emit(RoomLayout.clamp_walk(screen_to_world(point)))
+
+func yard_station_at(point: Vector2) -> String:
+	if not in_yard or overview or not render_rect.has_point(point): return ""
+	var closest := ""
+	var best := INF
+	for id in RoomLayout.YARD_STATIONS:
+		var data: Dictionary = RoomLayout.YARD_STATIONS[id]
+		var center := world_to_screen(data.visual)
+		var radius := maxf(26.0, float(data.reach) * screen_scale().x)
+		var distance := point.distance_to(center) / radius
+		if distance <= 1.0 and distance < best:
+			best = distance
+			closest = id
+	return closest
 
 func action_at(point: Vector2) -> String:
 	if not render_rect.has_point(point): return ""
@@ -782,11 +814,13 @@ func _process(delta: float) -> void:
 	_sync_layers()
 
 func _sync_layers() -> void:
+	for station in yard_nodes.values(): station.visible = in_yard
 	yard_rest.visible = in_yard and not yard_course.playing
 	yard_course.visible = in_yard
 	animator.position.y = -roundf(jump_lift / 3) * 3
 	yard_weather.visible = in_yard
 	yard_water.wet = yard_weather.kind != "sun" or yard_water.kind == "puddle"
+	yard_nodes.puddle.set_puddle_wet(yard_water.wet)
 	yard_water.visible = in_yard and not yard_course.playing
 	yard_water.pet_world = pet_world
 	water_drops.kind = yard_water.kind
@@ -829,21 +863,7 @@ func _sync_layers() -> void:
 			marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
 		marker.tooltip_text = RoomLayout.YARD_STATIONS[id].label
 		marker.accessibility_name = RoomLayout.YARD_STATIONS[id].label
-		marker.visible = in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < ((content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y)
-	# Nearby new stations must retain separate touch targets on narrow screens.
-	if in_yard and not overview:
-		var visible_markers: Array = []
-		for marker in yard_markers.values():
-			if marker.visible: visible_markers.append(marker)
-		visible_markers.sort_custom(func(a: Button, b: Button): return a.position.x < b.position.x)
-		for i in visible_markers.size():
-			var marker: Button = visible_markers[i]
-			var cell := (size.x - 24) / visible_markers.size()
-			if cell < 84:
-				marker.text = ""
-				marker.custom_minimum_size = Vector2(44, 44)
-				marker.size = Vector2(44, 44)
-			marker.position.x = 12 + cell * i + (cell - marker.size.x) / 2
+		marker.visible = in_yard and overview and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < ((content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y)
 	effect_label.visible = effect_left > 0
 	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
 	effect_label.modulate.a = minf(1, effect_left)

@@ -132,8 +132,7 @@ func _cross() -> void:
 	phase = "fade_in"
 
 func _open(value: bool) -> void:
-	app.room.backdrop.portal_open = value
-	app.room.backdrop.queue_redraw()
+	app.room.yard_nodes.gate.set_gate_open(value)
 	app.room.station_nodes.door.portal_open = value
 	app.room.station_nodes.door.queue_redraw()
 

@@ -70,8 +70,13 @@ func run() -> void:
 	check(app.room.animator.current == "shake", "real shaking clip")
 	check(float(app.room.animator.sprite.material.get_shader_parameter("dirt")) > 0.2, "mud visible on coat")
 	until("")
-	check(app.yard_bath_button.visible and not app.water_splash_button.visible, "bath action restored")
-	app.yard_bath_button.pressed.emit()
+	check(not app.yard_toolbar.visible and not app.water_splash_button.visible, "temporary water actions clear after play")
+	app._select_yard_station("puddle")
+	for i in 200:
+		if app.yard_action_bubble.visible: break
+		tick()
+	check(app.yard_action_bubble.visible and app.yard_action_secondary.text == "Kąpiel", "puddle offers a contextual bath")
+	app.yard_action_secondary.pressed.emit()
 	check(s.in_bath and app.bath_dialog.visible and not app.room.yard_water.visible, "water leads to bathroom without lingering effects")
 	s.bath.stage = 3
 	check(s.finish_bath() and s.pet.needs.hygiene > 95, "bath washes mud")

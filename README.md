@@ -51,6 +51,8 @@ Projekt sprawdzono w Godot **4.7.2**, renderer **Compatibility**, na macOS. Otw�
 '/Applications/Godot.app/Contents/MacOS/Godot' --path '/Volumes/KINGSTON/YuFriend'
 ```
 
+Testowy eksport Androida opisuje [instrukcja APK](docs/android.md).
+
 ## Co można zrobić
 
 - Przesuń pokój palcem lub przeciągnij myszą, aby obejrzeć jego dalszą część. „Do pieska” przywraca śledzenie; głaskanie i trening przybliżają kamerę.

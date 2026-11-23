@@ -1,5 +1,7 @@
 # Tło pokoju pixel art
 
+19 listopada 2026 strefę karmienia w panoramie domu zastąpiono kuchnią opartą na [makiecie B](../../../docs/images/kuchnia-makieta-b-jasna.png). Szałwiowe szafki, kremowy fartuch z płytek, okno, blat ze zlewem i otwarta spiżarka są rysowane przez `RoomArtwork._draw_kitchen_corner()` na siatce trzech jednostek świata. To statyczna grafika tła, bez nowych pól dotyku. Dwie miski na macie są osobnym węzłem stacji `food`, dzięki czemu dotknięcie nadal uruchamia karmienie. Rozmiar obszaru dotyku i miejsce dojścia psa odpowiadają nowemu rysunkowi. Zegar jest mniejszy i mieści się nad spiżarką.
+
 `puppy-room-pixel-v1.png` — nieprzezroczysty obraz RGB, 1254 × 1254 px, wygenerowany we wbudowanym ImageGen i dodany do gry 14 listopada 2026. [Dokładny prompt](puppy-room-pixel-v1-prompt.txt) jest zachowany obok obrazu. Obraz przedstawia sam pokój: ścianę, okno, roślinę, obrazek z łapą i podłogę. Pies, dywan oraz przedmioty opieki nie są w niego wtopione.
 
 Panorama jest składana w `RoomArtwork` w świecie 1440 × 360. Środkowa ściana korzysta z regionu źródła (0, 186, 1254, 650), w jednolitej skali 0,4, od X=400. Kolory skrajnych kolumn przedłużają ścianę na oba końce pokoju. Region desek (0, 900, 600, 354) bez smugi słońca tworzy podłogę; pojedyncze światło jest dodawane pod oknem, a listwa leży przy Y=260 świata. Źródłowy PNG pozostaje niezmieniony.

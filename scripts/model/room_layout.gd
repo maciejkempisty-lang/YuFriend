@@ -9,22 +9,22 @@ const WALK_AREA := Rect2(95, 286, 1250, 42)
 const PUPPY_SCALE := 0.64
 const START := Vector2(670, 322)
 const YARD_STATIONS := {
-	"shade": {"label": "Cień", "icon": "moon", "point": Vector2(240, 205)},
-	"course": {"label": "Tor", "icon": "paw", "point": Vector2(1010, 205)},
-	"puddle": {"label": "Kałuża", "icon": "water", "point": Vector2(420, 205)},
-	"sprinkler": {"label": "Zraszacz", "icon": "sprinkler", "point": Vector2(1230, 205)},
-	"gate": {"label": "Dom", "icon": "home", "point": Vector2(150, 205)},
-	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205)},
-	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205)},
-	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205)},
-	"dig": {"label": "Kopanie", "icon": "search", "point": Vector2(650, 205)},
-	"garden": {"label": "Ogródek", "icon": "flower", "point": Vector2(550, 205)},
-	"outing": {"label": "Na potrzebę", "icon": "paw", "point": Vector2(1300, 205)},
-	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205)}
+	"shade": {"label": "Cień", "icon": "moon", "point": Vector2(240, 205), "visual": Vector2(240, 275), "reach": 72.0, "action": "Odpocznij lub napij się"},
+	"course": {"label": "Tor", "icon": "paw", "point": Vector2(1010, 205), "visual": Vector2(1005, 260), "reach": 46.0, "action": "Rozpocznij tor"},
+	"puddle": {"label": "Kałuża", "icon": "water", "point": Vector2(420, 205), "visual": Vector2(420, 311), "reach": 45.0, "action": "Wejdź do kałuży"},
+	"sprinkler": {"label": "Zraszacz", "icon": "sprinkler", "point": Vector2(1230, 205), "visual": Vector2(1300, 305), "reach": 47.0, "action": "Włącz zraszacz"},
+	"gate": {"label": "Dom", "icon": "home", "point": Vector2(150, 205), "visual": Vector2(150, 242), "reach": 45.0, "action": "Wróć do domu"},
+	"bush_0": {"label": "Krzak 1", "icon": "search", "point": Vector2(350, 205), "visual": Vector2(350, 252), "reach": 62.0, "action": "Poszukaj zapachu"},
+	"bush_1": {"label": "Krzak 2", "icon": "search", "point": Vector2(750, 205), "visual": Vector2(750, 252), "reach": 62.0, "action": "Poszukaj zapachu"},
+	"fetch": {"label": "Aport", "icon": "ball", "point": Vector2(940, 205), "visual": Vector2(940, 308), "reach": 46.0, "action": "Rzuć piłkę"},
+	"dig": {"label": "Kopanie", "icon": "search", "point": Vector2(650, 205), "visual": Vector2(669, 307), "reach": 46.0, "action": "Kop w piasku"},
+	"garden": {"label": "Ogródek", "icon": "flower", "point": Vector2(550, 205), "visual": Vector2(550, 284), "reach": 56.0, "action": "Posadź lub podlej"},
+	"outing": {"label": "Na potrzebę", "icon": "paw", "point": Vector2(1300, 205), "visual": Vector2(1295, 270), "reach": 38.0, "action": "Wyjdź na potrzebę"},
+	"bush_2": {"label": "Krzak 3", "icon": "search", "point": Vector2(1150, 205), "visual": Vector2(1150, 252), "reach": 62.0, "action": "Poszukaj zapachu"}
 }
 const STATIONS := {
 	"bed": {"label": "Legowisko", "action": "rest", "position": Vector2(205, 322), "stand": Vector2(205, 306), "bounds": Rect2(-88, -52, 176, 68), "clip": "sleep", "need": "energy", "effects": {}, "facing_left": false},
-	"food": {"label": "Miska", "action": "feed", "position": Vector2(485, 325), "stand": Vector2(431, 319), "bounds": Rect2(-28, -28, 56, 28), "clip": "eat_loop", "need": "fullness", "effects": {"fullness": 22}, "facing_left": false},
+	"food": {"label": "Miska", "action": "feed", "position": Vector2(485, 325), "stand": Vector2(410, 319), "bounds": Rect2(-48, -36, 96, 36), "clip": "eat_loop", "need": "fullness", "effects": {"fullness": 22}, "facing_left": false},
 	"ball": {"label": "Piłka", "action": "play", "position": Vector2(890, 317), "stand": Vector2(845, 327), "bounds": Rect2(-14, -14, 28, 28), "clip": "play_bow", "need": "play", "effects": {"play": 24, "contact": 8, "energy": -5, "hygiene": -3}, "facing_left": false},
 	"toys": {"label": "Kosz z zabawkami", "action": "toys", "position": Vector2(1090, 316), "stand": Vector2(1020, 308), "bounds": Rect2(-48, -72, 96, 72), "clip": "play_bow", "need": "play", "effects": {"play": 6, "contact": 2}, "facing_left": false},
 	"window": {"label": "Okno", "action": "window", "position": Vector2(740, 260), "stand": Vector2(738, 291), "bounds": Rect2(-78, -190, 156, 168), "clip": "head_tilt_stand", "need": "play", "effects": {"play": 3}, "facing_left": false},

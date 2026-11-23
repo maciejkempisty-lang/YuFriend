@@ -40,6 +40,12 @@ var visitor_soothe_button: Button
 var visitor_recall_button: Button
 var yard_bath_button: Button
 var yard_button: Button
+var yard_action_bubble: PanelContainer
+var yard_action_title: Label
+var yard_action_button: Button
+var yard_action_secondary: Button
+var pending_yard_station := ""
+var yard_action_station := ""
 var sniff_button: Button
 var reward_buttons: Dictionary = {}
 var trick_buttons: Dictionary = {}
@@ -145,12 +151,16 @@ func _ready() -> void:
 	session.attention_requested.connect(room.focus_pet)
 	room.station_reached.connect(session.arrive_at)
 	room.destination_reached.connect(session.destination_reached)
+	room.destination_reached.connect(_on_yard_station_arrival)
 	room.performance_finished.connect(session.performance_finished)
 	session.save_status.connect(func(_ok: bool): _refresh())
 	room.floor_tapped.connect(session.move_to)
 	room.room_viewed.connect(session.follow_room)
+	room.room_viewed.connect(func(_point: Vector2): _clear_yard_station())
 	room.return_button.pressed.connect(session.player_activity)
 	room.care_requested.connect(_room_care_action)
+	room.yard_station_selected.connect(_select_yard_station)
+	room.floor_tapped.connect(func(_point: Vector2): _clear_yard_station())
 	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
 	session.hide_revealed.connect(room.reveal_hide)
@@ -352,6 +362,27 @@ func _build_ui() -> void:
 	message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	bubble_row.add_child(message_label)
 	bubble.hide()
+	yard_action_bubble = PanelContainer.new()
+	yard_action_bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf5"), 18, 10))
+	yard_action_bubble.z_index = 30
+	add_child(yard_action_bubble)
+	var yard_action_column := VBoxContainer.new()
+	yard_action_column.add_theme_constant_override("separation", 5)
+	yard_action_bubble.add_child(yard_action_column)
+	yard_action_title = _label("", 16, INK, true)
+	yard_action_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	yard_action_column.add_child(yard_action_title)
+	var yard_action_row := HBoxContainer.new()
+	yard_action_row.add_theme_constant_override("separation", 6)
+	yard_action_column.add_child(yard_action_row)
+	yard_action_button = _button("", _use_yard_station, true)
+	yard_action_button.custom_minimum_size.y = 44
+	yard_action_row.add_child(yard_action_button)
+	yard_action_secondary = _button("", _use_yard_secondary)
+	yard_action_secondary.custom_minimum_size.y = 44
+	yard_action_row.add_child(yard_action_secondary)
+	yard_action_secondary.hide()
+	yard_action_bubble.hide()
 	gain_label = _label("", 21, GREEN, true)
 	gain_label.add_theme_stylebox_override("normal", _style(CREAM, 14, 8))
 	gain_label.hide()
@@ -861,6 +892,7 @@ func _show_touch_game(kind: String) -> void:
 	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
+	if key != "care": _clear_yard_station()
 	if key != "care" and session.in_yard:
 		if not session.change_yard(false): return
 		if room.in_yard: room.set_yard(false)
@@ -879,6 +911,11 @@ func _place(control: Control, rect: Rect2) -> void:
 	control.position = rect.position
 	control.size = rect.size
 
+func _yard_toolbar_needed() -> bool:
+	if selected_tab != "care": return false
+	if not session.in_yard: return true
+	return session.water.active() or session.course.active() or session.yard_rest.active() or session.hide_game.active() or not session.outdoor_commands.phase.is_empty() or str(session.invitation.get("kind", "")).begins_with("yard_")
+
 func _fit_room() -> void:
 	if sheet == null: return
 	safe_rect = _safe_content_rect()
@@ -895,11 +932,10 @@ func _fit_room() -> void:
 		panel_width = safe_rect.size.x - 24
 		panel_top = safe_rect.position.y + 8
 		panel_height = nav_y - panel_top - 8 - warning_space
-	yard_toolbar.visible = selected_tab == "care"
+	yard_toolbar.visible = _yard_toolbar_needed()
 	_place(yard_toolbar, Rect2(panel_x, safe_rect.position.y + 196, panel_width, 44))
 	visitor_toolbar.visible = selected_tab == "care" and session.visitors.active()
 	_place(visitor_toolbar, Rect2(panel_x, panel_top - 52, panel_width, 44))
-	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
 	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
 	var scene_width := safe_rect.end.x - rail if layout_wide else size.x
@@ -914,6 +950,7 @@ func _fit_room() -> void:
 	header.visible = selected_tab != "journal"
 	room.visible = selected_tab != "journal"
 	room.hud_bottom = header.get_rect().end.y + 10
+	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8 if yard_toolbar.visible else room.hud_bottom + 52
 	room.content_bottom = safe_rect.end.y - 16 if layout_wide else panel_top
 	room.overlay_left = header_x
 	room.overlay_right = minf(scene_width - 12, safe_rect.end.x - 12)
@@ -1123,6 +1160,7 @@ func _submit_command() -> void:
 
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
+	if not session.in_yard: _clear_yard_station()
 	var pet := session.pet
 	if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
 	if room.backdrop.decor != pet.decor:
@@ -1161,12 +1199,13 @@ func _refresh() -> void:
 	care_buttons.rest.icon_name = "sun" if session.is_sleeping() else "moon"
 	room.carrying_ball = session.outdoor_commands.key == "come" and session.outdoor_commands.phase == "perform" and session.outdoor_commands.trial.will_succeed
 	var command := session.outdoor_commands.available_key(session)
-	yard_command_button.visible = not command.is_empty()
-	yard_bath_button.visible = command.is_empty()
+	yard_command_button.visible = session.in_yard and not command.is_empty() and not session.outdoor_commands.phase.is_empty()
+	yard_bath_button.visible = not session.in_yard
 	yard_command_button.text = "Pochwal" if session.outdoor_commands.phase == "praise" else TrainingSystem.LABELS.get(command, "Komenda")
 	yard_command_button.disabled = session.outdoor_commands.phase == "perform" or (command == "come" and session.busy() and not session.outdoor_commands.running())
-	yard_button.text = "Dom" if session.in_yard else "Podwórko"
-	sniff_button.visible = session.in_yard
+	yard_button.visible = not session.in_yard
+	yard_button.text = "Podwórko"
+	sniff_button.visible = session.in_yard and session.hide_game.active()
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Krzaki"
 	sniff_button.disabled = (session.busy(false) and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else "Aport · rekord %.1f m · przeciągnij piłkę" % pet.yard_record) if session.in_yard else _activity_status()
@@ -1178,14 +1217,15 @@ func _refresh() -> void:
 	if room.backdrop.garden_key != garden_key:
 		room.backdrop.garden_key = garden_key
 		room.backdrop.garden_state = garden_view
-		if session.in_yard: room.backdrop.queue_redraw()
+		room.yard_nodes.garden.art.garden_state = garden_view
+		if session.in_yard: room.yard_nodes.garden.art.queue_redraw()
 	if session.hide_game.active(): care_status.text = session.hide_game.hint()
 	if session.outdoor_commands.phase == "praise": care_status.text = "Udało się! Pochwal, aby zaliczyć trening."
 	elif session.outdoor_commands.phase == "perform": care_status.text = "Wraca z piłką…" if command == "come" else "Zostań… spokojnie czekamy."
 	var visiting := session.visitors.active() and session.in_yard
 	room.fence_visitor.present(session.visitors.kind if visiting else "")
 	visitor_toolbar.visible = visiting and selected_tab == "care"
-	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8
+	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8 if yard_toolbar.visible else room.hud_bottom + 52
 	visitor_soothe_button.visible = visiting
 	visitor_recall_button.visible = visiting
 	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe"]
@@ -1243,6 +1283,8 @@ func _refresh() -> void:
 		yard_bath_button.hide()
 		yard_command_button.hide()
 		care_status.text = session.yard_rest.hint(session)
+	yard_toolbar.visible = _yard_toolbar_needed()
+	room.yard_controls_bottom = yard_toolbar.get_rect().end.y + 8 if yard_toolbar.visible else room.hud_bottom + 52
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
@@ -1413,6 +1455,8 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 	_position_feedback()
 
 func _process(delta: float) -> void:
+	if not pending_yard_station.is_empty() and session.activity != "walk": pending_yard_station = ""
+	if not yard_action_station.is_empty() and (not session.in_yard or session.activity != "idle" or room.moving): _clear_yard_station()
 	reminder_poll -= delta
 	if settings_dialog.visible and reminder_poll <= 0:
 		reminder_poll = 0.5
@@ -1435,6 +1479,7 @@ func _process(delta: float) -> void:
 				button.reward_ratio = clampf(session.training.time_left / session.training.reward_duration, 0, 1)
 				button.queue_redraw()
 	_position_feedback()
+	_position_yard_station()
 
 func _position_companion() -> void:
 	if companion_card == null or header == null: return
@@ -1442,7 +1487,7 @@ func _position_companion() -> void:
 	var pet_bounds := room.pet_screen_bounds()
 	if companion_card.visible:
 		_place_pet_overlay(companion_card, Vector2(header.position.x, room.hud_bottom + 52),
-			[pet_bounds.grow(20), room.bowl_rect().grow(4), room.ball_touch_rect().grow(4)])
+			[pet_bounds.grow(20), room.bowl_rect().grow(4), room.ball_touch_rect().grow(4), yard_toolbar.get_rect().grow(8)])
 	var below := companion_card.position.y >= pet_bounds.end.y
 	companion_tail.position = Vector2(clampf(pet_bounds.get_center().x - companion_card.position.x, 20, companion_card.size.x - 38), 0 if below else companion_card.size.y)
 	companion_tail.scale.y = -1 if below else 1
@@ -1491,7 +1536,7 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	bubble.visible = not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
+	bubble.visible = not session.portal_active and bubble_left > 0 and on_screen and not yard_action_bubble.visible and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
 	gain_label.visible = gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
@@ -1559,6 +1604,7 @@ func _show_yard_rest() -> void:
 	dialog.popup()
 
 func _toggle_yard(animated: bool = true) -> void:
+	_clear_yard_station()
 	if session.in_yard and session.yard_rest.phase == "rest":
 		session.change_yard(false)
 		return
@@ -1569,6 +1615,95 @@ func _toggle_yard(animated: bool = true) -> void:
 		gain_left = 0
 		gain_label.hide()
 		if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
+
+func _clear_yard_station() -> void:
+	pending_yard_station = ""
+	yard_action_station = ""
+	if yard_action_bubble != null: yard_action_bubble.hide()
+	if sheet != null: sheet.show()
+
+func _select_yard_station(id: String) -> void:
+	if not session.in_yard or not RoomLayout.YARD_STATIONS.has(id): return
+	_clear_yard_station()
+	var target := RoomLayout.clamp_walk(Vector2(RoomLayout.YARD_STATIONS[id].visual.x, 315))
+	pending_yard_station = id
+	session.move_to(target)
+	if session.activity != "walk":
+		pending_yard_station = ""
+		session.say("Dokończmy najpierw obecną czynność, potem podejdziemy do tego miejsca.")
+		return
+	# The destination card, rather than a transient walking message, explains
+	# the selected object when the puppy actually arrives.
+	bubble_left = 0
+	bubble.hide()
+	room.focus_pet(false)
+
+func _on_yard_station_arrival() -> void:
+	if pending_yard_station.is_empty() or not session.in_yard or session.activity != "idle": return
+	var id := pending_yard_station
+	var target := RoomLayout.clamp_walk(Vector2(RoomLayout.YARD_STATIONS[id].visual.x, 315))
+	if room.pet_world.distance_to(target) > 12: return
+	pending_yard_station = ""
+	yard_action_station = id
+	# Let the player read and choose before an autonomous walk replaces the card.
+	session._brain_left = maxf(session._brain_left, 12.0)
+	var data: Dictionary = RoomLayout.YARD_STATIONS[id]
+	yard_action_title.text = data.label
+	yard_action_button.text = data.action
+	yard_action_secondary.hide()
+	if id.begins_with("bush_"):
+		yard_action_button.text = "Szukaj"
+		yard_action_secondary.text = "Chowanka"
+		yard_action_secondary.show()
+	elif id in ["puddle", "sprinkler"]:
+		yard_action_button.text = "Pluskaj" if id == "puddle" else "Zraszaj"
+		yard_action_secondary.text = "Kąpiel"
+		yard_action_secondary.show()
+	elif id == "fetch" and not session.outdoor_commands.available_key(session).is_empty():
+		yard_action_secondary.text = "Komenda"
+		yard_action_secondary.show()
+	yard_action_button.icon = GameIcons.texture(data.icon, CREAM)
+	yard_action_button.expand_icon = true
+	yard_action_button.add_theme_constant_override("icon_max_width", 20)
+	yard_action_button.accessibility_name = "%s. %s" % [data.label, data.action]
+	yard_action_bubble.show()
+	_position_yard_station()
+
+func _use_yard_station() -> void:
+	var id := yard_action_station
+	_clear_yard_station()
+	if not id.is_empty(): _room_care_action("yard_" + id)
+
+func _use_yard_secondary() -> void:
+	var id := yard_action_station
+	_clear_yard_station()
+	if id.begins_with("bush_"): _show_yard_games()
+	elif id in ["puddle", "sprinkler"]: _show_bath()
+	elif id == "fetch": OutdoorPanels.command(self)
+
+func _position_yard_station() -> void:
+	if yard_action_bubble == null or not yard_action_bubble.visible: return
+	if not session.in_yard or selected_tab != "care" or room.overview:
+		yard_action_bubble.hide()
+		sheet.show()
+		return
+	yard_action_bubble.size = Vector2(minf(260, room.size.x - 24), 0)
+	if safe_rect.size.x <= 360 and safe_rect.size.y <= 700:
+		sheet.hide()
+		yard_action_bubble.size.x = minf(320, room.size.x - 24)
+		yard_action_bubble.position = Vector2(maxf(12, (room.size.x - yard_action_bubble.size.x) / 2), sheet.position.y + 12)
+		yard_action_bubble.modulate.a = 1
+		return
+	sheet.show()
+	var pet_bounds := room.pet_screen_bounds()
+	var obstacles: Array[Rect2] = [pet_bounds.grow(8)]
+	if yard_toolbar.visible: obstacles.append(yard_toolbar.get_rect().grow(6))
+	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(8))
+	if not _place_pet_overlay(yard_action_bubble, Vector2(pet_bounds.get_center().x - yard_action_bubble.size.x / 2, pet_bounds.end.y + 12), obstacles):
+		sheet.hide()
+		yard_action_bubble.size.x = minf(320, room.size.x - 24)
+		yard_action_bubble.position = Vector2(maxf(12, (room.size.x - yard_action_bubble.size.x) / 2), sheet.position.y + 12)
+		yard_action_bubble.modulate.a = 1
 
 func _course_action() -> void:
 	match session.course.phase:

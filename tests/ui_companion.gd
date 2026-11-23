@@ -59,17 +59,18 @@ func _run() -> void:
 			check(app.bubble.visible and app.companion_card.modulate.a == 0, "narrow screen: a reply bubble replaces a passing thought")
 			app.bubble_left = 0
 			await settle()
-			check(app.companion_card.visible and app.companion_card.modulate.a > 0, "narrow screen: the thought returns after the reply")
+			check(app.companion_card.modulate.a == 0 and app.yard_toolbar.visible, "narrow screen keeps the yard controls clear after the reply")
 		game.pet.needs.fullness = 20
 		await settle()
 		await capture("companion-need-%d.png" % layout.x)
 		check(app.companion_data.action == "feed" and app.companion_action.text == "Nakarm", "hungry bubble routes to feeding at " + str(layout))
 		check(app.room.camera_center() == camera and app.room.screen_scale() == scale and app.room.pet_position() == pet_point, "bubble does not change camera, scale or dog position at " + str(layout))
 		var rect: Rect2 = app.companion_card.get_global_rect()
-		check(app.safe_rect.encloses(rect) and rect.position.y >= app.room.overview_button.get_rect().end.y + 4, "bubble fits below the toolbar inside safe bounds at " + str(layout))
+		var shown: bool = app.companion_card.modulate.a > 0
+		check((app.safe_rect.encloses(rect) and rect.position.y >= app.room.overview_button.get_rect().end.y + 4 and not rect.intersects(app.yard_toolbar.get_rect())) if shown else app.yard_toolbar.visible, "bubble yields to yard controls and stays in safe bounds at " + str(layout))
 		var ball: Rect2 = app.room._screen_rect(Rect2(app.room.ball_world - Vector2(14, 14), Vector2(28, 32)))
-		check(not rect.intersects(puppy_bounds()) and not rect.intersects(app.room.bowl_rect()) and not rect.intersects(ball), "bubble leaves the dog, bowl and ball unobscured at " + str(layout))
-		check(rect.encloses(app.companion_action.get_global_rect()) and app.companion_action.size.y >= 44 and app.companion_label.get_line_count() <= 3, "action is tappable and text stays short at " + str(layout))
+		check(not shown or (not rect.intersects(puppy_bounds()) and not rect.intersects(app.room.bowl_rect()) and not rect.intersects(ball)), "bubble leaves the dog, bowl and ball unobscured at " + str(layout))
+		check((rect.encloses(app.companion_action.get_global_rect()) and app.companion_action.size.y >= 44 and app.companion_label.get_line_count() <= 3) if shown else app.care_buttons.feed.visible, "visible action is tappable and text stays short at " + str(layout))
 		game.pet.needs.fullness = 80
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
