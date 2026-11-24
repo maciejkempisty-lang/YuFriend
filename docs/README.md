@@ -53,3 +53,5 @@ Parametry mechanik są zebrane w jednym dokumencie; format PNG i manifestu opisu
 
 - [Plan rozwoju grafiki i referencje](rozwoj-grafiki.md) — aktualny zakres, makiety oraz zaadaptowane menu obiektów.
 - [Testowy eksport Androida](android.md) — osobny preset i skrypt eksportu APK.
+
+- [Przegląd menu ogrodu po scaleniu](przeglad-menu-ogrodu-2026-11-24.md) — regresja dotyku, dostępności akcji i trwających zabaw.
