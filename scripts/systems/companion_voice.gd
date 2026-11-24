@@ -9,13 +9,13 @@ const NEEDS := {
 	"energy": ["Oczka mi się kleją. Czas na drzemkę.", "rest", "Drzemka"],
 	"hygiene": ["Przydałoby się trochę czesania…", "clean", "Wyczesz"],
 	"play": ["Mam ochotę na wspólną zabawę!", "play", "Pobaw się"],
-	"contact": ["Chodź bliżej. Masz chwilę na głaski?", "pet", "Pogłaszcz"]
+	"contact": ["Posiedzisz ze mną? Mam ochotę na spokojne głaski.", "cuddle", "Przytul"]
 }
 const INVITATIONS := {
 	"ball": ["Rzucisz mi piłkę? Już czekam!", "Rzuć piłkę"],
 	"tug": ["Chwycisz drugi koniec liny?", "Chwyć linę"],
 	"cups": ["Schowaj smakołyk. Spróbuję go znaleźć!", "Schowaj"],
-	"cuddle": ["Najbardziej mam ochotę na głaski.", "Pogłaszcz"]
+	"cuddle": ["Posiedzisz ze mną?", "Przytul"]
 }
 const THOUGHTS := {
 	"calm": ["Lubię te nasze spokojne chwile.", "pet", "Pogłaszcz"],
@@ -76,6 +76,11 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 			text = {"feed": "Już idę do miski!", "rest": "Już idę do legowiska.",
 				"touch_ball": "Biegnę po piłkę!"}.get(game._pending_action, "Już biegnę!")
 		return _line("activity", text, "", "", game)
+	if game.wellbeing.reunion_left > 0:
+		return _line("thought", "Miło Cię znowu widzieć! Posiedzisz ze mną?", "cuddle", "Przytul", game)
+	if WellbeingSystem.state(game.wellbeing.score()) == 0:
+		var words: Array = NEEDS[game.wellbeing.lowest_part()]
+		return _line("need", words[0], words[1], words[2], game)
 	if game.wake_report_left > 0:
 		var report := wake_report(game)
 		return _line("wake", report.text, report.action, report.label, game)
@@ -122,6 +127,7 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 func _line(kind: String, text: String, action: String, label: String, game: GameSession) -> Dictionary:
 	var enabled := game.writable and not game.suspended
 	if action == "album": enabled = not game.suspended
+	elif action == "cuddle": enabled = enabled and game.can_pet()
 	elif action == "play": enabled = enabled and game.play_readiness().is_empty()
 	elif action != "pet" and float(game.cooldowns.get(action, 0)) > 0: enabled = false
 	return {"kind": kind, "text": text, "action": action, "label": label, "enabled": enabled}

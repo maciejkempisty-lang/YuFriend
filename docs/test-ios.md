@@ -502,3 +502,62 @@ historia wizyty i rytm podczas normalnej pracy gry. Format pozostaje v17.
 
 Kopie, zamrożone źródła, podpisana aplikacja, manifesty i logi:
 `exports/ios-week-reminders-v36/` (lokalne, ignorowane przez Git).
+
+
+## Build 37 — samopoczucie i przytulanie (2026-11-23)
+
+Zbudowano, podpisano i zainstalowano 0.1.0 (37) na MagicPhone jako aktualizację.
+Potwierdzono numer aplikacji i widgetu, podpis, dotychczasowy bundle ID,
+zespół P665WUWCN4, App Group i zgodność PCK z eksportem. Źródła obejmują
+lokalne wdrożenie samopoczucia i przytulania; ich manifest pozostał zgodny
+przez cały eksport i kompilację.
+
+Przed budową pobrano Documents Glorii i utworzono zweryfikowany ZIP. Bezpośrednio
+przed instalacją powtórzono kopię. Oba archiwa zachowano na KINGSTON.
+Po instalacji, przed uruchomieniem, wszystkie **31 plików** pozostało identycznych
+bajtowo. Zapis nadal v17; test odczytu i ponownego zapisu świeżej kopii zachował
+wartości wszystkich **30 pól**. Nie odinstalowywano gry ani nie przywracano
+starszej kopii na urządzeniu.
+
+Weryfikacja: 69 sprawdzeń samopoczucia i zachowania zapisu na świeżej kopii
+Glorii; brak błędów. Wdrożenie pochodzi z przetestowanego stanu 36/36 zestawów
+logiki i 31/31 UI, z dodatkową końcową kontrolą przytulania, dymków i głównych
+ekranów. Nie wykonywano czynności w rzeczywistym zapisie psa.
+
+Początkowo iOS blokował start komunikatem „Niezaufany deweloper”. Użytkownik
+zweryfikował profil w ustawieniach telefonu, po czym build 37 uruchomił się
+poprawnie. Potwierdzono procesy aplikacji i widgetu oraz zrzut rzeczywistego
+ekranu: Gloria, „Stęskniona” i przycisk „Przytul”. Podpis i nowe profile są
+poprawne, ważne do 30 listopada 2026. Gra została przywrócona na ekran telefonu.
+
+Kopia Documents po uruchomieniu zachowuje tożsamość, opanowanie i liczniki
+wszystkich sztuczek, więź i jej postęp, osiągnięcia, fotografie, dekoracje,
+kolekcje, ogródek, przygody i zabawy. Nie brakuje żadnego wcześniejszego pliku;
+archiwa i fotografie pozostają identyczne bajtowo. Zmiany potrzeb, snu,
+znaczników czasu, historii, charakteru dnia i raportu nieobecności pochodzą
+z normalnego działania gry. Zmiany formy ćwiczeń, cech i dnia refleksji
+odtworzono dokładnie istniejącymi `PracticeSystem.sync` i
+`PersonalitySystem.reflect` na kopii sprzed startu. Wszystkie wspólne wpisy
+albumu są identyczne; limit dziesięciu raportów nieobecności zastąpił najstarszy
+nietrwały raport nowym, bez utraty osiągnięć. Pełna historia sprzed aktualizacji
+pozostaje w kopiach ZIP. Format nadal v17.
+
+Nie wykonywano minigry na rzeczywistym zapisie Glorii; fizyczna ocena gestu
+należy do próby użytkownika.
+
+Kopie, paczka, manifesty i logi: `exports/ios-cuddle-v37/` (lokalne, ignorowane
+przez Git). Kopie: `gloria-before-build37.zip` i
+`gloria-final-before-build37.zip`. Wynik: `verification.json`.
+
+
+## Build 38 — ogród, kuchnia i menu obiektów (24.11.2026)
+
+Zbudowano, podpisano, zainstalowano jako aktualizację i uruchomiono 0.1.0 (38) na MagicPhone. Aplikacja i widget mają numer 38, dotychczasowy bundle ID, zespół P665WUWCN4 i App Group. Podpis oraz zgodność PCK z eksportem zweryfikowano. Źródła wykonawcze pozostały identyczne podczas budowy; potem uściślono testy i uzupełniono dokumentację.
+
+Pakiet zawiera nowe tło ogrodu, osobne sprite’y, kuchnię i menu przy krzakach, wodzie oraz aporcie z dostępną komendą. Zachowano mapę, powrót do domu, wyjście na potrzebę, sprzątanie i minigry oraz samopoczucie i przytulanie z buildu 37. Schemat zapisu nadal v17.
+
+Przed aktualizacją pobrano dwie kopie Documents, w tym końcową po przejściu gry w tło. Wszystkie 31 plików pozostało identycznych bajtowo po instalacji, przed uruchomieniem. Próba odczytu i ponownego zapisu kopii Glorii zachowała wszystkie 30 pól (69 sprawdzeń zestawu z fixture). Po uruchomieniu trwałe postępy, umiejętności, więź, osiągnięcia, zdjęcia i ogródek pozostały bez zmian. Zmieniły się potrzeby, czas i dane wizyty: history, journal, life oraz rhythm. Wspólne wpisy dziennika są identyczne; raport zapisuje rotację nietrwałych raportów i aktualizację generowanego cache shaderów. Wszystkie wcześniejsze pliki istnieją; nie wykonywano czynności w rzeczywistym zapisie psa.
+
+Weryfikacja: 36/36 zestawów logiki i wszystkie 33 zestawy UI po sprawdzeniu dwóch nieudanych prób pierwszego przebiegu. ui_play przeszedł przy ponowieniu 46/46 bez zmiany kodu. W ui_water sprecyzowano wybór widocznego celu na mapie zamiast emitowania sygnału ukrytego przycisku (148/148). Nowy test menu pokrywa wybór ze sceny (43/43), anulowanie, zmianę dostępności i tło. Obejrzano menu 320/390 px; sprawdzono układ poziomy i skalowanie 3×. Fizyczna ocena gestów przez użytkownika pozostaje do wykonania.
+
+Kopie, podpisana aplikacja, podglądy, logi, manifest i raport: `exports/ios-garden-v38/`. Eksport powtórzył znane ostrzeżenia skalowania ikony, ustawienia splashu i lokalnego generatora grafik widgetu. Konfiguracji Androida nie eksportowano na urządzenie.

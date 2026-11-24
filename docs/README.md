@@ -18,6 +18,7 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 | [Odpoczynek na podwórku](odpoczynek-na-podworku.md) | Cień, miska z wodą, animacja picia i samodzielne przerwy |
 | [Mały tor przeszkód](tor-przeszkod.md) | Slalom, skok, Zostań i wspólny trening |
 | [Minigierki — propozycje](minigry-propozycje.md) | Plan: zabawy wymagające refleksu i uwagi, ocena rund, kolejność wdrażania (niewdrożone) |
+| [Samopoczucie i dolegliwości](samopoczucie-i-dolegliwosci.md) | Samopoczucie i przytulanie: wdrożenie lokalne, ochrona przed pogorszeniem po nieobecności; dolegliwości pozostają planem |
 | [Pogoda i zaproszenia](pogoda-i-zaproszenia.md) | Lokalny deszcz, podlewanie ogródka i samodzielne propozycje zabawy |
 | [Kałuża i zraszacz](woda-na-podworku.md) | Pluskanie, brudzenie sierści, otrzepywanie, grafika i połączenie z kąpielą |
 | [Cykl zachowań](cykl-zachowan.md) | Rytm dnia, noc, adaptacja, wybór ważony i sekwencje |
@@ -47,3 +48,8 @@ Opisy architektury, mechanik i danych dotyczą obecnej implementacji. W dokumenc
 Parametry mechanik są zebrane w jednym dokumencie; format PNG i manifestu opisuje instrukcja integracji. Nie zmieniamy nazw komend, klipów ani pól zapisu tylko w dokumentacji — muszą pozostać zgodne z kodem i dostarczanymi materiałami. Wyniki testów zawsze odnosimy do daty uruchomienia.
 
 - [Lina 2.0 — zasady prototypu i zapis rekordów](lina-2.md)
+
+## Grafika i dodatkowe eksporty
+
+- [Plan rozwoju grafiki i referencje](rozwoj-grafiki.md) — aktualny zakres, makiety oraz zaadaptowane menu obiektów.
+- [Testowy eksport Androida](android.md) — osobny preset i skrypt eksportu APK.

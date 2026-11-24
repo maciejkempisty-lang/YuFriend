@@ -80,6 +80,9 @@ func run() -> void:
 	app.bath_dialog.hide()
 	app._toggle_yard(false)
 	s.water.cooldown = 0
+	# Use the map explicitly; normal scene taps now offer contextual choices.
+	app.room.show_overview()
+	check(app.room.yard_markers.sprinkler.visible, "sprinkler map target is visible before tapping")
 	app.room.yard_markers.sprinkler.pressed.emit()
 	until("ready")
 	await shot("sprinkler")

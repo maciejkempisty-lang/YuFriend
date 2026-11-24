@@ -83,6 +83,8 @@ func _test_invitations() -> void:
 	check(game.accept_invitation() and game.pet.social.responses.cuddle.accepted == 1 and game.invitation.is_empty(), "accepting the invitation performs care and records exactly one response")
 	check(not game.accept_invitation() and game.pet.social.responses.cuddle.accepted == 1, "double acceptance cannot duplicate a response")
 	check(not game.offer_initiative("ball"), "invitations respect a persistent spacing limit")
+	check(game.cuddle.running(), "accepted contact opens the cuddle ritual")
+	game.cancel_cuddle()
 	game._process(2)
 	game.pet.social.last_offer_at = 0
 	game.offer_initiative("cups")

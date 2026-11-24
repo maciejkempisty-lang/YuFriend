@@ -1,0 +1,36 @@
+# Dalszy rozwój grafiki — 24 listopada 2026
+
+Adaptacja audytu i materiałów z `codex/garden-sprites-kitchen-2026-11-23` (`30636e7`) do obecnego projektu. Makiety są referencjami; pokazują także propozycje, których nie wdrożono. Podstawą zleceń animacji jest bieżący [manifest](../assets/sprites/puppy/pixel/manifest.json), nie liczby w dawnych opisach.
+
+## Stan obecny
+
+Manifest zawiera 28 klipów, 172 klatki i 26 arkuszy. Ogród ma panoramę oraz 14 przezroczystych sprite’ów (12 miejsc, dodatkowe stany furtki i kałuży). Rośliny, pogoda, woda i tor korzystają z warstw aktualizowanych podczas gry. Kuchnia jest rysowana w kodzie. Stan i reguły rozgrywki pozostają oddzielone od grafiki.
+
+## Kolejność prac
+
+| Priorytet | Zadanie | Kryterium odbioru |
+|---|---|---|
+| 1 | Wspólny wzorzec psa; próbka `idle`, `walk`, `sit_down` | Jedna paleta i sylwetka, stabilne łapy, spójna wielkość pikseli; ogląd w ruchu przy 320/390 px. Zachować źródła i aktualny pakiet do porównania. |
+| 1 | Przejścia leżenia, snu i jedzenia | Sprawdzić styki `idle_lie → get_up`, `sleep → wake_up`, `eat_loop → eat_exit`; bez skoków skali i oderwania pyska od miski. |
+| 2 | Dedykowany skok i picie | Obecnie ruchy składają się z innych klipów. Nowe animacje muszą zachować momenty kontaktu i zdarzenia mechaniki. |
+| 2 | Spójność ogrodu, domu i kąpieli | Porównać paletę i kontury na telefonie; zachować czytelność obiektów dotykowych, wzrost roślin i efekty pogody. |
+| 3 | Bardziej ikonowy interfejs | Makieta służy do prototypu. Zachować nazwy dostępności, cel minimum 44 pkt i rozpoznawalność bez samego koloru; nie usuwać podpisów bez próby z użytkownikiem. |
+| Później | Animacje nowych rytuałów i kolejnych aktywności | Zamawiać po ustaleniu mechaniki; nie traktować listy pomysłów jako już wdrożonych funkcji. |
+
+To plan kontroli i produkcji, a nie nowy audyt wszystkich klatek. Przed wymianą pakietu trzeba obejrzeć aktualne animacje i porównać je z próbą.
+
+## Zachowane referencje
+
+- Kuchnia: [wariant przytulny](images/kuchnia-makieta-a-przytulna.png), [wariant jasny](images/kuchnia-makieta-b-jasna.png), [prompty](images/kuchnia-makiety-prompts.md).
+- Ogród: [słoneczny](images/ogrod-makieta-a-sloneczny.png), [po deszczu](images/ogrod-makieta-b-po-deszczu.png), [prompty](images/ogrod-makiety-prompts.md).
+- Interfejs: [makieta ikon](images/makieta-interfejs-ikony.png), [prompt i korekta](images/makieta-interfejs-ikony.prompt.txt).
+
+Makiety pochodzą ze wskazanej gałęzi i nie są zrzutami obecnego buildu. Eksporter rzeczywistych obiektów ogrodu: [instrukcja sprite’ów](../assets/art/yard/README.md).
+
+## Zaadaptowane menu obiektów
+
+`YardActionMenu` pokazuje wybór przy krzakach, kałuży i zraszaczu oraz przy aporcie, gdy dostępna jest komenda. Wybór pojawia się od razu w panelu opieki. Dopiero czynność uruchamia istniejącą mechanikę dojścia. Na małym ekranie menu zastępuje przyciski opieki i pozostaje w panelu pod sceną; powrót do domu i wymagane akcje nie znikają.
+
+Mapa ogrodu i trwające aktywności zachowują dotychczasowe sterowanie. Menu zamyka się po zmianie sceny, ekranu, wejściu w aktywność, otwarciu dialogu, sprzątaniu, utracie zapisu albo przejściu aplikacji w tło. Przyciski ponownie sprawdzają dostępność przy wykonaniu. Nie nadpisujemy zegara autonomicznego chodzenia, nie zmieniamy nagród ani schematu zapisu.
+
+Weryfikacja menu i instalacji: [raport buildu 38](test-ios.md).

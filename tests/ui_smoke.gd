@@ -285,7 +285,7 @@ func _test_life_ui() -> void:
 	var slow: float = app.room.mood_walk_speed
 	game.pet.life.mood = "playful"
 	app._refresh()
-	check(slow < app.room.mood_walk_speed and app.care_status.text.contains("Ochota na psoty"), "daily mood reaches both care status and room movement")
+	check(slow < app.room.mood_walk_speed and app.care_status.text.contains(game.wellbeing.label()), "daily character affects movement while status shows current wellbeing")
 	game.pet.yard_routines.outday = previous_outday
 	game.suspend_session()
 	game.pet.last_seen_at = Time.get_unix_time_from_system() - 3600

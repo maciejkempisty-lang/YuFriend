@@ -19,6 +19,12 @@ signal ball_aim_requested
 signal ball_throw_requested(target: Vector2, token: int)
 signal touch_game_opened(kind: String)
 signal touch_game_closed
+signal cuddle_opened
+signal cuddle_closed
+
+var wellbeing := WellbeingSystem.new()
+var cuddle := CuddleSystem.new()
+var emotional_foreground := true
 
 var pet: PetState
 var training := TrainingSystem.new()
@@ -95,12 +101,14 @@ const SATISFIED_NEED := 95.0
 const CARE_COOLDOWNS := {"feed": 10.0, "play": 8.0, "clean": 12.0, "pet": 4.0}
 
 func _apply_care_effects(action: String, changes: Dictionary) -> void:
+	wellbeing.observe(pet, not is_sleeping() and emotional_foreground)
 	var before := pet.needs.duplicate()
 	NeedsSystem.change(pet, changes)
 	var gains := {}
 	for key in changes:
 		var gain := float(pet.needs[key]) - float(before[key])
 		if gain > 0: gains[key] = gain
+	wellbeing.observe(pet, not is_sleeping() and emotional_foreground)
 	care_completed.emit(action, gains)
 
 func start(save_path: String = "user://pet.json") -> void:
@@ -117,6 +125,7 @@ func start(save_path: String = "user://pet.json") -> void:
 	var was_resting := pet.resting
 	var away := maxf(0, now - seen)
 	NeedsSystem.catch_up_rhythm(pet, now, _local_now())
+	wellbeing.begin(pet, away)
 	PracticeSystem.sync(pet, _local_now())
 	var news := _reflect()
 	var report := _update_life(seen, now, was_resting)
@@ -147,6 +156,10 @@ func start(save_path: String = "user://pet.json") -> void:
 
 func _process(delta: float) -> void:
 	if not active or suspended: return
+	var emotional_awake := emotional_foreground and not is_sleeping() and (attention_available or cuddle.running() or play.running() or training_view_active)
+	wellbeing.observe(pet, emotional_awake)
+	wellbeing.advance(delta, emotional_awake)
+	if cuddle.running(): cuddle.advance(delta)
 	var was_idle := activity == "idle"
 	yard_rest.advance(self, delta)
 	course.advance(self, delta)
@@ -172,6 +185,7 @@ func _process(delta: float) -> void:
 	wake_report_left = maxf(0, wake_report_left - delta)
 	if scheduled_sleep: NeedsSystem.advance_sleep(pet, delta)
 	else: NeedsSystem.advance(pet, delta)
+	wellbeing.observe(pet, emotional_awake and not is_sleeping())
 	if is_sleeping():
 		_sleep_elapsed += delta
 		if scheduled_sleep:
@@ -296,6 +310,15 @@ func _spontaneous(roll: float = -1.0) -> void:
 			return
 	if _initiative_wait <= 0 and offer_initiative(): return
 	var options := BehaviorSystem.weights(pet, _local_now(), _recent_behaviors, _last_behavior_place)
+	var feeling := WellbeingSystem.state(wellbeing.score())
+	if feeling <= 1:
+		options.carpet *= 2.0
+		options.approach *= 2.0 if feeling == 0 else 1.0
+		options.ball *= 0.5
+		options.toys *= 0.5
+	elif feeling == 3:
+		options.ball *= 1.3
+		options.toys *= 1.3
 	_start_behavior(BehaviorSystem.choose(options, randf() if roll < 0 else roll))
 
 func show_habit(id: String) -> void:
@@ -337,10 +360,10 @@ func busy(include_visitors: bool = true) -> bool:
 	# Player readiness passes false so visitors yield; autonomy still waits.
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return cuddle.running() or portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
-	return writable and not suspended and not is_sleeping() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk", "visitor"] or _inviting())
+	return writable and not suspended and not is_sleeping() and not cuddle.running() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk", "visitor"] or _inviting())
 
 func _cancel_motion() -> void:
 	yard_rest.cancel(self)
@@ -523,7 +546,10 @@ func act(action: String, by_player: bool = true) -> bool:
 	if in_yard and action in ["feed", "rest", "toys", "window", "door", "clean"]:
 		say("Wróćmy do domu, żeby się tym zająć.")
 		return false
-	if action == "pet": return _pet()
+	if action == "cuddle": return start_cuddle()
+	if action == "pet":
+		if wellbeing.reunion_left > 0 and can_pet(): return start_cuddle()
+		return _pet()
 	if busy(not by_player) and not (training.phase == "idle" and _inviting()):
 		say("Jeszcze chwilka — kończymy tę czynność.")
 		return false
@@ -744,7 +770,9 @@ func flush() -> bool:
 func suspend_session() -> void:
 	if in_bath: cancel_bath()
 	if not active or suspended: return
+	wellbeing.observe(pet, not is_sleeping() and emotional_foreground)
 	_cancel_invitation()
+	cancel_cuddle()
 	cancel_touch_game()
 	training.cancel()
 	if in_yard: change_yard(false)
@@ -761,6 +789,7 @@ func resume_session() -> void:
 	var was_resting := pet.resting
 	var away := maxf(0, now - seen)
 	NeedsSystem.catch_up_rhythm(pet, now, _local_now())
+	wellbeing.returned(pet, away)
 	PracticeSystem.sync(pet, _local_now())
 	suspended = false
 	activity = "sleep" if is_sleeping() else "idle"
@@ -846,7 +875,7 @@ func accept_invitation() -> bool:
 	if suspended or invitation.is_empty(): return false
 	var kind: String = invitation.kind
 	if kind.begins_with("yard_"): return YardInvitations.accept(self)
-	if kind == "cuddle": return act("pet")
+	if kind == "cuddle": return start_cuddle()
 	if kind == "ball":
 		if not play_readiness().is_empty():
 			say(play_readiness())
@@ -967,6 +996,7 @@ func _settle_touch_game() -> void:
 	activity_left = 1.4
 	clip_requested.emit("tail_wag_stand" if play.success else "head_tilt_stand")
 	if play.success:
+		wellbeing.add_joy(kind, float(play.tug_stars()) * 4.0 if kind == "tug" else 10.0)
 		sound_requested.emit("success")
 		if in_yard: yard_rest.note_play()
 	say(play.hint())
@@ -1000,7 +1030,7 @@ func is_sleeping() -> bool:
 	return night_sleep or pet.resting
 
 func walk_speed() -> float:
-	return LifeSystem.walk_speed(pet) * (0.75 if groggy_left > 0 else (0.85 if DailyRhythm.quiet(pet, _local_now()) else 1.0))
+	return LifeSystem.walk_speed(pet) * ([0.85, 0.90, 1.0, 1.08][WellbeingSystem.state(wellbeing.score())]) * (0.75 if groggy_left > 0 else (0.85 if DailyRhythm.quiet(pet, _local_now()) else 1.0))
 
 func set_training_view(value: bool) -> void:
 	if training_view_active == value: return
@@ -1057,6 +1087,8 @@ func _sync_rhythm_on_return(_reset: bool = true) -> void:
 
 func _tick_rhythm(delta: float) -> void:
 	if portal_active: return
+	if cuddle.running() and DailyRhythm.should_sleep(pet, _local_now()):
+		cancel_cuddle()
 	groggy_left = maxf(0, groggy_left - delta)
 	if not writable: return
 	var due := DailyRhythm.should_sleep(pet, _local_now())
@@ -1213,3 +1245,67 @@ func cancel_hide() -> void:
 
 func _return_tired() -> bool:
 	return YardActivities._return_tired(self)
+
+# Cuddling uses only existing v17 needs, journal and milestones. The gesture
+# and emotional state are ephemeral; no new save file or schema is introduced.
+func start_cuddle() -> bool:
+	if not writable or suspended or is_sleeping() or not can_pet():
+		say("Przytulimy się, gdy skończę tę chwilę i będę na jawie.")
+		return false
+	_answer_action("cuddle")
+	_cancel_motion()
+	cuddle.start(WellbeingSystem.favorite(pet), wellbeing.reunion_left > 0)
+	activity = "cuddle"
+	activity_left = 0
+	pose = "lie"
+	clip_requested.emit("idle_lie")
+	attention_requested.emit(true)
+	cuddle_opened.emit()
+	changed.emit()
+	return true
+
+func cuddle_press(point: Vector2) -> void:
+	if writable and not suspended: cuddle.press(point)
+
+func cuddle_move(point: Vector2) -> void:
+	if not writable or suspended: return
+	cuddle.move(point)
+	if cuddle.phase == "result" and not cuddle.settled: _finish_cuddle()
+
+func cuddle_release(point: Vector2, cancelled: bool = false) -> void:
+	cuddle.release(point, cancelled)
+
+func _finish_cuddle() -> void:
+	cuddle.settled = true
+	var before := pet.to_dict()
+	var needs_before := pet.needs.duplicate()
+	NeedsSystem.change(pet, {"contact": 24, "play": 4})
+	pet.remember("cuddle_favorite", "Ulubione głaski", "Najbardziej lubię głaski " + WellbeingSystem.favorite_label(pet) + ".")
+	_note("pet")
+	if not flush():
+		pet = PetState.from_dict(before)
+		cuddle.feedback = "Nie udało się zapisać przytulania. Spróbuj ponownie za chwilę."
+		say(cuddle.feedback)
+		changed.emit()
+		return
+	wellbeing.observe(pet)
+	wellbeing.add_joy("cuddle", 12)
+	if cuddle.shortened:
+		wellbeing.joy = minf(20, wellbeing.joy + 10)
+		wellbeing.reunion_left = 0
+	wellbeing.comfort()
+	care_completed.emit("pet", {"contact": float(pet.needs.contact) - float(needs_before.contact)})
+	clip_requested.emit("tail_wag_stand")
+	sound_requested.emit("pet_happy")
+	say(cuddle.feedback)
+	changed.emit()
+
+func cancel_cuddle() -> void:
+	if cuddle.phase == "idle": return
+	cuddle.cancel()
+	activity = "idle"
+	activity_left = 0
+	pose = "stand"
+	clip_requested.emit("idle")
+	cuddle_closed.emit()
+	changed.emit()

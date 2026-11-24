@@ -34,6 +34,7 @@ var photo_signature := ""
 var taking_photo := false
 var bath_dialog: AcceptDialog
 var yard_toolbar: HBoxContainer
+var yard_menu := YardActionMenu.new()
 var yard_transition := YardTransition.new()
 var yard_command_button: Button
 var water_splash_button: Button
@@ -56,6 +57,11 @@ var gesture_dialog: AcceptDialog
 var tab_buttons: Dictionary = {}
 var panels: Dictionary = {}
 var name_label: Button
+var wellbeing_dialog: AcceptDialog
+var wellbeing_button: WellbeingButton
+var cuddle_dialog: AcceptDialog
+var cuddle_view: CuddleView
+var cuddle_hint: Label
 var bond_label: Label
 var bond_detail: Label
 var message_label: Label
@@ -135,8 +141,8 @@ var play_cue: Button
 var play_again: Button
 var app_foreground := true
 const ACTION_NEEDS := {"feed": "fullness", "rest": "energy", "clean": "hygiene", "play": "play", "pet": "contact"}
-const ACTION_LABELS := {"feed": "Nakarm", "rest": "Drzemka", "clean": "Wyczesz", "play": "Pobaw się", "pet": "Pogłaszcz"}
-const LOW_LABELS := {"feed": "Głód", "rest": "Senność", "clean": "Czesanie", "play": "Nuda", "pet": "Tęskni"}
+const ACTION_LABELS := {"feed": "Nakarm", "rest": "Drzemka", "clean": "Wyczesz", "play": "Pobaw się", "pet": "Przytul"}
+const LOW_LABELS := {"feed": "Głód", "rest": "Senność", "clean": "Czesanie", "play": "Nuda", "pet": "Bliskość"}
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
@@ -166,10 +172,12 @@ func _ready() -> void:
 	room.performance_finished.connect(session.performance_finished)
 	room.animator.sitting_contact.connect(session.training.sitting_contact)
 	session.save_status.connect(func(_ok: bool): _refresh())
+	room.floor_tapped.connect(func(_point: Vector2): yard_menu.close())
 	room.floor_tapped.connect(session.move_to)
+	room.room_viewed.connect(func(_point: Vector2): yard_menu.close())
 	room.room_viewed.connect(session.follow_room)
 	room.return_button.pressed.connect(session.player_activity)
-	room.care_requested.connect(_room_care_action)
+	room.care_requested.connect(_on_room_care_requested)
 	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
 	session.hide_revealed.connect(room.reveal_hide)
@@ -177,6 +185,8 @@ func _ready() -> void:
 	session.ball_aim_requested.connect(_aim_ball)
 	session.touch_game_opened.connect(_show_touch_game)
 	session.touch_game_closed.connect(func(): play_dialog.hide())
+	session.cuddle_opened.connect(_show_cuddle)
+	session.cuddle_closed.connect(func(): cuddle_dialog.hide())
 	var path := "user://pet.json"
 	if OS.get_cmdline_user_args().has("--qa"): path = "user://qa-ui/pet.json"
 	if not save_path_override.is_empty(): path = save_path_override
@@ -287,8 +297,9 @@ func _sync_yard_actions() -> void:
 		container.move_child(visitor_toolbar, 2)
 		_fit_room()
 	var occupied := session.in_yard and (session.busy() or not session.invitation.is_empty() or session.visitors.active() or YardRoutines.has_mess(session))
-	care_actions.visible = not occupied
-	var layout_key := "%s|%s" % [care_actions.visible, session.in_yard and session.visitors.active()]
+	care_actions.visible = not occupied and not yard_menu.visible
+	care_status.visible = not yard_menu.visible
+	var layout_key := "%s|%s|%s" % [care_actions.visible, session.in_yard and session.visitors.active(), yard_menu.visible]
 	if layout_key != _yard_layout_key:
 		_yard_layout_key = layout_key
 		_fit_room()
@@ -440,15 +451,26 @@ func _build_ui() -> void:
 	bond_detail = _label("", 10, MUTED)
 	bond_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	identity.add_child(bond_detail)
+	wellbeing_button = WellbeingButton.new()
+	wellbeing_button.text = "Radosna"
+	wellbeing_button.pressed.connect(_show_wellbeing)
+	var header_actions := VBoxContainer.new()
+	header_actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	header_actions.add_theme_constant_override("separation", 0)
+	header_row.add_child(header_actions)
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 8)
+	header_actions.add_child(action_row)
 	var settings := _icon_button("settings", "Ustawienia", _show_settings)
 	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	today_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
 	today_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	today_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	today_button.custom_minimum_size.x = 54
-	header_row.add_child(today_button)
-	today_home = header_row
-	header_row.add_child(settings)
+	action_row.add_child(today_button)
+	today_home = action_row
+	action_row.add_child(settings)
+	header_actions.add_child(wellbeing_button)
 	bubble = PanelContainer.new()
 	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -570,6 +592,7 @@ func _companion_act() -> void:
 	elif action == "yard": _toggle_yard()
 	elif action == "outing": YardRoutines.start_outing(session)
 	elif action == "play": _show_play_menu()
+	elif action == "cuddle": session.start_cuddle()
 	elif not action.is_empty(): session.act(action)
 	_update_attention()
 	_refresh_companion()
@@ -641,6 +664,8 @@ func _build_care() -> VBoxContainer:
 		actions.add_child(button)
 		care_buttons[key] = button
 		needs_ui[need] = button
+	yard_menu.setup(self)
+	box.add_child(yard_menu)
 	return box
 
 func _build_training() -> VBoxContainer:
@@ -899,6 +924,7 @@ func _build_dialogs() -> void:
 		text_dialog.hide()
 		_submit_command())
 	_build_play_dialogs()
+	_build_cuddle_dialog()
 	var update_shade := func():
 		shade.visible = _dialog_open()
 		_update_attention()
@@ -908,6 +934,8 @@ func _build_dialogs() -> void:
 	reunion_dialog.visibility_changed.connect(update_shade)
 	play_menu.visibility_changed.connect(update_shade)
 	play_dialog.visibility_changed.connect(update_shade)
+	cuddle_dialog.visibility_changed.connect(update_shade)
+	wellbeing_dialog.visibility_changed.connect(update_shade)
 
 func _build_play_dialogs() -> void:
 	play_menu = AcceptDialog.new()
@@ -964,7 +992,8 @@ func _dialog_open() -> bool:
 func _update_attention() -> void:
 	if is_instance_valid(modal_shade): modal_shade.visible = _dialog_open()
 	session.set_training_view(selected_tab == "training")
-	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview
+	session.emotional_foreground = app_foreground
+	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview and not yard_menu.visible
 	if room.ambient_life.is_node_ready() and session.pet != null:
 		room.ambient_life.sync(room, session, app_foreground and selected_tab == "care" and room.visible and not _dialog_open())
 	if companion_card != null and not session.attention_available:
@@ -998,6 +1027,7 @@ func _show_touch_game(kind: String) -> void:
 	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
+	yard_menu.close()
 	if key != "care" and session.in_yard:
 		if not session.change_yard(false): return
 		if room.in_yard: room.set_yard(false)
@@ -1027,7 +1057,7 @@ func _fit_room() -> void:
 	var warning_space := 46.0 if footer_label.visible else 0.0
 	# Outdoors the panel holds instructions and context actions; it shrinks when
 	# an activity hides the care buttons instead of leaving an empty card.
-	var yard_height := 192.0 if care_actions.visible else (160.0 if session.visitors.active() else 112.0)
+	var yard_height := 192.0 if care_actions.visible or yard_menu.visible else (160.0 if session.visitors.active() else 112.0)
 	var panel_height := (yard_height if session.in_yard else 192.0) if selected_tab == "care" else 274.0
 	var panel_top := nav_y - panel_height - 8 - warning_space
 	if selected_tab == "journal":
@@ -1051,6 +1081,7 @@ func _fit_room() -> void:
 	bond_label.visible = not training_open
 	bond_bar.visible = not training_open
 	bond_detail.visible = not training_open
+	wellbeing_button.visible = not training_open
 	name_label.add_theme_font_size_override("font_size", 22 if training_open else 27)
 	_place(header, Rect2(header_x, safe_rect.position.y + 8, header_width, 68 if training_open else 100))
 	header.visible = selected_tab != "journal"
@@ -1063,7 +1094,7 @@ func _fit_room() -> void:
 	room.update_placement()
 	_position_feedback()
 	_position_companion()
-	for dialog in [profile_dialog, text_dialog, reunion_dialog, play_menu, play_dialog]:
+	for dialog in [profile_dialog, text_dialog, reunion_dialog, play_menu, play_dialog, cuddle_dialog, wellbeing_dialog]:
 		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
 	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 290))
 	if settings_dialog != null and settings_dialog.visible: _fit_settings()
@@ -1182,6 +1213,7 @@ func _care_action(key: String) -> void:
 		if room.in_yard: room.set_yard(false)
 	if key == "train": _select_tab("training")
 	elif key == "play": _show_play_menu()
+	elif key == "pet" and not session.is_sleeping(): session.start_cuddle()
 	else: session.act(key)
 
 func _train(guided: bool) -> void:
@@ -1339,7 +1371,8 @@ func _show_profile() -> void:
 		bar.value = value
 		profile_bars.add_child(bar)
 	profile_traits.text = "Ulubiona nagroda: " + (REWARD_LABELS[session.pet.favorite_reward] if session.pet.milestones.has("favorite_reward") else "odkryjecie ją podczas ćwiczeń")
-	profile_life.text = "%s\n%s\n\nMałe dziwactwa\n%s" % [LifeSystem.mood_label(session.pet), session.pet.life.mood_reason, "\n".join(PackedStringArray(LifeSystem.quirk_lines(session.pet)))]
+	profile_life.text = "Charakter dnia: %s\n%s\n\nMałe dziwactwa\n%s" % [LifeSystem.mood_label(session.pet), session.pet.life.mood_reason, "\n".join(PackedStringArray(LifeSystem.quirk_lines(session.pet)))]
+	profile_life.text += "\n\nUlubione głaski: " + (WellbeingSystem.favorite_label(session.pet) if session.pet.milestones.has("cuddle_favorite") else "odkryjecie podczas przytulania")
 	profile_social.text = "Wasz rytm\n" + DailyRhythm.schedule_label(session.pet) + "\n" + InitiativeSystem.profile_text(session.pet)
 	var habits := PersonalitySystem.habit_labels(session.pet)
 	if habits.is_empty(): habits.append("Dopiero się poznajemy")
@@ -1398,6 +1431,7 @@ func _submit_command() -> void:
 func _refresh() -> void:
 	if session.pet == null or name_label == null: return
 	var pet := session.pet
+	yard_menu.sync()
 	_sync_yard_actions()
 	if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
 	if room.backdrop.decor != pet.decor:
@@ -1419,6 +1453,13 @@ func _refresh() -> void:
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = "Piesek" if naming_pending else pet.pet_name
+	wellbeing_button.text = "Śpi spokojnie" if session.is_sleeping() else session.wellbeing.label()
+	wellbeing_button.feeling = WellbeingSystem.state(session.wellbeing.score())
+	wellbeing_button.sleeping = session.is_sleeping()
+	wellbeing_button.tooltip_text = "Samopoczucie · dotknij, żeby dowiedzieć się, co pomoże"
+	wellbeing_button.accessibility_name = "Samopoczucie: " + wellbeing_button.text
+	wellbeing_button.queue_redraw()
+	cuddle_hint.text = session.cuddle.feedback
 	bond_label.text = BondLevels.summary(pet)
 	bond_bar.value = BondLevels.progress(pet)
 	bond_detail.text = BondLevels.detail(pet, session._local_now())
@@ -1645,6 +1686,7 @@ func _notification(what: int) -> void:
 		session.flush()
 		get_tree().quit()
 	elif what == NOTIFICATION_APPLICATION_PAUSED:
+		yard_menu.close()
 		yard_transition.cancel()
 		music.set_backgrounded(true)
 		effects.set_backgrounded(true)
@@ -1657,11 +1699,13 @@ func _notification(what: int) -> void:
 		music.set_backgrounded(false)
 		effects.set_backgrounded(false)
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		yard_menu.close()
 		if session.training.marker_mode and session.training.phase != "idle":
 			session.training.cancel()
 			session.say("Próba przerwana. Opanowanie pozostaje bez zmian.")
 		if is_instance_valid(bath_dialog): bath_dialog.hide()
 		if is_instance_valid(gesture_dialog): gesture_dialog.hide()
+		session.cancel_cuddle()
 		app_foreground = false
 		_update_attention()
 		session.flush()
@@ -1675,6 +1719,7 @@ static func fetch_hint(record: float) -> String:
 	return ("Aport · rekord %.1f m · przeciągnij piłkę" % record).replace(".", ",")
 
 func _activity_status() -> String:
+	if session.cuddle.running(): return "Spokojne chwile · przytulanie"
 	if session.activity == "sniff_walk": return "Podąża za zapachem…"
 	if session.activity == "sniff": return "Węszy… jeszcze %d s" % ceili(session.activity_left)
 	if session.play.running(): return "Wspólna zabawa · " + InitiativeSystem.LABELS[session.play.kind]
@@ -1692,7 +1737,7 @@ func _activity_status() -> String:
 		return "%s · jeszcze %d s" % [{"feed": "Zajada", "clean": "Czesanie", "play": "Bawi się", "happy": "Cieszy się z nagrody"}[session.activity], ceili(session.activity_left)]
 	if YardRoutines.has_mess(session): return "Na podwórku czeka kupa do posprzątania"
 	if YardRoutines.due(session) and not DailyRhythm.quiet(session.pet, session._local_now()): return "Chcę wyjść na potrzebę · wybierz Podwórko"
-	return LifeSystem.mood_label(session.pet) + " · dotknij, by zadbać"
+	return session.wellbeing.label() + " · dotknij, by zadbać"
 
 func _show_feedback(text: String) -> void:
 	if selected_tab == "training":
@@ -1737,6 +1782,7 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 	_position_feedback()
 
 func _process(delta: float) -> void:
+	yard_menu.sync()
 	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 330))
 	reminder_poll -= delta
 	if settings_dialog.visible and reminder_poll <= 0:
@@ -1895,6 +1941,7 @@ func _show_yard_rest() -> void:
 	dialog.popup()
 
 func _toggle_yard(animated: bool = true) -> void:
+	yard_menu.close()
 	if session.in_yard and session.yard_rest.phase == "rest":
 		session.change_yard(false)
 		return
@@ -1911,6 +1958,11 @@ func _course_action() -> void:
 		"jump_ready": session.course.jump(session)
 		"stay_ready": session.course.stay(session)
 		"praise": session.course.praise(session)
+
+func _on_room_care_requested(action: String) -> void:
+	if action.begins_with("yard_") and yard_menu.offer(action.trim_prefix("yard_")): return
+	yard_menu.close()
+	_room_care_action(action)
 
 func _room_care_action(action: String) -> void:
 	if action == "catch":
@@ -2074,3 +2126,51 @@ func _confirm_remove_photo(id: String) -> void:
 
 func _show_garden() -> void:
 	OutdoorPanels._show_garden(self)
+
+func _build_cuddle_dialog() -> void:
+	wellbeing_dialog = AcceptDialog.new()
+	wellbeing_dialog.ok_button_text = "Zamknij"
+	wellbeing_dialog.min_size = Vector2i(280, 150)
+	add_child(wellbeing_dialog)
+	cuddle_dialog = AcceptDialog.new()
+	cuddle_dialog.title = "Chwila bliskości"
+	cuddle_dialog.ok_button_text = "Zakończ"
+	cuddle_dialog.min_size = Vector2i(280, 350)
+	add_child(cuddle_dialog)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	cuddle_dialog.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override("separation", 10)
+	scroll.add_child(box)
+	cuddle_hint = _label("Powoli głaszcz grzbiet w obie strony.", 15, INK, true)
+	cuddle_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(cuddle_hint)
+	cuddle_view = CuddleView.new()
+	cuddle_view.model = session.cuddle
+	cuddle_view.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cuddle_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(cuddle_view)
+	cuddle_view.pressed_at.connect(session.cuddle_press)
+	cuddle_view.moved_to.connect(session.cuddle_move)
+	cuddle_view.released_at.connect(session.cuddle_release)
+	cuddle_dialog.visibility_changed.connect(func():
+		if not cuddle_dialog.visible: session.cancel_cuddle())
+
+func _show_cuddle() -> void:
+	cuddle_hint.text = session.cuddle.feedback
+	cuddle_dialog.popup()
+	_position_dialog(cuddle_dialog, Vector2i(350, 430))
+
+func _show_wellbeing() -> void:
+	var need := session.wellbeing.lowest_part()
+	var explanation := "Miło mi z Tobą. Możemy się przytulić albo pobawić."
+	if WellbeingSystem.state(session.wellbeing.score()) <= 1:
+		explanation = str(CompanionVoice.NEEDS[need][0])
+	if session.wellbeing.reunion_left > 0: explanation = "Miło Cię znowu widzieć! Posiedzisz ze mną?"
+	if session.is_sleeping(): explanation = "Śpię spokojnie. Przytulimy się po pobudce."
+	wellbeing_dialog.title = "Samopoczucie · " + wellbeing_button.text
+	wellbeing_dialog.dialog_text = explanation
+	wellbeing_dialog.popup()
+	_position_dialog(wellbeing_dialog, Vector2i(320, 200))
