@@ -43,6 +43,7 @@ var actors := Node2D.new()
 var puppy := Node2D.new()
 var camera := Camera2D.new()
 var yard_markers: Dictionary = {}
+var yard_nodes: Dictionary = {}
 var yard_sparkles: Dictionary = {}
 # Places the player has already tried; untried ones get a quiet twinkle.
 var yard_seen: Dictionary = {}
@@ -137,19 +138,30 @@ func _ready() -> void:
 	world.add_child(backdrop)
 	# Extra floor continues behind the floating controls; gameplay coordinates stay fixed.
 	backdrop.configure(Vector2(RoomLayout.SIZE.x, 960))
-	wall_clock.position = Vector2(471, 141)
+	for id in RoomLayout.YARD_STATIONS:
+		var station := YardStationView.new()
+		station.configure(id)
+		station.z_index = -1
+		station.hide()
+		world.add_child(station)
+		yard_nodes[id] = station
+	wall_clock.position = Vector2(607, 81)
+	wall_clock.radius = 24
 	wall_clock.z_index = -4
 	world.add_child(wall_clock)
 	yard_water.z_index = -2
+	yard_water.draw_ground_base = false
 	yard_water.hide()
 	world.add_child(yard_water)
 	yard_weather.z_index = -1
 	yard_weather.hide()
 	world.add_child(yard_weather)
 	yard_course.z_index = -1
+	yard_course.draw_sign = false
 	yard_course.hide()
 	world.add_child(yard_course)
 	yard_rest.z_index = -1
+	yard_rest.draw_static = false
 	yard_rest.hide()
 	world.add_child(yard_rest)
 	yard_potty.z_index = 2
@@ -821,12 +833,21 @@ func _process(delta: float) -> void:
 	_sync_layers()
 
 func _sync_layers() -> void:
+	for id in yard_nodes:
+		# Keep the existing visibility of props while the course is unfolded.
+		yard_nodes[id].visible = in_yard and (id not in ["shade", "puddle", "sprinkler"] or not yard_course.playing)
+	var garden_art: RoomArtwork = yard_nodes.garden.art
+	if garden_art.garden_key != backdrop.garden_key:
+		garden_art.garden_key = backdrop.garden_key
+		garden_art.garden_state = backdrop.garden_state
+		garden_art.queue_redraw()
 	yard_potty.visible = in_yard and not yard_course.playing
 	yard_rest.visible = in_yard and not yard_course.playing
 	yard_course.visible = in_yard
 	animator.position.y = -roundf(jump_lift / 3) * 3
 	yard_weather.visible = in_yard
 	yard_water.wet = yard_weather.kind != "sun" or yard_water.kind == "puddle"
+	yard_nodes.puddle.set_puddle_wet(yard_water.wet)
 	yard_water.visible = in_yard and not yard_course.playing
 	yard_water.pet_world = pet_world
 	water_drops.kind = yard_water.kind
@@ -857,6 +878,8 @@ func _sync_layers() -> void:
 	# Places are touched directly in the scene. Labelled buttons appear only on the
 	# whole-yard map; in the normal view an untried place gets a quiet twinkle.
 	var yard_free := in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and hide_phase.is_empty()
+	for id in yard_nodes:
+		yard_nodes[id].highlight.visible = yard_free and not overview and not yard_seen.has(id)
 	var lower_limit := (content_bottom - 52 if fence_visitor.visible else content_bottom) if content_bottom > 0 else size.y
 	for id in yard_markers:
 		var marker: Button = yard_markers[id]

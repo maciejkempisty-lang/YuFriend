@@ -20,6 +20,13 @@ func cloud(at: Vector2, tint: Color) -> void:
 	pixel(at + Vector2(33, -21), Vector2(30, 15), tint)
 
 func _draw() -> void:
+	# Weather shades the sunny base panorama without baking a second yard image.
+	if kind == "rain":
+		draw_rect(Rect2(0, -1000, RoomLayout.SIZE.x, 1960), Color(0.23, 0.35, 0.39, 0.24))
+	elif kind == "after_rain":
+		draw_rect(Rect2(0, -1000, RoomLayout.SIZE.x, 1960), Color(0.45, 0.55, 0.55, 0.08))
+	if night:
+		draw_rect(Rect2(0, -1000, RoomLayout.SIZE.x, 1960), Color(0.10, 0.16, 0.28, 0.42))
 	var tint := Color("b1c7c8") if kind == "rain" else Color("e8eee0")
 	if kind != "rain" and not night:
 		var sun := Vector2(1110, 120)

@@ -3,6 +3,9 @@ extends Node2D
 
 # Pixel-native graphics share the yard's 3-world-unit grid and palette.
 var effects_only := false
+var draw_ground_base := true
+var show_puddle := true
+var show_sprinkler := true
 var wet := true
 var kind := ""
 var phase := ""
@@ -24,20 +27,22 @@ func oval(center: Vector2, radius: Vector2, color: String) -> void:
 
 func _draw_ground() -> void:
 	var puddle := YardWater.SPOTS.puddle + Vector2(0, 6)
-	oval(puddle, Vector2(63, 18), "947354")
-	if wet:
-		oval(puddle + Vector2(-3, -3), Vector2(51, 12), "72a9af")
-		block(puddle + Vector2(-30, -9), Vector2(33, 3), "badbd4")
-		block(puddle + Vector2(9, 0), Vector2(24, 3), "95c4c5")
-	for offset in [Vector2(-48, 9), Vector2(42, 12), Vector2(60, 3)]:
-		block(puddle + offset, Vector2(9, 6), "a08057")
+	if draw_ground_base and show_puddle:
+		oval(puddle, Vector2(63, 18), "947354")
+		if wet:
+			oval(puddle + Vector2(-3, -3), Vector2(51, 12), "72a9af")
+			block(puddle + Vector2(-30, -9), Vector2(33, 3), "badbd4")
+			block(puddle + Vector2(9, 0), Vector2(24, 3), "95c4c5")
+		for offset in [Vector2(-48, 9), Vector2(42, 12), Vector2(60, 3)]:
+			block(puddle + offset, Vector2(9, 6), "a08057")
 	var nozzle := YardWater.SPOTS.sprinkler + Vector2(75, -9)
-	block(nozzle + Vector2(0, 18), Vector2(72, 6), "658c69")
-	block(nozzle + Vector2(66, 18), Vector2(6, 36), "658c69")
-	oval(nozzle + Vector2(0, 15), Vector2(18, 6), "527f79")
-	block(nozzle + Vector2(-3, -9), Vector2(6, 24), "799d98")
-	block(nozzle + Vector2(-12, -12), Vector2(24, 6), "e1cd91")
-	block(nozzle + Vector2(-3, -18), Vector2(6, 6), "527f79")
+	if draw_ground_base and show_sprinkler:
+		block(nozzle + Vector2(0, 18), Vector2(72, 6), "658c69")
+		block(nozzle + Vector2(66, 18), Vector2(6, 36), "658c69")
+		oval(nozzle + Vector2(0, 15), Vector2(18, 6), "527f79")
+		block(nozzle + Vector2(-3, -9), Vector2(6, 24), "799d98")
+		block(nozzle + Vector2(-12, -12), Vector2(24, 6), "e1cd91")
+		block(nozzle + Vector2(-3, -18), Vector2(6, 6), "527f79")
 	if kind == "sprinkler" and phase != "shake":
 		for side in [-1, 1]:
 			for i in 10:

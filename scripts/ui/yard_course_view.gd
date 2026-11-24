@@ -1,13 +1,15 @@
 class_name YardCourseView
 extends Node2D
 var playing := false
+var draw_sign := true
 func block(point: Vector2, extent: Vector2, color: String) -> void:
 	draw_rect(Rect2((point / 3).round() * 3, extent), Color(color))
 func _draw() -> void:
 	# A folded course sign remains visible; props unfold only during a round.
-	block(Vector2(1000, 240), Vector2(6, 54), "947354")
-	block(Vector2(979, 234), Vector2(54, 27), "e5ce96")
-	block(Vector2(991, 246), Vector2(30, 3), "648778")
+	if draw_sign:
+		block(Vector2(1000, 240), Vector2(6, 54), "947354")
+		block(Vector2(979, 234), Vector2(54, 27), "e5ce96")
+		block(Vector2(991, 246), Vector2(30, 3), "648778")
 	if not playing: return
 	for x in [860, 920, 980]:
 		block(Vector2(x - 12, 309), Vector2(24, 6), "e7c080")

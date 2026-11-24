@@ -2,9 +2,10 @@ class_name RoomArtwork
 extends Node2D
 
 const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-v1.png")
-const PORTRAIT_PUPPY = preload("res://assets/sprites/puppy/pixel/sheets/sit_idle.png")
+const YARD_BACKGROUND = preload("res://assets/art/environments/yard-sunny-background-v1.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
 var portal_open := false
+var yard_overlay_only := false
 var kind := "room"
 var garden_state: Dictionary = {}
 var garden_key := ""
@@ -27,6 +28,14 @@ func _draw() -> void:
 			_draw_room()
 			_draw_decor()
 		"yard": _draw_yard()
+		"yard_gate": _draw_yard_gate()
+		"yard_garden": _draw_yard_garden()
+		"yard_dig": _draw_yard_dig()
+		"yard_fetch": _draw_yard_fetch()
+		"yard_outing": _draw_yard_outing()
+		"yard_bush_0": _draw_yard_bush(350)
+		"yard_bush_1": _draw_yard_bush(750)
+		"yard_bush_2": _draw_yard_bush(1150)
 		"hide_tail": _draw_hide_tail()
 		"shadow": _pixel_ellipse(Vector2(0, 3), Vector2(53, 9), Color(0.35, 0.31, 0.20, 0.16))
 		"ball": _draw_ball()
@@ -64,10 +73,7 @@ func _draw_room() -> void:
 		for pane in 2:
 			_pixel_rect(Rect2(708 + pane * 51 - row * 0.75, RoomLayout.FLOOR_Y + 12 + row, 39, 3), Color(1.0, 0.92, 0.65, 0.24))
 	_draw_wall_panels()
-	_draw_portrait()
-	# Floor plants sit in front of wall frames and the skirting board.
-	_pixel_ellipse(Vector2(519, 276), Vector2(30, 6), Color("b79364"))
-	_draw_planter(Vector2(519, 276), 1.2)
+	_draw_kitchen_corner()
 	_draw_lamp(Vector2(870, 270))
 	_draw_music_corner()
 	_draw_sleep_corner()
@@ -219,22 +225,64 @@ func _draw_wall_panels() -> void:
 			_pixel_rect(Rect2(x, 210, 3, 48), Color("b4bd97"))
 			_pixel_rect(Rect2(x + 3, 210, 3, 48), Color("d6d8b3"))
 
-func _draw_portrait() -> void:
-	# The sitting sprite is already shipped with the game; no separate portrait atlas.
-	# The frame also covers the small paw picture baked into the original background.
-	_pixel_rect(Rect2(516, 99, 111, 126), Color(0.36, 0.29, 0.19, 0.18))
-	_pixel_rect(Rect2(510, 93, 111, 126), Color("684d35"))
-	_pixel_rect(Rect2(513, 96, 105, 120), Color("bc8a53"))
-	_pixel_rect(Rect2(516, 99, 99, 3), Color("edc58b"))
-	_pixel_rect(Rect2(516, 102, 3, 108), Color("d8ac71"))
-	_pixel_rect(Rect2(519, 102, 93, 108), Color("815a3d"))
-	_pixel_rect(Rect2(522, 105, 87, 102), Color("f5e7bd"))
-	_pixel_rect(Rect2(528, 111, 75, 84), Color("a8b999"))
-	_pixel_ellipse(Vector2(564, 153), Vector2(30, 36), Color("c8d2ac"))
-	_pixel_ellipse(Vector2(564, 186), Vector2(30, 6), Color("91a17f"))
-	draw_texture_rect_region(PORTRAIT_PUPPY, Rect2(525, 111, 81, 81), Rect2(0, 0, 627, 627))
-	_pixel_rect(Rect2(552, 198, 27, 6), Color("bf945b"))
-	_pixel_rect(Rect2(558, 198, 15, 3), Color("efd49a"))
+func _draw_kitchen_corner() -> void:
+	# The feeding corner follows the sage-cabinet mockup. Everything here is
+	# static scenery; the bowls remain a separate station node above the floor.
+	_pixel_rect(Rect2(390, 57, 258, 201), Color("f0eed8"))
+	_pixel_rect(Rect2(390, 183, 258, 75), Color("dce2c6"))
+	_pixel_rect(Rect2(390, 57, 6, 201), Color("c8bb97"))
+	_pixel_rect(Rect2(642, 57, 6, 201), Color("c8bb97"))
+	# Cream backsplash and green tile joints.
+	_pixel_rect(Rect2(399, 150, 171, 72), Color("f8f0da"))
+	for y in range(150, 223, 12):
+		_pixel_rect(Rect2(399, y, 171, 3), Color("ddd5b6"))
+	for x in range(399, 571, 12):
+		_pixel_rect(Rect2(x, 150, 3, 72), Color("ddd5b6"))
+	# Small arched kitchen window, separate from the room's main window.
+	_pixel_arch(Rect2(417, 81, 72, 84), Color("805733"))
+	_pixel_arch(Rect2(423, 87, 60, 72), Color("a5c9b8"))
+	_pixel_rect(Rect2(423, 135, 60, 24), Color("a9bc7a"))
+	for x in [432, 456, 474]:
+		_pixel_ellipse(Vector2(x, 138), Vector2(12, 12), Color("789565"))
+	_pixel_rect(Rect2(450, 90, 6, 69), Color("926545"))
+	_pixel_rect(Rect2(423, 126, 60, 6), Color("926545"))
+	_pixel_rect(Rect2(414, 159, 81, 6), Color("bd8b55"))
+	_pixel_rect(Rect2(414, 162, 81, 3), Color("e6ba7e"))
+	# A narrow pendant lamp leaves the central window and sink readable.
+	_pixel_rect(Rect2(534, 57, 3, 39), Color("866744"))
+	_pixel_rect(Rect2(519, 93, 33, 6), Color("58764f"))
+	_pixel_rect(Rect2(513, 99, 45, 9), Color("799567"))
+	_pixel_rect(Rect2(522, 108, 27, 3), Color("e4bd78"))
+	# Continuous wooden worktop and sink.
+	_pixel_rect(Rect2(399, 210, 174, 12), Color("795638"))
+	_pixel_rect(Rect2(399, 210, 174, 6), Color("d9aa70"))
+	_pixel_rect(Rect2(426, 207, 60, 6), Color("e9d4ad"))
+	_pixel_rect(Rect2(432, 210, 48, 6), Color("9ca6a0"))
+	_pixel_rect(Rect2(438, 213, 36, 3), Color("d3d8c8"))
+	_pixel_rect(Rect2(450, 186, 6, 24), Color("846f58"))
+	_pixel_rect(Rect2(453, 183, 15, 6), Color("846f58"))
+	_pixel_rect(Rect2(465, 186, 3, 6), Color("846f58"))
+	# Cabinet doors and drawers use the room's three-unit pixel grid.
+	_pixel_rect(Rect2(405, 222, 165, 42), Color("52694c"))
+	_pixel_rect(Rect2(411, 225, 153, 33), Color("a1b487"))
+	for x in [414, 462, 510]:
+		_pixel_rect(Rect2(x, 228, 42, 27), Color("6e8d67"))
+		_pixel_rect(Rect2(x + 3, 231, 36, 21), Color("b5c69a"))
+		_pixel_rect(Rect2(x + 33, 240, 3, 6), Color("9e754e"))
+	_pixel_rect(Rect2(405, 258, 165, 6), Color("51694d"))
+	# Open pantry, with food jars above the puppy's reach.
+	_pixel_rect(Rect2(579, 108, 60, 153), Color("735337"))
+	_pixel_rect(Rect2(585, 114, 48, 138), Color("d5aa71"))
+	for y in [150, 192, 231]:
+		_pixel_rect(Rect2(585, y, 48, 6), Color("78583b"))
+	for x in [591, 612]:
+		for y in [123, 165]:
+			_pixel_rect(Rect2(x, y, 15, 21), Color("f5e7c5"))
+			_pixel_rect(Rect2(x + 3, y + 6, 9, 12), Color("bd955e" if x == 591 else "8b9a65"))
+			_pixel_rect(Rect2(x, y - 3, 15, 3), Color("8f714c"))
+	_pixel_rect(Rect2(594, 204, 33, 24), Color("af8455"))
+	_pixel_rect(Rect2(597, 207, 27, 18), Color("d6b481"))
+	_pixel_rect(Rect2(588, 255, 42, 6), Color("5b6f52"))
 
 func _draw_lamp(base: Vector2) -> void:
 	# Stepped translucent pools keep the warm light on the same pixel grid as the room.
@@ -397,17 +445,21 @@ func _draw_bed() -> void:
 	_pixel_rect(Rect2(-63, -6, 18, 3), Color("a2b287"))
 
 func _draw_bowl() -> void:
-	var bowl := Rect2(-25, -28, 50, 28)
-	_pixel_ellipse(Vector2(0, -5), Vector2(31, 10), Color("b79364"))
-	_pixel_rect(Rect2(bowl.position + Vector2(3, 7), bowl.size - Vector2(6, 7)), Color("825538"))
-	_pixel_rect(Rect2(bowl.position + Vector2(6, 10), bowl.size - Vector2(12, 13)), Color("bf7852"))
-	_pixel_rect(Rect2(bowl.position + Vector2(9, 24), Vector2(35, 3)), Color("df9c69"))
-	var rim := Vector2(0, -22)
-	_pixel_ellipse(rim, Vector2(28, 10), Color("825538"))
-	_pixel_ellipse(rim - Vector2(0, 2), Vector2(25, 8), Color("e8b583"))
-	_pixel_ellipse(rim - Vector2(0, 2), Vector2(19, 5), Color("65472f"))
+	# Keep the food bowl at the current feeding target; the water bowl is decor.
+	draw_set_transform(Vector2(24, 0))
+	_pixel_ellipse(Vector2(0, -6), Vector2(60, 17), Color("7b9068"))
+	_pixel_ellipse(Vector2(0, -9), Vector2(54, 12), Color("f4e9c9"))
+	for center in [Vector2(-24, -18), Vector2(27, -18)]:
+		_pixel_rect(Rect2(center + Vector2(-18, 0), Vector2(36, 15)), Color("9b704e"))
+		_pixel_rect(Rect2(center + Vector2(-15, 3), Vector2(30, 9)), Color("f1dfbd"))
+		_pixel_ellipse(center, Vector2(21, 9), Color("805733"))
+		_pixel_ellipse(center - Vector2(0, 3), Vector2(18, 6), Color("f8edcf"))
+	_pixel_ellipse(Vector2(-24, -22), Vector2(13, 4), Color("856243"))
 	for i in 5:
-		_pixel_rect(Rect2(rim + Vector2(-15 + i * 6, -4 + (i % 2) * 3), Vector2(3, 3)), Color("bb8c4f"))
+		_pixel_rect(Rect2(-36 + i * 6, -25 + (i % 2) * 3, 3, 3), Color("bd8b55"))
+	_pixel_ellipse(Vector2(27, -22), Vector2(13, 4), Color("82bac2"))
+	_pixel_rect(Rect2(18, -24, 6, 3), Color("d8f0e5"))
+	draw_set_transform(Vector2.ZERO)
 
 func _draw_toys() -> void:
 	_pixel_ellipse(Vector2(0, 0), Vector2(55, 12), Color("b79364"))
@@ -469,47 +521,88 @@ func _pixel_ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
 		draw_rect(Rect2(left, y, maxf(PIXEL, right - left), PIXEL), color)
 
 func _draw_yard() -> void:
-	draw_rect(Rect2(0, -2400, area.x, 2660), Color("c5dfcf"))
-	draw_rect(Rect2(0, 260, area.x, 4000), Color("a7ba79"))
-	for x in range(0, int(area.x), 42):
-		_pixel_rect(Rect2(x, 185, 30, 90), Color("d7b889"))
-		_pixel_rect(Rect2(x + 3, 185, 6, 90), Color("ecd4a2"))
-	_pixel_rect(Rect2(0, 213, area.x, 12), Color("b69468"))
-	_pixel_rect(Rect2(0, 252, area.x, 12), Color("b69468"))
-	_pixel_rect(Rect2(625, 280, 90, 45), Color("b69468"))
-	_pixel_rect(Rect2(631, 286, 78, 33), Color("e0c58d"))
-	_pixel_rect(Rect2(485, 265, 138, 60), Color("9a704e"))
-	_pixel_rect(Rect2(491, 271, 126, 48), Color("74543f"))
+	if area.x <= 0: return
+	# The 3:1 source is cropped to the 4:1 playable world. Its fence and
+	# grass line then meet the existing stations at y=190 and y=265.
+	draw_rect(Rect2(0, -2400, area.x, 2400), Color("acd7dd"))
+	draw_texture_rect_region(YARD_BACKGROUND, Rect2(0, 0, area.x, RoomLayout.SIZE.y), Rect2(0, 30, 2172, 543))
+	# Portrait screens can reveal ground below the panorama. Repeat a lawn-only
+	# strip from the same painting, without stretching a single scanline.
+	for y in range(int(RoomLayout.SIZE.y), int(area.y), 105):
+		var height := minf(105, area.y - y)
+		draw_texture_rect_region(YARD_BACKGROUND, Rect2(0, y, area.x, height), Rect2(0, 480, 2172, height * 1.5))
+
+func _draw_yard_garden() -> void:
+	# Raised wooden bed. Growth remains live and comes from the saved garden state.
+	if not yard_overlay_only:
+		_pixel_rect(Rect2(480, 278, 144, 48), Color("715238"))
+		_pixel_rect(Rect2(486, 272, 132, 42), Color("bd9160"))
+		_pixel_rect(Rect2(492, 269, 120, 30), Color("6e533a"))
+		_pixel_rect(Rect2(498, 275, 108, 21), Color("806444"))
+		for x in [489, 612]:
+			_pixel_rect(Rect2(x, 278, 6, 45), Color("e2b779"))
+			_pixel_rect(Rect2(x + 6, 305, 6, 9), Color("9c7047"))
+		for x in range(498, 609, 18):
+			_pixel_rect(Rect2(x, 302, 12, 3), Color("d9ab72"))
 	if not garden_state.is_empty() and garden_state.plant != "":
 		var view := garden_state.duplicate(true)
 		YardRoutines.update(view, Time.get_unix_time_from_system())
 		var height := 9 + 36 * float(view.growth) / YardRoutines.GROW_TIME
 		for x in [510, 550, 590]:
-			_pixel_rect(Rect2(x, 300 - height, 6, height), Color("63905a"))
-			_pixel_rect(Rect2(x - 9, 288, 12, 6), Color("7caa68"))
+			_pixel_rect(Rect2(x, 294 - height, 6, height), Color("567d4b"))
+			_pixel_rect(Rect2(x - 9, 280, 12, 6), Color("91ac67"))
 			if view.growth >= YardRoutines.GROW_TIME:
-				_pixel_ellipse(Vector2(x + 3, 300 - height), Vector2(12, 9), {"daisy": Color("fff3d5"), "poppy": Color("d97c68"), "lavender": Color("aa8cbd")}[view.plant])
-	_pixel_rect(Rect2(1290, 265, 6, 32), Color("a48059"))
-	_pixel_rect(Rect2(1278, 265, 33, 15), Color("efd7a4"))
-	# A wooden gate and a marked fetch lawn give the yard fixed landmarks.
-	_pixel_rect(Rect2(108, 190, 84, 84), Color("a48059"))
-	for x in [114, 138, 162, 186]: _pixel_rect(Rect2(x, 190, 6, 84), Color("efd7a4"))
-	_pixel_rect(Rect2(177, 232, 9, 6), Color("755b43"))
+				_pixel_ellipse(Vector2(x + 3, 294 - height), Vector2(12, 9), {"daisy": Color("fff3d5"), "poppy": Color("d97c68"), "lavender": Color("aa8cbd")}[view.plant])
+				_pixel_rect(Rect2(x, 291 - height, 6, 6), Color("dfb750"))
+
+func _draw_yard_dig() -> void:
+	_pixel_ellipse(Vector2(669, 317), Vector2(65, 15), Color("6d7650"))
+	_pixel_ellipse(Vector2(669, 310), Vector2(59, 18), Color("c5a676"))
+	_pixel_ellipse(Vector2(669, 305), Vector2(48, 12), Color("dec492"))
+	for point in [Vector2(629, 299), Vector2(692, 308), Vector2(707, 296)]:
+		_pixel_rect(Rect2(point, Vector2(6, 3)), Color("f0d8a6"))
+
+func _draw_yard_gate() -> void:
+	# A separate gate opens without changing the baked fence.
+	_pixel_rect(Rect2(99, 185, 99, 93), Color("765b42"))
+	_pixel_rect(Rect2(105, 188, 87, 84), Color("b68a5b"))
 	if portal_open:
-		_pixel_rect(Rect2(114, 190, 72, 84), Color("8da478"))
-		_pixel_rect(Rect2(108, 190, 18, 84), Color("a48059"))
-	_pixel_ellipse(Vector2(940, 310), Vector2(120, 28), Color("b5c784"))
+		_pixel_rect(Rect2(120, 191, 69, 75), Color("6e8867"))
+		_pixel_rect(Rect2(108, 188, 15, 84), Color("d5aa73"))
+	else:
+		for x in range(108, 190, 15):
+			_pixel_rect(Rect2(x, 188, 12, 81), Color("dfb77d"))
+			_pixel_rect(Rect2(x, 188, 3, 81), Color("f4d8a6"))
+		_pixel_rect(Rect2(108, 215, 81, 6), Color("a4774e"))
+		_pixel_rect(Rect2(108, 248, 81, 6), Color("a4774e"))
+		_pixel_rect(Rect2(177, 233, 9, 6), Color("65533c"))
+	_pixel_rect(Rect2(96, 269, 105, 6), Color("654f3e"))
+
+func _draw_yard_fetch() -> void:
+	_pixel_ellipse(Vector2(940, 310), Vector2(120, 24), Color("9ab76e"))
+	_pixel_ellipse(Vector2(940, 308), Vector2(111, 18), Color("b8ca7f"))
 	for x in [838, 1042]:
-		_pixel_rect(Rect2(x, 273, 6, 39), Color("ead9a1"))
-		_pixel_rect(Rect2(x + 6, 273, 21, 15), Color("dc946f"))
-	for x in [350, 750, 1150]:
-		_pixel_ellipse(Vector2(x, 272), Vector2(90, 26), Color("6e945f"))
-		_pixel_ellipse(Vector2(x - 25, 252), Vector2(48, 39), Color("85a66c"))
-		_pixel_ellipse(Vector2(x + 24, 248), Vector2(44, 44), Color("91b276"))
-		_pixel_rect(Rect2(x - 6, 293, 12, 6), Color("e4cb8a"))
-	for x in range(20, int(area.x), 57):
-		_pixel_rect(Rect2(x, 350 + (x % 4) * 9, 12, 3), Color("8ba263"))
-		_pixel_rect(Rect2(x + 15, 305, 3, 9), Color("78965a"))
+		_pixel_rect(Rect2(x, 263, 6, 48), Color("eed7a1"))
+		_pixel_rect(Rect2(x + 6, 263, 24, 15), Color("d88363"))
+		_pixel_rect(Rect2(x + 12, 278, 12, 6), Color("ae684e"))
+		_pixel_rect(Rect2(x - 3, 308, 12, 6), Color("a88655"))
+
+func _draw_yard_bush(x: int) -> void:
+	_pixel_ellipse(Vector2(x, 280), Vector2(78, 18), Color("577e4e"))
+	_pixel_ellipse(Vector2(x - 27, 254), Vector2(42, 32), Color("769a5d"))
+	_pixel_ellipse(Vector2(x + 20, 248), Vector2(48, 39), Color("85a965"))
+	_pixel_ellipse(Vector2(x - 6, 238), Vector2(41, 29), Color("99b574"))
+	for offset in [-36, -12, 18, 42]:
+		_pixel_rect(Rect2(x + offset, 251 + (offset % 3) * 6, 9, 6), Color("a9be7c"))
+	_pixel_rect(Rect2(x - 6, 288, 12, 6), Color("caaf75"))
+
+func _draw_yard_outing() -> void:
+	_pixel_rect(Rect2(1290, 255, 9, 45), Color("8e6848"))
+	_pixel_rect(Rect2(1272, 249, 48, 24), Color("9b714c"))
+	_pixel_rect(Rect2(1275, 252, 42, 18), Color("e7d09d"))
+	_pixel_rect(Rect2(1281, 258, 24, 3), Color("6b805c"))
+	_pixel_rect(Rect2(1299, 255, 12, 3), Color("6b805c"))
+	_pixel_rect(Rect2(1287, 294, 15, 6), Color("6a7650"))
 
 func _draw_decor() -> void:
 	if decor.has("heart"):
