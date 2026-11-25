@@ -1,9 +1,10 @@
 class_name SkillPlaySystem
 extends TouchPlaySystem
 
-const EXTRA := ["tag", "cups2", "frisbee", "freestyle"]
-const LABELS := {"tag": "Berek z zabawką", "cups2": "Kubki · śledź smakołyk", "frisbee": "Frisbee", "freestyle": "Psi freestyle"}
+const EXTRA := ["tag", "cups2", "frisbee", "freestyle", "bubbles"]
+const LABELS := {"tag": "Berek z zabawką", "cups2": "Kubki · śledź smakołyk", "frisbee": "Frisbee", "freestyle": "Psi freestyle", "bubbles": "Bańki mydlane"}
 const DANCE_CLIPS := {"sit": "sit_down", "paw": "give_paw", "lie": "lie_down", "bow": "play_bow", "spin": "spin", "roll": "roll"}
+var bubbles := BubblePlay.new()
 var dance_skills: Array[String] = []
 var dance_notes: Array[String] = []
 var dance_grades: Array[int] = []
@@ -65,7 +66,7 @@ static func label(game: String) -> String:
 	return LABELS.get(game, InitiativeSystem.LABELS.get(game, game))
 
 static func memory_key(game: String) -> String:
-	return "cups" if game == "cups2" else ("ball" if game in ["tag", "frisbee", "freestyle"] else game)
+	return "cups" if game == "cups2" else ("ball" if game in ["tag", "frisbee", "freestyle", "bubbles"] else game)
 
 func start(game: String, seed_value: int = 0) -> bool:
 	if game not in EXTRA: return super.start(game, seed_value)
@@ -92,7 +93,8 @@ func start(game: String, seed_value: int = 0) -> bool:
 	wind = _rng.randf_range(-1, 1)
 	feint_next = false
 	tag_offers = 0
-	phase = {"tag": "run", "cups2": "show", "frisbee": "aim", "freestyle": "ready"}[game]
+	phase = {"tag": "run", "cups2": "show", "frisbee": "aim", "freestyle": "ready", "bubbles": "ready"}[game]
+	if game == "bubbles": bubbles.start(wind)
 	if game == "freestyle":
 		dance_notes.clear()
 		dance_grades.clear()
@@ -116,6 +118,15 @@ func advance(delta: float) -> void:
 		super.advance(delta)
 		return
 	if not is_finite(delta) or delta <= 0 or phase == "result": return
+	if kind == "bubbles":
+		if phase == "ready": return
+		bubbles.advance(delta)
+		total = bubbles.elapsed
+		score = bubbles.score
+		if bubbles.finished:
+			stars = 3 if score >= 10 else (2 if score >= 6 else (1 if score > 0 else 0))
+			_finish(score > 0)
+		return
 	if kind == "freestyle":
 		if phase == "ready": return
 		total = minf(dance_duration(), total + delta)
@@ -237,6 +248,9 @@ func _dance_judge(grade: int) -> void:
 	dance_index += 1
 
 func cue() -> void:
+	if kind == "bubbles":
+		if phase == "ready": phase = "bubbles"
+		return
 	if kind == "freestyle":
 		if phase == "ready":
 			phase = "dance"
@@ -258,6 +272,9 @@ func cue() -> void:
 	elif kind not in EXTRA: super.cue()
 
 func press(point: Vector2) -> void:
+	if kind == "bubbles":
+		if phase == "bubbles" and _valid_point(point): bubbles.press(point)
+		return
 	if kind not in EXTRA:
 		super.press(point)
 		return
@@ -268,9 +285,13 @@ func press(point: Vector2) -> void:
 		_pressed_cup = cup_at(point)
 
 func move(point: Vector2) -> void:
+	if kind == "bubbles": bubbles.move(point)
 	if kind not in EXTRA: super.move(point)
 
 func release(point: Vector2, cancelled: bool = false) -> void:
+	if kind == "bubbles":
+		bubbles.release(point, cancelled or not _valid_point(point))
+		return
 	if kind not in EXTRA:
 		super.release(point, cancelled)
 		return
@@ -305,6 +326,10 @@ func release(point: Vector2, cancelled: bool = false) -> void:
 		elapsed = 0
 
 func hint() -> String:
+	if kind == "bubbles":
+		if phase == "ready": return "Przytrzymaj palec na trawie, przesuń i puść bańkę w stronę pieska. Większe bańki lecą wolniej. Masz 30 s i 10 baniek."
+		if phase == "result": return "%d/12 pkt · %d/3 gwiazdki. Rekord: %d pkt." % [score, stars, int(best_record.get("score", 0))]
+		return "%d s · Bańki %d/10 · %d pkt · Wiatr %s. %s" % [ceili(30 - bubbles.elapsed), bubbles.launched, bubbles.score, "→" if wind >= 0 else "←", "Poczekaj, aż odlecą." if bubbles.items.size() >= 3 else "Przytrzymaj, przesuń i puść."]
 	if kind == "freestyle":
 		if phase == "ready": return "Układ %d s · %d komendy. Dotknij W rytm, gdy kółko dotrze do linii. Poznane sztuczki: od 50%%. Dźwięk jest opcjonalny." % [int(dance_duration()), dance_notes.size()]
 		if phase == "result": return "%d/%d pkt · %d/3 gwiazdki · seria %d. Rekord układu: %d pkt." % [score, dance_notes.size() * 2, stars, dance_best_combo, int(best_record.get("score", 0))]
@@ -321,3 +346,7 @@ func hint() -> String:
 	if kind == "tag": return "%d s · %d/3. %s" % [ceili(clock_left), score, "TERAZ! Dotknij pieska w ukłonie." if phase == "bow" else ("Zmyłka — poczekaj na napis TERAZ!" if phase == "feint" else "Poczekaj na pełny ukłon i napis TERAZ!")]
 	if kind == "cups2": return {"show": "Zapamiętaj kubek ze smakołykiem.", "shuffle": "Śledź kubek podczas tasowania…", "guess": "Wskaż kubek lub poproś Glorię o pomoc (2 zamiast 3 gwiazdek).", "hint": "Gloria węszy przy właściwym kubku."}.get(phase, "")
 	return "Rzut %d/5 · Wiatr %s %d%% · %s" % [mini(rounds + 1, 5), "→" if wind >= 0 else "←", roundi(absf(wind) * 100), {"aim": "Przeciągnij i puść, żeby rzucić dyskiem.", "flight": "Złapany! Lądujemy z dyskiem." if caught else ("Skok!" if jumped else "Dotknij Skacz, zanim dysk dotrze do znacznika!"), "land": feedback}.get(phase, "")]
+
+func reset() -> void:
+	super.reset()
+	bubbles.start(0)

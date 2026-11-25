@@ -10,6 +10,8 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 
 Aktualizacja 25 listopada: [psi freestyle](psi-freestyle.md) oraz [kolejne minigry przygotowane do wdrożenia](kolejne-minigry-do-wdrozenia.md). Build 40 na telefonie obejmuje picie, przyjaźnie i trzymanie piłki; freestyle powstał po jego instalacji.
 
+Build 41: [bańki mydlane](banki-mydlane.md) i freestyle; [lista prób na iPhonie](testy-reczne-build-41.md).
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

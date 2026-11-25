@@ -600,3 +600,26 @@ Przeszło 41/41 zestawów logiki, 69 sprawdzeń na kopii zapisu Glorii oraz
 16 sprawdzeń UI chwytu/trzymania z poprzedniego etapu. Podpis zweryfikowany.
 Kopie i raport: `exports/ios-home-v40/` (lokalnie, poza Git).
 Freestyle powstaje po tym wydaniu i nie jest częścią buildu 40.
+
+## Build 41 — bańki i freestyle (25 listopada 2026)
+
+Podpisana aktualizacja 0.1.0 (41) została zainstalowana i uruchomiona na
+MagicPhone. Numer aplikacji i widgetu: 41, identyfikatory i App Group bez zmian.
+Zweryfikowano podpis, identyczny PCK z eksportem oraz niezmienność źródeł
+wykonawczych podczas końcowej budowy.
+
+Zabezpieczono Documents przed budową i bezpośrednio przed instalacją.
+Wszystkie 33 wcześniejsze pliki były identyczne bajtowo po instalacji.
+Po starcie zmieniły się potrzeby, czas wizyty i jeden licznik wizyty wieczornej
+w historii; pozostałe dane psa, w tym sztuczki, więź, ogródek, Album i zdjęcia,
+pozostały bez zmian. Schemat nadal v17. Zrzut fizycznego ekranu pokazuje Glorię
+w mieszkaniu. Nie wykonywano rund na rzeczywistym zapisie.
+
+Regresja: 43/43 zestawów logiki, 38/39 UI w pierwszym przebiegu. Test baniek
+wykrył przesunięcie pyska przy zmianie klatki; po synchronizacji przed
+renderowaniem przeszedł 22/22 sprawdzenia. Poprawka weszła do ponownie
+zbudowanej i zainstalowanej paczki. Kopia Glorii: 69/69 sprawdzeń zapisu.
+
+Kopie, manifest, logi i porównanie: `exports/ios-bubbles-v41/` (lokalnie).
+Zakres: [bańki](banki-mydlane.md), [freestyle](psi-freestyle.md).
+Do próby palcem na telefonie: [lista testów ręcznych](testy-reczne-build-41.md).

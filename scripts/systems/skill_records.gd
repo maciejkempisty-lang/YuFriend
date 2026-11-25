@@ -7,7 +7,7 @@ static func read(save_path: String, kind: String) -> Dictionary:
 	if config.load(save_path + ".games.cfg") != OK: return result
 	for key in ["stars", "score"]:
 		var value: Variant = config.get_value(kind, key, 0)
-		var limit := 3 if key == "stars" else (24 if kind.begins_with("freestyle_") else 10)
+		var limit := 3 if key == "stars" else (24 if kind.begins_with("freestyle_") else (12 if kind == "bubbles" else 10))
 		if value is int and value >= 0 and value <= limit: result[key] = value
 	var seconds: Variant = config.get_value(kind, "seconds", 0.0)
 	if (seconds is int or seconds is float) and is_finite(seconds) and seconds >= 0 and seconds <= 45: result.seconds = float(seconds)

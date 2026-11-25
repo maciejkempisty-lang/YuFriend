@@ -902,8 +902,8 @@ func play_readiness() -> String:
 	return ""
 
 func start_touch_game(kind: String) -> bool:
-	if kind not in ["tug", "cups", "tag", "cups2", "frisbee", "freestyle"]: return false
-	if kind in ["tag", "frisbee"] and not in_yard:
+	if kind not in ["tug", "cups", "tag", "cups2", "frisbee", "freestyle", "bubbles"]: return false
+	if kind in ["tag", "frisbee", "bubbles"] and not in_yard:
 		say("W tę zabawę zagramy na podwórku. Wyjdźmy najpierw na zewnątrz.")
 		return false
 	if kind == play.kind and play.phase == "result" and activity == "happy" and writable and not suspended:
@@ -1009,6 +1009,8 @@ func _settle_touch_game() -> void:
 		else: BondLevels.add(pet, 0.35, _local_now())
 		_note("play")
 	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + SkillPlaySystem.label(kind), "Pierwsza runda zabawy sterowanej dotykiem.", now)
+	if kind == "bubbles" and play.stars == 3:
+		pet.remember("bubbles_three_stars", "Łapaczka baniek", "Pierwsze trzy gwiazdki za wspólne bańki mydlane.", now)
 	if kind == "freestyle" and not play.dance_grades.has(0):
 		pet.remember("freestyle_full", "Pierwszy wspólny taniec", "Cały układ poznanych sztuczek bez pominięcia komendy.", now)
 	_reward_from_training = false

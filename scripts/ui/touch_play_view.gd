@@ -37,6 +37,7 @@ func _ready() -> void:
 	click.data = samples
 	rhythm_player.stream = click
 	add_child(puppy)
+	RenderingServer.frame_pre_draw.connect(_sync_bubble_mouth)
 	add_child(prop_layer)
 	prop_layer.z_index = 5
 	prop_layer.draw.connect(_draw_disk)
@@ -51,10 +52,17 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if model == null: return
-	puppy.visible = model.kind in ["tug", "cups", "cups2", "tag", "frisbee", "freestyle"]
+	clip_contents = model.kind == "bubbles"
+	puppy.visible = model.kind in ["tug", "cups", "cups2", "tag", "frisbee", "freestyle", "bubbles"]
 	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
 	var clip := "play_bow" if model.phase in ["warning", "demo_warning"] else ("shake" if model.phase == "dog_pull" else "idle")
-	if model.kind == "freestyle":
+	if model.kind == "bubbles":
+		var game := model as SkillPlaySystem
+		var b := game.bubbles
+		puppy.scale = Vector2.ONE * _bubble_scale() * 0.85
+		puppy.facing_left = b.facing < 0
+		clip = "treat_take_stand" if b.jump_left > 0 else ("run" if b.moving else "idle")
+	elif model.kind == "freestyle":
 		var game := model as SkillPlaySystem
 		puppy.position = Vector2(size.x * 0.5, size.y * 0.88)
 		puppy.facing_left = false
@@ -95,8 +103,9 @@ func _process(_delta: float) -> void:
 		_last_dance_clip = clip
 		_last_phase = model.phase
 		_last_kind = model.kind
-		if model.kind in ["tag", "frisbee"]: puppy.remaining = 0
+		if model.kind in ["tag", "frisbee", "bubbles"]: puppy.remaining = 0
 		puppy.request_clip(clip)
+	_sync_bubble_mouth()
 	queue_redraw()
 	prop_layer.queue_redraw()
 
@@ -120,15 +129,15 @@ func _on_input(event: InputEvent) -> void:
 func _down(point: Vector2, id: int) -> void:
 	if _pointer != -1: return
 	_pointer = id
-	pressed_at.emit(point / size)
+	pressed_at.emit(_input_point(point))
 
 func _move(point: Vector2, id: int) -> void:
-	if _pointer == id: moved_to.emit(point / size)
+	if _pointer == id: moved_to.emit(_input_point(point))
 
 func _up(point: Vector2, id: int, cancelled: bool = false) -> void:
 	if _pointer != id: return
 	_pointer = -1
-	released_at.emit(point / size, cancelled)
+	released_at.emit(_input_point(point), cancelled)
 
 func _draw() -> void:
 	draw_style_box(_mat, Rect2(Vector2.ZERO, size))
@@ -137,6 +146,8 @@ func _draw() -> void:
 	elif model.kind in ["cups", "cups2"]: _draw_cups()
 	elif model.kind in ["tag", "frisbee"]: _draw_yard_game()
 	elif model.kind == "freestyle": _draw_dance()
+	elif model.kind == "bubbles":
+		draw_texture_rect(yard_texture, Rect2(_bubble_origin(), BubblePlay.WORLD * _bubble_scale()), false)
 
 func _draw_rope() -> void:
 	var start := Vector2(puppy.position.x + size.x * 0.06, size.y * 0.49)
@@ -231,6 +242,9 @@ func _draw_yard_game() -> void:
 		draw_string(font, Vector2(12, 36), "%d / 3 gwiazdki" % game.stars, HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 20, Color("315d49"))
 
 func _draw_disk() -> void:
+	if model != null and model.kind == "bubbles":
+		_draw_bubbles()
+		return
 	if model == null or model.kind != "frisbee": return
 	var game := model as SkillPlaySystem
 	var point := game.disk_point() * size
@@ -265,3 +279,38 @@ func _draw_dance() -> void:
 	if game.phase == "result": next = "%d / 3 gwiazdki" % game.stars
 	draw_string(font, Vector2(12, 30), next, HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 18, Color("315d49"))
 	draw_string(font, Vector2(12, 125), "Kółko na linii → W rytm!", HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 14, Color("315d49"))
+
+func _bubble_scale() -> float: return minf(size.x / BubblePlay.WORLD.x, size.y / BubblePlay.WORLD.y)
+func _bubble_origin() -> Vector2: return (size - BubblePlay.WORLD * _bubble_scale()) * 0.5
+func _input_point(point: Vector2) -> Vector2:
+	if model.kind == "bubbles": return (point - _bubble_origin()) / _bubble_scale() / BubblePlay.WORLD
+	return point / size
+
+func _draw_bubbles() -> void:
+	var b := (model as SkillPlaySystem).bubbles
+	var scale_value := _bubble_scale()
+	var origin := _bubble_origin()
+	for item in b.items:
+		_bubble_circle(origin + item.point * scale_value, item.radius * scale_value, item.gold)
+	if b.holding:
+		_bubble_circle(origin + b.hold_point * scale_value, b.radius() * scale_value, (b.launched + 1) % 5 == 0)
+		prop_layer.draw_line(origin + b.hold_point * scale_value, origin + b.pointer * scale_value, Color("f8f3d5"), 2, true)
+	for pop in b.pops:
+		var center: Vector2 = origin + pop.point * scale_value
+		var radius_value: float = (1 - pop.left / 0.25) * 30 + 8
+		for ray in 6:
+			var direction := Vector2.from_angle(ray * TAU / 6)
+			prop_layer.draw_line(center + direction * radius_value, center + direction * (radius_value + 5), Color("f7e99c"), 2, true)
+	if model.phase == "result":
+		prop_layer.draw_string(get_theme_default_font(), Vector2(12, 30), "%d / 3 gwiazdki" % (model as SkillPlaySystem).stars, HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 20, Color("315d49"))
+
+func _bubble_circle(point: Vector2, radius_value: float, gold: bool) -> void:
+	prop_layer.draw_circle(point, radius_value, Color(1, 0.85, 0.35, 0.22) if gold else Color(0.65, 0.90, 1, 0.20))
+	prop_layer.draw_arc(point, radius_value, 0, TAU, 40, Color("f5d16d") if gold else Color("e1f7fb"), 2, true)
+	prop_layer.draw_arc(point, radius_value - 4, PI * 1.1, PI * 1.6, 12, Color.WHITE, 2, true)
+
+func _sync_bubble_mouth() -> void:
+	if model == null or model.kind != "bubbles": return
+	# Sprite animation advances after the parent UI tick. Align again before
+	# drawing, so collision and the visible mouth share the same frame.
+	puppy.position = _bubble_origin() + (model as SkillPlaySystem).bubbles.mouth() * _bubble_scale() - puppy.mouth_point() * puppy.scale

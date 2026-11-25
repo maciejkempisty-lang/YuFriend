@@ -1,8 +1,9 @@
 # Kolejne minigry — pakiety gotowe do implementacji
 
 Stan: 25 listopada 2026, po implementacji pierwszego freestyle.
-Poniższe dwa pakiety są specyfikacją; nie są jeszcze działającymi funkcjami.
-Kolejność: próba freestyle na telefonie → bańki → agility na czas.
+Bańki zostały zaimplementowane w buildzie 41: [opis](banki-mydlane.md).
+Poniższy zakres baniek zachowano jako specyfikację odbioru; agility nadal jest planem.
+Dalsza kolejność: próba buildu 41 (freestyle i bańki) na telefonie → agility na czas.
 
 ## 1. Bańki mydlane
 
@@ -88,4 +89,4 @@ Konieczne będzie jawne rozszerzenie walidacji sekund w `SkillRecords`
 Każdy pakiet osobno: testy logiki i powiązanego UI → przegląd zrzutów → build
 z kolejnym numerem → kopia Documents z telefonu → aktualizacja bez odinstalowania
 → porównanie danych przed/po → próba gestów. Nie zmieniać rzeczywistego zapisu
-Glorii fixture’ami. Freestyle wymaga jeszcze tej fizycznej próby przed bańkami.
+Glorii fixture’ami. Freestyle i bańki wymagają jeszcze oceny gestów na fizycznym telefonie.

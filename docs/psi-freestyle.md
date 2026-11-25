@@ -48,6 +48,6 @@ korzystają ze wspólnego systemu zabaw. Po zamknięciu wraca zwykła muzyka.
   pozostały `ui_wellbeing` 16/16 po ustaleniu powrotu fokusu w przygotowaniu
   testu. Kopia Glorii po instalacji buildu 40: 69/69 sprawdzeń zapisu.
 - Obejrzano zrzut układu 320 punktów. Próba rytmu palcem na iPhonie pozostaje
-  do wykonania; pierwsza wersja nie jest zawarta w zainstalowanym buildzie 40.
+  do wykonania; pierwsza wersja została dołączona do zainstalowanego buildu 41.
 
 Kolejny zakres: [bańki i agility](kolejne-minigry-do-wdrozenia.md).

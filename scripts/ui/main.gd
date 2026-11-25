@@ -972,7 +972,7 @@ func _build_play_dialogs() -> void:
 	play_menu.add_child(choices_scroll)
 	choices_scroll.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"], ["freestyle", "Psi freestyle · wyuczone sztuczki"]]:
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"], ["freestyle", "Psi freestyle · wyuczone sztuczki"], ["bubbles", "Bańki mydlane · na podwórku"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
@@ -1486,6 +1486,9 @@ func _refresh() -> void:
 			play_cue.text = "Zaczynamy!" if session.play.phase == "ready" else "W rytm!"
 			play_cue.disabled = session.play.phase == "dance" and session.play.dance_index >= session.play.dance_notes.size()
 		else: play_cue.disabled = false
+		if session.play.kind == "bubbles":
+			play_cue.visible = session.play.phase == "ready"
+			play_cue.text = "Puszczamy bańki!"
 	play_again.visible = session.play.phase == "result"
 	play_again.disabled = session.play.phase != "result" or (session.busy() and session.activity != "happy")
 	room.mood_walk_speed = session.walk_speed()
