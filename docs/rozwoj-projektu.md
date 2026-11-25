@@ -4,6 +4,8 @@
 
 ## Aktualizacja — 25 listopada 2026
 
+Po instalacji buildu 39 dodano [picie w domu, interakcje z NPC i przyjaźnie](picie-i-przyjaznie.md). Ten kolejny pakiet wymaga jeszcze nowego buildu na telefonie.
+
 Dodano lokalne [pierwsze wersje berka, Kubków 2.0 i Frisbee](minigry-2026-11-25.md), dostępne z menu zabaw. Dodano następnie odbicia piłki, animowane chwyty piłki i dysku, zmyłki w berku, wiatr we Frisbee i trwałe rekordy. Zapis psa pozostaje v17; fizyczna próba i instalacja są jeszcze otwarte.
 
 Wdrożono opcjonalne wibracje w Ustawieniach, domyślnie wyłączone. Krótki impuls towarzyszy zaakceptowanemu głaskaniu i sukcesowi czynności; kroki, szczekanie i animacje nie uruchamiają wibracji. Odstęp minimum 250 ms zapobiega serii impulsów. Utrata fokusu i przejście w tło wyciszają reakcje. Preferencja pozostaje w `ui.cfg`, niezależnie od dźwięku i zapisu psa. Na komputerze przełącznik jest niedostępny. Fizyczne odczucie wibracji wymaga testu kolejnego buildu na telefonie.

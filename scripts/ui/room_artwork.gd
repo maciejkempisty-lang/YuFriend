@@ -445,7 +445,7 @@ func _draw_bed() -> void:
 	_pixel_rect(Rect2(-63, -6, 18, 3), Color("a2b287"))
 
 func _draw_bowl() -> void:
-	# Keep the food bowl at the current feeding target; the water bowl is decor.
+	# Keep the food bowl at the current feeding target; the water bowl has its own HomeDrink target.
 	draw_set_transform(Vector2(24, 0))
 	_pixel_ellipse(Vector2(0, -6), Vector2(60, 17), Color("7b9068"))
 	_pixel_ellipse(Vector2(0, -9), Vector2(54, 12), Color("f4e9c9"))

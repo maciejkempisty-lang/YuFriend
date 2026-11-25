@@ -55,6 +55,10 @@ func _run() -> void:
 	step(0.02)
 	await process_frame
 	await process_frame
+	# The synthetic touch resumes the main window after the native profile closes.
+	app.app_foreground = true
+	app._update_attention()
+	app._refresh_companion()
 	app._position_companion()
 	var accept_point: Vector2 = app.companion_action.get_global_rect().get_center()
 	await touch(accept_point, true, 0)

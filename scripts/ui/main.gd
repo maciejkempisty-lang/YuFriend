@@ -50,6 +50,9 @@ var visitor_toolbar: HBoxContainer
 var today_button: Button
 var visitor_soothe_button: Button
 var visitor_recall_button: Button
+var visitor_interact_button: Button
+var visitor_dialog: AcceptDialog
+var visitor_dialog_kind := ""
 var yard_bath_button: Button
 var yard_button: Button
 var sniff_button: Button
@@ -183,6 +186,7 @@ func _ready() -> void:
 	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
 	session.ball_caught.connect(room.animate_ball_catch)
+	session.home_drink_started.connect(func(): room.animator.facing_left = true)
 	session.hide_revealed.connect(room.reveal_hide)
 	session.initiative_requested.connect(room.present_invitation)
 	session.ball_aim_requested.connect(_aim_ball)
@@ -571,7 +575,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = not session.yard_rest.active() and not session.course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
+	companion_card.visible = not session.home_drink.active() and not session.yard_rest.active() and not session.course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -649,6 +653,8 @@ func _build_care() -> VBoxContainer:
 	add_child(visitor_toolbar)
 	visitor_soothe_button = _button("Spokojnie", func(): session.visitors.respond(session, "soothe"))
 	visitor_recall_button = _button("Przyjdź", func(): session.visitors.respond(session, "recall"))
+	visitor_interact_button = _button("Gość", _show_visitor_interactions)
+	visitor_toolbar.add_child(visitor_interact_button)
 	visitor_toolbar.add_child(visitor_soothe_button)
 	visitor_toolbar.add_child(visitor_recall_button)
 	visitor_soothe_button.hide()
@@ -1120,6 +1126,7 @@ func _fit_room() -> void:
 		if dialog != null and dialog.visible: _position_dialog(dialog, dialog.size)
 	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 290))
 	if settings_dialog != null and settings_dialog.visible: _fit_settings()
+	if is_instance_valid(visitor_dialog) and visitor_dialog.visible: _position_dialog(visitor_dialog, Vector2i(320, 330))
 
 func _safe_content_rect() -> Rect2:
 	var full := Rect2(Vector2.ZERO, size)
@@ -1532,7 +1539,10 @@ func _refresh() -> void:
 	room.yard_controls_bottom = header.get_rect().end.y + 64
 	visitor_soothe_button.visible = visiting
 	visitor_recall_button.visible = visiting
-	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe"]
+	visitor_interact_button.visible = visiting
+	visitor_soothe_button.disabled = session.visitors.phase in ["recall", "soothe", "greet", "together"]
+	visitor_interact_button.disabled = visitor_soothe_button.disabled
+	if is_instance_valid(visitor_dialog) and visitor_dialog.visible and (not visiting or session.visitors.kind != visitor_dialog_kind): visitor_dialog.hide()
 	visitor_recall_button.disabled = visitor_soothe_button.disabled
 	if visiting:
 		care_status.text = session.visitors.hint()
@@ -1748,6 +1758,7 @@ static func fetch_hint(record: float) -> String:
 	return ("Aport · rekord %.1f m · przeciągnij piłkę" % record).replace(".", ",")
 
 func _activity_status() -> String:
+	if session.home_drink.active(): return "Idzie do wody…" if session.home_drink.phase == "walk" else "Pije wodę · dotknij miski, aby przerwać"
 	if session.cuddle.running(): return "Spokojne chwile · przytulanie"
 	if session.activity == "sniff_walk": return "Podąża za zapachem…"
 	if session.activity == "sniff": return "Węszy… jeszcze %d s" % ceili(session.activity_left)
@@ -1994,6 +2005,12 @@ func _on_room_care_requested(action: String) -> void:
 	_room_care_action(action)
 
 func _room_care_action(action: String) -> void:
+	if action == "drink":
+		session.home_drink.start(session)
+		return
+	if action == "visitor":
+		_show_visitor_interactions()
+		return
 	if action == "catch":
 		session.catch_ball()
 		return
@@ -2203,3 +2220,39 @@ func _show_wellbeing() -> void:
 	wellbeing_dialog.dialog_text = explanation
 	wellbeing_dialog.popup()
 	_position_dialog(wellbeing_dialog, Vector2i(320, 200))
+
+func _show_visitor_interactions() -> void:
+	if not session.visitors.active() or not session.in_yard: return
+	if session.visitors.phase in ["soothe", "recall", "greet", "together"]: return
+	if is_instance_valid(visitor_dialog):
+		visitor_dialog.hide()
+		visitor_dialog.queue_free()
+	visitor_dialog_kind = session.visitors.kind
+	var guest := visitor_dialog_kind
+	visitor_dialog = AcceptDialog.new()
+	var dialog := visitor_dialog
+	dialog.title = YardVisitors.LABELS[guest]
+	dialog.ok_button_text = "Wróć"
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	dialog.add_child(box)
+	var status := _label(VisitorMemory.describe(session.pet, guest), 16, INK, true)
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.custom_minimum_size.x = 240
+	box.add_child(status)
+	var explanation := _label("Przyjaźń rośnie po spokojnych spotkaniach w trzech różnych dniach. Przerwa jej nie osłabia.", 14, MUTED)
+	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	explanation.custom_minimum_size.x = 240
+	box.add_child(explanation)
+	for entry in [["greet", "Przywitaj się spokojnie"], ["together", "Pobądźcie razem"]]:
+		var choice: String = entry[0]
+		var button := _button(entry[1], func():
+			dialog.hide()
+			if session.visitors.kind == guest: session.visitors.respond(session, choice))
+		button.disabled = choice == "together" and VisitorMemory.level(session.pet, guest) < 1
+		box.add_child(button)
+	add_child(dialog)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		dialog.get_ok_button().add_theme_stylebox_override(state, _style(Color("efeeda"), 12, 14))
+	_position_dialog(dialog, Vector2i(320, 330))
+	dialog.popup()

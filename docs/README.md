@@ -57,3 +57,5 @@ Parametry mechanik są zebrane w jednym dokumencie; format PNG i manifestu opisu
 - [Przegląd menu ogrodu po scaleniu](przeglad-menu-ogrodu-2026-11-24.md) — regresja dotyku, dostępności akcji i trwających zabaw.
 
 [Nowe minigry — zakres i zasady z 25 listopada](minigry-2026-11-25.md).
+
+[Picie z domowej miski i przyjaźnie z gośćmi](picie-i-przyjaznie.md) — pakiet po buildzie 39.

@@ -69,11 +69,16 @@ func hint() -> String:
 	if not active(): return ""
 	if phase == "recall": return "Wraca do Ciebie… spokojnie czekamy."
 	if phase == "soothe": return "Spokojnie, jestem przy Tobie…"
+	if phase == "greet": return "Spokojne powitanie. Dajemy sobie czas na poznanie."
+	if phase == "together": return "Chwila razem przy płocie. Tak rośnie przyjaźń."
 	var text: String = {"wary": "Zna ten zapach, obserwuje ostrożnie", "shy": "Cofa się niepewnie", "bark": "Szczeka z emocji", "curious": "Podchodzi zaciekawiona", "calm": "Spokojnie obserwuje"}[reaction]
 	return "%s · %s%s" % [LABELS[kind], "Znowu razem! " if familiar else "", text]
 
 func respond(s: GameSession, choice: String) -> bool:
-	if not active() or phase in ["soothe", "recall"] or choice not in ["soothe", "recall"] or s.suspended or not s.writable: return false
+	if not active() or phase in ["soothe", "recall", "greet", "together"] or choice not in ["soothe", "recall", "greet", "together"] or s.suspended or not s.writable: return false
+	if choice == "together" and VisitorMemory.level(s.pet, kind) < 1:
+		s.say("Najpierw spokojnie się przywitajmy. Wspólna chwila przyjdzie później.")
+		return false
 	# Cancel only presentation movement: the encounter remains alive until arrival.
 	s.activity_cancelled.emit()
 	phase = choice
@@ -82,8 +87,9 @@ func respond(s: GameSession, choice: String) -> bool:
 		s.destination_requested.emit(SAFE_SPOT)
 		s.clip_requested.emit("walk")
 	else:
-		response_left = 2.5
-		s.clip_requested.emit("tail_wag_stand")
+		response_left = 6.0 if choice == "together" else (3.0 if choice == "greet" else 2.5)
+		remaining = maxf(remaining, response_left + 1)
+		s.clip_requested.emit("head_tilt_stand" if reaction in ["shy", "wary"] else ("play_bow" if choice == "together" else "tail_wag_stand"))
 	s.say(hint())
 	s.changed.emit()
 	return true
@@ -101,10 +107,10 @@ func advance(s: GameSession, delta: float) -> void:
 			finish(s, "Gość rusza dalej. Czas odpocząć.")
 			return
 		remaining -= delta
-		if phase == "soothe":
+		if phase in ["soothe", "greet", "together"]:
 			response_left -= delta
 			if response_left <= 0:
-				finish(s, "Spokojniej. Gość rusza dalej.", true)
+				finish(s, "Miło było pobyć razem. Do następnego spotkania!" if phase in ["greet", "together"] else "Spokojniej. Gość rusza dalej.", true)
 				return
 		if remaining <= 0: finish(s, "Gość rusza dalej. Znowu spokojne podwórko.")
 		return

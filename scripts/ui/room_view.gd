@@ -399,6 +399,7 @@ func action_at(point: Vector2) -> String:
 			return RoomLayout.STATIONS[id].action
 	var where := screen_to_world(point)
 	if in_yard:
+		if fence_visitor.visible and visitor_touch_rect().has_point(point): return "visitor"
 		if yard_potty.mess and _screen_rect(Rect2(YardPottyView.SPOT - Vector2(24, 36), Vector2(48, 42))).grow(12).has_point(point): return "yard_outing"
 		if catch_active and Rect2(pet_world - Vector2(90, 170) * presentation_scale, Vector2(180, 190) * presentation_scale).has_point(where): return "catch"
 		if ball_touch_rect().has_point(point): return "play"
@@ -406,6 +407,8 @@ func action_at(point: Vector2) -> String:
 		var place := yard_place_at(point)
 		return "" if place.is_empty() else "yard_" + place
 	if ball_touch_rect().has_point(point): return "play"
+	var water_center := world_to_screen(HomeDrink.BOWL)
+	if water_touch_rect().has_point(point) and point.distance_to(water_center) < point.distance_to(world_to_screen(RoomLayout.STATIONS.food.position - Vector2(0, 22))): return "drink"
 	# Crate/bowl in front of the puppy keep the same priority as Y-sorted rendering.
 	for id in ["toys", "food"]:
 		if RoomLayout.STATIONS[id].position.y > pet_world.y and station_bounds(id).has_point(where):
@@ -972,3 +975,12 @@ func animate_ball_catch(precise: bool) -> void:
 	animator.remaining = 0
 	animator.request_clip("treat_take_stand")
 	_sync_layers()
+
+func water_touch_rect() -> Rect2:
+	var center := world_to_screen(HomeDrink.BOWL)
+	return Rect2(center - Vector2(22, 22), Vector2(44, 44))
+
+func visitor_touch_rect() -> Rect2:
+	var rect := _screen_rect(Rect2(YardVisitors.FENCE - Vector2(35, 95), Vector2(80, 95)))
+	var target := rect.size.max(Vector2(44, 44))
+	return Rect2(rect.get_center() - target / 2, target)

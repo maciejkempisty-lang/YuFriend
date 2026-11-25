@@ -49,6 +49,8 @@ signal hide_revealed(spot: int)
 var hide_game := YardHide.new()
 var fetch := YardFetch.new()
 var visitors := YardVisitors.new()
+signal home_drink_started
+var home_drink := HomeDrink.new()
 var yard_rest := YardRest.new()
 var course := YardCourse.new()
 var water := YardWater.new()
@@ -162,6 +164,7 @@ func _process(delta: float) -> void:
 	wellbeing.advance(delta, emotional_awake)
 	if cuddle.running(): cuddle.advance(delta)
 	var was_idle := activity == "idle"
+	home_drink.advance(self, delta)
 	yard_rest.advance(self, delta)
 	course.advance(self, delta)
 	weather.advance(self, delta)
@@ -361,12 +364,13 @@ func busy(include_visitors: bool = true) -> bool:
 	# Player readiness passes false so visitors yield; autonomy still waits.
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return cuddle.running() or portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return home_drink.active() or cuddle.running() or portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not cuddle.running() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk", "visitor"] or _inviting())
 
 func _cancel_motion() -> void:
+	home_drink.cancel()
 	yard_rest.cancel(self)
 	course.cancel()
 	if str(invitation.get("kind", "")).begins_with("yard_"):
@@ -619,6 +623,9 @@ func destination_reached() -> void:
 		invitation.arrived = true
 		clip_requested.emit("sniff" if invitation.kind == "yard_hide" else "tail_wag_stand")
 		changed.emit()
+		return
+	if home_drink.active():
+		home_drink.arrived(self)
 		return
 	if yard_rest.active():
 		yard_rest.arrived(self)
