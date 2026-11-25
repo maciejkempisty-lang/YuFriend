@@ -39,14 +39,17 @@ func _available(id: String) -> bool:
 	if not app.app_foreground or app.selected_tab != "care" or app.room.overview or app._dialog_open(): return false
 	if s.busy() or not s.invitation.is_empty() or YardRoutines.has_mess(s): return false
 	if id.begins_with("bush_"): return RoomLayout.YARD_STATIONS.has(id)
-	if id in ["puddle", "sprinkler"]: return true
+	if id in ["puddle", "sprinkler", "course"]: return true
 	return id == "fetch" and not s.outdoor_commands.available_key(s).is_empty()
 
 func offer(id: String) -> bool:
 	if not _available(id): return false
 	station_id = id
 	title.text = RoomLayout.YARD_STATIONS[id].label
-	if id.begins_with("bush_"):
+	if id == "course":
+		primary.text = "Spokojny tor"
+		secondary.text = "Na czas"
+	elif id.begins_with("bush_"):
 		primary.text = "Szukaj"
 		secondary.text = "Chowanka"
 	elif id in ["puddle", "sprinkler"]:
@@ -83,6 +86,7 @@ func _activate(use_secondary: bool) -> void:
 	elif id.begins_with("bush_"): app._show_yard_games()
 	elif id in ["puddle", "sprinkler"]: app._show_bath()
 	elif id == "fetch": OutdoorPanels.command(app)
+	elif id == "course": app.session.timed_course.start(app.session)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):

@@ -10,7 +10,7 @@ static func read(save_path: String, kind: String) -> Dictionary:
 		var limit := 3 if key == "stars" else (24 if kind.begins_with("freestyle_") else (12 if kind == "bubbles" else 10))
 		if value is int and value >= 0 and value <= limit: result[key] = value
 	var seconds: Variant = config.get_value(kind, "seconds", 0.0)
-	if (seconds is int or seconds is float) and is_finite(seconds) and seconds >= 0 and seconds <= 45: result.seconds = float(seconds)
+	if (seconds is int or seconds is float) and is_finite(seconds) and seconds >= 0 and seconds <= (60 if kind == "agility" else 45): result.seconds = float(seconds)
 	return result
 
 static func write(save_path: String, game: SkillPlaySystem) -> bool:
@@ -29,5 +29,16 @@ static func write(save_path: String, game: SkillPlaySystem) -> bool:
 	if game.kind == "tag" and game.score == 3 and game.result_time > 0:
 		seconds = game.result_time if seconds <= 0 else minf(seconds, game.result_time)
 	config.set_value(section, "seconds", seconds)
+	if config.save(path + ".tmp") != OK: return false
+	return DirAccess.rename_absolute(path + ".tmp", path) == OK
+
+static func write_course(save_path: String, seconds: float, stars: int) -> bool:
+	if not is_finite(seconds) or seconds <= 0 or seconds >= 60 or stars < 1 or stars > 3: return false
+	var path := save_path + ".games.cfg"
+	var config := ConfigFile.new()
+	if config.load(path) not in [OK, ERR_FILE_NOT_FOUND]: return false
+	var old := read(save_path, "agility")
+	config.set_value("agility", "seconds", seconds if old.seconds <= 0 else minf(old.seconds, seconds))
+	config.set_value("agility", "stars", maxi(old.stars, stars))
 	if config.save(path + ".tmp") != OK: return false
 	return DirAccess.rename_absolute(path + ".tmp", path) == OK

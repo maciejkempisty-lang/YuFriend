@@ -14,6 +14,8 @@ Build 41: [bańki mydlane](banki-mydlane.md) i freestyle; [lista prób na iPhoni
 
 Build 42: wszystkie 8 zabaw widoczne od razu w siatce menu; poprawione trzymanie piłki i ciągłość schylania przy miskach. [Krótka lista prób](testy-reczne-build-42.md).
 
+Build 43: [Agility na czas](agility-na-czas.md) jako dziewiąta zabawa, z zachowaniem spokojnego toru i treningu Zostań.
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

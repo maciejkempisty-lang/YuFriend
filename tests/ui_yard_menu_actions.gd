@@ -103,7 +103,7 @@ func run() -> void:
 			check(point.is_finite(), "scene target exists: %s %d" % [id, width])
 			if not point.is_finite(): continue
 			await tap(point)
-			if id.begins_with("bush_") or id in ["puddle", "sprinkler"]:
+			if id.begins_with("bush_") or id in ["puddle", "sprinkler", "course"]:
 				check(app.yard_menu.visible and app.yard_menu.station_id == id, "scene touch selects menu: " + id)
 				await button(app.yard_menu.primary, id + " primary")
 			check(not app.yard_menu.visible, "original action dismisses choices: " + id)

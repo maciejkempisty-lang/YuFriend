@@ -41,6 +41,7 @@ var yard_transition := YardTransition.new()
 var yard_command_button: Button
 var water_splash_button: Button
 var yard_rest_stop: Button
+var course_meter: CourseTimingView
 var course_action: Button
 var course_stop: Button
 var water_shake_button: Button
@@ -167,6 +168,7 @@ func _ready() -> void:
 	session.clip_requested.connect(room.play_clip)
 	session.destination_requested.connect(room.move_to)
 	session.course_jump_requested.connect(room.start_course_jump)
+	session.timed_course_finished.connect(_show_timed_course_result)
 	session.performance_requested.connect(room.play_performance)
 	session.approach_requested.connect(room.approach_station)
 	session.place_requested.connect(room.place_at_station)
@@ -575,7 +577,7 @@ func _build_companion_card() -> void:
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = not session.home_drink.active() and not session.yard_rest.active() and not session.course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
+	companion_card.visible = not session.home_drink.active() and not session.yard_rest.active() and not session.course.active() and not session.timed_course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
 	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
 	if data != companion_data:
 		companion_data = data
@@ -639,7 +641,7 @@ func _build_care() -> VBoxContainer:
 	yard_invite_accept.hide()
 	yard_invite_later.hide()
 	course_action = _button("Skacz", _course_action)
-	course_stop = _button("Przerwij", func(): session.course.finish(session, "Tor poczeka. Chwila odpoczynku."))
+	course_stop = _button("Przerwij", _stop_course)
 	outdoors.add_child(course_action)
 	outdoors.add_child(course_stop)
 	yard_rest_stop = _button("Przerwij", func(): session.yard_rest.finish(session))
@@ -665,6 +667,10 @@ func _build_care() -> VBoxContainer:
 	care_status.max_lines_visible = 2
 	care_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(care_status)
+	course_meter = CourseTimingView.new()
+	course_meter.model = session.timed_course
+	box.add_child(course_meter)
+	course_meter.hide()
 	var actions := HBoxContainer.new()
 	care_actions = actions
 	actions.add_theme_constant_override("separation", 2)
@@ -971,13 +977,13 @@ func _build_play_dialogs() -> void:
 	choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play_menu.add_child(choices_scroll)
 	choices_scroll.add_child(choices)
-	choices.add_child(_label("Wybierz jedną z 8 zabaw", 16, INK, true))
+	choices.add_child(_label("Wybierz jedną z 9 zabaw", 16, INK, true))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 8)
 	grid.add_theme_constant_override("v_separation", 8)
 	choices.add_child(grid)
-	for entry in [["bubbles", "Bańki\nPodwórko"], ["freestyle", "Psi freestyle"], ["tag", "Berek\nPodwórko"], ["frisbee", "Frisbee\nPodwórko"], ["cups2", "Kubki z nosem"], ["ball", "Piłka"], ["tug", "Lina"], ["cups", "Kubki klasyczne"]]:
+	for entry in [["bubbles", "Bańki\nPodwórko"], ["freestyle", "Psi freestyle"], ["tag", "Berek\nPodwórko"], ["frisbee", "Frisbee\nPodwórko"], ["cups2", "Kubki z nosem"], ["ball", "Piłka"], ["tug", "Lina"], ["cups", "Kubki klasyczne"], ["agility", "Tor na czas\nPodwórko"]]:
 		var button := _button(entry[1], _choose_play.bind(entry[0]))
 		button.name = "Play_" + entry[0]
 		button.custom_minimum_size = Vector2(0, 64)
@@ -1047,7 +1053,8 @@ func _show_play_menu() -> void:
 
 func _choose_play(kind: String) -> void:
 	play_menu.hide()
-	if kind == "ball": _aim_ball()
+	if kind == "agility": session.timed_course.start(session)
+	elif kind == "ball": _aim_ball()
 	else: session.start_touch_game(kind)
 
 func _aim_ball() -> void:
@@ -1095,7 +1102,7 @@ func _fit_room() -> void:
 	var warning_space := 46.0 if footer_label.visible else 0.0
 	# Outdoors the panel holds instructions and context actions; it shrinks when
 	# an activity hides the care buttons instead of leaving an empty card.
-	var yard_height := 192.0 if care_actions.visible or yard_menu.visible else (160.0 if session.visitors.active() else 112.0)
+	var yard_height := 152.0 if session.timed_course.active() else (192.0 if care_actions.visible or yard_menu.visible else (160.0 if session.visitors.active() else 112.0))
 	var panel_height := (yard_height if session.in_yard else 192.0) if selected_tab == "care" else 274.0
 	var panel_top := nav_y - panel_height - 8 - warning_space
 	if selected_tab == "journal":
@@ -1593,7 +1600,9 @@ func _refresh() -> void:
 		yard_command_button.hide()
 		care_status.text = YardInvitations.WORDS[session.invitation.kind][0]
 		yard_invite_accept.disabled = not YardInvitations.options(session).has(session.invitation.kind)
-	var on_course := session.in_yard and session.course.active()
+	var timed := session.timed_course.active()
+	var on_course := session.in_yard and (session.course.active() or timed)
+	course_meter.visible = timed and session.timed_course.phase == "cue"
 	room.yard_course.playing = on_course
 	room.yard_course.queue_redraw()
 	course_action.visible = on_course
@@ -1605,6 +1614,10 @@ func _refresh() -> void:
 		care_status.text = session.course.hint()
 		course_action.text = "Pochwal" if session.course.phase == "praise" else ("Zostań" if session.course.phase in ["stay_ready", "stay"] else "Skacz")
 		course_action.disabled = session.course.phase not in ["jump_ready", "stay_ready", "praise"]
+		if timed:
+			care_status.text = session.timed_course.hint()
+			course_action.text = TimedCourse.COMMANDS[session.timed_course.segment]
+			course_action.disabled = not session.timed_course.can_cue()
 	var resting_outside := session.in_yard and session.yard_rest.active()
 	if session.yard_rest.phase == "drink": room.animator.facing_left = false
 	room.yard_rest.drinking = session.yard_rest.phase == "drink" and session.yard_rest.drink_stage == 1
@@ -1925,7 +1938,7 @@ func _position_feedback() -> void:
 	bubble.size.y = 0
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
-	var yard_instruction := session.in_yard and (session.activity in ["outing_walk", "outing_pause", "outing_praise"] or session.water.active() or session.course.active() or session.yard_rest.active() or str(session.invitation.get("kind", "")).begins_with("yard_"))
+	var yard_instruction := session.in_yard and (session.activity in ["outing_walk", "outing_pause", "outing_praise"] or session.water.active() or session.course.active() or session.timed_course.active() or session.yard_rest.active() or str(session.invitation.get("kind", "")).begins_with("yard_"))
 	bubble.visible = not yard_instruction and not _dialog_open() and not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
 	gain_label.visible = not _dialog_open() and gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
@@ -2017,6 +2030,9 @@ func _toggle_yard(animated: bool = true) -> void:
 		if room.in_yard != session.in_yard: room.set_yard(session.in_yard)
 
 func _course_action() -> void:
+	if session.timed_course.active():
+		session.timed_course.cue(session)
+		return
 	match session.course.phase:
 		"jump_ready": session.course.jump(session)
 		"stay_ready": session.course.stay(session)
@@ -2279,3 +2295,19 @@ func _show_visitor_interactions() -> void:
 		dialog.get_ok_button().add_theme_stylebox_override(state, _style(Color("efeeda"), 12, 14))
 	_position_dialog(dialog, Vector2i(320, 330))
 	dialog.popup()
+
+func _stop_course() -> void:
+	if session.timed_course.active(): session.timed_course.finish(session, "Tor poczeka. Chwila odpoczynku.")
+	else: session.course.finish(session, "Tor poczeka. Chwila odpoczynku.")
+
+func _show_timed_course_result(message: String) -> void:
+	var result := AcceptDialog.new()
+	result.title = "Agility na czas"
+	result.dialog_autowrap = true
+	result.dialog_text = message
+	result.ok_button_text = "Gotowe"
+	add_child(result)
+	result.confirmed.connect(result.queue_free)
+	result.canceled.connect(result.queue_free)
+	result.popup_centered(Vector2i(300, 240))
+	_position_dialog(result, Vector2i(320, 250))

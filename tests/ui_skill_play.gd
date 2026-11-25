@@ -47,7 +47,7 @@ func run() -> void:
   app._show_play_menu()
   await settle()
   check(app.play_menu.visible and app.safe_rect.encloses(Rect2(Vector2(app.play_menu.position), Vector2(app.play_menu.size))), 'six-game menu fits screen')
-  for key in ['bubbles', 'freestyle', 'tag', 'frisbee', 'cups2', 'ball', 'tug', 'cups']:
+  for key in ['bubbles', 'freestyle', 'tag', 'frisbee', 'cups2', 'ball', 'tug', 'cups', 'agility']:
    var button: Button = app.play_menu.find_child('Play_' + key, true, false)
    var scroll: ScrollContainer = button.get_parent().get_parent().get_parent()
    check(scroll.get_global_rect().encloses(button.get_global_rect()) and button.size.y >= 44, 'game visible without scrolling: ' + key)

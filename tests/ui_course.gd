@@ -52,6 +52,7 @@ func run() -> void:
 		for b in app.room.yard_markers.values():
 			if a != b: check(not a.get_rect().intersects(b.get_rect()), "station targets do not overlap")
 	app.room.yard_markers.course.pressed.emit()
+	if app.yard_menu.visible: app.yard_menu.primary.pressed.emit()
 	check(app.session.course.active() and app.room.yard_course.playing, "course marker starts round")
 	until("jump_ready")
 	await shot("fence")
@@ -75,6 +76,7 @@ func run() -> void:
 	check(app.session.pet.milestones.has("yard_course"), "UI finish adds album memory")
 	app.session.pet.fatigue = 0
 	app.room.yard_markers.course.pressed.emit()
+	if app.yard_menu.visible: app.yard_menu.primary.pressed.emit()
 	until("jump_ready")
 	app.course_action.pressed.emit()
 	for i in 7: tick()

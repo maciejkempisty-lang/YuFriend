@@ -2,8 +2,8 @@
 
 Stan: 25 listopada 2026, po implementacji pierwszego freestyle.
 Bańki zostały zaimplementowane w buildzie 41: [opis](banki-mydlane.md).
-Poniższy zakres baniek zachowano jako specyfikację odbioru; agility nadal jest planem.
-Dalsza kolejność: próba buildu 41 (freestyle i bańki) na telefonie → agility na czas.
+Poniższy zakres baniek zachowano jako specyfikację odbioru; agility wdrożono w buildzie 43: [opis i testy](agility-na-czas.md).
+Oba pakiety mają implementację; kolejnym krokiem jest fizyczna próba gestów i dostrojenie tempa.
 
 ## 1. Bańki mydlane
 

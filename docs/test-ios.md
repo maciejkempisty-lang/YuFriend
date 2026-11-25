@@ -646,3 +646,28 @@ Trwałe postępy, umiejętności, więź, Album i ogródek są niezmienione; sch
 Fizyczny zrzut potwierdza start z odpoczywającą Glorią. Nie wykonywano nowych
 rund na rzeczywistym zapisie. Kopie i raport: `exports/ios-animation-v42/`.
 Do wykonania: [krótkie próby ręczne](testy-reczne-build-42.md).
+
+## Build 43 — agility na czas (25 listopada 2026)
+
+Zainstalowano i uruchomiono 0.1.0 (43) na MagicPhone. Numer 43 odczytano
+z urządzenia. Aplikacja i widget zachowują identyfikatory i podpis; PCK
+odpowiada eksportowi, a źródła wykonawcze końcowej paczki były niezmienne.
+
+Nowy tryb jest dostępny w menu dziewięciu zabaw i przy torze w zbliżeniu.
+Spokojny tor zachowuje trening Zostań. Nowy przejazd ma odliczanie, komendy,
+postój za błąd, czas od startu do mety, gwiazdki, rekord i wspomnienie.
+Opis i próby ręczne: [agility na czas](agility-na-czas.md).
+
+Przeszło 44/44 zestawów logiki. Pierwszy przebieg UI: 40/41; stary test toru
+nie wybierał trybu w nowym menu. Po dostosowaniu wyboru Spokojnego toru
+przeszedł 156/156 sprawdzeń. Końcowe testy nowego toru: 58 logiki i 22 UI,
+z rzeczywistym ruchem, skokiem i anulowaniem w locie. Menu: 58 sprawdzeń,
+wszystkie dziewięć zabaw widoczne przy 320/390 pkt. Kopia Glorii: 69/69.
+
+Zabezpieczono Documents przed budową i bezpośrednio przed instalacją.
+Wszystkie 33 pliki były identyczne bajtowo po aktualizacji. Po uruchomieniu
+zmieniły się tylko potrzeby, czas, rytm odpoczynku i jeden licznik wizyty
+wieczornej. Pozostałe postępy, sztuczki, więź, ogródek i Album są niezmienione;
+schema v17. Zrzut fizycznego telefonu pokazuje odpoczywającą Glorię.
+Nie wykonywano rund w rzeczywistym zapisie; ocena gestów pozostaje do próby
+użytkownika. Kopie, manifest i raport: `exports/ios-agility-v43/` (poza Git).

@@ -43,6 +43,7 @@ var last_message: String = "Dotknij, by pogłaskać. Przycisk „Cały pokój”
 var _refresh_left: float = 0.0
 var _save_left: float = 25.0
 var _brain_left: float = 8.0
+signal timed_course_finished(message: String)
 signal course_jump_requested(target: Vector2)
 signal visitor_appeared
 signal hide_revealed(spot: int)
@@ -53,6 +54,7 @@ signal home_drink_started
 var home_drink := HomeDrink.new()
 var yard_rest := YardRest.new()
 var course := YardCourse.new()
+var timed_course := TimedCourse.new()
 var water := YardWater.new()
 var weather := YardWeather.new()
 var outdoor_commands := OutdoorCommands.new()
@@ -167,6 +169,7 @@ func _process(delta: float) -> void:
 	home_drink.advance(self, delta)
 	yard_rest.advance(self, delta)
 	course.advance(self, delta)
+	timed_course.advance(self, delta)
 	weather.advance(self, delta)
 	water.advance(self, delta)
 	visitors.advance(self, delta)
@@ -364,7 +367,7 @@ func busy(include_visitors: bool = true) -> bool:
 	# Player readiness passes false so visitors yield; autonomy still waits.
 	# A floor walk or an autonomous invitation can always yield to the player.
 	# A care approach, care animation and a training trial must finish or be cancelled.
-	return home_drink.active() or cuddle.running() or portal_active or yard_rest.active() or course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
+	return home_drink.active() or cuddle.running() or portal_active or yard_rest.active() or course.active() or timed_course.active() or water.active() or (include_visitors and visitors.active()) or outdoor_commands.running() or activity in ["dig_walk", "digging", "outing_walk", "outing_pause", "outing_praise"] or hide_game.active() or in_bath or activity == "sniff_walk" or play.running() or training.phase != "idle" or (not _inviting() and ((activity_left > 0 and activity != "pet") or activity == "approach"))
 
 func can_pet() -> bool:
 	return writable and not suspended and not is_sleeping() and not cuddle.running() and not play.running() and training.phase == "idle" and (activity in ["idle", "pet", "habit", "need", "walk", "visitor"] or _inviting())
@@ -373,6 +376,7 @@ func _cancel_motion() -> void:
 	home_drink.cancel()
 	yard_rest.cancel(self)
 	course.cancel()
+	timed_course.cancel()
 	if str(invitation.get("kind", "")).begins_with("yard_"):
 		invitation.clear()
 		_initiative_wait = InitiativeSystem.OFFER_INTERVAL
@@ -629,6 +633,9 @@ func destination_reached() -> void:
 		return
 	if yard_rest.active():
 		yard_rest.arrived(self)
+		return
+	if timed_course.active():
+		timed_course.arrived(self)
 		return
 	if course.active():
 		course.arrived(self)
