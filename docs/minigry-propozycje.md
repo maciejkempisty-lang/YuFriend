@@ -2,7 +2,7 @@
 
 [Mapa dokumentacji](README.md)
 
-Status: **propozycja z 22 listopada 2026. Wdrożono lokalny prototyp [Liny 2.0](lina-2.md); pozostałe propozycje czekają.** Dokument zbiera pomysły na zabawy, które wymagają od gracza uwagi, refleksu i decyzji. Opiera się na obecnym kodzie: [zabawach dotykiem](mechaniki-gry.md#zabawy-dotykiem), [aporcie](mechaniki-gry.md#stałe-miejsca-i-aport-z-zamachem--17-listopada-2026), [chowanym](mechaniki-gry.md#chowany-na-podwórku--17-listopada-2026), [torze przeszkód](tor-przeszkod.md) i [znaczniku „Siad”](mechaniki-gry.md#prototyp-znacznika-i-siad--build-32).
+Status: **propozycja z 22 listopada 2026. Wdrożono lokalny prototyp [Liny 2.0](lina-2.md); 25 listopada dodano lokalne [pierwsze wersje berka, Kubków 2.0 i Frisbee](minigry-2026-11-25.md). Pozostałe propozycje i rozszerzenia tych rund czekają.** Dokument zbiera pomysły na zabawy, które wymagają od gracza uwagi, refleksu i decyzji. Opiera się na obecnym kodzie: [zabawach dotykiem](mechaniki-gry.md#zabawy-dotykiem), [aporcie](mechaniki-gry.md#stałe-miejsca-i-aport-z-zamachem--17-listopada-2026), [chowanym](mechaniki-gry.md#chowany-na-podwórku--17-listopada-2026), [torze przeszkód](tor-przeszkod.md) i [znaczniku „Siad”](mechaniki-gry.md#prototyp-znacznika-i-siad--build-32).
 
 ## Dlaczego obecna zabawa nudzi
 

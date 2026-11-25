@@ -16,6 +16,7 @@ signal away_report_ready
 signal care_completed(action: String, gains: Dictionary)
 signal initiative_requested(kind: String)
 signal ball_aim_requested
+signal ball_caught(precise: bool)
 signal ball_throw_requested(target: Vector2, token: int)
 signal touch_game_opened(kind: String)
 signal touch_game_closed
@@ -74,7 +75,7 @@ var attention_available := true
 var invitation_presented := true
 var initiatives_enabled := true
 var _initiative_wait := 90.0
-var play := TouchPlaySystem.new()
+var play := SkillPlaySystem.new()
 # Injectable local clock; inactivity uses elapsed foreground time, not wall time.
 var local_clock: Callable = PersonalitySystem.local_now
 var training_view_active := false
@@ -894,25 +895,29 @@ func play_readiness() -> String:
 	return ""
 
 func start_touch_game(kind: String) -> bool:
-	if kind not in ["tug", "cups"]: return false
-	if kind == "tug" and play.kind == "tug" and play.phase == "result" and activity == "happy" and writable and not suspended:
+	if kind not in ["tug", "cups", "tag", "cups2", "frisbee"]: return false
+	if kind in ["tag", "frisbee"] and not in_yard:
+		say("W tę zabawę zagramy na podwórku. Wyjdźmy najpierw na zewnątrz.")
+		return false
+	if kind == play.kind and play.phase == "result" and activity == "happy" and writable and not suspended:
 		activity = "idle"
 		activity_left = 0
 	return _begin_touch_game(kind)
 
 func _begin_touch_game(kind: String) -> bool:
-	if not PetState.PLAY_KEYS.has(kind): return false
+	if not PetState.PLAY_KEYS.has(kind) and kind not in SkillPlaySystem.EXTRA: return false
 	var reason := play_readiness()
 	if not reason.is_empty():
 		say(reason)
 		return false
-	_answer_action(kind)
+	_answer_action(SkillPlaySystem.memory_key(kind))
 	_cancel_motion()
 	if kind == "tug":
 		var record := TugRecord.read(storage.path)
 		play.tug_best = record.best
 		play.tug_demo_seen = record.seen or play.tug_demo_seen
 	play.start(kind)
+	if kind in SkillPlaySystem.EXTRA: play.best_record = SkillRecords.read(storage.path, kind)
 	activity = "touch_play"
 	activity_left = 0
 	pose = "stand"
@@ -971,7 +976,8 @@ func _settle_touch_game() -> void:
 	if play.phase != "result" or play.settled or suspended or not writable: return
 	play.settled = true
 	var kind := play.kind
-	pet.social.games[kind] = mini(PetState.MAX_EVENT_COUNT, int(pet.social.games[kind]) + 1)
+	var memory := SkillPlaySystem.memory_key(kind)
+	pet.social.games[memory] = mini(PetState.MAX_EVENT_COUNT, int(pet.social.games[memory]) + 1)
 	var now := Time.get_unix_time_from_system()
 	var bonus := false
 	var fetch_origin := fetch.origin
@@ -990,13 +996,13 @@ func _settle_touch_game() -> void:
 			bonus = award.bonus
 		else: BondLevels.add(pet, 0.35, _local_now())
 		_note("play")
-	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + InitiativeSystem.LABELS[kind], "Pierwsza runda zabawy sterowanej dotykiem.", now)
+	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + SkillPlaySystem.label(kind), "Pierwsza runda zabawy sterowanej dotykiem.", now)
 	_reward_from_training = false
 	activity = "happy"
 	activity_left = 1.4
 	clip_requested.emit("tail_wag_stand" if play.success else "head_tilt_stand")
 	if play.success:
-		wellbeing.add_joy(kind, float(play.tug_stars()) * 4.0 if kind == "tug" else 10.0)
+		wellbeing.add_joy(memory, float(play.tug_stars()) * 4.0 if kind == "tug" else 10.0)
 		sound_requested.emit("success")
 		if in_yard: yard_rest.note_play()
 	say(play.hint())
@@ -1006,6 +1012,12 @@ func _settle_touch_game() -> void:
 	if fetch_round: outdoor_commands.offer_recall(fetch_origin)
 	if kind == "ball": play.reset()
 	var saved := flush()
+	if kind in SkillPlaySystem.EXTRA and saved:
+		if SkillRecords.write(storage.path, play):
+			play.best_record = SkillRecords.read(storage.path, kind)
+			say(play.hint())
+		else: say("Runda zakończona, ale nie udało się zapisać rekordu.")
+	if kind == "ball": ball_caught.emit(fetch_precise)
 	if kind == "tug" and saved:
 		if TugRecord.write(storage.path, play.tug_good, play.tug_demo_seen):
 			play.tug_best = maxi(play.tug_best, play.tug_good)

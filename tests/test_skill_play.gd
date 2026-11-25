@@ -1,0 +1,96 @@
+extends SceneTree
+var passed := 0
+var failed := 0
+func check(ok: bool, label: String) -> void:
+ if ok: passed += 1
+ else:
+  failed += 1
+  push_error(label)
+func tap(g: SkillPlaySystem, p: Vector2, cancel := false) -> void:
+ g.press(p)
+ g.release(p, cancel)
+func _initialize() -> void:
+ var g := SkillPlaySystem.new()
+ g.start('tag', 42)
+ tap(g, Vector2(g.tag_x, 0.6))
+ check(g.score == 0 and g.phase == 'run', 'running dog dodges')
+ g.advance(1.81)
+ tap(g, Vector2(g.tag_x, 0.6), true)
+ check(g.score == 0, 'cancelled touch cannot catch')
+ tap(g, Vector2(0.02, 0.6))
+ check(g.score == 0, 'outside dog does not catch')
+ for i in 3:
+  while g.phase != 'bow': g.advance(0.05)
+  tap(g, Vector2(g.tag_x, 0.6))
+ check(g.success and g.score == 3 and g.stars == 3, 'three timed catches finish round')
+ tap(g, Vector2(g.tag_x, 0.6))
+ check(g.score == 3, 'finished round cannot be scored twice')
+ g.start('tag', 42)
+ g.advance(46)
+ check(g.phase == 'result' and not g.success and g.stars == 0, 'idle round expires without reward')
+ for seed_value in range(1, 21):
+  g.start('cups2', seed_value)
+  var correct := g.treat_cup
+  g.advance(0.5)
+  tap(g, g.cup_point(correct))
+  check(g.phase == 'show', 'no guesses before shuffle')
+  g.advance(10)
+  check(g.phase == 'guess' and g.slots.size() == 3 and g.slots.has(0) and g.slots.has(1) and g.slots.has(2), 'shuffle preserves three distinct cups')
+  tap(g, g.cup_point(correct) - Vector2(0, 0.1))
+  check(g.success and g.stars == 3, 'tracking the original cup wins')
+ g.start('cups2', 42)
+ check(g.level > 0, 'repeat after win increases difficulty')
+ g.advance(10)
+ g.cue()
+ check(g.assisted and g.phase == 'hint', 'hint visibly pauses guessing')
+ g.advance(1.3)
+ tap(g, g.cup_point(g.treat_cup) - Vector2(0, 0.1))
+ check(g.success and g.stars == 2, 'assisted win scores two stars')
+ g.start('cups2', 42)
+ g.advance(10)
+ tap(g, g.cup_point((g.treat_cup + 1) % 3) - Vector2(0, 0.1))
+ check(not g.success and g.stars == 0, 'wrong cup loses without reward')
+ g.start('frisbee', 42)
+ tap(g, Vector2(0.2, 0.6))
+ check(g.phase == 'aim', 'tap is not a throw')
+ for i in 5:
+  g.press(Vector2(0.2, 0.6))
+  g.release(Vector2(0.7, 0.4))
+  check(g.phase == 'flight', 'drag launches disk')
+  g.advance(g.flight_duration() * g.catch_progress() - 0.3)
+  g.cue()
+  g.cue()
+  check(g.shot_score == 2, 'peak timing scores once')
+  g.advance(g.flight_duration() + 1)
+ check(g.phase == 'result' and g.score == 10 and g.stars == 3, 'five precise throws finish round')
+ g.start('frisbee', 42)
+ g.advance(91)
+ check(not g.success and g.phase == 'result', 'abandoned aiming times out')
+ var s := GameSession.new()
+ s.local_clock = func(): return 100 * 86400.0 + 12 * 3600
+ s.pet = PetState.create(42)
+ s.active = true
+ var path := '/tmp/yuf-skill-%s/pet.json' % Time.get_ticks_usec()
+ DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+ s.storage = SaveSystem.new(path)
+ s.flush()
+ check(not s.start_touch_game('tag'), 'yard game unavailable indoors')
+ s.in_yard = true
+ var skills := s.pet.skills.duplicate(true)
+ check(s.start_touch_game('tag'), 'yard game starts')
+ for i in 3:
+  while s.play.phase != 'bow': s.play.advance(0.05)
+  var point := Vector2(s.play.tag_x, 0.6)
+  s.play_press(point)
+  s.play_release(point)
+ check(s.play.settled and s.pet.social.games.ball == 1, 'round settled through existing game history')
+ var bond := s.pet.bond
+ s._settle_touch_game()
+ check(s.pet.bond == bond and s.pet.social.games.ball == 1, 'settlement is idempotent')
+ check(s.start_touch_game('tag'), 'immediate retry works')
+ s.suspend_session()
+ check(s.play.kind.is_empty() and s.suspended, 'background cancels round')
+ check(s.pet.skills == skills and PetState.from_dict(s.pet.to_dict()) != null, 'skills and existing schema preserved')
+ s.free()
+ print('SKILL PLAY: %d passed, %d failed' % [passed, failed])
+ quit(1 if failed else 0)

@@ -86,6 +86,24 @@ func _run() -> void:
 		check(not app.settings_dialog.visible, "Touching top close also exits at " + str(layout))
 	app.reminders_toggle.button_pressed = false
 	check(not app.reminders.enabled, "UI opt-out is saved")
+	var pulses: Array[int] = []
+	app.haptics.supported = true
+	app.haptics.backgrounded = false
+	app.haptics.output = func(ms: int): pulses.append(ms)
+	app.haptics_toggle.button_pressed = true
+	app.session.sound_requested.emit("success")
+	check(pulses == [40] and app.haptics.enabled, "Vibration toggle connects accepted game events")
+	app._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_OUT)
+	app.haptics.last_pulse = -1000
+	app.session.sound_requested.emit("success")
+	check(pulses.size() == 1, "Focus loss suppresses vibration")
+	app._notification(MainLoop.NOTIFICATION_APPLICATION_FOCUS_IN)
+	app.session.sound_requested.emit("success")
+	check(pulses.size() == 2, "Focus return restores opted-in feedback")
+	app.haptics_toggle.button_pressed = false
+	app.haptics.last_pulse = -1000
+	app.session.sound_requested.emit("success")
+	check(pulses.size() == 2 and not app.haptics.enabled, "Vibration opt-out silences events")
 	app.session.active = false
 	app.queue_free()
 	await process_frame

@@ -2,6 +2,14 @@
 
 [Mapa dokumentacji](README.md)
 
+## Aktualizacja — 25 listopada 2026
+
+Dodano lokalne [pierwsze wersje berka, Kubków 2.0 i Frisbee](minigry-2026-11-25.md), dostępne z menu zabaw. Dodano następnie odbicia piłki, animowane chwyty piłki i dysku, zmyłki w berku, wiatr we Frisbee i trwałe rekordy. Zapis psa pozostaje v17; fizyczna próba i instalacja są jeszcze otwarte.
+
+Wdrożono opcjonalne wibracje w Ustawieniach, domyślnie wyłączone. Krótki impuls towarzyszy zaakceptowanemu głaskaniu i sukcesowi czynności; kroki, szczekanie i animacje nie uruchamiają wibracji. Odstęp minimum 250 ms zapobiega serii impulsów. Utrata fokusu i przejście w tło wyciszają reakcje. Preferencja pozostaje w `ui.cfg`, niezależnie od dźwięku i zapisu psa. Na komputerze przełącznik jest niedostępny. Fizyczne odczucie wibracji wymaga testu kolejnego buildu na telefonie.
+
+Poniższy plan zachowuje kolejność pakietów; jego numery buildu i schematu opisują stan z 17 listopada. Ostatnia instalacja opisana w raporcie iOS to build 38, schemat v17.
+
 ## Dalsze kroki po buildzie 28 — 17 listopada 2026
 
 Bieżący punkt odniesienia: **build 28 zainstalowany i uruchomiony na iPhonie**, zapis **v15**, źródła opublikowane na `main`. Działają już ogródek, poziomy więzi, kopanie, komendy w zabawach, goście i ich pamięć, małe przygody dnia, pogoda, woda, tor przeszkód oraz [odpoczynek z animacją picia](odpoczynek-na-podworku.md). Szczegóły zachowania danych i granice weryfikacji są w [raporcie iOS](test-ios.md).

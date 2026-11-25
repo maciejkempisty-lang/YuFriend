@@ -112,6 +112,9 @@ var ball_throw_enabled := true
 var throw_guide := Line2D.new()
 var _drag_ball := false
 var _throw_target := Vector2.ZERO
+var ball_motion := BallMotion.new()
+var ball_catch_left := 0.0
+var ball_catch_precise := false
 var _ball_flight_left := 0.0
 var _ball_flight_total := 0.0
 var _ball_flight_from := Vector2.ZERO
@@ -689,7 +692,8 @@ func throw_ball(target: Vector2, token: int) -> void:
 	station_token = token
 	ball_target = RoomLayout.clamp_walk(target)
 	_ball_flight_from = ball_world
-	_ball_flight_total = clampf(ball_world.distance_to(ball_target) / 350.0, 0.3, 1.0)
+	ball_motion.start(ball_world, ball_target)
+	_ball_flight_total = ball_motion.duration
 	_ball_flight_left = _ball_flight_total
 	target_world = station_point("play")
 	moving = true
@@ -717,6 +721,11 @@ func start_course_jump(target: Vector2) -> void:
 	jump_clip = ""
 
 func cancel_activity() -> void:
+	if ball_catch_left > 0 or carrying_ball:
+		ball_world = RoomLayout.clamp_walk(Vector2(ball_world.x, pet_world.y))
+	ball_catch_left = 0
+	ball_motion.cancel()
+	animator.rotation = 0
 	jump_motion.cancel()
 	jump_lift = 0
 	animator.position.y = 0
@@ -808,14 +817,14 @@ func _process(delta: float) -> void:
 				destination_reached.emit()
 	# Match the walk cycle to the small mood-dependent change in movement speed.
 	animator.sprite.speed_scale = mood_walk_speed if animator.current == "walk" else 1.0
-	if _ball_flight_left > 0:
-		_ball_flight_left = maxf(0, _ball_flight_left - delta)
-		var progress := 1.0 - _ball_flight_left / _ball_flight_total
-		ball_world = _ball_flight_from.lerp(ball_target, progress)
-		_ball_lift = sin(progress * PI) * 65
-		if _ball_flight_left <= 0:
-			ball_world = ball_target
-			_ball_lift = 0
+	if ball_motion.running:
+		var before := ball_world.x
+		var sample := ball_motion.advance(delta)
+		_ball_flight_left = maxf(0, ball_motion.duration - ball_motion.elapsed)
+		ball_world = sample.point
+		_ball_lift = sample.lift
+		ball_art.roll_phase += (ball_world.x - before) / 12
+		ball_art.queue_redraw()
 	elif not ball_world.is_equal_approx(ball_target):
 		if not _ball_was_rolling: sound_requested.emit("ball_roll")
 		_ball_was_rolling = true
@@ -825,6 +834,17 @@ func _process(delta: float) -> void:
 		ball_art.queue_redraw()
 	else:
 		_ball_was_rolling = false
+	if ball_catch_left > 0:
+		ball_catch_left = maxf(0, ball_catch_left - delta)
+		if ball_catch_left == 0:
+			var ground := RoomLayout.clamp_walk(Vector2(ball_world.x, pet_world.y))
+			ball_target = RoomLayout.clamp_walk(ground + Vector2(-25 if animator.facing_left else 25, 0))
+			ball_motion.drop(ground, ball_target, maxf(1, pet_world.y - ball_world.y))
+			ball_world = ground
+			_ball_flight_total = ball_motion.duration
+			_ball_flight_left = ball_motion.duration
+			_ball_lift = ball_motion.drop_height
+			animator.rotation = 0
 	effect_left = maxf(0, effect_left - delta)
 	focus_left = maxf(0, focus_left - delta)
 	for id in prop_bounces:
@@ -844,7 +864,10 @@ func _sync_layers() -> void:
 	yard_potty.visible = in_yard and not yard_course.playing
 	yard_rest.visible = in_yard and not yard_course.playing
 	yard_course.visible = in_yard
-	animator.position.y = -roundf(jump_lift / 3) * 3
+	var catch_t := 1.0 - ball_catch_left / 0.9
+	var catch_lift := sin(clampf(catch_t / 0.7, 0, 1) * PI) * (24 if ball_catch_precise else 8) if ball_catch_left > 0 else 0.0
+	animator.position.y = -roundf((jump_lift + catch_lift) / 3) * 3
+	if ball_catch_left > 0: animator.rotation = sin(catch_t * PI) * (-0.06 if animator.facing_left else 0.06)
 	yard_weather.visible = in_yard
 	yard_water.wet = yard_weather.kind != "sun" or yard_water.kind == "puddle"
 	yard_nodes.puddle.set_puddle_wet(yard_water.wet)
@@ -855,9 +878,11 @@ func _sync_layers() -> void:
 	water_drops.pet_world = pet_world
 	water_drops.visible = in_yard and yard_water.phase in ["splash", "shake"]
 	puppy.position = (pet_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
-	if carrying_ball:
-		ball_world = pet_world + Vector2(-25 if animator.facing_left else 25, -10)
+	if carrying_ball or ball_catch_left > 0:
+		ball_world = puppy.position + animator.transform * animator.mouth_point()
 		ball_target = ball_world
+		_ball_lift = 0
+	ball_art.z_index = 2 if carrying_ball or ball_catch_left > 0 else 0
 	ball_art.position = ((ball_world - Vector2(0, _ball_lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	for id in prop_bounces:
 		var node: Node2D = ball_art if id == "ball" else station_nodes[id]
@@ -935,4 +960,15 @@ func reveal_hide(spot: int) -> void:
 	hide_phase = ""
 	hide_spot = -1
 	look_at_world(pet_world)
+	_sync_layers()
+
+func animate_ball_catch(precise: bool) -> void:
+	ball_motion.cancel()
+	_ball_flight_left = 0
+	_ball_lift = 0
+	ball_catch_left = 0.9
+	ball_catch_precise = precise
+	moving = false
+	animator.remaining = 0
+	animator.request_clip("treat_take_stand")
 	_sync_layers()

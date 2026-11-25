@@ -167,3 +167,15 @@ func _apply_transform() -> void:
 	else:
 		sprite.rotation = 0
 	sprite.modulate = Color(0.8, 0.85, 0.9) if current == "sleep" and not real_clip else Color.WHITE
+
+# Prop attachment follows the actual current frame, including mirrored poses.
+var _prop_bounds: Dictionary = {}
+func mouth_point() -> Vector2:
+	if sprite.sprite_frames == null or not sprite.sprite_frames.has_animation(sprite.animation): return Vector2.ZERO
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	if texture == null: return Vector2.ZERO
+	if not _prop_bounds.has(texture): _prop_bounds[texture] = Rect2(texture.get_image().get_used_rect())
+	var bounds: Rect2 = _prop_bounds[texture]
+	var point := bounds.position + bounds.size * Vector2(0.88, 0.48)
+	if facing_left: point.x = texture.get_width() - point.x
+	return sprite.position + point * sprite.scale

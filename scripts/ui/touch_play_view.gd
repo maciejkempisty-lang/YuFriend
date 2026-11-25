@@ -6,7 +6,9 @@ signal moved_to(point: Vector2)
 signal released_at(point: Vector2, cancelled: bool)
 
 var model: TouchPlaySystem
+var yard_texture := preload("res://assets/art/environments/yard-sunny-background-v1.png")
 var puppy := PetAnimator.new()
+var prop_layer := Node2D.new()
 var _pointer := -1
 var _last_phase := ""
 var _last_kind := ""
@@ -19,6 +21,9 @@ func _ready() -> void:
 	_mat.bg_color = Color("e7ecd9")
 	_mat.set_corner_radius_all(20)
 	add_child(puppy)
+	add_child(prop_layer)
+	prop_layer.z_index = 5
+	prop_layer.draw.connect(_draw_disk)
 	puppy.set_skin(load("res://data/skins/puppy_pixel.tres"))
 	puppy.request_clip("play_bow")
 	gui_input.connect(_on_input)
@@ -29,26 +34,37 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if model == null: return
-	puppy.visible = model.kind in ["tug", "cups"]
+	puppy.visible = model.kind in ["tug", "cups", "cups2", "tag", "frisbee"]
 	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
 	var clip := "play_bow" if model.phase in ["warning", "demo_warning"] else ("shake" if model.phase == "dog_pull" else "idle")
-	if model.kind == "cups":
+	if model.kind in ["cups", "cups2"]:
 		puppy.scale *= 0.75
 		var point := model.dog_point() * size
 		if model.phase == "search":
 			if absf(point.x - puppy.position.x) > 0.01: puppy.facing_left = point.x < puppy.position.x
 			clip = "walk" if model.elapsed < TouchPlaySystem.SEARCH_SECONDS * 0.6 else "head_tilt_stand"
-		else: clip = "head_tilt_stand" if model.phase == "found" else "idle"
+		else: clip = "head_tilt_stand" if model.phase in ["found", "hint"] else "idle"
 		puppy.position = point
+	elif model.kind in ["tag", "frisbee"]:
+		var game := model as SkillPlaySystem
+		puppy.scale *= 0.85
+		var point := game.dog_point() * size
+		if absf(point.x - puppy.position.x) > 0.1: puppy.facing_left = point.x < puppy.position.x
+		puppy.position = point
+		if game.kind == "frisbee": puppy.facing_left = false
+		clip = "play_bow" if game.phase in ["bow", "feint"] else ("run" if game.phase in ["run", "flight"] else "idle")
 	else:
 		puppy.facing_left = false
 		puppy.position = Vector2(size.x * (0.19 + (model.tug_handle.x - 0.60) * 0.16), size.y * 0.67)
 	if model.phase == "result": clip = "tail_wag_stand"
+	if model.kind == "frisbee" and (model as SkillPlaySystem).disk_attached(): clip = "treat_take_stand"
 	if _last_phase != model.phase or _last_kind != model.kind or (puppy.current != clip and puppy.pending != clip):
 		_last_phase = model.phase
 		_last_kind = model.kind
+		if model.kind in ["tag", "frisbee"]: puppy.remaining = 0
 		puppy.request_clip(clip)
 	queue_redraw()
+	prop_layer.queue_redraw()
 
 func _on_input(event: InputEvent) -> void:
 	if model == null or event.device == InputEvent.DEVICE_ID_EMULATION: return
@@ -84,7 +100,8 @@ func _draw() -> void:
 	draw_style_box(_mat, Rect2(Vector2.ZERO, size))
 	if model == null: return
 	if model.kind == "tug": _draw_rope()
-	elif model.kind == "cups": _draw_cups()
+	elif model.kind in ["cups", "cups2"]: _draw_cups()
+	elif model.kind in ["tag", "frisbee"]: _draw_yard_game()
 
 func _draw_rope() -> void:
 	var start := Vector2(puppy.position.x + size.x * 0.06, size.y * 0.49)
@@ -130,7 +147,7 @@ func _draw_cups() -> void:
 	for id in 3:
 		var base := model.cup_point(id) * size
 		draw_ellipse_shadow(base)
-		var reveal := model.phase == "hide" or (model.phase == "cover" and id == model.treat_cup) or (model.phase in ["found", "result"] and id == model.selected_cup)
+		var reveal := (model.kind == "cups2" and (model.phase == "show" or (model.phase == "result" and id == model.treat_cup))) or model.phase == "hide" or (model.phase == "cover" and id == model.treat_cup) or (model.phase in ["found", "result"] and id == model.selected_cup)
 		if id == model.treat_cup and reveal:
 			var treat := Rect2(base - Vector2(14, 13), Vector2(28, 28))
 			draw_texture_rect(GameIcons.texture("treat", Color("a56f39")), treat, false)
@@ -143,9 +160,12 @@ func _draw_cups() -> void:
 		draw_colored_polygon(shape, Color("d9b67c") if id == model.selected_cup else Color("819c77"))
 		draw_polyline(PackedVector2Array([shape[0], shape[1], shape[2], shape[3], shape[0]]), Color("42634d"), 3, true)
 		draw_line(bottom + Vector2(-width * 0.4, -height * 0.3), bottom + Vector2(width * 0.4, -height * 0.3), Color("edf1dd"), 7, true)
-		if model.phase in ["hide", "ready", "found", "result"]:
+		if model.kind != "cups2" and model.phase in ["hide", "ready", "found", "result"]:
 			draw_string(font, base + Vector2(-5, 38), str(id + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("315d49"))
 
+	if model.kind == "cups2" and (model.phase == "hint" or (model.phase == "guess" and (model as SkillPlaySystem).assisted)):
+		var target := model.cup_point(model.treat_cup) * size
+		draw_arc(target, 28, 0, TAU, 32, Color("bd8b38"), 4, true)
 	if model.phase == "search":
 		var target := model.cup_point(model.search_order[model.search_index]) * size
 		draw_arc(target + Vector2(0, 13), 12 + sin(model.elapsed * 8) * 3, 0, PI, 16, Color("a56f39"), 2, true)
@@ -157,3 +177,36 @@ func draw_ellipse_shadow(base: Vector2) -> void:
 	draw_set_transform(base + Vector2(0, 4), 0, Vector2(1, 0.2))
 	draw_circle(Vector2.ZERO, size.x * 0.12, Color("c6cfb8"))
 	draw_set_transform(Vector2.ZERO)
+
+func _draw_yard_game() -> void:
+	var game := model as SkillPlaySystem
+	draw_texture_rect(yard_texture, Rect2(Vector2.ZERO, size), false)
+	var font := get_theme_default_font()
+	if game.kind == "tag":
+		var center := Vector2(game.tag_x * size.x, size.y * 0.78)
+		draw_arc(center, 30, PI, TAU, 24, Color("f6d877") if game.phase == "bow" else Color("e8eedb"), 4, true)
+		draw_circle(center + Vector2(25, -22), 8, Color("d78952"))
+		if game.phase == "bow": draw_string(font, Vector2(12, 28), "TERAZ!", HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 20, Color("244f3d"))
+	elif game.kind == "frisbee":
+		if game.phase == "flight":
+			var target := game.disk_position_at(game.catch_progress()) * size
+			draw_arc(target, 22, 0, TAU, 32, Color("f7f3ce"), 3, true)
+	if game.phase == "result":
+		draw_style_box(_mat, Rect2(8, 8, size.x - 16, 42))
+		draw_string(font, Vector2(12, 36), "%d / 3 gwiazdki" % game.stars, HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 20, Color("315d49"))
+
+func _draw_disk() -> void:
+	if model == null or model.kind != "frisbee": return
+	var game := model as SkillPlaySystem
+	var point := game.disk_point() * size
+	if game.disk_attached():
+		point = puppy.transform * puppy.mouth_point()
+		if game.phase == "flight":
+			var contact := game.disk_position_at(game.catch_at / game.flight_duration()) * size
+			point = contact.lerp(point, clampf((game.elapsed - game.catch_at) / 0.10, 0, 1))
+	elif game.phase in ["land", "result"]:
+		point = Vector2(0.78, 0.82) * size
+	prop_layer.draw_set_transform(point, 0.12 if game.disk_attached() else game.elapsed * 3, Vector2(1, 0.4))
+	prop_layer.draw_circle(Vector2.ZERO, 15, Color("f3c565"))
+	prop_layer.draw_arc(Vector2.ZERO, 11, 0, TAU, 32, Color("9a613b"), 3, true)
+	prop_layer.draw_set_transform(Vector2.ZERO)

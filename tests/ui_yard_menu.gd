@@ -38,6 +38,8 @@ func run() -> void:
 	app.session.local_clock = func(): return 100 * 86400.0 + 12 * 3600
 	app.room.ambient_life.life.autoplay = false
 	root.add_child(app)
+	# Exercise both water actions with deterministic, permitted weather.
+	app.session.weather.override_kind = "after_rain"
 	app.session.set_process(false)
 	app.room.set_process(false)
 	app.room.animator.set_process(false)

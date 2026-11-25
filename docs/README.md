@@ -17,7 +17,7 @@ Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy
 | [Mechaniki gry](mechaniki-gry.md) | Potrzeby, temperament, trening, nagrody i aktualne parametry balansu |
 | [Odpoczynek na podwórku](odpoczynek-na-podworku.md) | Cień, miska z wodą, animacja picia i samodzielne przerwy |
 | [Mały tor przeszkód](tor-przeszkod.md) | Slalom, skok, Zostań i wspólny trening |
-| [Minigierki — propozycje](minigry-propozycje.md) | Plan: zabawy wymagające refleksu i uwagi, ocena rund, kolejność wdrażania (niewdrożone) |
+| [Minigierki — propozycje](minigry-propozycje.md) | Lina 2.0 oraz pierwsze wersje berka, Kubków 2.0 i Frisbee; dalsze propozycje |
 | [Samopoczucie i dolegliwości](samopoczucie-i-dolegliwosci.md) | Samopoczucie i przytulanie: wdrożenie lokalne, ochrona przed pogorszeniem po nieobecności; dolegliwości pozostają planem |
 | [Pogoda i zaproszenia](pogoda-i-zaproszenia.md) | Lokalny deszcz, podlewanie ogródka i samodzielne propozycje zabawy |
 | [Kałuża i zraszacz](woda-na-podworku.md) | Pluskanie, brudzenie sierści, otrzepywanie, grafika i połączenie z kąpielą |
@@ -55,3 +55,5 @@ Parametry mechanik są zebrane w jednym dokumencie; format PNG i manifestu opisu
 - [Testowy eksport Androida](android.md) — osobny preset i skrypt eksportu APK.
 
 - [Przegląd menu ogrodu po scaleniu](przeglad-menu-ogrodu-2026-11-24.md) — regresja dotyku, dostępności akcji i trwających zabaw.
+
+[Nowe minigry — zakres i zasady z 25 listopada](minigry-2026-11-25.md).

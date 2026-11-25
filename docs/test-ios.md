@@ -561,3 +561,28 @@ Przed aktualizacją pobrano dwie kopie Documents, w tym końcową po przejściu 
 Weryfikacja: 36/36 zestawów logiki i wszystkie 33 zestawy UI po sprawdzeniu dwóch nieudanych prób pierwszego przebiegu. ui_play przeszedł przy ponowieniu 46/46 bez zmiany kodu. W ui_water sprecyzowano wybór widocznego celu na mapie zamiast emitowania sygnału ukrytego przycisku (148/148). Nowy test menu pokrywa wybór ze sceny (43/43), anulowanie, zmianę dostępności i tło. Obejrzano menu 320/390 px; sprawdzono układ poziomy i skalowanie 3×. Fizyczna ocena gestów przez użytkownika pozostaje do wykonania.
 
 Kopie, podpisana aplikacja, podglądy, logi, manifest i raport: `exports/ios-garden-v38/`. Eksport powtórzył znane ostrzeżenia skalowania ikony, ustawienia splashu i lokalnego generatora grafik widgetu. Konfiguracji Androida nie eksportowano na urządzenie.
+
+
+## Build 39 — minigry, chwyty i wibracje (25 listopada 2026)
+
+Zbudowano, podpisano, zainstalowano jako aktualizację i uruchomiono 0.1.0 (39)
+na MagicPhone. Aplikacja i widget mają numer 39, ten sam bundle ID, zespół
+P665WUWCN4 i App Group. Podpis oraz zgodność PCK z eksportem zweryfikowano;
+manifest źródeł pozostał niezmienny podczas budowy.
+
+Przed budową i bezpośrednio przed instalacją zabezpieczono Documents Glorii.
+Po instalacji wszystkie 33 wcześniejsze pliki były identyczne bajtowo.
+Po uruchomieniu schemat pozostał v17; nie zmieniły się tożsamość, sztuczki,
+więź, osiągnięcia, kolekcje, zdjęcia, dekoracje, preferencje ani pozostałe
+trwałe postępy. Zmieniły się tylko potrzeby, zmęczenie, rytm, czas ostatniej
+wizyty i dane relacji z nieobecności. Sprawdzono zachowanie wspólnych wpisów
+Albumu i wszystkich wcześniejszych plików. Nie odinstalowywano gry ani nie
+przywracano starszego zapisu na telefonie.
+
+Weryfikacja: 40 zestawów logiki, 36 UI łącznie z końcowymi powtórkami oraz
+69 sprawdzeń odczytu i ponownego zapisu świeżej kopii Glorii. Zrzut z fizycznego
+telefonu potwierdza uruchomienie gry z Glorią. Nie jest to fizyczna próba nowych
+minigier ani odczucia wibracji. Zakres funkcji: [opis minigier](minigry-2026-11-25.md).
+
+Kopie, manifest, wynik porównania i logi: `exports/ios-games-v39/` (lokalne,
+ignorowane przez Git).

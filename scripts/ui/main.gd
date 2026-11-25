@@ -22,6 +22,8 @@ var music := BackgroundMusic.new()
 var music_toggle: CheckButton
 var effects := SoundEffects.new()
 var effects_toggle: CheckButton
+var haptics := HapticFeedback.new()
+var haptics_toggle: CheckButton
 var reminders := LocalReminders.new()
 var reminders_toggle: CheckButton
 var reminders_status: Label
@@ -180,6 +182,7 @@ func _ready() -> void:
 	room.care_requested.connect(_on_room_care_requested)
 	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
+	session.ball_caught.connect(room.animate_ball_catch)
 	session.hide_revealed.connect(room.reveal_hide)
 	session.initiative_requested.connect(room.present_invitation)
 	session.ball_aim_requested.connect(_aim_ball)
@@ -200,6 +203,10 @@ func _ready() -> void:
 	add_child(effects)
 	effects.start(path.get_base_dir().path_join("audio.cfg"))
 	effects_toggle.set_pressed_no_signal(effects.enabled)
+	haptics.start(ui_settings_path)
+	haptics_toggle.set_pressed_no_signal(haptics.enabled)
+	haptics_toggle.disabled = not haptics.supported
+	session.sound_requested.connect(haptics.play_event)
 	session.sound_requested.connect(effects.play_effect)
 	session.away_report_ready.connect(_show_reunion)
 	room.sound_requested.connect(effects.play_effect)
@@ -875,6 +882,13 @@ func _build_dialogs() -> void:
 	effects_toggle.custom_minimum_size.y = 44
 	effects_toggle.toggled.connect(effects.set_enabled)
 	settings_box.add_child(effects_toggle)
+	haptics_toggle = CheckButton.new()
+	haptics_toggle.text = "Wibracje"
+	haptics_toggle.custom_minimum_size.y = 44
+	haptics_toggle.toggled.connect(func(value: bool):
+		haptics.set_enabled(value)
+		haptics_toggle.set_pressed_no_signal(haptics.enabled))
+	settings_box.add_child(haptics_toggle)
 	reminders_toggle = CheckButton.new()
 	reminders_toggle.text = "Przypomnienia od pieska"
 	reminders_toggle.custom_minimum_size.y = 44
@@ -945,13 +959,20 @@ func _build_play_dialogs() -> void:
 	add_child(play_menu)
 	var choices := VBoxContainer.new()
 	choices.add_theme_constant_override("separation", 12)
-	play_menu.add_child(choices)
+	var choices_scroll := ScrollContainer.new()
+	choices_scroll.custom_minimum_size.y = 220
+	choices_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	play_menu.add_child(choices_scroll)
+	choices_scroll.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"]]:
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
 	play_dialog.ok_button_text = "Zakończ"
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		play_dialog.get_ok_button().add_theme_stylebox_override(state, _style(Color("efeeda"), 12, 14))
 	play_dialog.min_size = Vector2i(280, 350)
 	add_child(play_dialog)
 	var content := VBoxContainer.new()
@@ -1021,9 +1042,10 @@ func _aim_ball() -> void:
 
 func _show_touch_game(kind: String) -> void:
 	play_menu.hide()
-	play_dialog.title = InitiativeSystem.LABELS[kind]
+	play_dialog.title = SkillPlaySystem.label(kind)
 	play_hint.text = session.play.hint()
 	play_dialog.popup()
+	play_dialog.get_ok_button().custom_minimum_size.y = 48
 	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
@@ -1448,8 +1470,11 @@ func _refresh() -> void:
 	play_hint.text = session.play.hint()
 	play_cue.visible = (session.play.kind == "cups" and session.play.phase in ["ready", "found"]) or (session.play.kind == "tug" and session.play.phase == "demo_done")
 	play_cue.text = "Zagraj rundę" if session.play.kind == "tug" else ("Brawo!" if session.play.phase == "found" else "Szukaj!")
+	if session.play.kind in SkillPlaySystem.EXTRA:
+		play_cue.visible = (session.play.kind == "cups2" and session.play.phase == "guess" and not session.play.assisted) or (session.play.kind == "frisbee" and session.play.phase == "flight" and not session.play.jumped)
+		play_cue.text = "Pomóż, Gloria" if session.play.kind == "cups2" else "Skacz!"
 	play_again.visible = session.play.phase == "result"
-	play_again.disabled = session.play.phase != "result" or (session.busy() and session.play.kind != "tug")
+	play_again.disabled = session.play.phase != "result" or (session.busy() and session.activity != "happy")
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = "Piesek" if naming_pending else pet.pet_name
@@ -1690,6 +1715,7 @@ func _notification(what: int) -> void:
 		yard_transition.cancel()
 		music.set_backgrounded(true)
 		effects.set_backgrounded(true)
+		haptics.backgrounded = true
 		if is_instance_valid(bath_dialog): bath_dialog.hide()
 		if is_instance_valid(gesture_dialog): gesture_dialog.hide()
 		session.suspend_session()
@@ -1698,7 +1724,9 @@ func _notification(what: int) -> void:
 		session.resume_session()
 		music.set_backgrounded(false)
 		effects.set_backgrounded(false)
+		haptics.backgrounded = false
 	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		haptics.backgrounded = true
 		yard_menu.close()
 		if session.training.marker_mode and session.training.phase != "idle":
 			session.training.cancel()
@@ -1710,6 +1738,7 @@ func _notification(what: int) -> void:
 		_update_attention()
 		session.flush()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		haptics.backgrounded = false
 		app_foreground = true
 		_update_attention()
 
@@ -1722,7 +1751,7 @@ func _activity_status() -> String:
 	if session.cuddle.running(): return "Spokojne chwile · przytulanie"
 	if session.activity == "sniff_walk": return "Podąża za zapachem…"
 	if session.activity == "sniff": return "Węszy… jeszcze %d s" % ceili(session.activity_left)
-	if session.play.running(): return "Wspólna zabawa · " + InitiativeSystem.LABELS[session.play.kind]
+	if session.play.running(): return "Wspólna zabawa · " + SkillPlaySystem.label(session.play.kind)
 	if not session.invitation.is_empty(): return session.pet.pet_name + " zaprasza Cię do wspólnej chwili"
 	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
 	if session.training.phase == "attempt": return "Wykonuje komendę · otwórz Trening"
