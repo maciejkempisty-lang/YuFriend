@@ -623,3 +623,26 @@ zbudowanej i zainstalowanej paczki. Kopia Glorii: 69/69 sprawdzeń zapisu.
 Kopie, manifest, logi i porównanie: `exports/ios-bubbles-v41/` (lokalnie).
 Zakres: [bańki](banki-mydlane.md), [freestyle](psi-freestyle.md).
 Do próby palcem na telefonie: [lista testów ręcznych](testy-reczne-build-41.md).
+
+## Build 42 — widoczne zabawy i korekty animacji (25 listopada 2026)
+
+Zainstalowano i uruchomiono 0.1.0 (42) na MagicPhone. Numer 42 potwierdzono
+odczytem aplikacji z urządzenia; aplikacja i widget mają poprawny podpis.
+PCK odpowiada eksportowi, źródła wykonawcze nie zmieniły się podczas budowy.
+
+Poprzednie menu miało krótki obszar przewijania: nowe gry znajdowały się pod
+trzema starymi. Teraz siatka pokazuje wszystkie osiem pozycji bez przewijania
+na ekranach 320/390 pkt. Skorygowano punkty chwytu piłki, zasłanianie jej
+przez pysk i brak cienia przy trzymaniu. Jedzenie i picie korzystają ze
+spójnego arkusza, skali oraz zakotwiczenia na przejściach.
+
+Przeszło 43/43 zestawów logiki, 40/40 UI i 69 sprawdzeń na kopii Glorii.
+Test menu sprawdza widoczność wszystkich przycisków; test animacji bada
+ciągłość klatek i skalę. Obejrzano menu, piłkę w obu kierunkach i picie.
+
+Wszystkie 33 pliki Documents pozostały identyczne bajtowo po instalacji.
+Po uruchomieniu zmieniły się jedynie potrzeby, zmęczenie, czas i rytm odpoczynku.
+Trwałe postępy, umiejętności, więź, Album i ogródek są niezmienione; schema v17.
+Fizyczny zrzut potwierdza start z odpoczywającą Glorią. Nie wykonywano nowych
+rund na rzeczywistym zapisie. Kopie i raport: `exports/ios-animation-v42/`.
+Do wykonania: [krótkie próby ręczne](testy-reczne-build-42.md).

@@ -150,7 +150,7 @@ func _run() -> void:
 	var production_frames: SpriteFrames = animator.skin.frames
 	var total := 0
 	for clip in PetAnimator.CLIPS: total += production_frames.get_frame_count(clip)
-	check(production_frames.get_animation_names().size() == 28 and total == 172, "production pack contains all 28 clips and 172 frames")
+	check(production_frames.get_animation_names().size() == 28 and total == 169, "production pack contains all 28 clips and 169 frames")
 	var paw_seconds := 0.0
 	for i in production_frames.get_frame_count("give_paw"):
 		paw_seconds += production_frames.get_frame_duration("give_paw", i) / production_frames.get_animation_speed("give_paw")

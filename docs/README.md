@@ -12,6 +12,8 @@ Aktualizacja 25 listopada: [psi freestyle](psi-freestyle.md) oraz [kolejne minig
 
 Build 41: [bańki mydlane](banki-mydlane.md) i freestyle; [lista prób na iPhonie](testy-reczne-build-41.md).
 
+Build 42: wszystkie 8 zabaw widoczne od razu w siatce menu; poprawione trzymanie piłki i ciągłość schylania przy miskach. [Krótka lista prób](testy-reczne-build-42.md).
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

@@ -14,6 +14,7 @@ const DECOR_ATLAS = preload("res://assets/art/environments/decor-v1.png")
 const DECOR_REGIONS := {"rug": Rect2(39, 474, 449, 232), "flower": Rect2(617, 293, 275, 469), "shelf": Rect2(1040, 382, 447, 329)}
 var area := Vector2.ZERO
 var roll_phase := 0.0
+var ball_held := false
 var draw_count := 0
 
 func configure(bounds: Vector2) -> void:
@@ -498,7 +499,7 @@ func _draw_door() -> void:
 
 func _draw_ball() -> void:
 	var ball := Vector2.ZERO
-	_pixel_ellipse(ball + Vector2(0, 13), Vector2(15, 5), Color("b79364"))
+	if not ball_held: _pixel_ellipse(ball + Vector2(0, 13), Vector2(15, 5), Color("b79364"))
 	_pixel_ellipse(ball, Vector2(14, 14), Color("4d666d"))
 	_pixel_ellipse(ball - Vector2(0, 1), Vector2(11, 11), Color("709ca3"))
 	_pixel_rect(Rect2(ball + Vector2(roundf(sin(roll_phase) * 2) * 3 - 3, -9), Vector2(6, 3)), Color("dce8c4"))

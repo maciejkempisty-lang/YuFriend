@@ -47,6 +47,12 @@ func run() -> void:
   app._show_play_menu()
   await settle()
   check(app.play_menu.visible and app.safe_rect.encloses(Rect2(Vector2(app.play_menu.position), Vector2(app.play_menu.size))), 'six-game menu fits screen')
+  for key in ['bubbles', 'freestyle', 'tag', 'frisbee', 'cups2', 'ball', 'tug', 'cups']:
+   var button: Button = app.play_menu.find_child('Play_' + key, true, false)
+   var scroll: ScrollContainer = button.get_parent().get_parent().get_parent()
+   check(scroll.get_global_rect().encloses(button.get_global_rect()) and button.size.y >= 44, 'game visible without scrolling: ' + key)
+  await RenderingServer.frame_post_draw
+  root.get_texture().get_image().save_png('/tmp/yuf-menu42-%d.png' % width)
   app.play_menu.hide()
   for kind in ['tag', 'cups2', 'frisbee']:
    app.session.cancel_touch_game()

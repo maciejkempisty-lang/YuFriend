@@ -212,6 +212,7 @@ func _ready() -> void:
 	puppy.add_child(animator)
 	ball_art.kind = "ball"
 	actors.add_child(ball_art)
+	RenderingServer.frame_pre_draw.connect(_sync_held_ball)
 	hide_tail.kind = "hide_tail"
 	hide_tail.hide()
 	actors.add_child(hide_tail)
@@ -895,10 +896,10 @@ func _sync_layers() -> void:
 	water_drops.visible = in_yard and yard_water.phase in ["splash", "shake"]
 	puppy.position = (pet_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	if carrying_ball or ball_catch_left > 0 or ball_hold_left > 0:
-		ball_world = puppy.position + animator.transform * animator.mouth_point()
+		ball_world = puppy.position + animator.transform * animator.ball_grip_point()
 		ball_target = ball_world
 		_ball_lift = 0
-	ball_art.z_index = 2 if carrying_ball or ball_catch_left > 0 or ball_hold_left > 0 else 0
+	_set_ball_held(carrying_ball or ball_catch_left > 0 or ball_hold_left > 0)
 	ball_art.position = ((ball_world - Vector2(0, _ball_lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	for id in prop_bounces:
 		var node: Node2D = ball_art if id == "ball" else station_nodes[id]
@@ -998,3 +999,19 @@ func visitor_touch_rect() -> Rect2:
 	var rect := _screen_rect(Rect2(YardVisitors.FENCE - Vector2(35, 95), Vector2(80, 95)))
 	var target := rect.size.max(Vector2(44, 44))
 	return Rect2(rect.get_center() - target / 2, target)
+
+func _set_ball_held(held: bool) -> void:
+	# The muzzle occludes the top of the ball: it is gripped, not floating in front.
+	ball_art.z_index = -1 if held else 0
+	if ball_art.ball_held != held:
+		ball_art.ball_held = held
+		ball_art.queue_redraw()
+
+func _sync_held_ball() -> void:
+	var held := carrying_ball or ball_catch_left > 0 or ball_hold_left > 0
+	_set_ball_held(held)
+	if not held: return
+	ball_world = puppy.position + animator.transform * animator.ball_grip_point()
+	ball_target = ball_world
+	_ball_lift = 0
+	ball_art.position = (ball_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE

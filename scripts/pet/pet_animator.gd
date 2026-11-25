@@ -179,3 +179,20 @@ func mouth_point() -> Vector2:
 	var point := bounds.position + bounds.size * Vector2(0.88, 0.48)
 	if facing_left: point.x = texture.get_width() - point.x
 	return sprite.position + point * sprite.scale
+
+# Pixel coordinates in the authored frames, just below the nose. The ball is
+# drawn behind the muzzle, so the lips cover its upper/inner edge.
+const BALL_GRIPS := {
+	"idle": [Vector2(420, 244), Vector2(420, 238), Vector2(420, 238), Vector2(420, 243), Vector2(420, 244), Vector2(420, 244)],
+	"walk": [Vector2(395, 202), Vector2(395, 210), Vector2(395, 200), Vector2(395, 195), Vector2(395, 207), Vector2(395, 207), Vector2(395, 218), Vector2(395, 216)],
+	"run": [Vector2(342, 277), Vector2(342, 277), Vector2(342, 277), Vector2(342, 277)],
+	"tail_wag_stand": [Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239)],
+	"treat_take_stand": [Vector2(321, 243), Vector2(323, 258), Vector2(334, 286), Vector2(333, 285), Vector2(323, 267), Vector2(324, 250), Vector2(324, 237), Vector2(324, 237)]
+}
+func ball_grip_point() -> Vector2:
+	if not real_clip or not BALL_GRIPS.has(sprite.animation): return mouth_point()
+	var texture := sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var points: Array = BALL_GRIPS[sprite.animation]
+	var point: Vector2 = points[mini(sprite.frame, points.size() - 1)]
+	if facing_left: point.x = texture.get_width() - point.x
+	return sprite.transform * point

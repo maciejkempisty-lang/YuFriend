@@ -971,9 +971,19 @@ func _build_play_dialogs() -> void:
 	choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play_menu.add_child(choices_scroll)
 	choices_scroll.add_child(choices)
-	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"], ["freestyle", "Psi freestyle · wyuczone sztuczki"], ["bubbles", "Bańki mydlane · na podwórku"]]:
-		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
+	choices.add_child(_label("Wybierz jedną z 8 zabaw", 16, INK, true))
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	choices.add_child(grid)
+	for entry in [["bubbles", "Bańki\nPodwórko"], ["freestyle", "Psi freestyle"], ["tag", "Berek\nPodwórko"], ["frisbee", "Frisbee\nPodwórko"], ["cups2", "Kubki z nosem"], ["ball", "Piłka"], ["tug", "Lina"], ["cups", "Kubki klasyczne"]]:
+		var button := _button(entry[1], _choose_play.bind(entry[0]))
+		button.name = "Play_" + entry[0]
+		button.custom_minimum_size = Vector2(0, 64)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 14)
+		grid.add_child(button)
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
 	play_dialog.ok_button_text = "Zakończ"
@@ -1033,7 +1043,7 @@ func _show_play_menu() -> void:
 		session.say(reason)
 		return
 	play_menu.popup()
-	_position_dialog(play_menu, Vector2i(336, 310))
+	_position_dialog(play_menu, Vector2i(360, 520))
 
 func _choose_play(kind: String) -> void:
 	play_menu.hide()
