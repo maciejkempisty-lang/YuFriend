@@ -5,6 +5,11 @@ signal pressed_at(point: Vector2)
 signal moved_to(point: Vector2)
 signal released_at(point: Vector2, cancelled: bool)
 
+var rhythm_enabled := true
+var rhythm_player := AudioStreamPlayer.new()
+var _last_beat := -1
+var _last_dance_index := -1
+var _last_dance_clip := ""
 var model: TouchPlaySystem
 var yard_texture := preload("res://assets/art/environments/yard-sunny-background-v1.png")
 var puppy := PetAnimator.new()
@@ -20,6 +25,17 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_mat.bg_color = Color("e7ecd9")
 	_mat.set_corner_radius_all(20)
+	add_child(rhythm_player)
+	var click := AudioStreamWAV.new()
+	click.format = AudioStreamWAV.FORMAT_16_BITS
+	click.mix_rate = 22050
+	var samples := PackedByteArray()
+	samples.resize(2205 * 2)
+	for i in 2205:
+		var sample := int(sin(TAU * 660 * i / 22050.0) * exp(-i / 280.0) * 7000)
+		samples.encode_s16(i * 2, sample)
+	click.data = samples
+	rhythm_player.stream = click
 	add_child(puppy)
 	add_child(prop_layer)
 	prop_layer.z_index = 5
@@ -29,15 +45,32 @@ func _ready() -> void:
 	gui_input.connect(_on_input)
 	visibility_changed.connect(func():
 		if not is_visible_in_tree():
+			rhythm_player.stop()
 			_pointer = -1
 			if model != null: model.release(Vector2.ZERO, true))
 
 func _process(_delta: float) -> void:
 	if model == null: return
-	puppy.visible = model.kind in ["tug", "cups", "cups2", "tag", "frisbee"]
+	puppy.visible = model.kind in ["tug", "cups", "cups2", "tag", "frisbee", "freestyle"]
 	puppy.scale = Vector2.ONE * minf(size.x / 640.0, 0.55)
 	var clip := "play_bow" if model.phase in ["warning", "demo_warning"] else ("shake" if model.phase == "dog_pull" else "idle")
-	if model.kind in ["cups", "cups2"]:
+	if model.kind == "freestyle":
+		var game := model as SkillPlaySystem
+		puppy.position = Vector2(size.x * 0.5, size.y * 0.88)
+		puppy.facing_left = false
+		clip = game.dance_clip()
+		var beat := floori(game.total * 2)
+		if game.phase == "dance" and is_visible_in_tree() and rhythm_enabled:
+			if beat != _last_beat:
+				rhythm_player.pitch_scale = 1.3 if beat % 4 == 0 else 1.0
+				rhythm_player.play()
+		else: rhythm_player.stop()
+		_last_beat = beat if game.phase == "dance" else -1
+		if _last_dance_index != game.dance_index:
+			_last_dance_index = game.dance_index
+			puppy.remaining = 0
+			puppy.request_clip(clip)
+	elif model.kind in ["cups", "cups2"]:
 		puppy.scale *= 0.75
 		var point := model.dog_point() * size
 		if model.phase == "search":
@@ -58,7 +91,8 @@ func _process(_delta: float) -> void:
 		puppy.position = Vector2(size.x * (0.19 + (model.tug_handle.x - 0.60) * 0.16), size.y * 0.67)
 	if model.phase == "result": clip = "tail_wag_stand"
 	if model.kind == "frisbee" and (model as SkillPlaySystem).disk_attached(): clip = "treat_take_stand"
-	if _last_phase != model.phase or _last_kind != model.kind or (puppy.current != clip and puppy.pending != clip):
+	if _last_phase != model.phase or _last_kind != model.kind or (clip != _last_dance_clip if model.kind == "freestyle" else (puppy.current != clip and puppy.pending != clip)):
+		_last_dance_clip = clip
 		_last_phase = model.phase
 		_last_kind = model.kind
 		if model.kind in ["tag", "frisbee"]: puppy.remaining = 0
@@ -102,6 +136,7 @@ func _draw() -> void:
 	if model.kind == "tug": _draw_rope()
 	elif model.kind in ["cups", "cups2"]: _draw_cups()
 	elif model.kind in ["tag", "frisbee"]: _draw_yard_game()
+	elif model.kind == "freestyle": _draw_dance()
 
 func _draw_rope() -> void:
 	var start := Vector2(puppy.position.x + size.x * 0.06, size.y * 0.49)
@@ -210,3 +245,23 @@ func _draw_disk() -> void:
 	prop_layer.draw_circle(Vector2.ZERO, 15, Color("f3c565"))
 	prop_layer.draw_arc(Vector2.ZERO, 11, 0, TAU, 32, Color("9a613b"), 3, true)
 	prop_layer.draw_set_transform(Vector2.ZERO)
+
+func _draw_dance() -> void:
+	var game := model as SkillPlaySystem
+	var font := get_theme_default_font()
+	var target := size.x * 0.25
+	var lane_y := 85.0
+	draw_line(Vector2(12, lane_y), Vector2(size.x - 12, lane_y), Color("9bb399"), 3)
+	draw_rect(Rect2(target - 8, lane_y - 26, 16, 52), Color("f3d798"))
+	draw_line(Vector2(target, lane_y - 28), Vector2(target, lane_y + 28), Color("315d49"), 3)
+	for i in game.dance_notes.size():
+		var x := target + (game.dance_note_time(i) - game.total) * size.x * 0.15
+		if x < 12 or x > size.x - 12: continue
+		var grade := game.dance_grades[i]
+		var color := Color("315d49") if grade < 0 else (Color("b97654") if grade == 0 else Color("6a914d"))
+		draw_circle(Vector2(x, lane_y), 13, color)
+		draw_string(font, Vector2(x - 8, lane_y + 5), str(i + 1), HORIZONTAL_ALIGNMENT_CENTER, 16, 14, Color.WHITE)
+	var next: String = TrainingSystem.LABELS[game.dance_notes[game.dance_index]] if game.dance_index < game.dance_notes.size() else "Brawo za wspólny taniec!"
+	if game.phase == "result": next = "%d / 3 gwiazdki" % game.stars
+	draw_string(font, Vector2(12, 30), next, HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 18, Color("315d49"))
+	draw_string(font, Vector2(12, 125), "Kółko na linii → W rytm!", HORIZONTAL_ALIGNMENT_CENTER, size.x - 24, 14, Color("315d49"))

@@ -8,6 +8,8 @@ Aktualizacja interfejsu: pokój na całą wysokość, jeden rząd przycisków ł
 
 Etap 2 dodaje zaproszenia Glorii, pamięć reakcji w karcie psa oraz trzy zabawy dotykiem: piłkę, linę i kubki. [Zasady zabaw](mechaniki-gry.md#zabawy-dotykiem) i [pamięć reakcji](osobowosc.md#własna-inicjatywa-i-pamięć-reakcji--etap-2) opisują bieżący zakres.
 
+Aktualizacja 25 listopada: [psi freestyle](psi-freestyle.md) oraz [kolejne minigry przygotowane do wdrożenia](kolejne-minigry-do-wdrozenia.md). Build 40 na telefonie obejmuje picie, przyjaźnie i trzymanie piłki; freestyle powstał po jego instalacji.
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

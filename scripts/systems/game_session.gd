@@ -902,7 +902,7 @@ func play_readiness() -> String:
 	return ""
 
 func start_touch_game(kind: String) -> bool:
-	if kind not in ["tug", "cups", "tag", "cups2", "frisbee"]: return false
+	if kind not in ["tug", "cups", "tag", "cups2", "frisbee", "freestyle"]: return false
 	if kind in ["tag", "frisbee"] and not in_yard:
 		say("W tę zabawę zagramy na podwórku. Wyjdźmy najpierw na zewnątrz.")
 		return false
@@ -917,6 +917,11 @@ func _begin_touch_game(kind: String) -> bool:
 	if not reason.is_empty():
 		say(reason)
 		return false
+	if kind == "freestyle":
+		play.dance_skills = SkillPlaySystem.known_dance_skills(pet)
+		if play.dance_skills.is_empty():
+			say("Najpierw poćwiczmy Siad lub inną sztuczkę do 50%. Potem zatańczymy razem!")
+			return false
 	_answer_action(SkillPlaySystem.memory_key(kind))
 	_cancel_motion()
 	if kind == "tug":
@@ -924,7 +929,7 @@ func _begin_touch_game(kind: String) -> bool:
 		play.tug_best = record.best
 		play.tug_demo_seen = record.seen or play.tug_demo_seen
 	play.start(kind)
-	if kind in SkillPlaySystem.EXTRA: play.best_record = SkillRecords.read(storage.path, kind)
+	if kind in SkillPlaySystem.EXTRA: play.best_record = SkillRecords.read(storage.path, play.record_key())
 	activity = "touch_play"
 	activity_left = 0
 	pose = "stand"
@@ -1004,6 +1009,8 @@ func _settle_touch_game() -> void:
 		else: BondLevels.add(pet, 0.35, _local_now())
 		_note("play")
 	pet.remember("touch_play_" + kind, "Wspólna zabawa: " + SkillPlaySystem.label(kind), "Pierwsza runda zabawy sterowanej dotykiem.", now)
+	if kind == "freestyle" and not play.dance_grades.has(0):
+		pet.remember("freestyle_full", "Pierwszy wspólny taniec", "Cały układ poznanych sztuczek bez pominięcia komendy.", now)
 	_reward_from_training = false
 	activity = "happy"
 	activity_left = 1.4
@@ -1021,7 +1028,7 @@ func _settle_touch_game() -> void:
 	var saved := flush()
 	if kind in SkillPlaySystem.EXTRA and saved:
 		if SkillRecords.write(storage.path, play):
-			play.best_record = SkillRecords.read(storage.path, kind)
+			play.best_record = SkillRecords.read(storage.path, play.record_key())
 			say(play.hint())
 		else: say("Runda zakończona, ale nie udało się zapisać rekordu.")
 	if kind == "ball": ball_caught.emit(fetch_precise)

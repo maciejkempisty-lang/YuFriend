@@ -972,7 +972,7 @@ func _build_play_dialogs() -> void:
 	play_menu.add_child(choices_scroll)
 	choices_scroll.add_child(choices)
 	choices.add_child(_label("Na co macie ochotę?", 18, INK, true))
-	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"]]:
+	for entry in [["ball", "Piłka · przeciągnij i rzuć"], ["tug", "Lina · ciągnij i odpuszczaj"], ["cups", "Kubki · schowaj smakołyk"], ["tag", "Berek · na podwórku"], ["cups2", "Kubki · śledź smakołyk"], ["frisbee", "Frisbee · na podwórku"], ["freestyle", "Psi freestyle · wyuczone sztuczki"]]:
 		choices.add_child(_button(entry[1], _choose_play.bind(entry[0])))
 	play_dialog = AcceptDialog.new()
 	play_dialog.title = "Wspólna zabawa"
@@ -1475,11 +1475,17 @@ func _refresh() -> void:
 	room.ball_throw_enabled = session.play_readiness().is_empty()
 	_refresh_companion()
 	play_hint.text = session.play.hint()
+	play_cue.disabled = false
 	play_cue.visible = (session.play.kind == "cups" and session.play.phase in ["ready", "found"]) or (session.play.kind == "tug" and session.play.phase == "demo_done")
 	play_cue.text = "Zagraj rundę" if session.play.kind == "tug" else ("Brawo!" if session.play.phase == "found" else "Szukaj!")
 	if session.play.kind in SkillPlaySystem.EXTRA:
 		play_cue.visible = (session.play.kind == "cups2" and session.play.phase == "guess" and not session.play.assisted) or (session.play.kind == "frisbee" and session.play.phase == "flight" and not session.play.jumped)
 		play_cue.text = "Pomóż, Gloria" if session.play.kind == "cups2" else "Skacz!"
+		if session.play.kind == "freestyle":
+			play_cue.visible = session.play.phase in ["ready", "dance"]
+			play_cue.text = "Zaczynamy!" if session.play.phase == "ready" else "W rytm!"
+			play_cue.disabled = session.play.phase == "dance" and session.play.dance_index >= session.play.dance_notes.size()
+		else: play_cue.disabled = false
 	play_again.visible = session.play.phase == "result"
 	play_again.disabled = session.play.phase != "result" or (session.busy() and session.activity != "happy")
 	room.mood_walk_speed = session.walk_speed()
@@ -1822,6 +1828,10 @@ func _show_gain(action: String, gains: Dictionary) -> void:
 	_position_feedback()
 
 func _process(delta: float) -> void:
+	var dancing := session.play.kind == "freestyle" and session.play.phase == "dance"
+	play_view.rhythm_enabled = music.enabled and app_foreground and not session.suspended
+	var quiet_music := not app_foreground or dancing
+	if music.backgrounded != quiet_music: music.set_backgrounded(quiet_music)
 	yard_menu.sync()
 	if first_meeting != null and first_meeting.visible: _position_dialog(first_meeting, Vector2i(340, 330))
 	reminder_poll -= delta

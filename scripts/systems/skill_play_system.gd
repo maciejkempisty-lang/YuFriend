@@ -1,8 +1,31 @@
 class_name SkillPlaySystem
 extends TouchPlaySystem
 
-const EXTRA := ["tag", "cups2", "frisbee"]
-const LABELS := {"tag": "Berek z zabawką", "cups2": "Kubki · śledź smakołyk", "frisbee": "Frisbee"}
+const EXTRA := ["tag", "cups2", "frisbee", "freestyle"]
+const LABELS := {"tag": "Berek z zabawką", "cups2": "Kubki · śledź smakołyk", "frisbee": "Frisbee", "freestyle": "Psi freestyle"}
+const DANCE_CLIPS := {"sit": "sit_down", "paw": "give_paw", "lie": "lie_down", "bow": "play_bow", "spin": "spin", "roll": "roll"}
+var dance_skills: Array[String] = []
+var dance_notes: Array[String] = []
+var dance_grades: Array[int] = []
+var dance_index := 0
+var dance_combo := 0
+var dance_best_combo := 0
+var dance_last_clip := "idle"
+var dance_action_at := -10.0
+
+static func known_dance_skills(pet: PetState) -> Array[String]:
+	var result: Array[String] = []
+	for key in DANCE_CLIPS:
+		if float(pet.skills[key].mastery) >= 50: result.append(key)
+	return result
+
+func dance_duration() -> float: return dance_notes.size() * 5.0
+func dance_note_time(index: int) -> float: return 3.0 + index * 5.0
+func record_key() -> String:
+	return "freestyle_%d" % int(dance_duration()) if kind == "freestyle" else kind
+func dance_clip() -> String:
+	return dance_last_clip if total - dance_action_at < 2.5 else "idle"
+
 var clock_left := 45.0
 var total := 0.0
 var score := 0
@@ -42,10 +65,11 @@ static func label(game: String) -> String:
 	return LABELS.get(game, InitiativeSystem.LABELS.get(game, game))
 
 static func memory_key(game: String) -> String:
-	return "cups" if game == "cups2" else ("ball" if game in ["tag", "frisbee"] else game)
+	return "cups" if game == "cups2" else ("ball" if game in ["tag", "frisbee", "freestyle"] else game)
 
 func start(game: String, seed_value: int = 0) -> bool:
 	if game not in EXTRA: return super.start(game, seed_value)
+	if game == "freestyle" and dance_skills.is_empty(): return false
 	var next_level := mini(level + 1, 4) if kind == "cups2" and game == kind and success else 0
 	reset()
 	kind = game
@@ -68,7 +92,19 @@ func start(game: String, seed_value: int = 0) -> bool:
 	wind = _rng.randf_range(-1, 1)
 	feint_next = false
 	tag_offers = 0
-	phase = {"tag": "run", "cups2": "show", "frisbee": "aim"}[game]
+	phase = {"tag": "run", "cups2": "show", "frisbee": "aim", "freestyle": "ready"}[game]
+	if game == "freestyle":
+		dance_notes.clear()
+		dance_grades.clear()
+		dance_index = 0
+		dance_combo = 0
+		dance_best_combo = 0
+		dance_last_clip = "idle"
+		dance_action_at = -10
+		var count := 4 if dance_skills.size() < 3 else (8 if dance_skills.size() < 5 else 12)
+		for i in count:
+			dance_notes.append(dance_skills[i % dance_skills.size()])
+			dance_grades.append(-1)
 	if game == "cups2":
 		treat_cup = _rng.randi_range(0, 2)
 		swaps_left = 3 + level
@@ -80,6 +116,15 @@ func advance(delta: float) -> void:
 		super.advance(delta)
 		return
 	if not is_finite(delta) or delta <= 0 or phase == "result": return
+	if kind == "freestyle":
+		if phase == "ready": return
+		total = minf(dance_duration(), total + delta)
+		while dance_index < dance_notes.size() and total > dance_note_time(dance_index) + 0.4:
+			_dance_judge(0)
+		if total >= dance_duration():
+			stars = 3 if score == dance_notes.size() * 2 else (2 if score >= dance_notes.size() else (1 if score > 0 else 0))
+			_finish(score > 0)
+		return
 	# Small bounded steps keep boundary events independent of frame rate.
 	var left := minf(delta, 91)
 	while left > 0 and phase != "result":
@@ -180,7 +225,26 @@ func disk_point() -> Vector2:
 	var t := clampf(elapsed / flight_duration(), 0, 1)
 	return disk_position_at(t)
 
+func _dance_judge(grade: int) -> void:
+	if dance_index >= dance_notes.size(): return
+	dance_grades[dance_index] = grade
+	dance_combo = dance_combo + 1 if grade > 0 else 0
+	dance_best_combo = maxi(dance_best_combo, dance_combo)
+	score += grade
+	dance_last_clip = DANCE_CLIPS[dance_notes[dance_index]] if grade > 0 else "head_tilt_stand"
+	dance_action_at = total
+	feedback = ["Pudło — próbuj dalej", "Dobrze!", "Idealnie!"][grade]
+	dance_index += 1
+
 func cue() -> void:
+	if kind == "freestyle":
+		if phase == "ready":
+			phase = "dance"
+			total = 0
+		elif phase == "dance" and dance_index < dance_notes.size():
+			var error := absf(total - dance_note_time(dance_index))
+			_dance_judge(2 if error <= 0.18 else (1 if error <= 0.4 else 0))
+		return
 	if kind == "cups2" and phase == "guess":
 		assisted = true
 		phase = "hint"
@@ -241,6 +305,11 @@ func release(point: Vector2, cancelled: bool = false) -> void:
 		elapsed = 0
 
 func hint() -> String:
+	if kind == "freestyle":
+		if phase == "ready": return "Układ %d s · %d komendy. Dotknij W rytm, gdy kółko dotrze do linii. Poznane sztuczki: od 50%%. Dźwięk jest opcjonalny." % [int(dance_duration()), dance_notes.size()]
+		if phase == "result": return "%d/%d pkt · %d/3 gwiazdki · seria %d. Rekord układu: %d pkt." % [score, dance_notes.size() * 2, stars, dance_best_combo, int(best_record.get("score", 0))]
+		var next: String = TrainingSystem.LABELS[dance_notes[dance_index]] if dance_index < dance_notes.size() else "Finał"
+		return "%s · %s · seria %d · %d s" % [next, feedback, dance_combo, ceili(dance_duration() - total)]
 	if kind not in EXTRA: return super.hint()
 	if phase == "result":
 		var detail := "Złapania: %d/3" % score if kind == "tag" else ("Chwyty: %d/10 pkt" % score if kind == "frisbee" else ("Dobry kubek!" if success else "Smakołyk był pod innym kubkiem."))

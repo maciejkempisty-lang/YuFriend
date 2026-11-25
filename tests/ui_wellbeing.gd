@@ -39,6 +39,10 @@ func _run() -> void:
 	check(app.wellbeing_dialog.ok_button_text == "Zamknij" and not app.text_dialog.visible, "emotion explanation is independent of training commands")
 	app.wellbeing_dialog.hide()
 	await process_frame
+	await process_frame
+	# Native dialog focus returns asynchronously; the test disables the UI tick.
+	app.app_foreground = true
+	app._update_attention()
 	step(0.01)
 	for key in app.session.wellbeing.parts: app.session.wellbeing.parts[key] = 30.0
 	app.session.wellbeing.parts.contact = 10.0
