@@ -34,3 +34,17 @@ Makiety pochodzą ze wskazanej gałęzi i nie są zrzutami obecnego buildu. Eksp
 Mapa ogrodu i trwające aktywności zachowują dotychczasowe sterowanie. Menu zamyka się po zmianie sceny, ekranu, wejściu w aktywność, otwarciu dialogu, sprzątaniu, utracie zapisu albo przejściu aplikacji w tło. Przyciski ponownie sprawdzają dostępność przy wykonaniu. Nie nadpisujemy zegara autonomicznego chodzenia, nie zmieniamy nagród ani schematu zapisu.
 
 Weryfikacja menu i instalacji: [raport buildu 38](test-ios.md).
+
+## Trzymanie piłki — 25 listopada 2026
+
+Po chwycie Gloria przez 2,4 s trzyma piłkę przy pyszczku i merda ogonem,
+a następnie puszcza ją z wysokości pyska; działa dotychczasowa fizyka odbić.
+Pozycja piłki śledzi bieżącą klatkę i odbicie lustrzane psa. Przerwanie
+aktywności usuwa fazę trzymania i odkłada piłkę na ziemię. Powrót z aportem
+zachowuje własny stan niesienia piłki.
+
+Animacja składa się z istniejących klipów chwytu i merdania oraz ruchu
+rekwizytu; nie dodaje nowego arkusza sprite’ów ani danych do zapisu.
+`ui_catch_motion.gd`: 16 sprawdzeń, w tym trzymanie w obu kierunkach,
+upuszczenie, przerwanie i chwyt frisbee. Obejrzano zrzut fazy trzymania.
+Weryfikacja na fizycznym telefonie pozostaje do wykonania.

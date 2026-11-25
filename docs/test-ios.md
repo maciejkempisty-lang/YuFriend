@@ -586,3 +586,17 @@ minigier ani odczucia wibracji. Zakres funkcji: [opis minigier](minigry-2026-11-
 
 Kopie, manifest, wynik porównania i logi: `exports/ios-games-v39/` (lokalne,
 ignorowane przez Git).
+
+## Build 40 — picie, przyjaźnie i trzymanie piłki (25 listopada 2026)
+
+Zainstalowano i uruchomiono aktualizację 0.1.0 (40) na MagicPhone, z zachowaniem
+bundle ID, podpisu i widgetu. Zabezpieczono Documents przed instalacją.
+Wszystkie 33 pliki były identyczne bajtowo bezpośrednio po aktualizacji.
+Po uruchomieniu zmieniły się wyłącznie potrzeby i czas ostatniej wizyty;
+pozostałe pola oraz schemat v17 pozostały bez zmian. Zrzut potwierdza Glorię
+w mieszkaniu. Nie wykonywano minigier na jej rzeczywistym zapisie.
+
+Przeszło 41/41 zestawów logiki, 69 sprawdzeń na kopii zapisu Glorii oraz
+16 sprawdzeń UI chwytu/trzymania z poprzedniego etapu. Podpis zweryfikowany.
+Kopie i raport: `exports/ios-home-v40/` (lokalnie, poza Git).
+Freestyle powstaje po tym wydaniu i nie jest częścią buildu 40.

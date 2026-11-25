@@ -113,6 +113,8 @@ var throw_guide := Line2D.new()
 var _drag_ball := false
 var _throw_target := Vector2.ZERO
 var ball_motion := BallMotion.new()
+const BALL_HOLD_SECONDS := 2.4
+var ball_hold_left := 0.0
 var ball_catch_left := 0.0
 var ball_catch_precise := false
 var _ball_flight_left := 0.0
@@ -724,9 +726,10 @@ func start_course_jump(target: Vector2) -> void:
 	jump_clip = ""
 
 func cancel_activity() -> void:
-	if ball_catch_left > 0 or carrying_ball:
+	if ball_catch_left > 0 or ball_hold_left > 0 or carrying_ball:
 		ball_world = RoomLayout.clamp_walk(Vector2(ball_world.x, pet_world.y))
 	ball_catch_left = 0
+	ball_hold_left = 0
 	ball_motion.cancel()
 	animator.rotation = 0
 	jump_motion.cancel()
@@ -837,9 +840,18 @@ func _process(delta: float) -> void:
 		ball_art.queue_redraw()
 	else:
 		_ball_was_rolling = false
+	var hold_delta := delta
 	if ball_catch_left > 0:
+		hold_delta = maxf(0, delta - ball_catch_left)
 		ball_catch_left = maxf(0, ball_catch_left - delta)
 		if ball_catch_left == 0:
+			ball_hold_left = BALL_HOLD_SECONDS
+			animator.remaining = 0
+			animator.request_clip("tail_wag_stand")
+			animator.rotation = 0
+	if ball_hold_left > 0:
+		ball_hold_left = maxf(0, ball_hold_left - hold_delta)
+		if ball_hold_left == 0 and not carrying_ball:
 			var ground := RoomLayout.clamp_walk(Vector2(ball_world.x, pet_world.y))
 			ball_target = RoomLayout.clamp_walk(ground + Vector2(-25 if animator.facing_left else 25, 0))
 			ball_motion.drop(ground, ball_target, maxf(1, pet_world.y - ball_world.y))
@@ -847,7 +859,8 @@ func _process(delta: float) -> void:
 			_ball_flight_total = ball_motion.duration
 			_ball_flight_left = ball_motion.duration
 			_ball_lift = ball_motion.drop_height
-			animator.rotation = 0
+			animator.remaining = 0
+			animator.request_clip("idle")
 	effect_left = maxf(0, effect_left - delta)
 	focus_left = maxf(0, focus_left - delta)
 	for id in prop_bounces:
@@ -881,11 +894,11 @@ func _sync_layers() -> void:
 	water_drops.pet_world = pet_world
 	water_drops.visible = in_yard and yard_water.phase in ["splash", "shake"]
 	puppy.position = (pet_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
-	if carrying_ball or ball_catch_left > 0:
+	if carrying_ball or ball_catch_left > 0 or ball_hold_left > 0:
 		ball_world = puppy.position + animator.transform * animator.mouth_point()
 		ball_target = ball_world
 		_ball_lift = 0
-	ball_art.z_index = 2 if carrying_ball or ball_catch_left > 0 else 0
+	ball_art.z_index = 2 if carrying_ball or ball_catch_left > 0 or ball_hold_left > 0 else 0
 	ball_art.position = ((ball_world - Vector2(0, _ball_lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
 	for id in prop_bounces:
 		var node: Node2D = ball_art if id == "ball" else station_nodes[id]
@@ -969,6 +982,7 @@ func animate_ball_catch(precise: bool) -> void:
 	ball_motion.cancel()
 	_ball_flight_left = 0
 	_ball_lift = 0
+	ball_hold_left = 0
 	ball_catch_left = 0.9
 	ball_catch_precise = precise
 	moving = false
