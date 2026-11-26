@@ -14,7 +14,9 @@ Projekt używa renderera Compatibility i bazowego obszaru 390 × 844. Okno pulpi
 
 Pokój jest osobnym światem 2D w `SubViewport`, wyświetlanym przez `Sprite2D` pod HUD-em. `Camera2D` przesuwa tylko świat; zbliżenie realizuje całkowite powiększenie tekstury pokoju, a potrzeby, panele i komunikat pozostają w interfejsie. [RoomLayout](../scripts/model/room_layout.gd) określa wymiary 1440 × 360, płytki pas chodzenia oraz sześć stacji. Ich pozycje nie zmieniają się wraz z wielkością okna.
 
-`RoomArtwork` składa panoramę z fragmentów istniejącego tła pixel art i osobnych przedmiotów. Tło ma zachowaną listę rysowania, przedmioty są oddzielnymi węzłami, a `actors.y_sort_enabled` ustawia kolejność psa i kosza/miski/piłki według głębokości. Legowisko i drzwi są nad tłem, lecz za postacią. [Opis zasobów](../assets/art/environments/README.md) wskazuje sposób składania grafiki.
+Świat w `RoomView` to `SceneLayers` z trzema nazwanymi węzłami: `Background`, `MiddleGround` i `Foreground`. Pokój i ogród współdzielą ten układ, przełączając widoczność istniejących obiektów. Warstwy mają wspólny początek i kamerę; HUD pozostaje poza światem. `actors` jest aliasem `MiddleGround`, gdzie `y_sort_enabled` sortuje psa, gości, miskę, kosz i przestrzenne przedmioty ogrodu po ich podstawach. `YardSpriteLayout.SORT_ORIGINS` ustala podstawy, a lokalne przesunięcie grafiki zachowuje dotychczasowe położenie PNG. Przeszkody toru mają osobne podstawy, zwierzęta otoczenia korzystają z zagnieżdżonego Y-sort.
+
+`RoomArtwork` nadal składa obecne tło bez zmiany zasobów. Background zawiera także płaską ziemię, kałużę, legowisko, ścienne stacje i istniejący złożony PNG miejsca odpoczynku. Mata toru pozostaje pod postaciami. Foreground zawiera efekty otrzepywania, wskazówkę rzutu, efekt potrzeby i ogon podpowiedzi w chowanego. Warstwy nie zmieniają pól dotyku, dróg ani zapisu. [Wytyczne grafik](wytyczne-grafik.md) opisują rozmiary, pivoty, wyjątki istniejących grafik i dostawę kolejnych assetów.
 
 ```mermaid
 flowchart TD

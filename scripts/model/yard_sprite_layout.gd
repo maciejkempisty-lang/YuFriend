@@ -17,3 +17,15 @@ const CROPS := {
 	"puddle": Rect2i(351, 294, 144, 51),
 	"sprinkler": Rect2i(1281, 279, 102, 81)
 }
+
+# Flat ground and the existing composite rest shelter stay below characters.
+# Shade includes a bed and bowl in one PNG: splitting that artwork is separate work.
+const GROUND_ONLY := ["dig", "puddle", "shade"]
+# Feet/base of the upright object, NOT the bottom of its transparent crop/shadow.
+const SORT_ORIGINS := {
+	"gate": Vector2(150, 276), "garden": Vector2(550, 300),
+	"fetch": Vector2(850, 312), "bush_0": Vector2(350, 294),
+	"bush_1": Vector2(750, 294), "bush_2": Vector2(1150, 294),
+	"outing": Vector2(1296, 300), "course": Vector2(1005, 294),
+	"sprinkler": Vector2(1305, 312)
+}

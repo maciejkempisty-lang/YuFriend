@@ -38,8 +38,9 @@ var ball_art := RoomArtwork.new()
 var shadow := RoomArtwork.new()
 var viewport := SubViewport.new()
 var display := Sprite2D.new()
-var world := Node2D.new()
-var actors := Node2D.new()
+var world := preload("res://scripts/ui/scene_layers.gd").new()
+# Compatibility alias used by movement and existing integration tests.
+var actors: Node2D = world.middle_ground
 var puppy := Node2D.new()
 var camera := Camera2D.new()
 var yard_markers: Dictionary = {}
@@ -140,52 +141,50 @@ func _ready() -> void:
 	world.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	world.scale = Vector2.ONE / _render_pixel_size
 	backdrop.z_index = -5
-	world.add_child(backdrop)
+	world.background.add_child(backdrop)
 	# Extra floor continues behind the floating controls; gameplay coordinates stay fixed.
 	backdrop.configure(Vector2(RoomLayout.SIZE.x, 960))
 	for id in RoomLayout.YARD_STATIONS:
 		var station := YardStationView.new()
 		station.configure(id)
-		station.z_index = -1
+		if YardSpriteLayout.GROUND_ONLY.has(id): station.z_index = -1
 		station.hide()
-		world.add_child(station)
+		(world.background if YardSpriteLayout.GROUND_ONLY.has(id) else actors).add_child(station)
 		yard_nodes[id] = station
 	wall_clock.position = Vector2(607, 81)
 	wall_clock.radius = 24
 	wall_clock.z_index = -4
-	world.add_child(wall_clock)
+	world.background.add_child(wall_clock)
 	yard_water.z_index = -2
 	yard_water.draw_ground_base = false
 	yard_water.hide()
-	world.add_child(yard_water)
+	world.background.add_child(yard_water)
 	yard_weather.z_index = -1
 	yard_weather.hide()
-	world.add_child(yard_weather)
-	yard_course.z_index = -1
+	world.background.add_child(yard_weather)
 	yard_course.draw_sign = false
 	yard_course.hide()
-	world.add_child(yard_course)
+	actors.add_child(yard_course)
 	yard_rest.z_index = -1
 	yard_rest.draw_static = false
 	yard_rest.hide()
-	world.add_child(yard_rest)
+	world.background.add_child(yard_rest)
 	yard_potty.z_index = 2
 	yard_potty.hide()
-	world.add_child(yard_potty)
+	world.foreground.add_child(yard_potty)
 	water_drops.effects_only = true
 	water_drops.z_index = 5
 	water_drops.hide()
-	world.add_child(water_drops)
+	world.foreground.add_child(water_drops)
 	ambient_life.z_index = 0
-	world.add_child(ambient_life)
-	world.add_child(actors)
+	actors.add_child(ambient_life)
 	fence_visitor.position = YardVisitors.FENCE
 	fence_visitor.scale = Vector2.ONE * 1.5
-	world.add_child(fence_visitor)
+	actors.add_child(fence_visitor)
 	throw_guide.width = 4
 	throw_guide.default_color = Color("fff3be")
 	throw_guide.z_index = 10
-	world.add_child(throw_guide)
+	world.foreground.add_child(throw_guide)
 	throw_guide.hide()
 	throw_power.hide()
 	actors.y_sort_enabled = true
@@ -194,8 +193,8 @@ func _ready() -> void:
 		var node := RoomArtwork.new()
 		node.kind = id
 		node.position = RoomLayout.STATIONS[id].position
-		if id in ["bed", "window", "door"]: node.z_index = -1
-		actors.add_child(node)
+		# Flat bed and wall fixtures remain behind the puppy, including sleep.
+		(world.background if id in ["bed", "window", "door"] else actors).add_child(node)
 		station_nodes[id] = node
 	catch_ring.width = 4
 	catch_ring.default_color = Color("ffe29a")
@@ -215,7 +214,7 @@ func _ready() -> void:
 	RenderingServer.frame_pre_draw.connect(_sync_held_ball)
 	hide_tail.kind = "hide_tail"
 	hide_tail.hide()
-	actors.add_child(hide_tail)
+	world.foreground.add_child(hide_tail)
 	for label in [effect_label, sleep_label]:
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.add_theme_font_size_override("font_size", 23)
@@ -871,6 +870,7 @@ func _process(delta: float) -> void:
 
 func _sync_layers() -> void:
 	for id in yard_nodes:
+		yard_nodes[id].set_weather(yard_weather.kind, yard_weather.night)
 		# Keep the existing visibility of props while the course is unfolded.
 		yard_nodes[id].visible = in_yard and (id not in ["shade", "puddle", "sprinkler"] or not yard_course.playing)
 	var garden_art: RoomArtwork = yard_nodes.garden.art

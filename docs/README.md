@@ -59,6 +59,8 @@ Parametry mechanik są zebrane w jednym dokumencie; format PNG i manifestu opisu
 
 ## Grafika i dodatkowe eksporty
 
+- [Wytyczne grafik i warstw scen](wytyczne-grafik.md) — rozmiary PNG, skala, pivoty i podział Background/MiddleGround/Foreground.
+
 - [Plan rozwoju grafiki i referencje](rozwoj-grafiki.md) — aktualny zakres, makiety oraz zaadaptowane menu obiektów.
 - [Testowy eksport Androida](android.md) — osobny preset i skrypt eksportu APK.
 

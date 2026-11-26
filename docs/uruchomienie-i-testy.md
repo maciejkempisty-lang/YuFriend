@@ -1,5 +1,18 @@
 # Uruchomienie i testy YuFriend
 
+
+## Warstwy pokoju i ogrodu — 26 listopada 2026
+
+Przed zmianą zapisano i wypchnięto `codex/old-version-backup-2026-11-26`, commit `ebdba63`. Implementacja warstw znajduje się na `codex/scene-layers`.
+
+- Regresja logiki: **44/44 zestawy**.
+- Pełna regresja UI: **34/43 zestawy**. Dziewięć nieudanych zestawów (`ui_bubbles`, `ui_companion`, `ui_hud_navigation`, `ui_play`, `ui_rhythm`, `ui_smoke`, `ui_stage2`, `ui_water`, `ui_wellbeing`) uruchomiono także na odizolowanej kopii `ebdba63`: odtwarzają wcześniejsze błędy dymków, nagłówka, układu treningu i widoczności celu zraszacza. Nie stanowią potwierdzenia pełnej poprawności istniejącego HUD-u.
+- Końcowe testy po zachowaniu kolorystyki pogody: **151/151** warstw, **19/19** sprite'ów ogrodu, **19/19** pogody, **156/156** toru i **153/153** odpoczynku.
+- Nowy `tests/ui_scene_layers.gd` sprawdza kolejność rzeczywiście wyrenderowanych pikseli, wspólne sortowanie postaci/przedmiotów, położenie grafik po zmianie pivotów, przełączanie lokacji, brak zmian danych psa, przeszkody i kolory pogody.
+- Obejrzano zrzuty pokoju i ogrodu. Kontrolny zrzut pokoju 390 × 844 jest identyczny piksel po pikselu ze zrzutem sprzed zmian; ogród zachowuje geometrię i kadrowanie. Kolejność zasłaniania przestrzennych obiektów wynika teraz z ich podstaw.
+
+Testy wykonano na macOS; nie eksportowano ani nie instalowano tej zmiany na telefonie. Zasady tworzenia nowych grafik: [wytyczne](wytyczne-grafik.md).
+
 [Mapa dokumentacji](README.md)
 
 ## Środowisko

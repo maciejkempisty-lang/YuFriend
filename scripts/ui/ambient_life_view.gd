@@ -10,6 +10,8 @@ var squirrel_frames: Array[Texture2D] = []
 var pane := Control.new()
 
 func _ready() -> void:
+	# Share each outdoor animal's foot position with the middle-ground sort.
+	y_sort_enabled = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	bird_frames = AmbientSpriteArt.frames(false)
 	butterfly_frames = AmbientSpriteArt.frames(true)
