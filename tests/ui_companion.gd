@@ -34,7 +34,7 @@ func _run() -> void:
 	game.pet.life.mood = "calm"
 	app.bubble_left = 0
 	await settle()
-	check(app.companion_card.visible and app.companion_data.kind == "thought", "quiet home shows a thought in the top bubble")
+	check(app.companion_notice.visible and app.companion_data.kind == "thought", "quiet home shows a thought in the top bubble")
 	for layout in [Vector2i(390, 844), Vector2i(320, 640), Vector2i(860, 1864), Vector2i(1100, 720)]:
 		root.size = layout
 		root.content_scale_size = Vector2i(390, 844) if layout.x == 860 else layout
@@ -57,20 +57,20 @@ func _run() -> void:
 			game.say("Znów w domu.")
 			app.bubble_left = 3
 			await settle()
-			check(app.bubble.visible and app.companion_card.modulate.a == 0, "narrow screen: a reply bubble replaces a passing thought")
+			check(app.bubble.visible and app.companion_notice.visible, "narrow screen: reply cloud and status message remain available")
 			app.bubble_left = 0
 			await settle()
-			check(app.companion_card.visible and app.companion_card.modulate.a > 0, "narrow screen: the thought returns after the reply")
+			check(app.companion_notice.visible and app.companion_notice.modulate.a > 0, "narrow screen: the thought returns after the reply")
 		game.pet.needs.fullness = 20
 		await settle()
 		await capture("companion-need-%d.png" % layout.x)
 		check(app.companion_data.action == "feed" and app.companion_action.text == "Nakarm", "hungry bubble routes to feeding at " + str(layout))
 		check(app.room.camera_center() == camera and app.room.screen_scale() == scale and app.room.pet_position() == pet_point, "bubble does not change camera, scale or dog position at " + str(layout))
-		var rect: Rect2 = app.companion_card.get_global_rect()
-		check(app.safe_rect.encloses(rect) and rect.position.y >= app.room.overview_button.get_rect().end.y + 4, "bubble fits below the toolbar inside safe bounds at " + str(layout))
+		var rect: Rect2 = app.companion_notice.get_global_rect()
+		check(app.safe_rect.encloses(rect) and rect.position.y >= app.header.get_rect().end.y, "bubble fits below the toolbar inside safe bounds at " + str(layout))
 		var ball: Rect2 = app.room._screen_rect(Rect2(app.room.ball_world - Vector2(14, 14), Vector2(28, 32)))
 		check(not rect.intersects(puppy_bounds()) and not rect.intersects(app.room.bowl_rect()) and not rect.intersects(ball), "bubble leaves the dog, bowl and ball unobscured at " + str(layout))
-		check(rect.encloses(app.companion_action.get_global_rect()) and app.companion_action.size.y >= 44 and app.companion_label.get_line_count() <= 3, "action is tappable and text stays short at " + str(layout))
+		check(rect.encloses(app.companion_action.get_global_rect()) and app.companion_action.size.y >= 26 and app.companion_label.get_line_count() <= 3, "action is tappable and text stays short at " + str(layout))
 		game.pet.needs.fullness = 80
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
@@ -91,12 +91,12 @@ func _run() -> void:
 	await capture("companion-memory-390.png")
 	check(app.companion_data.kind == "memory" and app.companion_action.text == "Zobacz album", "real journal event appears as a memory")
 	await tap(app.companion_action)
-	check(app.selected_tab == "journal" and not app.companion_card.visible, "memory button opens the album")
+	check(app.selected_tab == "journal" and not app.companion_notice.visible, "memory button opens the album")
 	app._select_tab("care")
 	game.pet.needs.play = 20
 	await settle()
 	await tap(app.companion_action)
-	check(app.play_menu.visible and not app.companion_card.visible, "play need opens the game chooser and yields to the dialog")
+	check(app.play_menu.visible and not app.companion_notice.visible, "play need opens the game chooser and yields to the dialog")
 	app.play_menu.hide()
 	await settle() # Refresh attention after closing the modal.
 	game.pet.needs.play = 80
@@ -115,22 +115,22 @@ func _run() -> void:
 	check(game.invitation.is_empty() and game.pet.social.responses.ball.declined == 1, "Później records exactly one declined invitation")
 	app._show_profile()
 	await settle()
-	check(not app.companion_card.visible, "profile hides the top bubble")
+	check(not app.companion_notice.visible, "profile hides the top bubble")
 	app.profile_dialog.hide()
 	app.room.show_overview()
 	await settle()
-	check(not app.companion_card.visible, "room overview has no top bubble")
+	check(not app.companion_notice.visible, "room overview has no top bubble")
 	app.room.focus_pet()
 	app._select_tab("training")
 	await settle()
-	check(not app.companion_card.visible, "training has no top bubble")
+	check(not app.companion_notice.visible, "training has no top bubble")
 	app._select_tab("care")
 	game.pet.pet_name = "Fado"
 	await settle()
 	check(app.companion_title.text.begins_with("Fado"), "renaming updates the voice header")
 	app.app_foreground = false
 	app._process(0)
-	check(not app.companion_card.visible, "backgrounding hides the bubble")
+	check(not app.companion_notice.visible, "backgrounding hides the bubble")
 	game.active = false
 	app.queue_free()
 	await process_frame

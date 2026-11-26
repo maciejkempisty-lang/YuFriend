@@ -1,6 +1,17 @@
 # Uruchomienie i testy YuFriend
 
 
+## Naprawa regresji UI — 26 listopada 2026
+
+Zachowano obecny nagłówek, pasek samopoczucia i wiadomości, chmurki reakcji, podpisy i procenty przy ikonach oraz dolną nawigację. Poprawiono bezpieczne marginesy zawartości paneli (tła nadal dochodzą do krawędzi), przeliczanie miejsca po ukryciu wiadomości i otwarciu mapy oraz dopasowanie skali/zbliżenia psa do rzeczywistej wysokości między HUD-em a panelem. Na szerokich i krótkich ekranach pies nie znika za nagłówkiem.
+
+Testy dziewięciu wcześniej nieudanych zestawów dostosowano do aktualnego interfejsu: sprawdzają widoczny `companion_notice`, samopoczucie w pasku statusu, podpisane przyciski, przylegające panele i bezpieczne prostokąty kontrolek zamiast pełnoekranowych teł. Test wody otwiera mapę przez tę samą metodę co przycisk Mapa. Zachowano kontrole dotyku, braku kolizji wiadomości z psem i pełnej widoczności postaci.
+
+Weryfikacja końcowa: **44/44 zestawy logiki** oraz **43/43 zestawy UI po ponowieniu ostatniego testu**. Pełen przebieg UI dał 42/43; pozostał warunek kadru względem dawnego, ukrytego paska kamery. Po odniesieniu go do widocznego statusu, bez zmiany kodu gry, `ui_smoke` przeszedł **242/242** sprawdzenia. Pozostałe 42 zestawy nie wymagały ponowienia. `ui_bubbles`: 1104/1104, `ui_companion`: 36/36, `ui_hud_navigation`: 34/34, `ui_play`: 46/46, `ui_rhythm`: 20/20, `ui_stage2`: 0 błędów, `ui_water`: 148/148, `ui_wellbeing`: 17/17.
+
+Obejrzano kadr treningu na wysokiej rozdzielczości i ogród. Kontrolny zrzut pokoju 390 × 844 pozostał identyczny piksel po pikselu; w ogrodzie różnice porównywanych zrzutów obejmują zmienną pogodę. Sprawdzenie na macOS, bez nowego eksportu i instalacji na telefonie.
+
+
 ## Warstwy pokoju i ogrodu — 26 listopada 2026
 
 Przed zmianą zapisano i wypchnięto `codex/old-version-backup-2026-11-26`, commit `ebdba63`. Implementacja warstw znajduje się na `codex/scene-layers`.

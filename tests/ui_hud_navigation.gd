@@ -28,10 +28,10 @@ func _run() -> void:
 	await process_frame
 	check(app.header.visible and app.header.position.y == app.safe_rect.position.y, "header touches the top safe edge")
 	check(app.name_label.visible and app.bond_bar.visible and app.today_button.visible, "header keeps name, progress and daily plan")
-	check(not app.bond_label.visible and not app.bond_detail.visible and not app.wellbeing_button.visible, "extra header details are hidden")
+	check(not app.bond_label.visible and not app.bond_detail.visible and not app.header.is_ancestor_of(app.wellbeing_button), "extra header details are hidden")
 	check(app.today_button.text == "Plan na dziś", "daily plan has a clear label")
 	check(app.care_status.get_parent() == app and not app.yard_toolbar.visible, "care panel contains only activity icons; any status floats separately")
-	for button in app.care_buttons.values(): check(button.icon_only, "care action is icon-only")
+	for button in app.care_buttons.values(): check(not button.icon_only and not button.caption.is_empty() and button.need_value >= 0, "care action retains icon, caption and need percentage")
 	var order := ["care", "training", "journal", "map", "settings"]
 	for index in order.size(): check(app.navigation.get_child(0).get_child(index) == app.tab_buttons[order[index]], "navigation order %d" % index)
 	app._show_map()

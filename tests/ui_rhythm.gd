@@ -112,8 +112,8 @@ func _run() -> void:
 	app._fit_room()
 	advance(0.1)
 	await capture("rhythm-wake-needs-320.png")
-	var wake_visible: bool = (app.companion_card.visible and app.companion_card.modulate.a > 0 and app.companion_label.text.begins_with("Już nie śpię!")) or (app.care_status.visible and app.care_status.text.begins_with("Już nie śpię!") and app.safe_rect.encloses(app.care_status.get_global_rect()) and app.care_status.get_global_rect().end.y <= app.sheet.position.y)
-	check(wake_visible, "small-screen wake needs remain readable in a chmurka or floating status")
+	var wake_visible: bool = (app.companion_notice.visible and app.companion_notice.modulate.a > 0 and app.companion_label.text.begins_with("Już nie śpię!")) or (app.care_status.visible and app.care_status.text.begins_with("Już nie śpię!") and app.safe_rect.encloses(app.care_status.get_global_rect()) and app.care_status.get_global_rect().end.y <= app.sheet.position.y)
+	check(wake_visible, "small-screen wake needs remain readable in the status notice or floating fallback")
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
 	await process_frame

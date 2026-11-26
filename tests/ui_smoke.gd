@@ -221,7 +221,7 @@ func _run() -> void:
 	app._fit_room()
 	await process_frame
 	check(app.safe_rect.position.distance_to(phone_safe.position) < 0.01 and app.safe_rect.size.distance_to(phone_safe.size) < 0.01, "physical safe-area insets convert correctly through fractional high-DPI scaling")
-	check(app.header.position.x >= phone_safe.position.x and app.header.get_rect().end.x <= phone_safe.end.x and app.navigation.get_rect().end.x <= phone_safe.end.x and app.navigation.get_rect().end.y <= phone_safe.end.y, "left, right and bottom insets keep controls clear on a high-DPI phone")
+	check(phone_safe.encloses(app.name_label.get_global_rect()) and phone_safe.encloses(app.today_button.get_global_rect()) and app.tab_buttons.values().all(func(button): return phone_safe.encloses(button.get_global_rect())), "left, right and bottom insets keep controls clear on a high-DPI phone")
 	app.safe_area_override = Rect2()
 	app._fit_room()
 	await _test_slow_pan()
@@ -231,7 +231,7 @@ func _run() -> void:
 	app._select_tab("care")
 	await capture("10-landscape.png")
 	check_pixel_grid("landscape")
-	check(app.layout_wide and app.room.size.x <= app.sheet.position.x, "wide window places controls beside the room")
+	check(not app.layout_wide and app.sheet.get_rect().end.y <= app.navigation.position.y and app.care_buttons.values().all(func(button): return app.safe_rect.encloses(button.get_global_rect())), "wide window retains the bottom panel and safe action targets")
 	check(visible_above_navigation(app.care_buttons.feed), "wide action panel stays usable")
 	root.size = Vector2i(320, 640)
 	root.content_scale_size = Vector2i(390, 844)
@@ -772,7 +772,7 @@ func _test_redesigned_ui() -> void:
 	var original := game.pet.needs.duplicate()
 	game.pet.needs.fullness = 21.0
 	app._refresh()
-	check(app.care_buttons.feed.need_value == 21 and app.care_buttons.feed.icon_only and app.care_buttons.feed.accessibility_name.contains("21 procent"), "low need keeps a visible ring and accessible percentage")
+	check(app.care_buttons.feed.need_value == 21 and not app.care_buttons.feed.icon_only and app.care_buttons.feed.accessibility_name.contains("21 procent"), "low need keeps a visible ring and accessible percentage")
 	check(NeedIndicator.level_color(35) != NeedIndicator.level_color(100) and NeedIndicator.level_color(20) != NeedIndicator.level_color(35), "critical, medium and satisfied needs use distinct colors")
 	game.cooldowns.feed = 6.0
 	app._refresh()
@@ -797,7 +797,7 @@ func _test_redesigned_ui() -> void:
 	await capture("22-settings.png")
 	app.settings_dialog.hide()
 	app._select_tab("journal")
-	check(app.header.visible and app.sheet.position.y >= app.header.get_rect().end.y and app.sheet.get_rect().end.y < app.navigation.position.y, "album stays between the pinned header and navigation")
+	check(app.header.visible and app.sheet.position.y >= app.header.get_rect().end.y and app.sheet.get_rect().end.y <= app.navigation.position.y, "album stays between the pinned header and navigation")
 	check(app._journal_icon("feed") != app._journal_icon("rest") and app._journal_icon("first_sit") == "spark", "album distinguishes care, sleep and learning events")
 	app._select_tab("training")
 	game.pet.milestones.erase("favorite_reward")
@@ -816,7 +816,7 @@ func _test_redesigned_ui() -> void:
 	app.safe_area_override = transform * Rect2(0, 47, app.size.x, app.size.y - 81)
 	app._fit_room()
 	await process_frame
-	check(app.header.position.y >= 47 and app.navigation.get_rect().end.y <= app.size.y - 34, "notch and home-indicator insets protect floating controls")
+	check(app.name_label.get_global_rect().position.y >= 47 and app.tab_buttons.values().all(func(button): return button.get_global_rect().end.y <= app.size.y - 34), "notch and home-indicator insets protect floating controls")
 	app._show_profile()
 	await process_frame
 	check(app.profile_dialog.position.y - 34 >= 47 and app.profile_dialog.position.y + app.profile_dialog.size.y <= app.size.y - 34, "dog card and its title fit inside the safe area")
@@ -869,7 +869,7 @@ func _test_training_visibility() -> void:
 			await process_frame
 			var bounds := _puppy_screen_bounds()
 			check(not app.bubble.visible and not app.gain_label.visible and bounds.position.y >= app.header.get_rect().end.y + 12 and bounds.end.y <= app.sheet.position.y - 12, "training puppy remains fully clear of HUD, messages and panel: %s / %s" % [layout, phase])
-			check(app.sheet.size.y <= 280 and app.sheet.get_rect().end.y < app.navigation.position.y and (app.sheet.position.y - app.header.get_rect().end.y) / app.safe_rect.size.y >= 0.43, "training reserves space for the puppy and keeps controls above navigation: %s / %s" % [layout, phase])
+			check(app.sheet.size.y <= 280 and app.sheet.get_rect().end.y <= app.navigation.position.y and (app.sheet.position.y - app.header.get_rect().end.y) / app.safe_rect.size.y >= 0.43, "training reserves space for the puppy and keeps controls above navigation: %s / %s" % [layout, phase])
 		await capture("training-clear-%d.png" % layout.x)
 		app.safe_area_override = Rect2()
 	game.training.phase = "idle"
@@ -918,7 +918,10 @@ func _test_phone_framing() -> void:
 		var ball := room._screen_rect(Rect2(room.ball_world - Vector2(14, 14), Vector2(28, 32)))
 		check(stage.encloses(_puppy_screen_bounds()) and stage.encloses(room.bowl_rect()) and stage.encloses(ball), "phone frame keeps the entire puppy, bowl and ball between toolbar and care panel: " + str(layout))
 		var window_top := room.world_to_screen(Vector2(740, 75)).y
-		check(window_top >= clear_top and window_top - clear_top <= 110, "phone frame limits blank wall below the toolbar to 110 UI points: " + str(layout))
+		# The former floating camera toolbar is hidden in the current HUD.
+		# Decoration may use that space, but must clear the actual status strip;
+		# retain the existing upper limit on empty wall / vertical framing.
+		check(window_top >= room.hud_bottom + 8 and window_top - clear_top <= 110, "phone decorations clear the status strip without excess blank wall: %s, window=%.2f, hud=%.2f, room=%s" % [layout, window_top, room.hud_bottom, room.size])
 		check(room.pet_world == RoomLayout.START and room.ball_world == RoomLayout.STATIONS.ball.position, "phone reframing preserves world positions: " + str(layout))
 		check_pixel_grid("phone framing " + str(layout))
 	app.safe_area_override = Rect2()

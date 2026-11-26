@@ -1215,6 +1215,9 @@ func _update_attention() -> void:
 		room.ambient_life.sync(room, session, app_foreground and selected_tab == "care" and room.visible and not _dialog_open())
 	if companion_card != null and not session.attention_available:
 		companion_card.hide()
+		if companion_notice.visible:
+			companion_notice.hide()
+			_fit_room.call_deferred()
 		session.invitation_presented = false
 
 func _show_play_menu() -> void:
@@ -1269,6 +1272,7 @@ func _show_map() -> void:
 	room.show_overview()
 	_refresh()
 	_update_attention()
+	_fit_room()
 	_sync_navigation()
 
 func _sync_navigation() -> void:
@@ -1312,13 +1316,20 @@ func _fit_room() -> void:
 		panel_height = nav_y - panel_top - warning_space
 	visitor_toolbar.visible = selected_tab == "care" and session.visitors.active()
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
+	# Backgrounds remain edge-to-edge; interactive contents respect device insets.
+	for panel in [sheet, navigation, status_strip]:
+		var padding := 12.0 if panel == sheet else (8.0 if panel == navigation else 3.0)
+		var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+		style.content_margin_left = safe_rect.position.x + padding
+		style.content_margin_right = size.x - safe_rect.end.x + padding
+		if panel == navigation: style.content_margin_bottom = size.y - safe_rect.end.y + padding
 	_place(navigation, Rect2(0, nav_y, size.x, size.y - nav_y))
 	_place(room, Rect2(0, 0, size.x, size.y))
 	var header_style := header.get_theme_stylebox("panel") as StyleBoxFlat
 	var portrait_header := size.x <= 500
 	header_art.visible = portrait_header
-	header_style.content_margin_left = 0 if portrait_header else 12
-	header_style.content_margin_right = 0 if portrait_header else 12
+	header_style.content_margin_left = safe_rect.position.x + (0 if portrait_header else 12)
+	header_style.content_margin_right = size.x - safe_rect.end.x + (0 if portrait_header else 12)
 	header_style.content_margin_top = safe_rect.position.y if portrait_header else safe_rect.position.y + 4
 	header_style.content_margin_bottom = 0 if portrait_header else 4
 	header_portrait_space.custom_minimum_size.x = size.x * 0.23 if portrait_header else 0

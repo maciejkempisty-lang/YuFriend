@@ -63,7 +63,7 @@ func _run() -> void:
 					if not closeup and x == RoomLayout.START.x:
 						check(app.bubble.modulate.a > 0, "immediate feedback remains visible on %s / %s" % [layout, clip])
 					var visible_rects: Array[Rect2] = []
-					for pair in [["thought", app.companion_card], ["feedback", app.bubble], ["gain", app.gain_label]]:
+					for pair in [["thought", app.companion_notice], ["feedback", app.bubble], ["gain", app.gain_label]]:
 						var control: Control = pair[1]
 						if not control.visible or control.modulate.a == 0: continue
 						shown[pair[0]] += 1
@@ -76,11 +76,11 @@ func _run() -> void:
 						await RenderingServer.frame_post_draw
 						root.get_texture().get_image().save_png("res://test-results/bubbles-%d-%s.png" % [layout.x, "close" if closeup else "normal"])
 	for key in ["feedback", "gain"]: check(shown[key] >= 20, "%s remains readable in ordinary layouts (%d cases)" % [key, shown[key]])
-	check(shown.thought == 0, "passive thoughts yield to immediate feedback at every size")
+	check(shown.thought >= 20, "status messages remain readable above the separate feedback cloud")
 	app.bubble_left = 0
 	app._refresh_companion()
 	app._position_feedback()
-	check(app.companion_card.visible and app.companion_card.modulate.a > 0, "thought returns after feedback expires")
+	check(app.companion_notice.visible and app.companion_notice.modulate.a > 0, "thought returns after feedback expires")
 	app.session.active = false
 	app.queue_free()
 	await process_frame

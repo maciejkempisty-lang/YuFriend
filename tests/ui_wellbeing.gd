@@ -40,7 +40,7 @@ func _run() -> void:
 	app._refresh()
 	await process_frame
 	await capture("header-390")
-	check(not app.wellbeing_button.visible and app.wellbeing_button.text == "Radosna", "emotional state remains available without cluttering the header")
+	check(app.wellbeing_button.visible and app.status_strip.is_ancestor_of(app.wellbeing_button) and not app.header.is_ancestor_of(app.wellbeing_button) and app.wellbeing_button.text == "Radosna", "emotional state remains available without cluttering the header")
 	app._show_profile()
 	var wellbeing_entry: Button = find_button(app.profile_dialog, "Samopoczucie")
 	check(wellbeing_entry != null, "profile offers emotional details")

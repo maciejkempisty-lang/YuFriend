@@ -529,6 +529,11 @@ func update_placement() -> void:
 	if size.y > size.x:
 		# Use the largest whole-pixel magnification that still fits both care props.
 		_base_pixel_scale = maxi(1, floori(size.x * output_scale.x / (HOME_FRAME_WIDTH / RoomLayout.PIXEL_SIZE)))
+	if not overview:
+		# A wide/short window must fit the puppy above the panel too. Preserve
+		# the normal framing whenever it already fits, using whole art pixels.
+		var usable_height := maxf(0, stage_height - hud_bottom - 24) * output_scale.y
+		_base_pixel_scale = mini(_base_pixel_scale, maxi(1, floori(usable_height / 80.0)))
 	if overview:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
@@ -561,7 +566,7 @@ func update_placement() -> void:
 func _wanted_zoom() -> int:
 	if overview: return 1
 	var focused := interaction_focus or focus_left > 0
-	var height_pixels := (content_bottom if content_bottom > 0 else size.y) * _output_transform.get_scale().y
+	var height_pixels := maxf(0, (content_bottom if content_bottom > 0 else size.y) - hud_bottom - 24) * _output_transform.get_scale().y
 	# Keep the whole puppy visible on short screens, even during an interaction.
 	var fits := height_pixels / (_base_pixel_scale * 2) >= 60 and size.x * _output_transform.get_scale().x / (_base_pixel_scale * 2) >= 68
 	if camera_manual: return 2 if zoom_level == 2 and fits else 1

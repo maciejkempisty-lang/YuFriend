@@ -45,8 +45,8 @@ func _run() -> void:
 	check(game.offer_initiative("ball"), "dog offers the ball on its own")
 	step(1)
 	await capture("30-invitation.png")
-	check(app.companion_card.visible and app.companion_title.text.contains("Gloria") and app.companion_action.text.contains("piłkę"), "invitation presents a named dog and an actionable response")
-	check(app.companion_card.size.y < 180 and app.companion_card.get_rect().end.y < app.care_buttons.play.get_global_rect().position.y, "invitation stays compact and leaves the room and care controls visible")
+	check(app.companion_notice.visible and app.companion_title.text.contains("Gloria") and app.companion_action.text.contains("piłkę"), "invitation presents a named dog and an actionable response")
+	check(app.companion_notice.size.y < 180 and app.companion_notice.get_rect().end.y < app.care_buttons.play.get_global_rect().position.y, "invitation stays compact and leaves the room and care controls visible")
 	var time_left: float = game.invitation.remaining
 	app._show_profile()
 	step(50)

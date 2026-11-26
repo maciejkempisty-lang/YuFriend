@@ -45,7 +45,7 @@ func run() -> void:
 	app.room.animator.set_process(false)
 	await process_frame
 	app._toggle_yard(false)
-	app.room.show_overview()
+	app._show_map()
 	await shot("overview")
 	check(app.room.yard_markers.size() == 12, "twelve yard stations")
 	check(app.room.yard_markers.values().all(func(m): return m.visible), "all overview targets visible at 320px")
@@ -82,8 +82,8 @@ func run() -> void:
 	app._toggle_yard(false)
 	s.water.cooldown = 0
 	# Use the map explicitly; normal scene taps now offer contextual choices.
-	app.room.show_overview()
-	check(app.room.yard_markers.sprinkler.visible, "sprinkler map target is visible before tapping")
+	app._show_map()
+	check(app.room.yard_markers.sprinkler.visible, "sprinkler map target is visible before tapping: rect=%s, bottom=%.1f, hud=%.1f" % [app.room.yard_markers.sprinkler.get_rect(), app.room.content_bottom, app.room.hud_bottom])
 	app.room.yard_markers.sprinkler.pressed.emit()
 	until("ready")
 	await shot("sprinkler")
@@ -92,7 +92,7 @@ func run() -> void:
 	await shot("sprinkler-splash")
 	app.water_shake_button.pressed.emit()
 	until("")
-	app.room.show_overview()
+	app._show_map()
 	app._toggle_yard(false)
 	check(not app.room.yard_water.visible, "home hides water graphics")
 	# Audio playback is released by the mixer asynchronously. Do not terminate
