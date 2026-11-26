@@ -98,31 +98,51 @@ func describe(game: GameSession, visible_delta: float = 0.0) -> Dictionary:
 	if not game.invitation.is_empty():
 		var words: Array = YardInvitations.WORDS[game.invitation.kind] if YardInvitations.WORDS.has(game.invitation.kind) else INVITATIONS[game.invitation.kind]
 		return _line("invitation", words[0], "invite:" + str(game.invitation.kind), words[1], game)
-	var memories: Array = []
-	for entry in pet.journal:
-		if MEMORIES.has(entry.key):
-			memories.append({"kind": "memory", "text": MEMORIES[entry.key], "action": "album", "label": "Zobacz album"})
-			if memories.size() == 3: break
 	var mood: String = pet.life.get("mood", "calm")
+	var memories := _memories(pet)
 	var context := str([pet.pet_id, mood, pet.life.discovered, memories, BondLevels.heart(pet)])
 	if context != _context:
 		_context = context
 		_quiet_index = 0
 		_quiet_left = QUIET_SECONDS
-	var words: Array = THOUGHTS.get(mood, THOUGHTS.calm)
-	var quiet: Array = memories.slice(0, 1)
-	quiet.append({"kind": "thought", "text": words[0], "action": words[1], "label": words[2]})
-	for quirk in pet.life.discovered:
-		quiet.append({"kind": "thought", "text": QUIRKS[quirk], "action": "", "label": ""})
-	if BondLevels.heart(pet) >= 2:
-		quiet.append({"kind": "thought", "text": BondLevels.thought(pet), "action": "pet", "label": "Pogłaszcz"})
-	quiet.append_array(memories.slice(1))
+	var quiet := _quiet_messages(pet, memories)
 	_quiet_left -= maxf(0, visible_delta)
 	if _quiet_left <= 0:
 		_quiet_index = (_quiet_index + 1) % quiet.size()
 		_quiet_left = QUIET_SECONDS
 	var selected: Dictionary = quiet[_quiet_index % quiet.size()]
 	return _line(selected.kind, selected.text, selected.action, selected.label, game)
+
+func messages(game: GameSession) -> Array[Dictionary]:
+	# The same priority and quiet rotation decide which message comes first.
+	var current := describe(game)
+	var result: Array[Dictionary] = [current]
+	if current.kind not in ["thought", "memory"]: return result
+	var quiet := _quiet_messages(game.pet, _memories(game.pet))
+	for offset in range(1, quiet.size()):
+		var entry: Dictionary = quiet[(_quiet_index + offset) % quiet.size()]
+		result.append(_line(entry.kind, entry.text, entry.action, entry.label, game))
+	return result
+
+func _memories(pet: PetState) -> Array:
+	var memories: Array = []
+	for entry in pet.journal:
+		if MEMORIES.has(entry.key):
+			memories.append({"kind": "memory", "text": MEMORIES[entry.key], "action": "album", "label": "Zobacz album"})
+			if memories.size() == 3: break
+	return memories
+
+func _quiet_messages(pet: PetState, memories: Array) -> Array:
+	var mood: String = pet.life.get("mood", "calm")
+	var words: Array = THOUGHTS.get(mood, THOUGHTS.calm)
+	var quiet: Array = memories.slice(0, 1)
+	quiet.append({"kind": "thought", "text": words[0], "action": words[1], "label": words[2]})
+	for quirk in pet.life.discovered:
+		if QUIRKS.has(quirk): quiet.append({"kind": "thought", "text": QUIRKS[quirk], "action": "", "label": ""})
+	if BondLevels.heart(pet) >= 2:
+		quiet.append({"kind": "thought", "text": BondLevels.thought(pet), "action": "pet", "label": "Pogłaszcz"})
+	quiet.append_array(memories.slice(1))
+	return quiet
 
 func _line(kind: String, text: String, action: String, label: String, game: GameSession) -> Dictionary:
 	var enabled := game.writable and not game.suspended

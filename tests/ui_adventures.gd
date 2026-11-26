@@ -54,7 +54,7 @@ func run() -> void:
 	DailyAdventure.record(app.session.pet, "treasure", app.session._local_now())
 	app._select_tab("journal")
 	await process_frame
-	check(app.today_button.get_parent() == app.album_actions, "album uses shared Today without progress badge")
+	check(app.today_button.get_parent() == app.today_home and app.header.visible, "album keeps the daily plan in its pinned header")
 	check(app.session.pet.milestones.has("adventure_1"), "existing keepsakes preserved")
 	app.today_button.pressed.emit()
 	await process_frame

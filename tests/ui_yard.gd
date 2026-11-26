@@ -43,6 +43,7 @@ func run() -> void:
 	await shot("entry")
 	check(app.room.yard_markers.size() == 12, "yard has gate lawn bushes garden and outing stations")
 	app.room.yard_markers.bush_2.pressed.emit()
+	if app.yard_menu.visible: app.yard_menu.primary.pressed.emit()
 	check(game.sniff_spot == 2, "third bush starts search at that actual location")
 	app._toggle_yard(false)
 	app._toggle_yard(false)
@@ -62,10 +63,10 @@ func run() -> void:
 		if i == 0: await shot("sniff")
 		tick(32)
 		check(game.pet.milestones.has("yard_find_%d" % i), "find saved only after sniffing")
-	var count := game.pet.milestones.size()
+	var count := game.pet.milestones.filter(func(key): return str(key).begins_with("yard_find_")).size()
 	game.start_sniff()
 	tick(400)
-	check(game.pet.milestones.size() == count, "repeat sniff does not duplicate collection")
+	check(game.pet.milestones.filter(func(key): return str(key).begins_with("yard_find_")).size() == count, "repeat sniff does not duplicate collection")
 	check(game.throw_ball(Vector2(1100, 310)), "ball throw starts outside")
 	tick(15)
 	check(app.room.animator.current == "run", "chase uses generated running clip")
@@ -84,7 +85,7 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	await shot("narrow")
-	check(app.yard_toolbar.get_global_rect().end.x <= 320, "yard controls fit narrow screen")
+	check(app.navigation.get_global_rect().end.x <= 320 and app.care_actions.get_global_rect().end.x <= 320, "yard icons and navigation fit narrow screen")
 	# Exercise real drag input, not just the session API.
 	game.pet.needs.energy = 90
 	game.pet.fatigue = 0

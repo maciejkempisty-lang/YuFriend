@@ -41,7 +41,7 @@ func run() -> void:
 		tick(150)
 		await process_frame
 		check(app.room.fence_visitor.visible and app.room.fence_visitor.kind == guest, "guest rendered")
-		check(app.visitor_soothe_button.visible and app.visitor_recall_button.visible and app.sniff_button.visible and not app.sniff_button.disabled and app.yard_bath_button.visible, "yard actions remain available")
+		check(app.visitor_soothe_button.visible and app.visitor_recall_button.visible and app.tab_buttons.map.visible and app.tab_buttons.care.caption == "Podwórko", "visitor actions and location navigation remain available")
 		check(app.visitor_recall_button.get_global_rect().end.x <= 320, "controls fit 320px")
 		check(not app.visitor_soothe_button.get_global_rect().intersects(app.visitor_recall_button.get_global_rect()), "controls separate")
 		check(app.visitor_toolbar.get_global_rect().position.y >= app.yard_toolbar.get_global_rect().end.y, "visitor responses have a separate row")

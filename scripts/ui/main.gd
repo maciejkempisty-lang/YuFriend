@@ -5,6 +5,7 @@ const INK := Color("24483d")
 const MUTED := Color("6b7663")
 const GREEN := Color("315d49")
 const CREAM := Color("fff9ed")
+const HEADER_PORTRAIT := preload("res://assets/art/ui/header-portret-v1.png")
 const NEED_LABELS := {"fullness": "Sytość", "energy": "Energia", "hygiene": "Czystość", "play": "Zabawa", "contact": "Bliskość"}
 const REWARD_LABELS := {"treat": "Smakołyk", "praise": "Pochwała", "play": "Zabawa"}
 const NEED_ICONS := {"fullness": "bowl", "energy": "moon", "hygiene": "brush", "play": "ball", "contact": "heart"}
@@ -109,9 +110,16 @@ var command_edit: LineEdit
 var save_path_override: String = ""
 var journal_signature: String = ""
 var header: PanelContainer
+var header_art: TextureRect
+var header_portrait_space: Control
+var status_strip: PanelContainer
+var companion_notice: PanelContainer
+var companion_dismiss: Button
+var dismissed_companion_messages: Dictionary = {}
+var dismissed_priority_message := ""
 var sheet: PanelContainer
 var navigation: PanelContainer
-var bubble: PanelContainer
+var bubble: PetSpeechCloud
 var training_actions: HBoxContainer
 var rewards_row: HBoxContainer
 var album_count: Label
@@ -132,12 +140,22 @@ var safe_rect := Rect2()
 var safe_area_override := Rect2()
 var ui_settings_path := ""
 var companion_voice := CompanionVoice.new()
-var companion_card: PanelContainer
+var companion_card: PetSpeechCloud
 var companion_title: Label
 var companion_label: Label
 var companion_action: Button
 var companion_later: Button
-var companion_tail: Polygon2D
+var companion_row: HBoxContainer
+var companion_badge: Label
+var companion_pager: HBoxContainer
+var companion_counter: Label
+var companion_messages: Array[Dictionary] = []
+var companion_source: Dictionary = {}
+var companion_index := 0
+var companion_detail_expanded := false
+var companion_expanded := true
+var companion_open_left := 0.0
+var companion_touch_start := Vector2.INF
 var companion_data: Dictionary = {}
 var play_menu: AcceptDialog
 var play_dialog: AcceptDialog
@@ -302,6 +320,7 @@ func _sync_yard_actions() -> void:
 	var camera_parent: Node = room if session.in_yard else yard_toolbar
 	if room.overview_button.get_parent() != camera_parent:
 		room.overview_button.reparent(camera_parent)
+	room.overview_button.hide()
 	var container: Node = panels.care
 	if yard_toolbar.get_parent() != container:
 		yard_toolbar.reparent(container)
@@ -311,13 +330,16 @@ func _sync_yard_actions() -> void:
 		_fit_room()
 	var occupied := session.in_yard and (session.busy() or not session.invitation.is_empty() or session.visitors.active() or YardRoutines.has_mess(session))
 	care_actions.visible = not occupied and not yard_menu.visible
-	care_status.visible = not yard_menu.visible
-	var layout_key := "%s|%s|%s" % [care_actions.visible, session.in_yard and session.visitors.active(), yard_menu.visible]
+	care_status.hide()
+	var layout_key := "%s|%s|%s|%s" % [care_actions.visible, session.in_yard and session.visitors.active(), yard_menu.visible, _yard_toolbar_needed()]
 	if layout_key != _yard_layout_key:
 		_yard_layout_key = layout_key
 		_fit_room()
 	for key in care_buttons:
 		care_buttons[key].visible = not session.in_yard or key in ["pet", "play", "rest"]
+
+func _yard_toolbar_needed() -> bool:
+	return room.overview or (session.in_yard and (session.busy(false) or session.yard_rest.active() or session.course.active() or session.timed_course.active() or session.water.active() or session.hide_game.active() or session.outdoor_commands.running() or not session.invitation.is_empty() or YardRoutines.has_mess(session) or session.visitors.active()))
 
 func _build_theme() -> void:
 	var app_theme := Theme.new()
@@ -440,30 +462,43 @@ func _build_ui() -> void:
 	add_child(background)
 	add_child(room)
 	header = PanelContainer.new()
-	header.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 22, 12))
+	header.add_theme_stylebox_override("panel", _style(CREAM, 0, 0))
 	add_child(header)
+	header_art = TextureRect.new()
+	header_art.texture = HEADER_PORTRAIT
+	header_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	header_art.stretch_mode = TextureRect.STRETCH_SCALE
+	header_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	header_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_child(header_art)
 	var header_row := HBoxContainer.new()
-	header_row.add_theme_constant_override("separation", 12)
+	header_row.add_theme_constant_override("separation", 4)
 	header.add_child(header_row)
+	header_portrait_space = Control.new()
+	header_portrait_space.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header_row.add_child(header_portrait_space)
 	var identity := VBoxContainer.new()
 	identity.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity.add_theme_constant_override("separation", 2)
 	header_row.add_child(identity)
 	name_label = _button("Biszkopt", _show_profile)
-	name_label.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	name_label.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.clip_text = true
 	name_label.tooltip_text = "Otwórz kartę pieska"
-	for state in ["normal", "hover"]: name_label.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]: name_label.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	identity.add_child(name_label)
 	bond_label = _label("Poznajecie się · 0%", 12, MUTED)
 	identity.add_child(bond_label)
+	bond_label.hide()
 	bond_bar = _bar(Color("779565"), 6)
+	bond_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new())
 	identity.add_child(bond_bar)
 	bond_detail = _label("", 10, MUTED)
 	bond_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	identity.add_child(bond_detail)
+	bond_detail.hide()
 	wellbeing_button = WellbeingButton.new()
 	wellbeing_button.text = "Radosna"
 	wellbeing_button.pressed.connect(_show_wellbeing)
@@ -474,18 +509,38 @@ func _build_ui() -> void:
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 8)
 	header_actions.add_child(action_row)
-	var settings := _icon_button("settings", "Ustawienia", _show_settings)
-	settings.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	today_button = _button("Dziś", func(): AdventurePanel.show_plan(self))
+	header_actions.add_child(wellbeing_button)
+	wellbeing_button.hide()
+	today_button = _button("Plan na dziś", func(): AdventurePanel.show_plan(self))
+	today_button.add_theme_font_size_override("font_size", 11)
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]: today_button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	today_button.add_theme_color_override("font_pressed_color", INK)
 	today_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	today_button.size_flags_horizontal = Control.SIZE_SHRINK_END
-	today_button.custom_minimum_size.x = 54
+	today_button.custom_minimum_size.x = 92
 	action_row.add_child(today_button)
 	today_home = action_row
-	action_row.add_child(settings)
-	header_actions.add_child(wellbeing_button)
-	bubble = PanelContainer.new()
-	bubble.add_theme_stylebox_override("panel", _style(Color("fff9edf2"), 18, 10))
+	status_strip = PanelContainer.new()
+	status_strip.add_theme_stylebox_override("panel", _style(Color("f1f0df"), 0, 3))
+	add_child(status_strip)
+	var status_column := VBoxContainer.new()
+	status_column.add_theme_constant_override("separation", 2)
+	status_strip.add_child(status_column)
+	var status_row := HBoxContainer.new()
+	status_row.add_theme_constant_override("separation", 8)
+	status_column.add_child(status_row)
+	wellbeing_button.reparent(status_row)
+	wellbeing_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	wellbeing_button.custom_minimum_size.y = 26
+	wellbeing_button.show()
+	companion_notice = PanelContainer.new()
+	companion_notice.add_theme_stylebox_override("panel", _style(CREAM, 8, 4))
+	companion_notice.mouse_filter = Control.MOUSE_FILTER_STOP
+	companion_notice.gui_input.connect(_companion_input)
+	companion_notice.hide()
+	status_column.add_child(companion_notice)
+	bubble = PetSpeechCloud.new()
+	bubble.add_theme_stylebox_override("panel", _style(Color.TRANSPARENT, 18, 15))
 	bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bubble)
 	var bubble_row := HBoxContainer.new()
@@ -510,10 +565,7 @@ func _build_ui() -> void:
 	gain_label.hide()
 	add_child(gain_label)
 	sheet = PanelContainer.new()
-	var sheet_style := _style(Color("fff9edf5"), 24, 12)
-	sheet_style.shadow_color = Color(0.25, 0.30, 0.17, 0.07)
-	sheet_style.shadow_size = 16
-	sheet_style.shadow_offset = Vector2(0, -3)
+	var sheet_style := _style(CREAM, 0, 12)
 	sheet.add_theme_stylebox_override("panel", sheet_style)
 	add_child(sheet)
 	panels.care = _build_care()
@@ -523,12 +575,15 @@ func _build_ui() -> void:
 		sheet.add_child(panels[key])
 		panels[key].visible = key == selected_tab
 	navigation = PanelContainer.new()
-	navigation.add_theme_stylebox_override("panel", _style(CREAM, 23, 3))
+	navigation.add_theme_stylebox_override("panel", _style(CREAM, 0, 8))
 	add_child(navigation)
 	var nav_row := HBoxContainer.new()
 	navigation.add_child(nav_row)
-	for key in ["care", "training", "journal"]:
-		var button := _action({"care": "home", "training": "spark", "journal": "book"}[key], {"care": "Dom", "training": "Trening", "journal": "Album"}[key], Color.TRANSPARENT, _select_tab.bind(key))
+	for key in ["care", "training", "journal", "map", "settings"]:
+		var icon: String = {"care": "home", "training": "spark", "journal": "book", "map": "map", "settings": "settings"}[key]
+		var label: String = {"care": "Dom", "training": "Trening", "journal": "Album", "map": "Mapa", "settings": "Opcje"}[key]
+		var callback: Callable = _return_to_location if key == "care" else (_show_map if key == "map" else (_show_settings if key == "settings" else _select_tab.bind(key)))
+		var button := _action(icon, label, Color.TRANSPARENT, callback)
 		button.navigation = true
 		button.selected = key == selected_tab
 		nav_row.add_child(button)
@@ -542,61 +597,175 @@ func _build_ui() -> void:
 	_build_dialogs()
 
 func _build_companion_card() -> void:
-	companion_card = PanelContainer.new()
-	companion_card.add_theme_stylebox_override("panel", _style(CREAM, 18, 12))
+	companion_card = PetSpeechCloud.new()
+	companion_card.add_theme_stylebox_override("panel", _style(Color.TRANSPARENT, 18, 16))
+	companion_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	companion_card.gui_input.connect(_companion_input)
 	add_child(companion_card)
-	companion_tail = Polygon2D.new()
-	companion_tail.color = CREAM
-	companion_tail.polygon = PackedVector2Array([Vector2(0, -1), Vector2(18, -1), Vector2(6, 9)])
-	companion_card.add_child(companion_tail)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	companion_card.add_child(row)
+	companion_row = HBoxContainer.new()
+	companion_row.mouse_filter = Control.MOUSE_FILTER_PASS
+	companion_row.add_theme_constant_override("separation", 4)
+	companion_card.add_child(companion_row)
 	var words := VBoxContainer.new()
+	words.mouse_filter = Control.MOUSE_FILTER_PASS
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	words.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	words.add_theme_constant_override("separation", 3)
-	row.add_child(words)
-	companion_title = _label("", 11, MUTED, true)
+	words.add_theme_constant_override("separation", 0)
+	companion_row.add_child(words)
+	companion_title = _label("", 9, MUTED, true)
 	companion_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	words.add_child(companion_title)
-	companion_label = _label("", 14, INK, true)
+	companion_label = _label("", 11, INK, true)
 	companion_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	companion_label.max_lines_visible = 2
+	companion_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	words.add_child(companion_label)
+	companion_pager = HBoxContainer.new()
+	companion_pager.mouse_filter = Control.MOUSE_FILTER_PASS
+	companion_pager.add_theme_constant_override("separation", 2)
+	companion_pager.alignment = BoxContainer.ALIGNMENT_CENTER
+	words.add_child(companion_pager)
+	var previous := _button("‹", func(): _browse_companion(-1))
+	previous.custom_minimum_size = Vector2(24, 22)
+	previous.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	companion_pager.add_child(previous)
+	companion_counter = _label("", 9, MUTED)
+	companion_counter.custom_minimum_size.x = 24
+	companion_counter.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	companion_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	companion_counter.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	companion_pager.add_child(companion_counter)
+	var next := _button("›", func(): _browse_companion(1))
+	next.custom_minimum_size = Vector2(24, 22)
+	next.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	companion_pager.add_child(next)
 	var actions := VBoxContainer.new()
+	actions.mouse_filter = Control.MOUSE_FILTER_PASS
 	actions.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	actions.add_theme_constant_override("separation", 2)
-	row.add_child(actions)
+	companion_row.add_child(actions)
 	companion_action = _button("", _companion_act, true)
-	companion_action.add_theme_font_size_override("font_size", 13)
+	companion_action.add_theme_font_size_override("font_size", 10)
+	companion_action.custom_minimum_size.y = 26
 	actions.add_child(companion_action)
 	companion_later = _button("Później", session.decline_invitation)
-	companion_later.add_theme_font_size_override("font_size", 12)
+	companion_later.add_theme_font_size_override("font_size", 10)
+	companion_later.custom_minimum_size.y = 24
 	actions.add_child(companion_later)
+	companion_dismiss = _button("×", _dismiss_companion)
+	companion_dismiss.add_theme_font_size_override("font_size", 14)
+	companion_dismiss.custom_minimum_size = Vector2(24, 22)
+	companion_dismiss.size_flags_horizontal = Control.SIZE_SHRINK_END
+	companion_dismiss.tooltip_text = "Usuń tę wiadomość"
+	companion_dismiss.accessibility_name = "Usuń tę wiadomość"
+	actions.add_child(companion_dismiss)
+	for button in [previous, next, companion_action, companion_later, companion_dismiss]:
+		var primary: bool = button == companion_action
+		button.add_theme_stylebox_override("normal", _style(GREEN if primary else Color("eeeede"), 7, 3))
+		button.add_theme_stylebox_override("hover", _style(Color("43715a") if primary else Color("e1e7d2"), 7, 3))
+		button.add_theme_stylebox_override("pressed", _style(Color("234936"), 7, 3))
+		button.add_theme_stylebox_override("disabled", _style(Color("edece1"), 7, 3))
+	companion_row.reparent(companion_notice)
+	companion_badge = _label("!", 13, INK, true)
+	companion_badge.custom_minimum_size = Vector2(24, 24)
+	companion_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	companion_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	companion_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	companion_badge.hide()
+	companion_card.add_child(companion_badge)
 	companion_card.hide()
 
 func _refresh_companion(delta: float = 0.0) -> void:
 	if companion_card == null or session.pet == null: return
-	companion_card.visible = not session.home_drink.active() and not session.yard_rest.active() and not session.course.active() and not session.timed_course.active() and not str(session.invitation.get("kind", "")).begins_with("yard_") and not session.portal_active and not session.visitors.active() and not session.water.active() and session.attention_available and not session.suspended and not session.hide_game.active() and not room.overview
-	var data := companion_voice.describe(session, delta if companion_card.visible and companion_card.modulate.a > 0 else 0.0)
-	if data != companion_data:
-		companion_data = data
-		companion_label.text = data.text
-		companion_action.text = data.label
-		companion_action.visible = not str(data.action).is_empty()
-		companion_action.disabled = not data.enabled
-		companion_action.accessibility_name = "%s. %s" % [data.text, data.label]
-		companion_later.visible = data.kind == "invitation"
-	# Renaming the dog also updates the bubble without restarting its quiet timer.
+	var available := session.attention_available and not session.suspended and not session.portal_active and not session.hide_game.active()
+	var source := companion_voice.describe(session, delta if available and companion_notice.visible else 0.0)
+	if not dismissed_priority_message.is_empty() and _companion_message_key(source) != dismissed_priority_message:
+		dismissed_companion_messages.erase(dismissed_priority_message)
+		dismissed_priority_message = ""
+	var changed: bool = companion_source.is_empty() or source.kind != companion_source.kind or source.text != companion_source.text or source.action != companion_source.action
+	companion_source = source
+	companion_messages.clear()
+	for message in companion_voice.messages(session):
+		if not dismissed_companion_messages.has(_companion_message_key(message)):
+			companion_messages.append(message)
+	if changed:
+		companion_index = 0
+		companion_detail_expanded = false
+	var show_notice := available and not companion_messages.is_empty()
+	if companion_notice.visible != show_notice:
+		companion_notice.visible = show_notice
+		_fit_room.call_deferred()
+	companion_card.hide()
+	if show_notice:
+		companion_index = clampi(companion_index, 0, companion_messages.size() - 1)
+		_apply_companion_message(companion_messages[companion_index])
+	wellbeing_button.text = _status_line()
+	session.invitation_presented = session.attention_available and (str(session.invitation.get("kind", "")).begins_with("yard_") or (show_notice and source.get("kind") == "invitation"))
+
+func _companion_message_key(message: Dictionary) -> String:
+	return str([message.kind, message.text, message.action])
+
+func _dismiss_companion() -> void:
+	if companion_data.is_empty() or not companion_notice.visible: return
+	companion_detail_expanded = false
+	if companion_data.kind == "invitation":
+		session.decline_invitation()
+	else:
+		var key := _companion_message_key(companion_data)
+		dismissed_companion_messages[key] = true
+		if companion_data.kind in ["activity", "need", "wake"]: dismissed_priority_message = key
+	_refresh_companion()
+
+func _apply_companion_message(data: Dictionary) -> void:
+	companion_data = data
+	companion_label.text = data.text
+	companion_label.max_lines_visible = -1 if companion_detail_expanded else 2
+	companion_action.text = data.label
+	companion_action.visible = not str(data.action).is_empty()
+	companion_action.disabled = not data.enabled
+	companion_action.accessibility_name = "%s. %s" % [data.text, data.label]
+	companion_later.visible = data.kind == "invitation"
 	companion_title.text = "%s · %s" % [session.pet.pet_name, {"need": "potrzebuje", "invitation": "ma ochotę", "thought": "myśli", "memory": "wspomina", "activity": "teraz", "wake": "po pobudce"}[data.kind]]
-	_position_companion()
-	session.invitation_presented = session.attention_available and (str(session.invitation.get("kind", "")).begins_with("yard_") or (companion_card.visible and companion_card.modulate.a > 0 and data.get("kind") == "invitation"))
+	companion_pager.visible = companion_messages.size() > 1
+	companion_counter.text = "%d / %d" % [companion_index + 1, companion_messages.size()]
+
+func _browse_companion(direction: int) -> void:
+	if companion_messages.size() < 2: return
+	companion_index = posmod(companion_index + direction, companion_messages.size())
+	companion_detail_expanded = false
+	_apply_companion_message(companion_messages[companion_index])
+	_fit_room.call_deferred()
+
+func _companion_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed: companion_touch_start = event.position
+		else:
+			_finish_companion_input(event.position)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not OS.has_feature("mobile"):
+		if event.pressed: companion_touch_start = event.position
+		else: _finish_companion_input(event.position)
+
+func _finish_companion_input(position: Vector2) -> void:
+	if not companion_touch_start.is_finite(): return
+	var distance := position.x - companion_touch_start.x
+	companion_touch_start = Vector2.INF
+	if absf(distance) > 35:
+		_browse_companion(-1 if distance > 0 else 1)
+	else:
+		companion_detail_expanded = not companion_detail_expanded
+		companion_label.max_lines_visible = -1 if companion_detail_expanded else 2
+		_fit_room.call_deferred()
 
 func _companion_act() -> void:
-	if not companion_card.visible or companion_data.is_empty(): return
+	if not companion_notice.visible or companion_data.is_empty(): return
 	# Recheck the current state: the need or invitation may have changed since touch-down.
-	var current := companion_voice.describe(session)
-	if current.action != companion_data.action or not current.enabled:
+	var current_messages := companion_voice.messages(session)
+	var current: Dictionary = {}
+	for entry in current_messages:
+		if entry.kind == companion_data.kind and entry.text == companion_data.text and entry.action == companion_data.action:
+			current = entry
+			break
+	if current.is_empty() or not current.enabled:
 		_refresh_companion()
 		return
 	var action: String = current.action
@@ -666,7 +835,9 @@ func _build_care() -> VBoxContainer:
 	care_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	care_status.max_lines_visible = 2
 	care_status.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	box.add_child(care_status)
+	care_status.add_theme_stylebox_override("normal", _style(Color("fff9ede8"), 12, 6))
+	add_child(care_status)
+	care_status.hide()
 	course_meter = CourseTimingView.new()
 	course_meter.model = session.timed_course
 	box.add_child(course_meter)
@@ -833,6 +1004,9 @@ func _build_dialogs() -> void:
 	name_edit.max_length = 24
 	name_edit.custom_minimum_size.y = 44
 	box.add_child(name_edit)
+	box.add_child(_button("Samopoczucie", func():
+		profile_dialog.hide()
+		_show_wellbeing()))
 	box.add_child(_button("Poziomy więzi", func():
 		profile_dialog.hide()
 		ProgressionPanels.bond(self)))
@@ -1073,9 +1247,6 @@ func _show_touch_game(kind: String) -> void:
 
 func _select_tab(key: String) -> void:
 	yard_menu.close()
-	if key != "care" and session.in_yard:
-		if not session.change_yard(false): return
-		if room.in_yard: room.set_yard(false)
 	if key != selected_tab:
 		effects.play_effect("ui")
 		bubble_left = 0
@@ -1087,6 +1258,33 @@ func _select_tab(key: String) -> void:
 	_fit_room()
 	_refresh()
 
+func _return_to_location() -> void:
+	_select_tab("care")
+	room.focus_pet()
+	_refresh()
+	_sync_navigation()
+
+func _show_map() -> void:
+	_select_tab("care")
+	room.show_overview()
+	_refresh()
+	_update_attention()
+	_sync_navigation()
+
+func _sync_navigation() -> void:
+	if tab_buttons.is_empty(): return
+	var location := "Podwórko" if session.in_yard else "Dom"
+	if tab_buttons.care.caption != location:
+		tab_buttons.care.caption = location
+		tab_buttons.care.icon_name = "flower" if session.in_yard else "home"
+	for key in ["care", "training", "journal"]:
+		var active: bool = selected_tab == key and (key != "care" or not room.overview)
+		if tab_buttons[key].selected != active: tab_buttons[key].selected = active
+	if tab_buttons.map.selected != (selected_tab == "care" and room.overview):
+		tab_buttons.map.selected = selected_tab == "care" and room.overview
+	if tab_buttons.settings.selected != settings_dialog.visible:
+		tab_buttons.settings.selected = settings_dialog.visible
+
 func _place(control: Control, rect: Rect2) -> void:
 	control.position = rect.position
 	control.size = rect.size
@@ -1094,49 +1292,61 @@ func _place(control: Control, rect: Rect2) -> void:
 func _fit_room() -> void:
 	if sheet == null: return
 	safe_rect = _safe_content_rect()
-	layout_wide = safe_rect.size.x >= 760 and safe_rect.size.x > safe_rect.size.y * 1.2
-	var rail := clampf(safe_rect.size.x * 0.36, 350, 420) if layout_wide else safe_rect.size.x
-	var panel_width := minf(rail - 24, 540)
-	var panel_x := safe_rect.end.x - rail + (rail - panel_width) / 2
-	var nav_y := safe_rect.end.y - 68
+	layout_wide = false
+	var panel_width := size.x
+	var panel_x := 0.0
+	var nav_y := safe_rect.end.y - 64
+	var status_height := 34.0
+	if companion_notice.visible:
+		status_height += 88.0 if companion_later.visible else (80.0 if size.x < 360 else 72.0)
+		if companion_detail_expanded: status_height += 42.0
 	var warning_space := 46.0 if footer_label.visible else 0.0
+	yard_toolbar.visible = selected_tab == "care" and _yard_toolbar_needed()
 	# Outdoors the panel holds instructions and context actions; it shrinks when
 	# an activity hides the care buttons instead of leaving an empty card.
-	var yard_height := 152.0 if session.timed_course.active() else (192.0 if care_actions.visible or yard_menu.visible else (160.0 if session.visitors.active() else 112.0))
-	var panel_height := (yard_height if session.in_yard else 192.0) if selected_tab == "care" else 274.0
-	var panel_top := nav_y - panel_height - 8 - warning_space
+	var care_height := 204.0 if yard_menu.visible else (176.0 if yard_toolbar.visible or session.timed_course.active() else 116.0)
+	var panel_height := care_height if selected_tab == "care" else 274.0
+	var panel_top := nav_y - panel_height - warning_space
 	if selected_tab == "journal":
-		panel_x = safe_rect.position.x + 12
-		panel_width = safe_rect.size.x - 24
-		panel_top = safe_rect.position.y + 8
-		panel_height = nav_y - panel_top - 8 - warning_space
-	yard_toolbar.visible = selected_tab == "care"
+		panel_top = safe_rect.position.y + 64 + status_height + 8
+		panel_height = nav_y - panel_top - warning_space
 	visitor_toolbar.visible = selected_tab == "care" and session.visitors.active()
-	room.yard_controls_bottom = header.get_rect().end.y + 64
 	_place(sheet, Rect2(panel_x, panel_top, panel_width, panel_height))
-	_place(navigation, Rect2(safe_rect.end.x - rail + (rail - minf(rail - 24, 540)) / 2, nav_y, minf(rail - 24, 540), 60))
-	var scene_width := safe_rect.end.x - rail if layout_wide else size.x
-	_place(room, Rect2(0, 0, scene_width, size.y))
-	var header_x := safe_rect.position.x + 12
-	var header_width := minf(minf(scene_width, safe_rect.end.x) - header_x - 12, 420)
-	var training_open := selected_tab == "training"
+	_place(navigation, Rect2(0, nav_y, size.x, size.y - nav_y))
+	_place(room, Rect2(0, 0, size.x, size.y))
 	var header_style := header.get_theme_stylebox("panel") as StyleBoxFlat
-	header_style.content_margin_top = 12 if training_open else 4
-	header_style.content_margin_bottom = 12 if training_open else 4
-	bond_label.visible = not training_open
-	bond_bar.visible = not training_open
-	bond_detail.visible = not training_open
-	wellbeing_button.visible = not training_open
-	name_label.add_theme_font_size_override("font_size", 22 if training_open else 27)
-	_place(header, Rect2(header_x, safe_rect.position.y + 8, header_width, 68 if training_open else 100))
-	header.visible = selected_tab != "journal"
+	var portrait_header := size.x <= 500
+	header_art.visible = portrait_header
+	header_style.content_margin_left = 0 if portrait_header else 12
+	header_style.content_margin_right = 0 if portrait_header else 12
+	header_style.content_margin_top = safe_rect.position.y if portrait_header else safe_rect.position.y + 4
+	header_style.content_margin_bottom = 0 if portrait_header else 4
+	header_portrait_space.custom_minimum_size.x = size.x * 0.23 if portrait_header else 0
+	name_label.alignment = HORIZONTAL_ALIGNMENT_CENTER if portrait_header else HORIZONTAL_ALIGNMENT_LEFT
+	bond_bar.add_theme_stylebox_override("background", StyleBoxEmpty.new() if portrait_header else _style(Color("e7e8d8"), 6, 0))
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		var button_style: StyleBox = StyleBoxEmpty.new()
+		if not portrait_header:
+			button_style = _style({"normal": Color("eeeede"), "hover": Color("e1e7d2"), "pressed": Color("234936"), "disabled": Color("edece1"), "focus": Color.TRANSPARENT}[state], 14, 10)
+		today_button.add_theme_stylebox_override(state, button_style)
+	today_button.add_theme_font_size_override("font_size", 11 if portrait_header else 12)
+	today_button.custom_minimum_size.x = size.x * 0.255 if portrait_header else 94
+	bond_bar.show()
+	name_label.add_theme_font_size_override("font_size", 22)
+	_place(header, Rect2(0, 0, size.x, safe_rect.position.y + 64))
+	header.show()
+	_place(status_strip, Rect2(0, header.get_rect().end.y, size.x, status_height))
+	room.yard_controls_bottom = status_strip.get_rect().end.y + 64
 	room.visible = selected_tab != "journal"
-	room.hud_bottom = header.get_rect().end.y + 10
-	room.content_bottom = safe_rect.end.y - 16 if layout_wide else panel_top
-	room.overlay_left = header_x
-	room.overlay_right = minf(scene_width - 12, safe_rect.end.x - 12)
+	room.hud_bottom = status_strip.get_rect().end.y + 10
+	room.content_bottom = panel_top
+	room.overlay_left = safe_rect.position.x + 12
+	room.overlay_right = safe_rect.end.x - 12
 	_place(footer_label, Rect2(panel_x + 8, nav_y - 44, panel_width - 16, 42))
 	room.update_placement()
+	room.overview_button.hide()
+	room.return_button.hide()
+	_position_care_status()
 	_position_feedback()
 	_position_companion()
 	for dialog in [profile_dialog, text_dialog, reunion_dialog, play_menu, play_dialog, cuddle_dialog, wellbeing_dialog]:
@@ -1434,6 +1644,7 @@ func _show_settings() -> void:
 	settings_scroll.scroll_vertical = 0
 	_fit_settings()
 	settings_close.grab_focus()
+	_sync_navigation()
 
 func _fit_settings() -> void:
 	safe_rect = _safe_content_rect()
@@ -1442,6 +1653,7 @@ func _fit_settings() -> void:
 
 func _hide_settings() -> void:
 	settings_dialog.hide()
+	_sync_navigation()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if settings_dialog.visible and event.is_action_pressed("ui_cancel"):
@@ -1508,7 +1720,7 @@ func _refresh() -> void:
 	room.mood_walk_speed = session.walk_speed()
 	room.set_interaction_focus(session.training.phase != "idle" or session.activity == "happy")
 	name_label.text = "Piesek" if naming_pending else pet.pet_name
-	wellbeing_button.text = "Śpi spokojnie" if session.is_sleeping() else session.wellbeing.label()
+	wellbeing_button.text = _status_line()
 	wellbeing_button.feeling = WellbeingSystem.state(session.wellbeing.score())
 	wellbeing_button.sleeping = session.is_sleeping()
 	wellbeing_button.tooltip_text = "Samopoczucie · dotknij, żeby dowiedzieć się, co pomoże"
@@ -1537,9 +1749,11 @@ func _refresh() -> void:
 	yard_bath_button.visible = command.is_empty()
 	yard_command_button.text = "Pochwal" if session.outdoor_commands.phase == "praise" else TrainingSystem.LABELS.get(command, "Komenda")
 	yard_command_button.disabled = session.outdoor_commands.phase == "perform" or (command == "come" and session.busy() and not session.outdoor_commands.running())
-	# "Dom" is the navigation tab; the yard exit says where it leads.
+	# Location shortcuts appear in the map view; the care panel stays icon-only.
 	yard_button.text = "Do domu" if session.in_yard else "Podwórko"
-	sniff_button.visible = session.in_yard
+	yard_button.visible = room.overview
+	yard_bath_button.visible = room.overview and command.is_empty()
+	sniff_button.visible = room.overview and session.in_yard
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Chowany"
 	sniff_button.disabled = (session.busy(false) and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else fetch_hint(pet.yard_record)) if session.in_yard else _activity_status()
@@ -1697,9 +1911,7 @@ func _refresh() -> void:
 	if had_warning != footer_label.visible: _fit_room()
 	if not session.writable: footer_label.text = "Nie udało się odczytać postępu. Zapis zachowano."
 	elif not session.save_ok: footer_label.text = "Postęp czeka na zapis. Sprawdź wolne miejsce."
-	var today_parent: Node = album_actions if selected_tab == "journal" else today_home
-	if today_button.get_parent() != today_parent:
-		today_button.reparent(today_parent)
+	_sync_navigation()
 	var visitor_lines: PackedStringArray = []
 	for guest in YardVisitors.KINDS:
 		visitor_lines.append("%s\n%s" % [YardVisitors.LABELS[guest], VisitorMemory.describe(pet, guest)])
@@ -1743,6 +1955,7 @@ func _refresh() -> void:
 			var detail := _label(entry.detail, 13, MUTED)
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			words.add_child(detail)
+	_position_care_status()
 
 func _notification(what: int) -> void:
 	if not is_instance_valid(session) or not session.active: return
@@ -1796,8 +2009,8 @@ func _activity_status() -> String:
 	if session.training.phase == "reward": return "Czeka na nagrodę · otwórz Trening"
 	if session.training.phase == "attempt": return "Wykonuje komendę · otwórz Trening"
 	if session.is_sleeping(): return "Śpi · pobudka o " + DailyRhythm._time_label(int(DailyRhythm.next_wake(session.pet, session._local_now()) / 60)) if session.scheduled_sleep else "Odpoczywa"
-	# Close-ups can leave no safe space for a bubble; the wake report is still
-	# visible in the care panel, above the same actionable need buttons.
+	# Close-ups can leave no safe space for a bubble; the wake report then uses
+	# a small floating status above the icon row.
 	if session.wake_report_left > 0 and companion_card.modulate.a == 0 and not session.busy():
 		return CompanionVoice.wake_report(session).text
 	if session.activity == "approach":
@@ -1807,6 +2020,29 @@ func _activity_status() -> String:
 	if YardRoutines.has_mess(session): return "Na podwórku czeka kupa do posprzątania"
 	if YardRoutines.due(session) and not DailyRhythm.quiet(session.pet, session._local_now()): return "Chcę wyjść na potrzebę · wybierz Podwórko"
 	return session.wellbeing.label() + " · dotknij, by zadbać"
+
+func _status_line() -> String:
+	if companion_notice != null and companion_notice.visible:
+		return "Śpi" if session.is_sleeping() else session.wellbeing.label()
+	if session.is_sleeping() or session.busy(): return _activity_status()
+	var lowest := ""
+	var value := 40.0
+	for need in PetState.NEED_KEYS:
+		if float(session.pet.needs[need]) < value:
+			lowest = need
+			value = float(session.pet.needs[need])
+	if not lowest.is_empty(): return "%s · %s %d%%" % [session.wellbeing.label(), NEED_LABELS[lowest], roundi(value)]
+	return session.wellbeing.label()
+
+func _position_care_status() -> void:
+	if care_status == null or sheet == null or companion_card == null: return
+	var wake_fallback := session.wake_report_left > 0 and companion_card.modulate.a == 0 and not session.busy()
+	var yard_context := session.in_yard and (session.timed_course.active() or session.course.active() or session.water.active() or session.hide_game.active() or session.outdoor_commands.running())
+	care_status.visible = selected_tab == "care" and not room.overview and not _dialog_open() and (wake_fallback or yard_context)
+	if not care_status.visible: return
+	var width := minf(sheet.size.x, room.size.x - 24)
+	_place(care_status, Rect2(sheet.position.x + (sheet.size.x - width) / 2,
+		maxf(status_strip.get_rect().end.y + 8, sheet.position.y - 40), width, 34))
 
 func _show_feedback(text: String) -> void:
 	if selected_tab == "training":
@@ -1834,6 +2070,10 @@ func _show_feedback(text: String) -> void:
 			break
 	message_label.text = short
 	bubble_left = 3.5 if short.length() < 35 else 6.0
+	# Let the reply finish first; the current companion message gets its own full
+	# reading time when the reply cloud disappears.
+	companion_expanded = true
+	companion_open_left = maxf(companion_open_left, 5.0)
 	bubble.size = Vector2(minf(330, room.size.x - 32) if short.length() > 35 else minf(250, maxf(150, short.length() * 7 + 55)), 0)
 	_position_feedback()
 
@@ -1863,6 +2103,9 @@ func _process(delta: float) -> void:
 		reminders_status.text = reminders.status_text()
 	_update_attention()
 	_refresh_companion(delta)
+	_position_care_status()
+	room.return_button.hide()
+	_sync_navigation()
 	bubble_left = maxf(0, bubble_left - delta)
 	gain_left = maxf(0, gain_left - delta)
 	training_feedback_left = maxf(0, training_feedback_left - delta)
@@ -1882,14 +2125,31 @@ func _process(delta: float) -> void:
 
 func _position_companion() -> void:
 	if companion_card == null or header == null: return
-	companion_card.size = Vector2(header.size.x, 0)
+	var card_style := companion_card.get_theme_stylebox("panel") as StyleBoxFlat
+	var margin := 16.0 if companion_expanded else 8.0
+	card_style.content_margin_left = margin
+	card_style.content_margin_right = margin
+	card_style.content_margin_top = margin
+	card_style.content_margin_bottom = margin
+	companion_card.size = Vector2(minf(340, safe_rect.size.x - 20) if companion_expanded else 48, 0)
 	var pet_bounds := room.pet_screen_bounds()
 	if companion_card.visible:
-		_place_pet_overlay(companion_card, Vector2(header.position.x, room.hud_bottom + 52),
-			[pet_bounds.grow(20), room.bowl_rect().grow(4), room.ball_touch_rect().grow(4)])
-	var below := companion_card.position.y >= pet_bounds.end.y
-	companion_tail.position = Vector2(clampf(pet_bounds.get_center().x - companion_card.position.x, 20, companion_card.size.x - 38), 0 if below else companion_card.size.y)
-	companion_tail.scale.y = -1 if below else 1
+		if companion_expanded:
+			_place_pet_overlay(companion_card, Vector2(pet_bounds.get_center().x - companion_card.size.x / 2,
+				pet_bounds.position.y - companion_card.size.y - 24),
+				[pet_bounds.grow(20), room.bowl_rect().grow(4), room.ball_touch_rect().grow(4)])
+			companion_card.point_to(Vector2(pet_bounds.get_center().x, pet_bounds.position.y))
+		else:
+			var left := maxf(12, safe_rect.position.x + 8)
+			var right := minf(room.size.x - 12, safe_rect.end.x - 8)
+			var head_x := pet_bounds.position.x + pet_bounds.size.x * (0.28 if room.animator.facing_left else 0.72)
+			var x := clampf(head_x - companion_card.size.x / 2, left, right - companion_card.size.x)
+			var top := status_strip.get_rect().end.y + 8
+			var bottom := minf(safe_rect.end.y - 8, room.content_bottom - 8)
+			var y := clampf(pet_bounds.position.y - companion_card.size.y - 8, top, maxf(top, bottom - companion_card.size.y))
+			companion_card.position = Vector2(x, y)
+			companion_card.modulate.a = 1
+			companion_card.point_to(Vector2(head_x, pet_bounds.position.y))
 	# Only move this UI hint; room bounds, camera and the approved framing stay intact.
 	if companion_card.visible and not room.overview and session.in_yard:
 		room.room_hint.position = Vector2(room.overview_button.get_rect().end.x + 12, room.hud_bottom + 14)
@@ -1936,7 +2196,7 @@ func _position_feedback() -> void:
 	var pet_point := room.pet_position()
 	var on_screen := room.render_rect.has_point(pet_point) and selected_tab == "care" and not room.overview
 	var yard_instruction := session.in_yard and (session.activity in ["outing_walk", "outing_pause", "outing_praise"] or session.water.active() or session.course.active() or session.timed_course.active() or session.yard_rest.active() or str(session.invitation.get("kind", "")).begins_with("yard_"))
-	bubble.visible = not yard_instruction and not _dialog_open() and not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active() and not (companion_card.visible and companion_card.modulate.a > 0 and companion_data.get("kind") == "invitation")
+	bubble.visible = not yard_instruction and not _dialog_open() and not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active()
 	gain_label.visible = not _dialog_open() and gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
 	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
@@ -1945,22 +2205,14 @@ func _position_feedback() -> void:
 		obstacles.append(yard_toolbar.get_global_rect().grow(4))
 		for marker in room.yard_markers.values():
 			if marker.visible: obstacles.append(marker.get_global_rect().grow(4))
-	var fixed_obstacles := obstacles.size()
-	if companion_card.visible and companion_card.modulate.a > 0: obstacles.append(companion_card.get_rect().grow(10))
-	if bubble.visible and companion_card.modulate.a > 0 and companion_data.get("kind") in ["thought", "memory"]:
-		# A passing thought yields to the immediate reply at every screen width instead
-		# of stacking two speech overlays above the dog.
-		companion_card.position = Vector2(-10000, -10000)
-		companion_card.modulate.a = 0
-		obstacles.resize(fixed_obstacles)
 	if bubble.visible:
 		var preferred := Vector2(head.x - bubble.size.x / 2, head.y - bubble.size.y - 24)
-		if not _place_pet_overlay(bubble, preferred, obstacles) and obstacles.size() > 1:
-			# On a short screen let the immediate response take the thought's place.
+		if _place_pet_overlay(bubble, preferred, obstacles) and companion_card.visible:
+			# One cloud at a time: the short reply takes priority over every
+			# companion category, including activity and invitations.
 			companion_card.position = Vector2(-10000, -10000)
 			companion_card.modulate.a = 0
-			obstacles.resize(fixed_obstacles)
-			_place_pet_overlay(bubble, preferred, obstacles)
+		bubble.point_to(head)
 	bubble.modulate.a *= minf(1, bubble_left * 3)
 	gain_label.reset_size()
 	if bubble.visible and bubble.modulate.a > 0: obstacles.append(bubble.get_rect().grow(8))

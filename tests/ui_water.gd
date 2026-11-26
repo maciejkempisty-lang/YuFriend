@@ -72,7 +72,8 @@ func run() -> void:
 	check(app.room.animator.current == "shake", "real shaking clip")
 	check(float(app.room.animator.sprite.material.get_shader_parameter("dirt")) > 0.2, "mud visible on coat")
 	until("")
-	check(app.yard_bath_button.visible and not app.water_splash_button.visible, "bath action restored")
+	app._show_map()
+	check(app.yard_bath_button.visible and not app.water_splash_button.visible, "bath action is available from the yard map")
 	app.yard_bath_button.pressed.emit()
 	check(s.in_bath and app.bath_dialog.visible and not app.room.yard_water.visible, "water leads to bathroom without lingering effects")
 	s.bath.stage = 3

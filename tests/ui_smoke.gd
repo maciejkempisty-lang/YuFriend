@@ -396,10 +396,10 @@ func _test_world_room() -> void:
 	check(room.pan_hint_dismissed and not room.room_hint.visible, "reloading UI preferences does not repeat the tutorial")
 	var manual_position: Vector2 = room.camera.position
 	step_game(1)
-	check(room.camera.position == manual_position and room.return_button.visible, "manual browsing stays put until follow is requested")
-	await click_at(room.return_button.get_global_rect().get_center())
+	check(room.camera.position == manual_position and app.tab_buttons.care.visible, "manual browsing stays put until location return is requested")
+	await click_at(app.tab_buttons.care.get_global_rect().get_center())
 	step_game(1)
-	check(not room.camera_manual and absf(room.camera_center().x - pet_before.x) < 3, "return button smoothly restores puppy following")
+	check(not room.camera_manual and absf(room.camera_center().x - pet_before.x) < 3, "location button smoothly restores puppy following")
 	room.ball_world = room.pet_world + Vector2(15, 0)
 	room.ball_target = room.ball_world
 	game.act("pet")
@@ -772,7 +772,7 @@ func _test_redesigned_ui() -> void:
 	var original := game.pet.needs.duplicate()
 	game.pet.needs.fullness = 21.0
 	app._refresh()
-	check(app.care_buttons.feed.need_value == 21 and app.care_buttons.feed.caption == "Głód", "low need has a readable percentage and a status caption")
+	check(app.care_buttons.feed.need_value == 21 and app.care_buttons.feed.icon_only and app.care_buttons.feed.accessibility_name.contains("21 procent"), "low need keeps a visible ring and accessible percentage")
 	check(NeedIndicator.level_color(35) != NeedIndicator.level_color(100) and NeedIndicator.level_color(20) != NeedIndicator.level_color(35), "critical, medium and satisfied needs use distinct colors")
 	game.cooldowns.feed = 6.0
 	app._refresh()
@@ -797,7 +797,7 @@ func _test_redesigned_ui() -> void:
 	await capture("22-settings.png")
 	app.settings_dialog.hide()
 	app._select_tab("journal")
-	check(app.sheet.size.y > app.size.y * 0.85 and not app.header.visible, "album uses a full-height card")
+	check(app.header.visible and app.sheet.position.y >= app.header.get_rect().end.y and app.sheet.get_rect().end.y < app.navigation.position.y, "album stays between the pinned header and navigation")
 	check(app._journal_icon("feed") != app._journal_icon("rest") and app._journal_icon("first_sit") == "spark", "album distinguishes care, sleep and learning events")
 	app._select_tab("training")
 	game.pet.milestones.erase("favorite_reward")

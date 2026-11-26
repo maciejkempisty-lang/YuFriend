@@ -59,7 +59,7 @@ func run() -> void:
 	await settle()
 	check(menu.visible and menu.station_id == "bush_1" and menu.primary.text == "Szukaj" and menu.secondary.text == "Chowanka", "touching a bush offers both activities")
 	check(app.session.pet.to_dict() == pet_before and app.room.pet_world == position_before and app.session._brain_left == timer_before, "reading choices does not move the dog change progress or overwrite the autonomy timer")
-	check(not app.care_actions.visible and not app.care_status.visible and app.yard_button.is_visible_in_tree(), "menu replaces care controls and keeps home available")
+	check(not app.care_actions.visible and not app.care_status.visible and app.tab_buttons.map.is_visible_in_tree(), "menu replaces care icons and keeps map available")
 	check(not app.session.attention_available, "companion invitations yield while choosing")
 	for layout in [Vector2i(320, 640), Vector2i(390, 844), Vector2i(844, 390), Vector2i(1080, 2340)]:
 		root.size = layout

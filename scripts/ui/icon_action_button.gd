@@ -14,6 +14,7 @@ var selected: bool = false:
 		selected = value
 		queue_redraw()
 var navigation: bool = false
+var icon_only: bool = false
 var compact: bool = false
 var need_value := -1.0
 var cooldown_ratio := 0.0
@@ -28,7 +29,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(48, 28 if compact else (54 if navigation else 88))
+	custom_minimum_size = Vector2(48, 28 if compact else (54 if navigation else (64 if icon_only else 88)))
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
@@ -53,7 +54,7 @@ func _draw() -> void:
 		return
 	var ink := Color("24483d") if not disabled else Color("8f9487")
 	var fill := accent if not disabled else Color("eae9df")
-	var center := Vector2(size.x / 2, 26 if not navigation else 18)
+	var center := Vector2(size.x / 2, (size.y / 2 if icon_only else 26) if not navigation else 18)
 	if navigation:
 		fill = Color("e3ecd8") if selected else Color.TRANSPARENT
 		ink = Color("24483d") if selected else Color("7b8172")
@@ -87,6 +88,7 @@ func _draw() -> void:
 		_draw_centered("%d s" % ceili(cooldown_left), center.y + 5, 14, ink)
 	else:
 		draw_texture_rect(GameIcons.texture(icon_name, ink), Rect2(center - Vector2(11, 11), Vector2(22, 22)), false)
+	if icon_only: return
 	_draw_centered(caption, 66 if not navigation else 48, 12 if not navigation else 13, ink)
 	if need_value >= 0:
 		_draw_centered("%d%%" % roundi(need_value), 83, 12, NeedIndicator.level_color(need_value))

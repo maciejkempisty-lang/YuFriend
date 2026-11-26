@@ -16,6 +16,7 @@ const PATHS := {
 	"sun": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>',
 	"spark": '<path d="m12 3 2.8 6.2L21 12l-6.2 2.8L12 21l-2.8-6.2L3 12l6.2-2.8zM20 2v4m-2-2h4"/>',
 	"home": '<path d="m3 11 9-8 9 8M5 10v11h14V10M9 21v-7h6v7"/>',
+	"map": '<path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 3v16M15 5v16"/>',
 	"book": '<path d="M4 4h7a3 3 0 0 1 3 3v14a4 4 0 0 0-3-2H4zM14 7a3 3 0 0 1 3-3h4v15h-4a4 4 0 0 0-3 2M7 8h3m-3 4h3"/>',
 	"settings": '<path d="m9 3 1-1h4l1 3 3 1 2-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 2H9l-1-3-3-1-2 1-2-4 2-2v-3L1 8l2-4 3 1z"/><circle cx="12" cy="12" r="3"/>',
 	"clock": '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',

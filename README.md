@@ -2,7 +2,7 @@
 
 Grywalny prototyp opieki nad szczeniakiem golden retrievera w Godocie. Dom, podwórko, kąpiel, temperament kształtowany przez wspólne rytuały i dziewięć sztuczek. Działa lokalnie, bez konta, internetu i klucza API.
 
-Pokój wypełnia wysokość ekranu, a interfejs pływa nad nim. W widoku 390 × 844 około 75% wysokości znajduje się nad panelem opieki. Jeden rząd pięciu przycisków łączy akcję, obwódkę potrzeby i widoczny procent. U góry są imię otwierające kartę psa, pasek więzi i osobne ustawienia. Stała nawigacja **Dom / Trening / Album** pozostaje przy dolnej krawędzi bezpiecznego obszaru; szerokie okno ma sterowanie z boku.
+Pokój wypełnia wysokość ekranu, a interfejs pływa nad nim. Przy górnej krawędzi są imię otwierające kartę psa, pasek więzi i **Plan na dziś**. Panel opieki zawiera ikony czynności z obwódkami potrzeb. Dolna nawigacja prowadzi do bieżącej lokacji, Treningu, Albumu, mapy lokacji i Opcji. Powrót z Treningu lub Albumu zachowuje dom albo podwórko; Mapa pokazuje cały pokój lub całe podwórko. Na szerokim ekranie sterowanie znajduje się z boku.
 
 <p>
   <img src="docs/images/interfejs-dom.png" width="260" alt="YuFriend — pokój i opieka nad pieskiem">

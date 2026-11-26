@@ -118,13 +118,15 @@ func run() -> void:
 				"fetch": check(app.session.last_message.begins_with("Przeciągnij piłkę"), "fetch retains drag instructions")
 				_: check(app.session.activity == "sniff_walk" and app.session.sniff_spot == int(id.trim_prefix("bush_")), "search keeps selected bush")
 
-		# Direct shortcuts must still work while the menu owns the care area.
+		# The map exposes location shortcuts after dismissing a contextual menu.
 		for kind in ["home", "outing", "bath", "hide", "command"]:
 			await fresh(width)
 			if kind == "hide": app.session.pet.yard_routines.outday = PersonalitySystem.day_of(app.session._local_now())
 			if kind == "command": app.session.outdoor_commands.offer_recall(Vector2(700, 315))
 			app._refresh()
 			await menu_before_action()
+			await button(app.tab_buttons.map, "map navigation")
+			check(app.room.overview and not app.yard_menu.visible, "map dismisses contextual choices")
 			match kind:
 				"home":
 					await button(app.yard_button, "home shortcut")
@@ -169,7 +171,7 @@ func run() -> void:
 		check(app.session.play.running() and not app.yard_menu.visible, "ball release starts fetch and frees its controls")
 		await fresh(width)
 		await menu_before_action()
-		await button(app.room.overview_button, "whole-yard map")
+		await button(app.tab_buttons.map, "whole-yard map")
 		check(app.room.overview and not app.yard_menu.visible and app.room.yard_markers.values().all(func(m): return m.visible), "map remains available with all twelve targets")
 		await fresh(width)
 		await menu_before_action()

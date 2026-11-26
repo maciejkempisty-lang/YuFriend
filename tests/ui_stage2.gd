@@ -85,7 +85,7 @@ func run() -> void:
 	check(not app.bubble.visible and not app.care_actions.visible, "invitation shows one instruction and contextual actions")
 	check(app.yard_invite_accept.text == "Do kałuży", "invitation names its action")
 	check(app.yard_toolbar.get_global_rect().end.y <= app.navigation.position.y, "context actions fit above navigation")
-	check(is_equal_approx(app.sheet.size.y, 112.0), "panel shrinks while care actions are hidden")
+	check(app.sheet.size.y <= 152.0 and app.sheet.get_rect().end.y < app.navigation.position.y, "context panel fits while care icons are hidden")
 	app.session.change_yard(false)
 	app._refresh()
 	check(app.yard_toolbar.get_parent()==app.panels.care and app.care_buttons.feed.visible, "home restores actions")

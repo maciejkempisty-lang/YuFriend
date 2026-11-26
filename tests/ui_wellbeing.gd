@@ -14,6 +14,13 @@ func check(ok: bool, message: String) -> void:
 		failed += 1
 		push_error(message)
 
+func find_button(node: Node, title: String) -> Button:
+	if node is Button and node.text == title: return node
+	for child in node.get_children():
+		var found := find_button(child, title)
+		if found != null: return found
+	return null
+
 func _run() -> void:
 	directory = preload("res://tests/helper_paths.gd").data_root().path_join("ui-wellbeing-%d" % Time.get_ticks_usec())
 	root.size = Vector2i(390, 844)
@@ -33,8 +40,11 @@ func _run() -> void:
 	app._refresh()
 	await process_frame
 	await capture("header-390")
-	check(app.wellbeing_button.visible and app.wellbeing_button.text == "Radosna", "header has readable emotional face")
-	app.wellbeing_button.pressed.emit()
+	check(not app.wellbeing_button.visible and app.wellbeing_button.text == "Radosna", "emotional state remains available without cluttering the header")
+	app._show_profile()
+	var wellbeing_entry: Button = find_button(app.profile_dialog, "Samopoczucie")
+	check(wellbeing_entry != null, "profile offers emotional details")
+	if wellbeing_entry != null: wellbeing_entry.pressed.emit()
 	check(app.wellbeing_dialog.visible and app.wellbeing_dialog.dialog_text.contains("przytulić"), "face explains what player can do")
 	check(app.wellbeing_dialog.ok_button_text == "Zamknij" and not app.text_dialog.visible, "emotion explanation is independent of training commands")
 	app.wellbeing_dialog.hide()

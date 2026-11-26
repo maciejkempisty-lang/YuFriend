@@ -30,9 +30,9 @@ func run() -> void:
 	BondLevels.add(app.session.pet, 17.5, NOW)
 	app._refresh()
 	await process_frame
-	check(app.bond_label.text == "Nierozłączni ♥2" and is_equal_approx(app.bond_bar.value, 35), "header and bar show heart progress")
-	check(app.bond_detail.text == "Do ♥3: 35% · dziś +17,5", "target and daily gain visible")
-	check(app.bond_detail.get_global_rect().end.x <= 320 and app.bond_label.get_global_rect().end.x <= 320, "header fits narrow phone")
+	check(app.bond_label.text == "Nierozłączni ♥2" and is_equal_approx(app.bond_bar.value, 35), "header bar keeps heart progress")
+	check(app.bond_detail.text == "Do ♥3: 35% · dziś +17,5" and not app.bond_detail.visible, "detail remains available in the profile without crowding the header")
+	check(app.bond_bar.get_global_rect().end.x <= 320 and app.header.get_global_rect().end.x <= 320, "compact header fits narrow phone")
 	await shot("header-320")
 	ProgressionPanels.bond(app)
 	await process_frame
