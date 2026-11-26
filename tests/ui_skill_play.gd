@@ -44,8 +44,9 @@ func run() -> void:
   app.session.pet.resting = false
   app._toggle_yard(false)
   await settle()
-  app._show_play_menu()
+  app.care_buttons.play.pressed.emit()
   await settle()
+  check(not app.session.fetch.active and app.session.play.kind.is_empty(), 'yard play button does not start fetch')
   check(app.play_menu.visible and app.safe_rect.encloses(Rect2(Vector2(app.play_menu.position), Vector2(app.play_menu.size))), 'six-game menu fits screen')
   for key in ['bubbles', 'freestyle', 'tag', 'frisbee', 'cups2', 'ball', 'tug', 'cups', 'agility']:
    var button: Button = app.play_menu.find_child('Play_' + key, true, false)
@@ -54,6 +55,13 @@ func run() -> void:
   await RenderingServer.frame_post_draw
   root.get_texture().get_image().save_png('/tmp/yuf-menu42-%d.png' % width)
   app.play_menu.hide()
+  app._room_care_action('play')
+  check(app.session.fetch.active, 'direct ball interaction still starts fetch')
+  app.session.cancel_touch_game()
+  app.session.fetch.reset()
+  app.session._cancel_motion()
+  app.session.activity = 'idle'
+  app.session.activity_left = 0
   for kind in ['tag', 'cups2', 'frisbee']:
    app.session.cancel_touch_game()
    app.session.activity = 'idle'

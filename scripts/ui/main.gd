@@ -1251,9 +1251,6 @@ func _choose_trick(key: String) -> void:
 	_refresh()
 
 func _care_action(key: String) -> void:
-	if session.in_yard and key == "play":
-		session.throw_ball(YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), room.ball_world)
-		return
 	if session.in_yard and key not in ["pet", "play", "rest"]:
 		if not session.change_yard(false): return
 		if room.in_yard: room.set_yard(false)
