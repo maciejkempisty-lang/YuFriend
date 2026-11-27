@@ -82,7 +82,7 @@ func _run() -> void:
 	check(room._ball_lift > 0 and not room.throw_guide.visible, "the thrown ball follows a visible arc")
 	await capture("32-ball-flight.png")
 	await_arrival()
-	check(game.pet.social.games.ball == 1 and game.pet.needs.play > needs_before.play, "the actual catch completes and rewards the throw")
+	check(game.pet.social.games.ball == 1 and game.pet.needs.play > needs_before.play, "catch and return complete before rewarding the throw")
 	step(2)
 	room.look_at_world(room.ball_world)
 	start = room.ball_center()
@@ -213,7 +213,7 @@ func step(seconds: float) -> void:
 
 func await_arrival() -> void:
 	var remaining := 40.0
-	while app.session.activity == "approach" and remaining > 0:
+	while app.session.activity in ["approach", "catch", "fetch_return"] and remaining > 0:
 		step(0.02)
 		remaining -= 0.02
 

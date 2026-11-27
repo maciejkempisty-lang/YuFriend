@@ -16,7 +16,7 @@ func _check(ok: bool, label: String) -> void:
 func _run() -> void:
 	root.size = Vector2i(390, 844)
 	root.content_scale_size = root.size
-	var directory := "user://qa-editor-main-%d" % Time.get_ticks_usec()
+	var directory: String = preload("res://tests/helper_paths.gd").data_root().path_join("qa-editor-main-%d" % Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 	var project_path := directory.path_join("project.json")
 	var project: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://level-editor/projects/ver1.json"))
@@ -28,6 +28,12 @@ func _run() -> void:
 		"x": 900, "y": 505, "width": 102, "height": 78, "pivot": {"x": 17, "y": 25},
 		"visible": true, "locked": false, "static": true, "script": "message",
 		"params": {"text": "Wiadomość z edytora", "duration": 5}}
+	var thought := note.duplicate(true)
+	thought.id = "editor_thought"
+	thought.x = 1150
+	thought.script = "thought"
+	thought.params = {"text": "Myśl z edytora", "duration": 2, "from_dog": false}
+	project.levels[0].elements.append(thought)
 	project.levels[0].elements.append(food)
 	project.levels[0].elements.append(note)
 	var file := FileAccess.open(project_path, FileAccess.WRITE)
@@ -57,6 +63,9 @@ func _run() -> void:
 	app.room._interact(note_point)
 	_check(app.message_label.text == "Wiadomość z edytora" and app.bubble_left == 5, "message parameters reach the game UI")
 	app._on_editor_interaction("editor_note", "thought", {"x": note.x, "y": note.y, "params": {"text": "Myśl z edytora", "duration": 2, "from_dog": false}})
+	_check(app.message_label.text == "Wiadomość z edytora", "forged script cannot replace the authored message")
+	app.room.look_at_world(Vector2(thought.x, thought.y))
+	app.room._interact(app.room.world_to_screen(LevelProject.element_rect(thought, assets[thought.asset]).get_center()))
 	_check(app.message_label.text == "Myśl z edytora" and app.editor_feedback_world_target.is_finite(), "thought can point to its editor element")
 	var ball_entry: Dictionary = app.room.editor_ball_sprites.get("home", {})
 	_check(not ball_entry.is_empty(), "authored ball has a movable game sprite")
@@ -66,6 +75,17 @@ func _run() -> void:
 		app.room.ball_world.x += 30
 		app.room._sync_layers()
 		_check(absf(ball_sprite.position.x - before_x - 30) < 0.1, "editor ball follows game ball motion")
+	app.room.look_at_world(app.room.ball_world)
+	_check(app.room.editor_element_at(app.room.ball_center()).get("script") == "ball", "ball center respects the authored pivot")
+	app.room._ball_lift = 65
+	app.room._sync_layers()
+	_check(app.room.editor_element_at(app.room.ball_center()).get("script") == "ball", "airborne ball hit area follows its visible sprite")
+	if not ball_entry.is_empty():
+		var anchor: Node2D = ball_entry.node
+		var sprite: Sprite2D = anchor.get_child(0)
+		var drawn_center := app.room.world_to_screen(anchor.position + sprite.position + sprite.get_rect().get_center() * sprite.scale)
+		_check(app.room.ball_center().distance_to(drawn_center) < 0.1, "ball interaction center matches the rendered sprite")
+		_check(app.room.editor_element_at(drawn_center).get("script") == "ball", "rendered airborne sprite can be touched")
 	app.queue_free()
 	await process_frame
 	for name in DirAccess.get_files_at(directory): DirAccess.remove_absolute(ProjectSettings.globalize_path(directory.path_join(name)))

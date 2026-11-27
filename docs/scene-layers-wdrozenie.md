@@ -48,3 +48,21 @@ Dekoracja z pustym `key` otwiera menu; element z konkretnym `key` jest jej edyto
 Testy używają odizolowanych zapisów. Poprawiono również dawny `ui_level_room`, który usuwał ustawienia muzyki/efektów z głównego `user://`.
 
 Nie zmieniano `project.godot`, animatora, manifestu sprite’ów ani metod odczytu/zapisu GameSession. Dane Glorii i instalacja na iPhonie nie były modyfikowane. Fizyczny dotyk i nowy eksport iOS pozostają do sprawdzenia na urządzeniu; nie są potwierdzone testami macOS.
+
+## Kontrola na Macu po wdrożeniu — punkty 1 i 2
+
+27 listopada 2026. Weryfikacja automatyczna na macOS, Godot 4.7.2 z renderowaniem OpenGL/Metal oraz lokalny Chrome. Obejrzano zrzuty edytora i gry. Nie jest to test fizycznego dotyku na iPhonie.
+
+**Edytor → gra:** w interfejsie inspektora zmieniono X miski jedzenia z 485 na 980 oraz wody z 555 na 1100. Przycisk „Zapisz” zapisał JSON; ponowne otwarcie wersji potwierdziło obie wartości. Następnie odznaczono „Widoczny w grze” dla obu misek i zapisano drugi wariant. Test Chrome korzystał z prawdziwych uchwytów File System Access w izolowanym OPFS; wybór folderu był podstawiony na katalog testowy. Natywny systemowy wybór katalogu nie jest objęty potwierdzonym wynikiem tego testu.
+
+Oba rzeczywiście zapisane pliki przekazano do `ui_editor_roundtrip.gd`. Test odtwarza główną scenę gry z tym samym osobnym zapisem psa, sprawdza kliknięcie elementów, rzeczywisty ruch do nowych punktów dojścia, zakończenie jedzenia/picia oraz blokadę ukrytych elementów w UI i systemach. Ostatnie otwarcie oryginalnego projektu sprawdza brak kumulowania przesunięć. Wynik: **19/19**. Test działa też samodzielnie, tworząc równoważne pliki; opcjonalne `YUFRIEND_EDITOR_MOVED` i `YUFRIEND_EDITOR_HIDDEN` pozwalają podać JSON z przeglądarki.
+
+**Poprawka:** punkt dotykania piłki uwzględnia teraz rozmiar i pivot grafiki z edytora. Obszar trafienia w locie podąża również za wysokością piłki. Test porównuje punkt interakcji ze środkiem rzeczywiście renderowanego sprite'a. Zaktualizowano dwa nieaktualne oczekiwania testów: nagroda za piłkę następuje po złapaniu i powrocie; skrypt myśli musi pochodzić z rzeczywiście zapisanego elementu, a podstawiony skrypt pozostaje odrzucany.
+
+Końcowe wyniki:
+
+- **12/12 zestawów UI z oknem macOS:** `ui_training`, `ui_wellbeing`, `ui_play`, `ui_bath`, `ui_yard_transition`, `ui_editor_scripts_main`, `ui_course`, `ui_timed_course`, `ui_home_friends`, `ui_editor_roundtrip`, `ui_water`, `ui_yard_rest`.
+- Obejmują karmienie, picie, przytulanie, trening, piłkę wraz z powrotem, szarpak, kubeczki, oba tory, kąpiel, odpoczynek oraz przejście do ogrodu i powrót do domu. Przykładowo `ui_play`: **46/46**, `ui_editor_scripts_main`: **13/13**.
+- **47/47** zestawów logiki gry i **22/22** testy modelu edytora.
+
+Scena `ver2.json` w repozytorium zachowuje pierwotne pozycje i widoczność. Zmienione warianty były wyłącznie danymi testowymi. Testy nie korzystały z właściwego zapisu Glorii.

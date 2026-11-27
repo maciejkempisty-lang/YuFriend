@@ -488,7 +488,7 @@ func editor_element_at(point: Vector2) -> Dictionary:
 			var moved := element.duplicate(true)
 			if element.script == "ball":
 				moved.x = ball_world.x
-				moved.y = ball_world.y
+				moved.y = ball_world.y - _ball_lift
 			if not LevelProject.element_rect(moved, assets[element.asset]).has_point(world_point): continue
 			var priority: float = LevelProject.LAYERS.find(element.layer) * 1000000000.0 + (float(element.y) * 1000.0 if element.layer == "middle" else 0.0) + index
 			if priority >= best:
@@ -604,6 +604,14 @@ func bed_rect() -> Rect2:
 	return _screen_rect(station_bounds("bed"))
 
 func ball_center() -> Vector2:
+	var element := RoomLayoutLoader.element_for_script("ball", "yard" if in_yard else "home")
+	if not element.is_empty():
+		for asset in RoomLayoutLoader.active_project.assets:
+			if asset.id != element.asset: continue
+			var moved := element.duplicate(true)
+			moved.x = ball_world.x
+			moved.y = ball_world.y - _ball_lift
+			return world_to_screen(LevelProject.element_rect(moved, asset).get_center())
 	return world_to_screen(ball_world - Vector2(0, _ball_lift))
 
 func station_touch_rect(id: String) -> Rect2:
