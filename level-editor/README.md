@@ -9,8 +9,8 @@ JSON na projekt, jeden folder PNG-ów, jeden rejestr skryptów.
 Otwórz `level-editor/index.html` w Chrome lub Edge — bez serwera, bez zależności.
 Edytor przy starcie pyta o folder YuFriend (wskaż katalog, w którym znajduje się
 `level-editor/`). Przeglądarka poprosi o zgodę na odczyt i zapis. Folder jest
-pamiętany między uruchomieniami (IndexedDB) — kolejne otwarcie HTML od razu
-wczytuje projekt startowy.
+pamiętany między uruchomieniami (IndexedDB). Po otwarciu edytor wczytuje
+`ver1.json` i pokazuje wybór wersji `ver1.json`, `ver2.json` itd.
 
 Edytor używa [File System Access API](https://developer.chrome.com/docs/capabilities/web-apis/file-system-access),
 więc Safari i Firefox nie obsłużą zapisu w folderze projects/. W tych
@@ -20,29 +20,30 @@ przeglądarkach używaj „Otwórz → Wybierz plik JSON" i „Pobierz JSON".
 
 ```
 level-editor/
-  assets/                # ← PNG do biblioteki. Dropnij tu plik, klik ↻ w panelu
-    bed.png              # „Biblioteka grafik" i gotowe.
+  assets/                # jeden płaski katalog PNG do biblioteki
+    bed.png              # dropnij tu plik i kliknij ↻ w panelu
     home-background.png
-    kategoria/
-      obiekt.png         # id = "kategoria-obiekt"
   projects/
-    starter.json         # wzorzec (chroniony przed nadpisaniem)
-    moj-projekt.json     # Twoje zapisy
+    ver1.json            # bieżąca wersja projektu YuFriend
+    ver2.json            # kolejne wersje tworzy przycisk „Nowa wersja"
   scripts.json           # rejestr skryptów (patrz niżej)
   registry.js            # ten sam rejestr dla przeglądarki
   index.html             # otwórz w Chrome/Edge — zero serwera
   app.js, model.js, fs.js # kod edytora (klasyczne skrypty)
 ```
 
-Dodatkowo edytor widzi też grafikę z folderu gry: `assets/art/yard/sprites/*.png`,
-`assets/art/home/sprites/*.png`, `assets/art/environments/*.png`, `assets/sprites/puppy/pixel/*.png`.
+Grafiki poziomów z dawnych podkatalogów są w `level-editor/assets/` z prefiksem
+dawnej ścieżki, np. `warm-v1-home-door-hd.png` albo `yard-gate.png`. Arkusze
+animacji mają prefiks `sprites-` i nie trafiają do biblioteki.
+Dotyczy to również arkuszy zapisanych wcześniej w bibliotece projektu;
+pozostają w projekcie, ale nie zaśmiecają listy grafik do dodania.
 
 ## Konwencja nazwowa grafik
 
-- Nazwa pliku → `id` grafiki. `bed.png` → id `bed`, `home/bed.png` → id `home-bed`
+- Nazwa pliku → `id` grafiki. `bed.png` → id `bed`
 - Tylko `[a-zA-Z0-9_-]`, max 64 znaki, musi zaczynać się literą
 - Max 4096 × 4096 px, nagłówek PNG weryfikowany po bajtach
-- Subfoldery służą jako grupowanie (prefiks id)
+- Wszystkie PNG edytora są bezpośrednio w `level-editor/assets/`
 
 ## Struktura projektu
 
@@ -81,12 +82,15 @@ Dodatkowo edytor widzi też grafikę z folderu gry: `assets/art/yard/sprites/*.p
 }
 ```
 
-**Wymiary świata gry: 1440 × 540** jednostek. Siatka ma 3 jednostki świata na
-piksel logiczny, więc źródłowe tła rysuje się jako 480 × 180 px PNG i rozciąga
-na pełną scenę (`scale=3`). Podłoga (`FLOOR_Y`) jest na y=440, pas ruchu
+**Wymiary świata gry: 1440 × 540** jednostek. Nowe grafiki można dodawać
+bezpośrednio jako PNG HD. Edytor ustawia ich początkowy rozmiar na podstawie
+projektu `art-kit-warm.json` lub dopasowuje je do sceny; tło wypełnia poziom.
+Niskorozdzielcze grafiki z prefiksem `warm-v1-native-` pozostają na dysku wyłącznie dla
+starszych projektów i nie pojawiają się przy dodawaniu nowych elementów.
+Podłoga (`FLOOR_Y`) jest na y=440, pas ruchu
 od y=466 do y=508, start psa na y=502. Starsze projekty 1440 × 360 wymagają
 migracji (przesunięcia elementów o +180 w y) — edytor robi to automatycznie
-przy wczytaniu, ale tła trzeba przeskalować ręcznie na 480 × 180.
+przy wczytaniu.
 
 - `project.assets` to lista grafik używanych w projekcie. Grafika z dysku, której
   jeszcze tu nie ma, pojawia się w bibliotece z przerywaną ramką i plakietką
@@ -119,11 +123,10 @@ Wbudowane skrypty: `none`, `message`, `thought` (chmurka myśli psa),
 
 ## Obsługa plików
 
-Edytor sam skanuje `level-editor/assets/` oraz `assets/art/{yard,home}/sprites/`,
-`assets/art/environments/` i `assets/sprites/puppy/pixel/`. Po wrzuceniu nowego
-PNG kliknij ↻ w panelu „Biblioteka grafik". Nowe projekty zapisują się jako
-`level-editor/projects/*.json` (atomowo); `starter.json` chroniony przed
-nadpisaniem. Fallback: „Pobierz JSON" generuje plik do pobrania.
+Edytor skanuje `level-editor/assets/`. Po wrzuceniu nowego PNG kliknij ↻ w
+panelu „Biblioteka grafik". Przycisk „Zapisz" zapisuje bieżącą wersję w
+`level-editor/projects/verN.json`, a „Nowa wersja" tworzy kolejny plik.
+Fallback: „Pobierz JSON" generuje plik do pobrania.
 
 **Rejestr skryptów jest w dwóch miejscach:** `scripts.json` (czyta Godot) i
 `registry.js` (czyta przeglądarka). Node test (`model.test.mjs`) wymusza parytet

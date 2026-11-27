@@ -7,287 +7,287 @@
     {
       "id": "warm-v1-native-home-background",
       "name": "Ściana i podłoga",
-      "source": "res://level-editor/assets/warm-v1-native/home/background.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-background.png",
       "width": 480,
       "height": 160
     },
     {
       "id": "warm-v1-native-home-kitchen-window-day",
       "name": "Za oknem kuchni · dzień",
-      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-day.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-kitchen-window-day.png",
       "width": 28,
       "height": 23
     },
     {
       "id": "warm-v1-native-home-kitchen-window-night",
       "name": "Za oknem kuchni · noc",
-      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-night.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-kitchen-window-night.png",
       "width": 28,
       "height": 23
     },
     {
       "id": "warm-v1-native-home-main-window-day",
       "name": "Za dużym oknem · dzień",
-      "source": "res://level-editor/assets/warm-v1-native/home/main-window-day.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-main-window-day.png",
       "width": 69,
       "height": 51
     },
     {
       "id": "warm-v1-native-home-main-window-night",
       "name": "Za dużym oknem · noc",
-      "source": "res://level-editor/assets/warm-v1-native/home/main-window-night.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-main-window-night.png",
       "width": 69,
       "height": 51
     },
     {
       "id": "warm-v1-native-home-plant",
       "name": "Roślina",
-      "source": "res://level-editor/assets/warm-v1-native/home/plant.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-plant.png",
       "width": 39,
       "height": 44
     },
     {
       "id": "warm-v1-native-home-portrait",
       "name": "Obraz",
-      "source": "res://level-editor/assets/warm-v1-native/home/portrait.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-portrait.png",
       "width": 34,
       "height": 30
     },
     {
       "id": "warm-v1-native-home-chest",
       "name": "Wiklinowa skrzynia",
-      "source": "res://level-editor/assets/warm-v1-native/home/chest.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-chest.png",
       "width": 46,
       "height": 24
     },
     {
       "id": "warm-v1-native-home-kitchen",
       "name": "Kuchnia",
-      "source": "res://level-editor/assets/warm-v1-native/home/kitchen.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-kitchen.png",
       "width": 99,
       "height": 45
     },
     {
       "id": "warm-v1-native-home-kitchen-window-frame",
       "name": "Okno kuchenne · rama",
-      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-frame.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-kitchen-window-frame.png",
       "width": 32,
       "height": 30
     },
     {
       "id": "warm-v1-native-home-pendant-lamp-off",
       "name": "Lampka wisząca · off",
-      "source": "res://level-editor/assets/warm-v1-native/home/pendant-lamp-off.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-pendant-lamp-off.png",
       "width": 22,
       "height": 27
     },
     {
       "id": "warm-v1-native-home-pendant-lamp-on",
       "name": "Lampka wisząca · on",
-      "source": "res://level-editor/assets/warm-v1-native/home/pendant-lamp-on.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-pendant-lamp-on.png",
       "width": 22,
       "height": 27
     },
     {
       "id": "warm-v1-native-home-clock",
       "name": "Zegar",
-      "source": "res://level-editor/assets/warm-v1-native/home/clock.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-clock.png",
       "width": 21,
       "height": 22
     },
     {
       "id": "warm-v1-native-home-main-window-frame",
       "name": "Duże okno · rama i firanki",
-      "source": "res://level-editor/assets/warm-v1-native/home/main-window-frame.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-main-window-frame.png",
       "width": 75,
       "height": 56
     },
     {
       "id": "warm-v1-native-home-floor-lamp-off",
       "name": "Lampa stojąca · off",
-      "source": "res://level-editor/assets/warm-v1-native/home/floor-lamp-off.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-floor-lamp-off.png",
       "width": 31,
       "height": 51
     },
     {
       "id": "warm-v1-native-home-floor-lamp-on",
       "name": "Lampa stojąca · on",
-      "source": "res://level-editor/assets/warm-v1-native/home/floor-lamp-on.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-floor-lamp-on.png",
       "width": 31,
       "height": 51
     },
     {
       "id": "warm-v1-native-home-gramophone",
       "name": "Komoda i gramofon",
-      "source": "res://level-editor/assets/warm-v1-native/home/gramophone.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-gramophone.png",
       "width": 60,
       "height": 40
     },
     {
       "id": "warm-v1-native-home-shelf",
       "name": "Półka",
-      "source": "res://level-editor/assets/warm-v1-native/home/shelf.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-shelf.png",
       "width": 70,
       "height": 23
     },
     {
       "id": "warm-v1-native-home-guitar",
       "name": "Gitara",
-      "source": "res://level-editor/assets/warm-v1-native/home/guitar.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-guitar.png",
       "width": 27,
       "height": 47
     },
     {
       "id": "warm-v1-native-home-door",
       "name": "Drzwi do ogrodu",
-      "source": "res://level-editor/assets/warm-v1-native/home/door.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-door.png",
       "width": 30,
       "height": 43
     },
     {
       "id": "warm-v1-native-home-rug",
       "name": "Dywan",
-      "source": "res://level-editor/assets/warm-v1-native/home/rug.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-rug.png",
       "width": 117,
       "height": 22
     },
     {
       "id": "warm-v1-native-home-bed",
       "name": "Legowisko",
-      "source": "res://level-editor/assets/warm-v1-native/home/bed.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-bed.png",
       "width": 68,
       "height": 25
     },
     {
       "id": "warm-v1-native-home-food",
       "name": "Miska z jedzeniem",
-      "source": "res://level-editor/assets/warm-v1-native/home/food.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-food.png",
       "width": 51,
       "height": 18
     },
     {
       "id": "warm-v1-native-home-toy-basket",
       "name": "Kosz z zabawkami",
-      "source": "res://level-editor/assets/warm-v1-native/home/toy-basket.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-toy-basket.png",
       "width": 48,
       "height": 23
     },
     {
       "id": "warm-v1-native-home-ball",
       "name": "Piłka",
-      "source": "res://level-editor/assets/warm-v1-native/home/ball.png",
+      "source": "res://level-editor/assets/warm-v1-native-home-ball.png",
       "width": 12,
       "height": 12
     },
     {
       "id": "warm-v1-native-yard-background",
       "name": "Tło ogrodu z domem",
-      "source": "res://level-editor/assets/warm-v1-native/yard/background.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-background.png",
       "width": 480,
       "height": 160
     },
     {
       "id": "warm-v1-native-yard-window",
       "name": "Okno domu",
-      "source": "res://level-editor/assets/warm-v1-native/yard/window.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-window.png",
       "width": 24,
       "height": 25
     },
     {
       "id": "warm-v1-native-yard-door",
       "name": "Drzwi do domu",
-      "source": "res://level-editor/assets/warm-v1-native/yard/door.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-door.png",
       "width": 29,
       "height": 43
     },
     {
       "id": "warm-v1-native-yard-bush",
       "name": "Krzak 1",
-      "source": "res://level-editor/assets/warm-v1-native/yard/bush.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-bush.png",
       "width": 34,
       "height": 32
     },
     {
       "id": "warm-v1-native-yard-fetch",
       "name": "Mata do aportowania",
-      "source": "res://level-editor/assets/warm-v1-native/yard/fetch.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-fetch.png",
       "width": 59,
       "height": 17
     },
     {
       "id": "warm-v1-native-yard-puddle",
       "name": "Kałuża",
-      "source": "res://level-editor/assets/warm-v1-native/yard/puddle.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-puddle.png",
       "width": 46,
       "height": 12
     },
     {
       "id": "warm-v1-native-yard-dig",
       "name": "Miejsce kopania",
-      "source": "res://level-editor/assets/warm-v1-native/yard/dig.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-dig.png",
       "width": 44,
       "height": 16
     },
     {
       "id": "warm-v1-native-yard-bed",
       "name": "Legowisko ogrodowe",
-      "source": "res://level-editor/assets/warm-v1-native/yard/bed.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-bed.png",
       "width": 45,
       "height": 23
     },
     {
       "id": "warm-v1-native-yard-pergola",
       "name": "Pergola",
-      "source": "res://level-editor/assets/warm-v1-native/yard/pergola.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-pergola.png",
       "width": 92,
       "height": 64
     },
     {
       "id": "warm-v1-native-yard-bowl",
       "name": "Miska z wodą",
-      "source": "res://level-editor/assets/warm-v1-native/yard/bowl.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-bowl.png",
       "width": 20,
       "height": 12
     },
     {
       "id": "warm-v1-native-yard-garden",
       "name": "Grządka",
-      "source": "res://level-editor/assets/warm-v1-native/yard/garden.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-garden.png",
       "width": 61,
       "height": 38
     },
     {
       "id": "warm-v1-native-yard-watering-can",
       "name": "Konewka",
-      "source": "res://level-editor/assets/warm-v1-native/yard/watering-can.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-watering-can.png",
       "width": 17,
       "height": 15
     },
     {
       "id": "warm-v1-native-yard-ball",
       "name": "Piłka",
-      "source": "res://level-editor/assets/warm-v1-native/yard/ball.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-ball.png",
       "width": 13,
       "height": 13
     },
     {
       "id": "warm-v1-native-yard-agility",
       "name": "Przeszkoda",
-      "source": "res://level-editor/assets/warm-v1-native/yard/agility.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-agility.png",
       "width": 43,
       "height": 22
     },
     {
       "id": "warm-v1-native-yard-sprinkler",
       "name": "Zraszacz",
-      "source": "res://level-editor/assets/warm-v1-native/yard/sprinkler.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-sprinkler.png",
       "width": 42,
       "height": 26
     },
     {
       "id": "warm-v1-native-yard-sign",
       "name": "Tabliczka",
-      "source": "res://level-editor/assets/warm-v1-native/yard/sign.png",
+      "source": "res://level-editor/assets/warm-v1-native-yard-sign.png",
       "width": 24,
       "height": 35
     }

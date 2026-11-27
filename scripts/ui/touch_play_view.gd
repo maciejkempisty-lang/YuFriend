@@ -11,7 +11,7 @@ var _last_beat := -1
 var _last_dance_index := -1
 var _last_dance_clip := ""
 var model: TouchPlaySystem
-var yard_texture := preload("res://assets/art/environments/yard-sunny-background-v1.png")
+var yard_texture := preload("res://level-editor/assets/environment-yard-sunny-background-v1.png")
 var puppy := PetAnimator.new()
 var prop_layer := Node2D.new()
 var _pointer := -1

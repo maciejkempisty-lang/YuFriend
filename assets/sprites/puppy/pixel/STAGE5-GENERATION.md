@@ -3,7 +3,7 @@
 Wygenerowano wbudowanym image_gen 17 listopada 2026. Oryginały PNG skopiowano do projektu bez przekształcania kanału alfa.
 
 - `sheets/spin-roll-v1.png`: atlas 1536×1024, 4 klatki obrotu i 4 klatki turlania. Referencja: `sheets/walk.png`. Regiony, podparcie i tempo są w manifeście. To krótkie animacje na obecnej siatce renderowania.
-- `assets/art/environments/decor-v1.png`: dywan z łapką, słonecznik i półka z trofeum. `RoomArtwork.DECOR_REGIONS` wyznacza prostokąty obiektów w oryginalnym arkuszu.
+- `level-editor/assets/environment-decor-v1.png`: dywan z łapką, słonecznik i półka z trofeum. `RoomArtwork.DECOR_REGIONS` wyznacza prostokąty obiektów w oryginalnym arkuszu.
 
 ## Prompt — sztuczki
 

@@ -4,21 +4,21 @@ extends Node2D
 # Presentation only: input, discovery and actions stay in RoomView/GameSession.
 # Dynamic overlays, such as growing plants, remain separate nodes.
 const SPRITES := {
-	"gate": preload("res://assets/art/yard/sprites/gate.png"),
-	"garden": preload("res://assets/art/yard/sprites/garden.png"),
-	"dig": preload("res://assets/art/yard/sprites/dig.png"),
-	"fetch": preload("res://assets/art/yard/sprites/fetch.png"),
-	"bush_0": preload("res://assets/art/yard/sprites/bush_0.png"),
-	"bush_1": preload("res://assets/art/yard/sprites/bush_1.png"),
-	"bush_2": preload("res://assets/art/yard/sprites/bush_2.png"),
-	"outing": preload("res://assets/art/yard/sprites/outing.png"),
-	"shade": preload("res://assets/art/yard/sprites/shade.png"),
-	"course": preload("res://assets/art/yard/sprites/course.png"),
-	"puddle": preload("res://assets/art/yard/sprites/puddle.png"),
-	"sprinkler": preload("res://assets/art/yard/sprites/sprinkler.png")
+	"gate": preload("res://level-editor/assets/yard-gate.png"),
+	"garden": preload("res://level-editor/assets/yard-garden.png"),
+	"dig": preload("res://level-editor/assets/yard-dig.png"),
+	"fetch": preload("res://level-editor/assets/yard-fetch.png"),
+	"bush_0": preload("res://level-editor/assets/yard-bush_0.png"),
+	"bush_1": preload("res://level-editor/assets/yard-bush_1.png"),
+	"bush_2": preload("res://level-editor/assets/yard-bush_2.png"),
+	"outing": preload("res://level-editor/assets/yard-outing.png"),
+	"shade": preload("res://level-editor/assets/yard-shade.png"),
+	"course": preload("res://level-editor/assets/yard-course.png"),
+	"puddle": preload("res://level-editor/assets/yard-puddle.png"),
+	"sprinkler": preload("res://level-editor/assets/yard-sprinkler.png")
 }
-const GATE_OPEN = preload("res://assets/art/yard/sprites/gate_open.png")
-const PUDDLE_DRY = preload("res://assets/art/yard/sprites/puddle_dry.png")
+const GATE_OPEN = preload("res://level-editor/assets/yard-gate_open.png")
+const PUDDLE_DRY = preload("res://level-editor/assets/yard-puddle_dry.png")
 const GLOW_SHADER = preload("res://scripts/ui/yard_sprite_glow.gdshader")
 
 var station_id := ""

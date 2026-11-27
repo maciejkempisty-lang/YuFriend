@@ -6,7 +6,6 @@
   const DB_NAME = 'yufriend-editor', STORE = 'handles', KEY = 'root';
   const MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
   const ID_RE = /^[a-zA-Z][a-zA-Z0-9_-]*$/;
-  const GAME_DIRS = ['art/yard/sprites', 'art/home/sprites', 'art/environments', 'sprites/puppy/pixel'];
 
   const supported = typeof self !== 'undefined' && 'showDirectoryPicker' in self;
   let root = null;
@@ -140,10 +139,11 @@
     if (w < 1 || w > 4096 || h < 1 || h > 4096) return null;
     return {w, h};
   }
-  async function walk(dirHandle, base, onPng) {
+  async function walk(dirHandle, base, onPng, excludedDirs = []) {
     for await (const [name, h] of dirHandle.entries()) {
       if (name.startsWith('.')) continue;
-      if (h.kind === 'directory') await walk(h, `${base}${name}/`, onPng);
+      if (h.kind === 'directory' && base === '' && excludedDirs.includes(name)) continue;
+      if (h.kind === 'directory') await walk(h, `${base}${name}/`, onPng, excludedDirs);
       else if (h.kind === 'file' && name.toLowerCase().endsWith('.png')) await onPng(`${base}${name}`, h);
     }
   }
@@ -151,7 +151,7 @@
   async function scanAssets() {
     if (!root) return [];
     const result = [], seen = new Set();
-    const add = async (dirPath, srcPrefix) => {
+    const add = async (dirPath, srcPrefix, excludedDirs = []) => {
       let dh;
       try { dh = await dir(dirPath); } catch { return; }
       await walk(dh, '', async (rel, handle) => {
@@ -163,10 +163,9 @@
         const path = `${dirPath}/${rel}`;
         assetHandles.set(path, handle);
         result.push({id: aid, name: pretty(rel), source: `${srcPrefix}${rel}`, width: png.w, height: png.h});
-      });
+      }, excludedDirs);
     };
     await add('level-editor/assets', 'res://level-editor/assets/');
-    for (const d of GAME_DIRS) await add(`assets/${d}`, `res://assets/${d}/`);
     result.sort((a, b) => a.id.localeCompare(b.id));
     return result;
   }

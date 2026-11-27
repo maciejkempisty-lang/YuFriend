@@ -28,17 +28,42 @@
     return out;
   }
 
-  function newElement(asset, layer = 'middle') {
+  function newElement(asset, layer = 'middle', level = null) {
+    const isBackground = /(?:^|[-/])background(?:-hd)?\.png$/i.test(asset.source || '') || /background/i.test(asset.name || '');
+    const authored = asset.defaultSize;
+    let width, height;
+    if (isBackground) {
+      width = level?.width || 1440; height = level?.height || 540;
+    } else if (authored?.width > 0 && authored?.height > 0) {
+      width = authored.width; height = authored.height;
+    } else if (Math.max(asset.width, asset.height) > 128) {
+      const scale = Math.min(300 / asset.width, 220 / asset.height);
+      width = Math.max(1, Math.round(asset.width * scale));
+      height = Math.max(1, Math.round(asset.height * scale));
+    } else {
+      width = asset.width * 3; height = asset.height * 3;
+    }
     return {
       id: id('item'), name: asset.name, asset: asset.id, layer,
-      x: 720, y: 315, width: asset.width * 3, height: asset.height * 3,
-      pivot: {x: asset.width / 2, y: asset.height},
+      x: isBackground ? 0 : 720, y: isBackground ? 0 : 315, width, height,
+      pivot: isBackground ? {x: 0, y: 0} : {x: asset.width / 2, y: asset.height},
       visible: true, locked: false, static: true,
       script: 'none', params: {}
     };
   }
 
   const isInteractive = e => e.script !== 'none';
+
+  function isAnimationAsset(asset) {
+    const source = String(asset?.source || '').toLowerCase();
+    const label = `${asset?.id || ''} ${asset?.name || ''}`.toLowerCase();
+    return source.startsWith('res://level-editor/assets/sprites-')
+      || source.startsWith('res://level-editor/assets/sprites/')
+      || source.startsWith('res://assets/sprites/')
+      || /(?:^|\/)(?:frames|sheets)(?:\/|$)/.test(source)
+      || /(?:^|\/)[^/]*spritesheet[^/]*(?:\/|$)/.test(source)
+      || /sprite[\s_-]*sheet|arkusz animacji/.test(label);
+  }
 
   function setScript(e, scriptId, project) {
     e.script = scriptId;
@@ -168,7 +193,7 @@
   globalThis.YF = {
     LAYERS, SCRIPTS, SCRIPT_LIST, SCRIPT_OPTIONS, CLIPS,
     DEFAULT_WALK_SPEED, DEFAULT_RUN_SPEED,
-    clone, id, newLevel, newElement, defaultParams, setScript, isInteractive,
+    clone, id, newLevel, newElement, defaultParams, setScript, isInteractive, isAnimationAsset,
     ordered, rect, removeLevel,
     migrate, migrateElement, migrateLevel, validate
   };

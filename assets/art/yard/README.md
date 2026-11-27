@@ -10,7 +10,7 @@ Każdy obiekt ma własny węzeł `YardStationView` i `Sprite2D`, co pozwala prze
 godot --path . --script res://tools/export_yard_sprites.gd
 ```
 
-Prostokąty kadrowania w jednostkach świata znajdują się w `scripts/model/yard_sprite_layout.gd`. Po odtworzeniu PNG należy uruchomić import zasobów Godota przed eksportem gry. Tło `assets/art/environments/yard-sunny-background-v1.png` zawiera tylko krajobraz; wszystkie interaktywne elementy są nad nim.
+Prostokąty kadrowania w jednostkach świata znajdują się w `scripts/model/yard_sprite_layout.gd`. Po odtworzeniu PNG należy uruchomić import zasobów Godota przed eksportem gry. Tło `level-editor/assets/environment-yard-sunny-background-v1.png` zawiera tylko krajobraz; wszystkie interaktywne elementy są nad nim.
 
 
 Warstwy świata i parametry nowych grafik: [wytyczne grafik](../../../docs/wytyczne-grafik.md). Stacje przestrzenne są teraz dziećmi MiddleGround z Y-sort; ich punkt podstawy określa `YardSpriteLayout.SORT_ORIGINS`. PNG zachowują dotychczasowe położenie dzięki przesunięciu lokalnemu. Ziemia, kałuża i istniejący złożony zestaw odpoczynku pozostają w Background. Kolorystykę przestrzennych sprite'ów w deszczu i nocą zachowuje `yard_weather_tint.gdshader`.

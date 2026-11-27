@@ -50,92 +50,197 @@
       "id": "ball",
       "name": "Piłka",
       "source": "res://level-editor/assets/ball.png",
-      "width": 12,
-      "height": 12
+      "width": 54,
+      "height": 54
     },
     {
       "id": "yard-gate",
       "name": "Furtka",
-      "source": "res://assets/art/yard/sprites/gate.png",
+      "source": "res://level-editor/assets/yard-gate.png",
       "width": 37,
       "height": 32
     },
     {
       "id": "yard-garden",
       "name": "Ogródek",
-      "source": "res://assets/art/yard/sprites/garden.png",
+      "source": "res://level-editor/assets/yard-garden.png",
       "width": 50,
       "height": 22
     },
     {
       "id": "yard-dig",
       "name": "Piaskownica",
-      "source": "res://assets/art/yard/sprites/dig.png",
+      "source": "res://level-editor/assets/yard-dig.png",
       "width": 46,
       "height": 18
     },
     {
       "id": "yard-fetch",
       "name": "Aport",
-      "source": "res://assets/art/yard/sprites/fetch.png",
+      "source": "res://level-editor/assets/yard-fetch.png",
       "width": 85,
       "height": 27
     },
     {
       "id": "yard-bush_0",
       "name": "Krzak 1",
-      "source": "res://assets/art/yard/sprites/bush_0.png",
+      "source": "res://level-editor/assets/yard-bush_0.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-bush_1",
       "name": "Krzak 2",
-      "source": "res://assets/art/yard/sprites/bush_1.png",
+      "source": "res://level-editor/assets/yard-bush_1.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-bush_2",
       "name": "Krzak 3",
-      "source": "res://assets/art/yard/sprites/bush_2.png",
+      "source": "res://level-editor/assets/yard-bush_2.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-outing",
       "name": "Tabliczka",
-      "source": "res://assets/art/yard/sprites/outing.png",
+      "source": "res://level-editor/assets/yard-outing.png",
       "width": 18,
       "height": 19
     },
     {
       "id": "yard-shade",
       "name": "Miejsce odpoczynku",
-      "source": "res://assets/art/yard/sprites/shade.png",
+      "source": "res://level-editor/assets/yard-shade.png",
       "width": 71,
       "height": 49
     },
     {
       "id": "yard-course",
       "name": "Tor",
-      "source": "res://assets/art/yard/sprites/course.png",
+      "source": "res://level-editor/assets/yard-course.png",
       "width": 21,
       "height": 22
     },
     {
       "id": "yard-puddle",
       "name": "Kałuża",
-      "source": "res://assets/art/yard/sprites/puddle.png",
+      "source": "res://level-editor/assets/yard-puddle.png",
       "width": 48,
       "height": 17
     },
     {
       "id": "yard-sprinkler",
       "name": "Zraszacz",
-      "source": "res://assets/art/yard/sprites/sprinkler.png",
+      "source": "res://level-editor/assets/yard-sprinkler.png",
       "width": 34,
       "height": 27
+    },
+    {
+      "id": "warm-v1-tall-home-background",
+      "name": "home background",
+      "source": "res://level-editor/assets/warm-v1-tall-home-background.png",
+      "width": 480,
+      "height": 180
+    },
+    {
+      "id": "warm-v1-native-home-portrait",
+      "name": "portrait",
+      "source": "res://level-editor/assets/warm-v1-native-home-portrait.png",
+      "width": 34,
+      "height": 30
+    },
+    {
+      "id": "warm-v1-native-home-plant",
+      "name": "plant",
+      "source": "res://level-editor/assets/warm-v1-native-home-plant.png",
+      "width": 39,
+      "height": 44
+    },
+    {
+      "id": "warm-v1-native-home-floor-lamp-off",
+      "name": "floor lamp off",
+      "source": "res://level-editor/assets/warm-v1-native-home-floor-lamp-off.png",
+      "width": 31,
+      "height": 51
+    },
+    {
+      "id": "warm-v1-native-home-door",
+      "name": "door",
+      "source": "res://level-editor/assets/warm-v1-native-home-door.png",
+      "width": 30,
+      "height": 43
+    },
+    {
+      "id": "warm-v1-yard-ball-hd",
+      "name": "ball hd",
+      "source": "res://level-editor/assets/warm-v1-yard-ball-hd.png",
+      "width": 1261,
+      "height": 1247
+    },
+    {
+      "id": "warm-v1-yard-bowl-hd",
+      "name": "bowl hd",
+      "source": "res://level-editor/assets/warm-v1-yard-bowl-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-native-yard-ball",
+      "name": "ball",
+      "source": "res://level-editor/assets/warm-v1-native-yard-ball.png",
+      "width": 13,
+      "height": 13
+    },
+    {
+      "id": "warm-v1-yard-bed-hd",
+      "name": "bed hd",
+      "source": "res://level-editor/assets/warm-v1-yard-bed-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-native-home-bed",
+      "name": "bed",
+      "source": "res://level-editor/assets/warm-v1-native-home-bed.png",
+      "width": 68,
+      "height": 25
+    },
+    {
+      "id": "warm-v1-home-door-hd",
+      "name": "door hd",
+      "source": "res://level-editor/assets/warm-v1-home-door-hd.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "id": "warm-v1-yard-bush-hd",
+      "name": "bush hd",
+      "source": "res://level-editor/assets/warm-v1-yard-bush-hd.png",
+      "width": 1402,
+      "height": 1122
+    },
+    {
+      "id": "warm-v1-home-toy-basket-hd",
+      "name": "toy basket hd",
+      "source": "res://level-editor/assets/warm-v1-home-toy-basket-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-home-floor-lamp-on-hd",
+      "name": "floor lamp on hd",
+      "source": "res://level-editor/assets/warm-v1-home-floor-lamp-on-hd.png",
+      "width": 887,
+      "height": 1774
+    },
+    {
+      "id": "warm-v1-home-bed-pixel-b-hd",
+      "name": "bed pixel b hd",
+      "source": "res://level-editor/assets/warm-v1-home-bed-pixel-b-hd.png",
+      "width": 2060,
+      "height": 763
     }
   ],
   "levels": [
@@ -158,17 +263,17 @@
       "runSpeed": 160,
       "elements": [
         {
-          "id": "background",
-          "name": "Tło",
-          "asset": "home-background",
+          "id": "item-21fbf8b1",
+          "name": "home background",
+          "asset": "warm-v1-tall-home-background",
           "layer": "background",
-          "x": 0,
-          "y": 0,
+          "x": 723,
+          "y": 543,
           "width": 1440,
           "height": 540,
           "pivot": {
-            "x": 0,
-            "y": 0
+            "x": 240,
+            "y": 180
           },
           "visible": true,
           "locked": false,
@@ -177,85 +282,17 @@
           "params": {}
         },
         {
-          "id": "bed",
-          "name": "Legowisko",
-          "asset": "bed",
+          "id": "item-1d99d0da",
+          "name": "door hd",
+          "asset": "warm-v1-home-door-hd",
           "layer": "background",
-          "x": 205,
-          "y": 502,
-          "width": 180,
-          "height": 72,
+          "x": 1029,
+          "y": 435,
+          "width": 249,
+          "height": 306,
           "pivot": {
-            "x": 30,
-            "y": 18
-          },
-          "visible": true,
-          "locked": false,
-          "static": true,
-          "script": "rest",
-          "params": {
-            "energy": 15,
-            "message": "Pora odpocząć.",
-            "clip": "sleep"
-          }
-        },
-        {
-          "id": "food",
-          "name": "Miska",
-          "asset": "food",
-          "layer": "middle",
-          "x": 485,
-          "y": 505,
-          "width": 60,
-          "height": 36,
-          "pivot": {
-            "x": 10,
-            "y": 10
-          },
-          "visible": true,
-          "locked": false,
-          "static": true,
-          "script": "feed",
-          "params": {
-            "fullness": 22,
-            "message": "Mniam!",
-            "clip": "eat_loop"
-          }
-        },
-        {
-          "id": "toys",
-          "name": "Kosz",
-          "asset": "toys",
-          "layer": "middle",
-          "x": 1090,
-          "y": 496,
-          "width": 102,
-          "height": 78,
-          "pivot": {
-            "x": 17,
-            "y": 25
-          },
-          "visible": true,
-          "locked": false,
-          "static": true,
-          "script": "message",
-          "params": {
-            "text": "W koszu czekają zabawki.",
-            "duration": 4
-          }
-        },
-        {
-          "id": "door",
-          "name": "Drzwi do ogrodu",
-          "asset": "door",
-          "layer": "background",
-          "x": 1300,
-          "y": 440,
-          "width": 126,
-          "height": 192,
-          "pivot": {
-            "x": 21,
-            "y": 63
+            "x": 512,
+            "y": 1536
           },
           "visible": true,
           "locked": false,
@@ -263,21 +300,40 @@
           "script": "portal",
           "params": {
             "target": "yard",
-            "message": "Idziemy do ogrodu!"
+            "message": ""
           }
         },
         {
-          "id": "ball",
+          "id": "item-217c2256",
+          "name": "bush hd",
+          "asset": "warm-v1-yard-bush-hd",
+          "layer": "background",
+          "x": 663,
+          "y": 405,
+          "width": 110.003,
+          "height": 105.807,
+          "pivot": {
+            "x": 701,
+            "y": 1122
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "item-82d21640",
           "name": "Piłka",
           "asset": "ball",
           "layer": "middle",
-          "x": 890,
-          "y": 497,
-          "width": 36,
-          "height": 36,
+          "x": 600,
+          "y": 468,
+          "width": 39,
+          "height": 39,
           "pivot": {
-            "x": 6,
-            "y": 6
+            "x": 27,
+            "y": 54
           },
           "visible": true,
           "locked": false,
@@ -288,6 +344,63 @@
             "contact": 5,
             "arc": 100
           }
+        },
+        {
+          "id": "item-f328e2af",
+          "name": "toy basket hd",
+          "asset": "warm-v1-home-toy-basket-hd",
+          "layer": "middle",
+          "x": 861,
+          "y": 462,
+          "width": 156,
+          "height": 84,
+          "pivot": {
+            "x": 768,
+            "y": 1024
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "item-26175605",
+          "name": "floor lamp on hd",
+          "asset": "warm-v1-home-floor-lamp-on-hd",
+          "layer": "foreground",
+          "x": 375,
+          "y": 549,
+          "width": 201,
+          "height": 291,
+          "pivot": {
+            "x": 443.5,
+            "y": 1774
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "item-0f0d167e",
+          "name": "bed pixel b hd",
+          "asset": "warm-v1-home-bed-pixel-b-hd",
+          "layer": "middle",
+          "x": 231,
+          "y": 471,
+          "width": 213,
+          "height": 78,
+          "pivot": {
+            "x": 1030,
+            "y": 763
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
         }
       ]
     },
@@ -338,8 +451,8 @@
           "width": 36,
           "height": 36,
           "pivot": {
-            "x": 6,
-            "y": 6
+            "x": 27,
+            "y": 27
           },
           "visible": true,
           "locked": false,

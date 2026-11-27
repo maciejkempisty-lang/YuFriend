@@ -1,8 +1,8 @@
 class_name RoomArtwork
 extends Node2D
 
-const ROOM_BACKGROUND = preload("res://assets/art/environments/puppy-room-pixel-v1.png")
-const YARD_BACKGROUND = preload("res://assets/art/environments/yard-sunny-background-v1.png")
+const ROOM_BACKGROUND = preload("res://level-editor/assets/environment-puppy-room-pixel-v1.png")
+const YARD_BACKGROUND = preload("res://level-editor/assets/environment-yard-sunny-background-v1.png")
 const PIXEL := RoomLayout.PIXEL_SIZE
 var portal_open := false
 var yard_overlay_only := false
@@ -10,7 +10,7 @@ var kind := "room"
 var garden_state: Dictionary = {}
 var garden_key := ""
 var decor: Array = []
-const DECOR_ATLAS = preload("res://assets/art/environments/decor-v1.png")
+const DECOR_ATLAS = preload("res://level-editor/assets/environment-decor-v1.png")
 const DECOR_REGIONS := {"rug": Rect2(39, 474, 449, 232), "flower": Rect2(617, 293, 275, 469), "shelf": Rect2(1040, 382, 447, 329)}
 var area := Vector2.ZERO
 var roll_phase := 0.0
@@ -500,10 +500,10 @@ func _draw_door() -> void:
 func _draw_ball() -> void:
 	var ball := Vector2.ZERO
 	if not ball_held: _pixel_ellipse(ball + Vector2(0, 13), Vector2(15, 5), Color("b79364"))
-	_pixel_ellipse(ball, Vector2(14, 14), Color("4d666d"))
-	_pixel_ellipse(ball - Vector2(0, 1), Vector2(11, 11), Color("709ca3"))
-	_pixel_rect(Rect2(ball + Vector2(roundf(sin(roll_phase) * 2) * 3 - 3, -9), Vector2(6, 3)), Color("dce8c4"))
-	_pixel_rect(Rect2(ball + Vector2(roundf(sin(roll_phase) * 2) * 3 - 6, -6), Vector2(3, 12)), Color("b7d2c2"))
+	_pixel_ellipse(ball, Vector2(14, 14), Color("457d1c"))
+	_pixel_ellipse(ball - Vector2(0, 1), Vector2(11, 11), Color("bded12"))
+	_pixel_rect(Rect2(ball + Vector2(roundf(sin(roll_phase) * 2) * 3 - 3, -9), Vector2(6, 3)), Color("f7fff0"))
+	_pixel_rect(Rect2(ball + Vector2(roundf(sin(roll_phase) * 2) * 3 - 6, -6), Vector2(3, 12)), Color("f7fff0"))
 
 func _pixel_rect(rect: Rect2, color: Color) -> void:
 	var origin := (rect.position / PIXEL).round() * PIXEL

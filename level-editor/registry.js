@@ -93,5 +93,5 @@ globalThis.YF_REGISTRY = {
       message: {type: "text", label: "Komunikat", default: "Ktoś przyszedł!", max: 200}
     }}
   ],
-  clips: ["idle", "walk", "run", "sleep", "eat_loop", "petted_stand", "bark_stand", "play_bow", "sit", "paw", "wag_stand"]
+  clips: ["idle", "walk", "run", "ball_play", "aport", "sleep", "eat_loop", "petted_stand", "bark_stand", "play_bow", "sit", "paw", "wag_stand"]
 };

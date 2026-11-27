@@ -1,6 +1,6 @@
 # Makiety kuchni YuFriend
 
-Wygenerowane wbudowanym narzędziem ImageGen. Obraz `assets/art/environments/puppy-room-pixel-v1.png` służył wyłącznie jako odniesienie stylu. Oba obrazy są koncepcjami 2172 × 724 px; przed użyciem w grze wymagają podziału tła i obiektów interaktywnych na osobne warstwy.
+Wygenerowane wbudowanym narzędziem ImageGen. Obraz `level-editor/assets/environment-puppy-room-pixel-v1.png` służył wyłącznie jako odniesienie stylu. Oba obrazy są koncepcjami 2172 × 724 px; przed użyciem w grze wymagają podziału tła i obiektów interaktywnych na osobne warstwy.
 
 ## A — przytulna
 

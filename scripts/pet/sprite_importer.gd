@@ -116,8 +116,8 @@ static func build(config: Dictionary) -> Dictionary:
 	return {"ok": true, "pack": pack, "missing": missing}
 
 static func _texture(value: Variant) -> Dictionary:
-	if not value is String or not value.simplify_path().begins_with("res://assets/") or value.get_extension().to_lower() != "png":
-		return _fail("Ścieżka PNG musi zaczynać się od res://assets/.")
+	if not value is String or not (value.simplify_path().begins_with("res://assets/") or value.simplify_path().begins_with("res://level-editor/assets/sprites-")) or value.get_extension().to_lower() != "png":
+		return _fail("Ścieżka PNG musi zaczynać się od res://assets/ lub res://level-editor/assets/sprites-.")
 	if not ResourceLoader.exists(value):
 		return _fail("Brak %s. Dodaj plik i poczekaj na import w edytorze Godota." % value)
 	var texture: Resource = ResourceLoader.load(value)

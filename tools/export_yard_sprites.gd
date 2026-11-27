@@ -2,7 +2,7 @@ extends SceneTree
 
 # Rebuild the transparent 1:3 yard sprites from their pixel-native draw code.
 # Run with: Godot --path . --script res://tools/export_yard_sprites.gd
-const OUTPUT := "res://assets/art/yard/sprites"
+const OUTPUT := "res://level-editor/assets"
 
 func _initialize() -> void:
 	call_deferred("_export_all")
@@ -32,7 +32,7 @@ func _export_all() -> void:
 			var crop: Rect2i = YardSpriteLayout.CROPS[id]
 			var pixels := Rect2i(crop.position / 3, crop.size / 3)
 			var image := viewport.get_texture().get_image().get_region(pixels)
-			var path: String = folder.path_join(variant + ".png")
+			var path: String = folder.path_join("yard-" + variant + ".png")
 			var error := image.save_png(path)
 			if error != OK or image.get_used_rect().size == Vector2i.ZERO:
 				printerr("Failed to export ", variant, " error=", error)

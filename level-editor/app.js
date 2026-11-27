@@ -1,7 +1,7 @@
 "use strict";
 (() => {
   const M = globalThis.YF, FS = globalThis.YF_FS;
-  const {LAYERS, SCRIPTS, SCRIPT_OPTIONS, CLIPS, clone, id, newLevel, newElement, ordered, rect, removeLevel, validate, migrate, setScript, isInteractive} = M;
+  const {LAYERS, SCRIPTS, SCRIPT_OPTIONS, CLIPS, clone, id, newLevel, newElement, ordered, rect, removeLevel, validate, migrate, setScript, isInteractive, isAnimationAsset} = M;
 
   const $ = s => document.querySelector(s);
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; };
@@ -9,7 +9,8 @@
   let project, levelId, selected = null, activeLayer = 'middle', dirty = false;
   let history = [], future = [];
   const images = new Map(), blobBySource = new Map();
-  let filter = '', fileName = 'moj-projekt.json', diskAssets = [];
+  let filter = '', fileName = 'ver1.json', diskAssets = [];
+  let hdDefaults = new Map();
   let zoom = 1, pan = {x: 0, y: 0}, drag = null, hidden = new Set();
   let testing = false, testState = null, lastTime = 0, autosaveTimer;
 
@@ -87,7 +88,19 @@
   async function refreshDiskAssets() {
     if (!FS.hasRoot()) { diskAssets = []; return; }
     try {
-      diskAssets = await FS.scanAssets();
+      diskAssets = (await FS.scanAssets()).filter(a => !isAnimationAsset(a) && !a.id.startsWith('warm-v1-native-') && !a.id.startsWith('warm-v1-tall-'));
+      hdDefaults = new Map();
+      try {
+        const kit = await FS.readProject('art-kit-warm.json');
+        const kitAssets = new Map(kit.assets.map(a => [a.id, a]));
+        for (const scene of kit.levels) for (const element of scene.elements) {
+          const source = kitAssets.get(element.asset)?.source;
+          if (!source) continue;
+          const size = {width: element.width, height: element.height};
+          if (!hdDefaults.has(source)) hdDefaults.set(source, size);
+          if (!hdDefaults.has(`${source}|${scene.id}`)) hdDefaults.set(`${source}|${scene.id}`, size);
+        }
+      } catch { /* Generic fitting still handles other HD art. */ }
       await cacheAll(diskAssets);
     } catch (e) { status('Nie udało się przeskanować folderu assets/: ' + e.message, true); diskAssets = []; }
   }
@@ -186,7 +199,11 @@
       const a = asset(e.asset), image = images.get(a.id)?.img;
       const pos = testing && testState.balls[e.id] ? {...e, ...testState.balls[e.id]} : e;
       const r = rect(pos, a);
-      if (image) ctx.drawImage(image, r.x, r.y, r.width, r.height);
+      if (image) {
+        ctx.imageSmoothingEnabled = Math.max(a.width, a.height) > 512;
+        ctx.drawImage(image, r.x, r.y, r.width, r.height);
+        ctx.imageSmoothingEnabled = false;
+      }
       else { ctx.fillStyle = '#a84b73'; ctx.fillRect(r.x, r.y, r.width, r.height); }
     }
     if (!testing) {
@@ -213,6 +230,21 @@
     }
     ctx.restore();
     ctx.strokeStyle = '#7b8d6e'; ctx.lineWidth = 1 / t.scale; ctx.strokeRect(0, 0, l.width, l.height);
+    if (!testing) {
+      const sel = item();
+      if (sel && sel.visible && !hidden.has(sel.layer) && !sel.locked) {
+        ctx.save(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const r = rect(sel, asset(sel.asset));
+        const centers = handleCenters(r), H = 8;
+        ctx.fillStyle = '#f5e19a'; ctx.strokeStyle = '#1d3d29'; ctx.lineWidth = 1;
+        for (const name of HANDLE_NAMES) {
+          const [cx, cy] = centers[name];
+          const sx = Math.round(cx * t.scale + t.x), sy = Math.round(cy * t.scale + t.y);
+          ctx.beginPath(); ctx.rect(sx - H / 2, sy - H / 2, H, H); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
     $('#zoomLabel').textContent = Math.round(zoom * 100) + '%';
     if (!testing) {
       const e = item();
@@ -278,7 +310,7 @@
     if (!list.childElementCount) list.append(el('p', 'note', 'Ta warstwa jest jeszcze pusta.'));
     const lib = $('#assets'); lib.replaceChildren();
     const diskOnly = diskAssets.filter(d => !project.assets.some(a => a.id === d.id));
-    const unified = [...project.assets, ...diskOnly];
+    const unified = [...project.assets.filter(a => !isAnimationAsset(a) && !a.id.startsWith('warm-v1-native-') && !a.id.startsWith('warm-v1-tall-')), ...diskOnly];
     const visible = unified.filter(a => a.name.toLowerCase().includes(filter) || a.id.toLowerCase().includes(filter));
     for (const a of visible) {
       const inProject = project.assets.some(x => x.id === a.id);
@@ -305,8 +337,10 @@
         mutate(() => {
           let used = project.assets.find(x => x.id === a.id);
           if (!used) { used = {id: a.id, name: a.name, source: a.source, width: a.width, height: a.height}; project.assets.push(used); }
-          const e = newElement(used, activeLayer);
-          e.x = snapN(level().width / 2); e.y = snapN(level().walk.y + level().walk.height / 2);
+          const e = newElement({...used, defaultSize: hdDefaults.get(`${used.source}|${level().id}`) || hdDefaults.get(used.source)}, activeLayer, level());
+          if (e.pivot.x !== 0 || e.pivot.y !== 0) {
+            e.x = snapN(level().width / 2); e.y = snapN(level().walk.y + level().walk.height / 2);
+          }
           level().elements.push(e); selected = e.id;
         }, inProject ? 'Dodano element.' : 'Dodano nową grafikę z folderu.');
       };
@@ -429,6 +463,52 @@
     box.append(row, el('p', 'note', e.layer === 'middle' ? 'W tej warstwie pozycja Y ma pierwszeństwo przed kolejnością na liście.' : 'Kolejność na liście rozstrzyga zasłanianie w tej warstwie.'));
   }
 
+  const HANDLE_SIZE = 10;
+  const HANDLE_NAMES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  function handleCenters(r) {
+    return {
+      nw: [r.x, r.y], n: [r.x + r.width / 2, r.y], ne: [r.x + r.width, r.y],
+      e: [r.x + r.width, r.y + r.height / 2], se: [r.x + r.width, r.y + r.height],
+      s: [r.x + r.width / 2, r.y + r.height], sw: [r.x, r.y + r.height], w: [r.x, r.y + r.height / 2]
+    };
+  }
+  function handleAt(p) {
+    const e = item(); if (!e || e.locked || !e.visible || hidden.has(e.layer)) return null;
+    const r = rect(e, asset(e.asset));
+    const tol = HANDLE_SIZE / transform().scale;
+    const centers = handleCenters(r);
+    for (const name of HANDLE_NAMES) {
+      const [cx, cy] = centers[name];
+      if (Math.abs(p.x - cx) <= tol && Math.abs(p.y - cy) <= tol) return name;
+    }
+    return null;
+  }
+  const HANDLE_CURSORS = {nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize', n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize'};
+  function resizeMove(p) {
+    const e = item(); if (!e) return;
+    const a = asset(e.asset);
+    const r0 = drag.r0, h = drag.handle, isCorner = h.length === 2, minSize = 4;
+    let left = r0.x, top = r0.y, right = r0.x + r0.width, bottom = r0.y + r0.height;
+    if (h.includes('w')) left = Math.min(right - minSize, p.x);
+    if (h.includes('e')) right = Math.max(left + minSize, p.x);
+    if (h.includes('n')) top = Math.min(bottom - minSize, p.y);
+    if (h.includes('s')) bottom = Math.max(top + minSize, p.y);
+    let newW = right - left, newH = bottom - top;
+    if (isCorner) {
+      const s = Math.max(newW / r0.width, newH / r0.height);
+      const aw = r0.width * s, ah = r0.height * s;
+      if (h.includes('w')) left = right - aw; else right = left + aw;
+      if (h.includes('n')) top = bottom - ah; else bottom = top + ah;
+      newW = aw; newH = ah;
+    }
+    e.width = Math.max(minSize, snapN(newW));
+    e.height = Math.max(minSize, snapN(newH));
+    e.x = snapN(left + (e.pivot?.x || 0) * (e.width / a.width));
+    e.y = snapN(top + (e.pivot?.y || 0) * (e.height / a.height));
+    drag.moved = true;
+    draw();
+  }
+
   function hit(p, interactive = false) {
     return ordered(level()).reverse().find(e => {
       if (!e.visible || (!testing && hidden.has(e.layer)) || (interactive && !isInteractive(e))) return false;
@@ -448,6 +528,13 @@
       return;
     }
     if (ev.altKey || ev.button === 1) { drag = {pan: true, x: ev.clientX, y: ev.clientY, origin: {...pan}}; return; }
+    const handle = handleAt(p);
+    if (handle) {
+      const sel = item(), a = asset(sel.asset), r = rect(sel, a);
+      checkpoint();
+      drag = {handle, r0: r, origin: {x: sel.x, y: sel.y, width: sel.width, height: sel.height}, moved: false};
+      return;
+    }
     const e = hit(p); selected = e?.id || null;
     if (e) {
       activeLayer = e.layer;
@@ -459,8 +546,15 @@
     if (!project) return;
     const p = worldPoint(ev);
     $('#cursor').textContent = `X ${Math.round(p.x)}   Y ${Math.round(p.y)}`;
-    if (!drag) return;
+    if (!drag) {
+      if (!testing) {
+        const h = handleAt(p);
+        canvas.style.cursor = h ? HANDLE_CURSORS[h] : '';
+      }
+      return;
+    }
     if (drag.pan) { pan = {x: drag.origin.x + ev.clientX - drag.x, y: drag.origin.y + ev.clientY - drag.y}; draw(); }
+    else if (drag.handle) resizeMove(p);
     else if (drag.id) { const e = item(); if (e) { e.x = snapN(drag.origin.x + p.x - drag.x); e.y = snapN(drag.origin.y + p.y - drag.y); drag.moved = true; draw(); } }
   };
   function release(ev, cancel = false) {
@@ -471,6 +565,11 @@
       testState.flight = {id: e.id, from: {...testState.balls[e.id]}, to: p, time: 0, arc: e.params?.arc ?? 100};
       testState.target = p; testState.pendingScript = 'ball'; testState.pendingElement = e;
       showTest('message', 'Łap piłkę!');
+    } else if (drag.handle) {
+      if (cancel) { Object.assign(item(), drag.origin); history.pop(); }
+      else if (drag.moved) changed('Zmieniono rozmiar.');
+      else history.pop();
+      render();
     } else if (drag.id) {
       if (cancel) { Object.assign(item(), drag.origin); history.pop(); }
       else if (drag.moved) changed('Zmieniono położenie.');
@@ -611,31 +710,27 @@
   $('#saveRepo').onclick = async () => {
     if (!FS.hasRoot()) { inform('Najpierw wybierz folder YuFriend przyciskiem „Folder”.'); return; }
     if (!valid()) return;
-    let name = await ask('Nazwa pliku w level-editor/projects (bez spacji):', fileName);
-    if (!name) return;
-    if (!name.endsWith('.json')) name += '.json';
     try {
-      const existing = await FS.listProjects();
-      if (existing.includes(name) && !await confirmAction('Nadpisać ' + name + '?')) return;
-      await FS.writeProject(name, project);
-      fileName = name; saved(); status('Zapisano projects/' + name);
+      await FS.writeProject(fileName, project);
+      saved(); status('Zapisano projects/' + fileName);
     } catch (e) { status(e.message, true); inform(e.message); }
   };
   $('#open').onclick = async () => {
     const list = $('#projectList'); list.replaceChildren();
     if (FS.hasRoot()) {
       try {
-        const files = await FS.listProjects();
+        const files = (await FS.listProjects()).filter(name => /^ver\d+\.json$/i.test(name))
+          .sort((a, b) => Number(a.slice(3, -5)) - Number(b.slice(3, -5)));
         for (const name of files) {
           const b = el('button', '', name);
           b.onclick = async () => {
             if (dirty && !await confirmAction('Porzucić niezapisane zmiany?')) return;
-            try { const p = await FS.readProject(name); await acceptProject(p); fileName = name === 'starter.json' ? 'moj-projekt.json' : name; $('#openDialog').close(); }
+            try { const p = await FS.readProject(name); await acceptProject(p); fileName = name; $('#openDialog').close(); }
             catch (e) { inform(e.message); }
           };
           list.append(b);
         }
-        if (!files.length) list.append(el('p', 'note', 'W folderze projects/ nie ma plików JSON.'));
+        if (!files.length) list.append(el('p', 'note', 'W folderze projects/ nie ma wersji ver1.json, ver2.json…'));
       } catch (e) { list.append(el('p', 'note', 'Nie udało się odczytać projects/: ' + e.message)); }
     } else {
       list.append(el('p', 'note', 'Wybierz folder YuFriend, aby zobaczyć listę projektów.'));
@@ -653,13 +748,16 @@
     ev.target.value = '';
   };
   $('#newProject').onclick = async () => {
-    if (!FS.hasRoot()) { inform('Wybierz folder YuFriend, aby wczytać starter.'); return; }
-    if (dirty && !await confirmAction('Porzucić niezapisane zmiany?')) return;
+    if (!FS.hasRoot() || !project) { inform('Najpierw wybierz folder YuFriend i wersję projektu.'); return; }
     try {
-      const p = await FS.readProject('starter.json');
-      await acceptProject(p); fileName = 'moj-projekt.json';
-      changed('Nowy projekt z Domem i Ogrodem.');
-    } catch (e) { inform('Nie znaleziono startera: ' + e.message); }
+      const files = await FS.listProjects();
+      const numbers = files.map(name => /^ver(\d+)\.json$/i.exec(name)?.[1]).filter(Boolean).map(Number);
+      const next = `ver${Math.max(0, ...numbers) + 1}.json`;
+      if (!await confirmAction(`Utworzyć ${next} jako kopię bieżącego projektu?`)) return;
+      if (!valid()) return;
+      await FS.writeProject(next, project);
+      fileName = next; saved(); status('Utworzono projects/' + next);
+    } catch (e) { status(e.message, true); inform(e.message); }
   };
   $('#refreshAssets').onclick = async () => {
     await refreshDiskAssets();
@@ -693,10 +791,7 @@
       const name = await FS.pick();
       status(`Folder: ${name}`);
       $('#pickRootDialog').close();
-      await initDogImage();
-      // Show the project picker straight away so the user chooses which JSON
-      // to load, instead of silently falling back to starter.json.
-      $('#open').click();
+      await bootProject();
     } catch (e) { status('Nie wybrano folderu: ' + e.message, true); }
   };
   $('#changeRoot').onclick = () => $('#pickRoot').click();
@@ -709,7 +804,7 @@
   addEventListener('keydown', ev => {
     if (ev.target.closest('input,textarea,select') || document.querySelector('dialog[open]')) return;
     if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z') { ev.preventDefault(); undo(ev.shiftKey); }
-    else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's') { ev.preventDefault(); $('#save').click(); }
+    else if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's') { ev.preventDefault(); $('#saveRepo').click(); }
     else if (ev.key === 'Delete' || ev.key === 'Backspace') { ev.preventDefault(); deleteItem(); }
     else if (ev.key === 'Escape') { stopTest(); selected = null; render(); }
   });
@@ -719,13 +814,14 @@
   async function bootProject() {
     await initDogImage();
     try {
-      let p = await FS.readProject('starter.json');
+      let p = await FS.readProject('ver1.json');
       const draft = localStorage.getItem('yufriend-editor-draft');
       if (draft && await confirmAction('Przywrócić niezapisaną kopię projektu z przeglądarki?')) {
         p = JSON.parse(draft); await acceptProject(p); changed('Przywrócono kopię roboczą.');
       } else {
         await acceptProject(p);
       }
+      $('#open').click();
     } catch (e) { status('Nie udało się otworzyć projektu: ' + e.message, true); }
   }
 

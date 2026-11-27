@@ -65,7 +65,7 @@ locations = {'gate': (93, 183, 150, 276), 'garden': (477, 264, 550, 300), 'dig':
 names = ['Furtka', 'Ogródek', 'Piaskownica', 'Aport', 'Krzak 1', 'Krzak 2', 'Krzak 3',
          'Tabliczka', 'Miejsce odpoczynku', 'Tor', 'Kałuża', 'Zraszacz']
 for (key, (cx, cy, x, y)), name in zip(locations.items(), names):
-    a = asset('yard-' + key, name, 'assets/art/yard/sprites/' + key + '.png')
+    a = asset('yard-' + key, name, 'level-editor/assets/yard-' + key + '.png')
     script = 'portal' if key == 'gate' else 'none'
     params = {'target': 'home', 'message': 'Wracamy do domu.'} if key == 'gate' else None
     layer = 'background' if key in ['dig', 'shade', 'puddle'] else 'middle'

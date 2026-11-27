@@ -14,7 +14,7 @@ from build_level_editor_art import Canvas, load_png
 from build_warm_editor_project import ROOT, alpha_bounds
 
 SOURCE = ROOT / "level-editor/projects/art-kit-warm.json"
-OUT = ROOT / "level-editor/assets/warm-v1-native"
+OUT = ROOT / "level-editor/assets"
 PROJECT = ROOT / "level-editor/projects/art-kit-warm-native.json"
 TOP_EXTRA = 20
 BOTTOM_EXTRA = 20
@@ -60,8 +60,7 @@ def main() -> None:
         for element in level["elements"]:
             original = original_assets[element["asset"]]
             original_path = ROOT / original["source"].removeprefix("res://")
-            source_rel = original_path.relative_to(ROOT / "level-editor/assets/warm-v1")
-            basename = source_rel.name.replace("-hd.png", ".png")
+            basename = original_path.name.removeprefix(f"warm-v1-{level['id']}-").replace("-hd.png", ".png")
             native_rel = Path(level["id"]) / basename
             native_key = native_rel.as_posix()
             w0, h0 = original["width"], original["height"]
@@ -85,10 +84,10 @@ def main() -> None:
                 if element["id"].endswith("background"):
                     native = extend_background(native)
                     native_h = SCENE_HEIGHT
-                native.save_path(OUT / native_rel)
+                native.save_path(OUT / ("warm-v1-native-" + level["id"] + "-" + basename))
                 aid = "warm-v1-native-" + native_key.removesuffix(".png").replace("/", "-")
                 native_assets[native_key] = {"id": aid, "name": element["name"],
-                    "source": "res://level-editor/assets/warm-v1-native/" + native_key,
+                    "source": "res://level-editor/assets/warm-v1-native-" + level["id"] + "-" + basename,
                     "width": native_w, "height": native_h}
             asset = native_assets[native_key]
 

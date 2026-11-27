@@ -7,273 +7,273 @@
     {
       "id": "warm-v1-home-background-hd",
       "name": "home · background",
-      "source": "res://level-editor/assets/warm-v1/home/background-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-background-hd.png",
       "width": 2172,
       "height": 724
     },
     {
       "id": "warm-v1-home-chest-hd",
       "name": "home · chest",
-      "source": "res://level-editor/assets/warm-v1/home/chest-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-chest-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-home-clock-hd",
       "name": "home · clock",
-      "source": "res://level-editor/assets/warm-v1/home/clock-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-clock-hd.png",
       "width": 1262,
       "height": 1246
     },
     {
       "id": "warm-v1-home-door-hd",
       "name": "home · door",
-      "source": "res://level-editor/assets/warm-v1/home/door-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-door-hd.png",
       "width": 1024,
       "height": 1536
     },
     {
       "id": "warm-v1-home-floor-lamp-off-hd",
       "name": "home · floor lamp off",
-      "source": "res://level-editor/assets/warm-v1/home/floor-lamp-off-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-floor-lamp-off-hd.png",
       "width": 887,
       "height": 1774
     },
     {
       "id": "warm-v1-home-floor-lamp-on-hd",
       "name": "home · floor lamp on",
-      "source": "res://level-editor/assets/warm-v1/home/floor-lamp-on-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-floor-lamp-on-hd.png",
       "width": 887,
       "height": 1774
     },
     {
       "id": "warm-v1-home-food-hd",
       "name": "home · food",
-      "source": "res://level-editor/assets/warm-v1/home/food-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-food-hd.png",
       "width": 1774,
       "height": 887
     },
     {
       "id": "warm-v1-home-gramophone-hd",
       "name": "home · gramophone",
-      "source": "res://level-editor/assets/warm-v1/home/gramophone-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-gramophone-hd.png",
       "width": 1312,
       "height": 1199
     },
     {
       "id": "warm-v1-home-guitar-hd",
       "name": "home · guitar",
-      "source": "res://level-editor/assets/warm-v1/home/guitar-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-guitar-hd.png",
       "width": 887,
       "height": 1774
     },
     {
       "id": "warm-v1-home-kitchen-hd",
       "name": "home · kitchen",
-      "source": "res://level-editor/assets/warm-v1/home/kitchen-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-kitchen-hd.png",
       "width": 1774,
       "height": 887
     },
     {
       "id": "warm-v1-home-kitchen-window-day-hd",
       "name": "home · kitchen window day",
-      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-day-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-kitchen-window-day-hd.png",
       "width": 1254,
       "height": 1254
     },
     {
       "id": "warm-v1-home-kitchen-window-frame-hd",
       "name": "home · kitchen window frame",
-      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-frame-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-kitchen-window-frame-hd.png",
       "width": 1310,
       "height": 1200
     },
     {
       "id": "warm-v1-home-kitchen-window-night-hd",
       "name": "home · kitchen window night",
-      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-night-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-kitchen-window-night-hd.png",
       "width": 1254,
       "height": 1254
     },
     {
       "id": "warm-v1-home-main-window-day-hd",
       "name": "home · main window day",
-      "source": "res://level-editor/assets/warm-v1/home/main-window-day-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-main-window-day-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-home-main-window-frame-hd",
       "name": "home · main window frame",
-      "source": "res://level-editor/assets/warm-v1/home/main-window-frame-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-main-window-frame-hd.png",
       "width": 1325,
       "height": 1187
     },
     {
       "id": "warm-v1-home-main-window-night-hd",
       "name": "home · main window night",
-      "source": "res://level-editor/assets/warm-v1/home/main-window-night-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-main-window-night-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-home-pendant-lamp-off-hd",
       "name": "home · pendant lamp off",
-      "source": "res://level-editor/assets/warm-v1/home/pendant-lamp-off-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-pendant-lamp-off-hd.png",
       "width": 1312,
       "height": 1199
     },
     {
       "id": "warm-v1-home-pendant-lamp-on-hd",
       "name": "home · pendant lamp on",
-      "source": "res://level-editor/assets/warm-v1/home/pendant-lamp-on-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-pendant-lamp-on-hd.png",
       "width": 1312,
       "height": 1199
     },
     {
       "id": "warm-v1-home-plant-hd",
       "name": "home · plant",
-      "source": "res://level-editor/assets/warm-v1/home/plant-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-plant-hd.png",
       "width": 1024,
       "height": 1536
     },
     {
       "id": "warm-v1-home-portrait-hd",
       "name": "home · portrait",
-      "source": "res://level-editor/assets/warm-v1/home/portrait-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-portrait-hd.png",
       "width": 1199,
       "height": 1312
     },
     {
       "id": "warm-v1-home-rug-hd",
       "name": "home · rug",
-      "source": "res://level-editor/assets/warm-v1/home/rug-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-rug-hd.png",
       "width": 2172,
       "height": 724
     },
     {
       "id": "warm-v1-home-shelf-hd",
       "name": "home · shelf",
-      "source": "res://level-editor/assets/warm-v1/home/shelf-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-shelf-hd.png",
       "width": 2172,
       "height": 724
     },
     {
       "id": "warm-v1-home-toy-basket-hd",
       "name": "home · toy basket",
-      "source": "res://level-editor/assets/warm-v1/home/toy-basket-hd.png",
+      "source": "res://level-editor/assets/warm-v1-home-toy-basket-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-yard-agility-hd",
       "name": "yard · agility",
-      "source": "res://level-editor/assets/warm-v1/yard/agility-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-agility-hd.png",
       "width": 1774,
       "height": 887
     },
     {
       "id": "warm-v1-yard-background-hd",
       "name": "yard · background",
-      "source": "res://level-editor/assets/warm-v1/yard/background-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-background-hd.png",
       "width": 2172,
       "height": 724
     },
     {
       "id": "warm-v1-yard-ball-hd",
       "name": "yard · ball",
-      "source": "res://level-editor/assets/warm-v1/yard/ball-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-ball-hd.png",
       "width": 1261,
       "height": 1247
     },
     {
       "id": "warm-v1-yard-bed-hd",
       "name": "yard · bed",
-      "source": "res://level-editor/assets/warm-v1/yard/bed-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-bed-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-yard-bowl-hd",
       "name": "yard · bowl",
-      "source": "res://level-editor/assets/warm-v1/yard/bowl-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-bowl-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-yard-bush-hd",
       "name": "yard · bush",
-      "source": "res://level-editor/assets/warm-v1/yard/bush-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-bush-hd.png",
       "width": 1402,
       "height": 1122
     },
     {
       "id": "warm-v1-yard-dig-hd",
       "name": "yard · dig",
-      "source": "res://level-editor/assets/warm-v1/yard/dig-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-dig-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-yard-door-hd",
       "name": "yard · door",
-      "source": "res://level-editor/assets/warm-v1/yard/door-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-door-hd.png",
       "width": 1024,
       "height": 1536
     },
     {
       "id": "warm-v1-yard-fetch-hd",
       "name": "yard · fetch",
-      "source": "res://level-editor/assets/warm-v1/yard/fetch-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-fetch-hd.png",
       "width": 2172,
       "height": 724
     },
     {
       "id": "warm-v1-yard-garden-hd",
       "name": "yard · garden",
-      "source": "res://level-editor/assets/warm-v1/yard/garden-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-garden-hd.png",
       "width": 1755,
       "height": 896
     },
     {
       "id": "warm-v1-yard-pergola-hd",
       "name": "yard · pergola",
-      "source": "res://level-editor/assets/warm-v1/yard/pergola-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-pergola-hd.png",
       "width": 1312,
       "height": 1199
     },
     {
       "id": "warm-v1-yard-puddle-hd",
       "name": "yard · puddle",
-      "source": "res://level-editor/assets/warm-v1/yard/puddle-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-puddle-hd.png",
       "width": 1774,
       "height": 887
     },
     {
       "id": "warm-v1-yard-sign-hd",
       "name": "yard · sign",
-      "source": "res://level-editor/assets/warm-v1/yard/sign-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-sign-hd.png",
       "width": 1024,
       "height": 1536
     },
     {
       "id": "warm-v1-yard-sprinkler-hd",
       "name": "yard · sprinkler",
-      "source": "res://level-editor/assets/warm-v1/yard/sprinkler-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-sprinkler-hd.png",
       "width": 1774,
       "height": 887
     },
     {
       "id": "warm-v1-yard-watering-can-hd",
       "name": "yard · watering can",
-      "source": "res://level-editor/assets/warm-v1/yard/watering-can-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-watering-can-hd.png",
       "width": 1536,
       "height": 1024
     },
     {
       "id": "warm-v1-yard-window-hd",
       "name": "yard · window",
-      "source": "res://level-editor/assets/warm-v1/yard/window-hd.png",
+      "source": "res://level-editor/assets/warm-v1-yard-window-hd.png",
       "width": 1164,
       "height": 1351
     }

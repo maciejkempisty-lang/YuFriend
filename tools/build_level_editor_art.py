@@ -14,7 +14,7 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "level-editor/assets/production"
+OUT = ROOT / "level-editor/assets"
 PROJECTS = ROOT / "level-editor/projects"
 
 CREAM = "#f3efdc"
@@ -82,7 +82,7 @@ class Canvas:
                 self.px(x + xx, y + yy, tuple(other.p[i:i + 4]))
 
     def save(self, rel: str):
-        return self.save_path(OUT / rel)
+        return self.save_path(OUT / ("production-" + rel.replace("/", "-")))
 
     def save_path(self, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -508,7 +508,7 @@ def generate():
 
 
 def build_project(assets):
-    starter = json.loads((PROJECTS / "starter.json").read_text())
+    starter = json.loads((PROJECTS / "_backup/starter.json").read_text())
     project = json.loads(json.dumps(starter))
     project["name"] = "YuFriend · Zestaw graficzny domu i ogrodu"
     amap = {a["id"]: a for a in project["assets"]}
@@ -516,14 +516,14 @@ def build_project(assets):
                             ("yard-background", "yard/background.png", project["levels"][1])):
         a = amap[key]
         a["id"] = "production-" + rel.removesuffix(".png").replace("/", "-")
-        a["source"] = "res://level-editor/assets/production/" + rel
+        a["source"] = "res://level-editor/assets/production-" + rel.replace("/", "-")
         a["width"], a["height"] = assets[rel].w, assets[rel].h
         level["elements"][0]["asset"] = a["id"]
 
     def register(rel, name):
         canvas = assets[rel]
         aid = "production-" + rel.removesuffix(".png").replace("/", "-")
-        project["assets"].append(dict(id=aid, name=name, source="res://level-editor/assets/production/" + rel, width=canvas.w, height=canvas.h))
+        project["assets"].append(dict(id=aid, name=name, source="res://level-editor/assets/production-" + rel.replace("/", "-"), width=canvas.w, height=canvas.h))
         return aid
 
     def add(level, rel, name, x, y, layer="middle", visible=True, script="none", params=None):

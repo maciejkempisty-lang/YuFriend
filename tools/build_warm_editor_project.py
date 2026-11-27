@@ -14,7 +14,7 @@ from pathlib import Path
 from build_level_editor_art import Canvas, load_png
 
 ROOT = Path(__file__).resolve().parents[1]
-ART = ROOT / "level-editor/assets/warm-v1"
+ART = ROOT / "level-editor/assets"
 PROJECTS = ROOT / "level-editor/projects"
 
 
@@ -44,7 +44,7 @@ def asset_id(rel: str) -> str:
 
 
 def main() -> None:
-    starter = json.loads((PROJECTS / "starter.json").read_text())
+    starter = json.loads((PROJECTS / "_backup/starter.json").read_text())
     project = {key: starter[key] for key in ("format", "version", "startLevel")}
     project["name"] = "Ciepły dom i ogród · wariant 1"
     project["assets"] = []
@@ -56,12 +56,14 @@ def main() -> None:
     home, yard = project["levels"]
 
     sources = {}
-    for path in sorted(ART.rglob("*.png")):
-        rel = path.relative_to(ART).as_posix()
+    for path in sorted(ART.glob("warm-v1-*-hd.png")):
+        stem = path.name.removeprefix("warm-v1-")
+        scene, rest = stem.split("-", 1)
+        rel = scene + "/" + rest
         w, h = dimensions(path)
         aid = asset_id(rel)
         project["assets"].append({"id": aid, "name": rel.removesuffix(".png").replace("-hd", "").replace("/", " · ").replace("-", " "),
-                                  "source": "res://level-editor/assets/warm-v1/" + rel,
+                                  "source": "res://level-editor/assets/" + path.name,
                                   "width": w, "height": h})
         sources[rel] = (aid, w, h, path)
 

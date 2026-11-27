@@ -11,7 +11,7 @@ for (const name of ['registry.js', 'model.js']) {
   vm.runInContext(fs.readFileSync(new URL(name, root), 'utf8'), ctx);
 }
 const {
-  clone, validate, ordered, rect, newLevel, newElement, removeLevel, migrate, setScript, SCRIPTS
+  clone, validate, ordered, rect, newLevel, newElement, removeLevel, migrate, setScript, SCRIPTS, isAnimationAsset
 } = ctx.YF;
 // vm context has its own Object prototype; normalize before strict-deep comparison.
 const norm = v => JSON.parse(JSON.stringify(v));
@@ -31,6 +31,27 @@ test('new level and imported element remain valid', () => {
   p.levels.push(l);
   l.elements.push(newElement(p.assets[0], 'foreground'));
   eq(validate(p), []);
+});
+
+test('HD art enters the scene at a practical size', () => {
+  const l = newLevel('Pokój');
+  const ball = newElement({id: 'hd-ball', name: 'Piłka HD', source: 'res://level-editor/assets/warm-v1-yard-ball-hd.png', width: 1261, height: 1247,
+    defaultSize: {width: 71, height: 70}}, 'middle', l);
+  assert.equal(ball.width, 71);
+  assert.equal(ball.height, 70);
+  const custom = newElement({id: 'hd-custom', name: 'Dekoracja', source: 'res://level-editor/assets/custom.png', width: 2048, height: 1024}, 'middle', l);
+  assert.ok(custom.width <= 300 && custom.height <= 220);
+  const background = newElement({id: 'hd-background', name: 'Tło', source: 'res://level-editor/assets/warm-v1-home-background-hd.png', width: 2172, height: 724}, 'background', l);
+  assert.equal(background.width, l.width);
+  assert.equal(background.height, l.height);
+  eq(background.pivot, {x: 0, y: 0});
+});
+
+test('animation sheets are excluded from the editor library', () => {
+  assert.equal(isAnimationAsset({source: 'res://level-editor/assets/sprites-Golden-spritesheet-run_right-spritesheet.png'}), true);
+  assert.equal(isAnimationAsset({source: 'res://assets/sprites/puppy/pixel/sheets/walk.png'}), true);
+  assert.equal(isAnimationAsset({source: 'data:image/png;base64,abc', name: 'spritesheet'}), true);
+  assert.equal(isAnimationAsset({source: 'res://level-editor/assets/yard-garden.png'}), false);
 });
 
 test('deleting a level repairs portals and starting level', () => {

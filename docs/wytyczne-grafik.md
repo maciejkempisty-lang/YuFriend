@@ -82,7 +82,7 @@ W `RoomView` warstwy są dostępne jako `world.background`, `world.middle_ground
 var prop := Node2D.new()
 prop.position = Vector2(720, 315) # podstawa w świecie
 var sprite := Sprite2D.new()
-sprite.texture = load("res://assets/art/yard/sprites/ogrod-donica-v1.png")
+sprite.texture = load("res://level-editor/assets/yard-ogrod-donica-v1.png")
 sprite.centered = false
 sprite.scale = Vector2.ONE * RoomLayout.PIXEL_SIZE
 sprite.position = -Vector2(16, 38) * RoomLayout.PIXEL_SIZE
