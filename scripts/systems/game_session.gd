@@ -305,7 +305,7 @@ func _spontaneous(roll: float = -1.0) -> void:
 	if float(pet.needs.energy) < 28:
 		act("rest", false)
 		return
-	if DailyRhythm.phase(pet, _local_now()) == "morning" and YardRoutines.due(self) and float(cooldowns.get("outing", 0)) <= 0:
+	if RoomLayoutLoader.allows("portal", "home") and RoomLayoutLoader.allows("potty", "yard") and DailyRhythm.phase(pet, _local_now()) == "morning" and YardRoutines.due(self) and float(cooldowns.get("outing", 0)) <= 0:
 		cooldowns["outing"] = 3600
 		move_to(RoomLayout.STATIONS.door.stand, false)
 		say("Chcę wyjść się załatwić. Czekam przy drzwiach — pójdziemy na podwórko?")
@@ -396,6 +396,7 @@ func _cancel_motion() -> void:
 	activity_cancelled.emit()
 
 func _approach(action: String, by_player: bool) -> void:
+	if not RoomLayoutLoader.allows_action(action, "yard" if in_yard else "home"): return
 	_cancel_motion()
 	_pending_action = action
 	_pending_by_player = by_player
@@ -543,6 +544,7 @@ func _pet() -> bool:
 	return true
 
 func act(action: String, by_player: bool = true) -> bool:
+	if not RoomLayoutLoader.allows_action(action, "yard" if in_yard else "home") and not (action in ["pet", "rest"] and is_sleeping()): return false
 	if not writable or suspended: return false
 	if by_player and action in ["pet", "feed", "rest", "play", "toys", "window", "door", "clean"]:
 		player_activity()
@@ -695,6 +697,7 @@ func performance_finished(trial_id: int) -> void:
 		performance_done = true
 
 func begin_training(key: String, guided: bool, marker: bool = false, gentle: bool = false) -> bool:
+	if not RoomLayoutLoader.allows("training", "yard" if in_yard else "home"): return false
 	if not writable or suspended: return false
 	player_activity()
 	if is_sleeping():
@@ -827,12 +830,14 @@ func resume_session() -> void:
 	if report: away_report_ready.emit()
 
 func offer_initiative(kind: String = "", now: float = -1.0) -> bool:
+	if not RoomLayoutLoader.allows("initiative", "yard" if in_yard else "home"): return false
 	if in_yard: return YardInvitations.offer(self, kind, now)
 	if in_bath: return false
 	if not active or not writable or suspended or not initiatives_enabled or not attention_available or busy() or is_sleeping() or not invitation.is_empty() or not play.kind.is_empty(): return false
 	if now < 0: now = Time.get_unix_time_from_system()
 	if not is_finite(now) or now - float(pet.social.last_offer_at) < InitiativeSystem.OFFER_INTERVAL: return false
 	if kind.is_empty(): kind = "cuddle" if DailyRhythm.quiet(pet, _local_now()) else InitiativeSystem.choose(pet)
+	if not (RoomLayoutLoader.allows("cuddle", "home") if kind == "cuddle" else RoomLayoutLoader.allows_play(kind, "home")): return false
 	if DailyRhythm.quiet(pet, _local_now()) and kind != "cuddle": return false
 	if not PetState.INITIATIVE_KEYS.has(kind) or float(InitiativeSystem.weights(pet)[kind]) <= 0: return false
 	_cancel_motion()
@@ -891,6 +896,8 @@ func decline_invitation() -> void:
 func accept_invitation() -> bool:
 	if suspended or invitation.is_empty(): return false
 	var kind: String = invitation.kind
+	if not RoomLayoutLoader.allows("initiative", "yard" if in_yard else "home"): return false
+	if kind == "ball" and not RoomLayoutLoader.allows("ball", "home"): return false
 	if kind.begins_with("yard_"): return YardInvitations.accept(self)
 	if kind == "cuddle": return start_cuddle()
 	if kind == "ball":
@@ -921,6 +928,7 @@ func start_touch_game(kind: String) -> bool:
 	return _begin_touch_game(kind)
 
 func _begin_touch_game(kind: String) -> bool:
+	if not RoomLayoutLoader.allows_play(kind, "yard" if in_yard else "home"): return false
 	if not PetState.PLAY_KEYS.has(kind) and kind not in SkillPlaySystem.EXTRA: return false
 	var reason := play_readiness()
 	if not reason.is_empty():
@@ -949,6 +957,7 @@ func _begin_touch_game(kind: String) -> bool:
 	return true
 
 func throw_ball(target: Vector2, origin: Vector2 = RoomLayout.STATIONS.ball.position) -> bool:
+	if not RoomLayoutLoader.allows("ball", "yard" if in_yard else "home"): return false
 	if not target.is_finite() or not origin.is_finite(): return false
 	origin = RoomLayout.clamp_walk(origin)
 	target = RoomLayout.clamp_walk(origin + (target - origin).limit_length(YardFetch.MAX_DISTANCE)) if in_yard else RoomLayout.clamp_walk(target)
@@ -1158,6 +1167,9 @@ func _tick_rhythm(delta: float) -> void:
 		_start_behavior("wait")
 
 func _start_behavior(id: String) -> void:
+	var required: String = {"ball": "ball", "bowl": "feed", "toys": "touch_play", "door": "portal", "nap": "rest", "night": "rest"}.get(id, "")
+	if not required.is_empty() and not RoomLayoutLoader.allows(required, "home"): return
+	if id == "window" and not RoomLayoutLoader.allows_action("window", "home"): return
 	if not invitation.is_empty(): _cancel_invitation()
 	_cancel_motion()
 	_sequence_id = id
@@ -1236,6 +1248,7 @@ func bath_readiness() -> String:
 	return BathCare.bath_readiness(self)
 
 func start_bath() -> bool:
+	if not RoomLayoutLoader.allows("bath", "home"): return false
 	return BathCare.start_bath(self)
 
 func finish_bath() -> bool:
@@ -1289,6 +1302,7 @@ func _return_tired() -> bool:
 # Cuddling uses only existing v17 needs, journal and milestones. The gesture
 # and emotional state are ephemeral; no new save file or schema is introduced.
 func start_cuddle() -> bool:
+	if not RoomLayoutLoader.allows("cuddle", "yard" if in_yard else "home"): return false
 	if not writable or suspended or is_sleeping() or not can_pet():
 		say("Przytulimy się, gdy skończę tę chwilę i będę na jawie.")
 		return false

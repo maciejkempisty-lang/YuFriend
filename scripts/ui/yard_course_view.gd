@@ -11,7 +11,10 @@ func _ready() -> void:
 		var prop := CourseProp.new()
 		prop.part = i
 		if i == 4: prop.z_index = -1
-		prop.position = Vector2([860, 920, 980, 1100, 1270][i], 315 if i < 3 else 321)
+		prop.origin = Vector2([860, 920, 980, 1100, 1270][i], 315 if i < 3 else 321)
+		if i < 3: prop.position = RoomLayoutLoader.clamp_to_level(RoomLayout.yard_stand("course") + Vector2([-150, -90, -30][i], 0), "yard")
+		elif i == 3: prop.position = (YardCourse.path()[-1] + YardCourse.landing()) * 0.5
+		else: prop.position = YardCourse.podium()
 		prop.visible = playing
 		add_child(prop)
 
@@ -28,8 +31,9 @@ func _draw() -> void:
 # Drawing coordinates below retain the original world-space geometry.
 class CourseProp extends Node2D:
 	var part := 0
+	var origin := Vector2.ZERO
 	func block(point: Vector2, extent: Vector2, color: String) -> void:
-		draw_rect(Rect2((point / 3).round() * 3 - position, extent), Color(color))
+		draw_rect(Rect2((point / 3).round() * 3 - origin, extent), Color(color))
 	func _draw() -> void:
 		if part < 3:
 			var x: int = [860, 920, 980][part]

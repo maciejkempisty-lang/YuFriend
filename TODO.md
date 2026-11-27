@@ -1,5 +1,7 @@
 # YuFriend · Handoff dla kolegi z zespołu
 
+> Aktualizacja 27.11.2026: wdrożono migrację pozycji, kontrolę dostępności i brakujące skrypty. Bieżący zakres, decyzje i wyniki testów: [raport wdrożenia](docs/scene-layers-wdrozenie.md). Projekt funkcjonalny: `level-editor/projects/ver2.json`. Poniższy tekst zachowano jako pierwotny handoff.
+
 Cel dokumentu: wprowadzić Cię w aktualną architekturę gra ↔ edytor i pokazać luki,
 które musimy pozamykać. Projekt jest w trakcie migracji z hardcoded Main.tscn
 (Godot) do modelu **"editor jako jedyne źródło prawdy"** — poziomy, elementy,

@@ -47,15 +47,11 @@ func run() -> void:
 	app._toggle_yard(false)
 	app._show_map()
 	await shot("overview")
-	check(app.room.yard_markers.size() == 12, "twelve yard stations")
-	check(app.room.yard_markers.values().all(func(m): return m.visible), "all overview targets visible at 320px")
-	for a in app.room.yard_markers.values():
-		for b in app.room.yard_markers.values():
-			if a == b: continue
-			check(not a.get_rect().intersects(b.get_rect()), "overview targets do not overlap")
-	app.room.yard_markers.puddle.pressed.emit()
+	check(app.room.yard_markers.values().all(func(marker): return not marker.visible), "editor scene hides legacy water hotspots")
+	var puddle := RoomLayoutLoader.element_for_script("water", "yard", {"spot": "puddle"})
+	app._on_editor_interaction(puddle.id, puddle.script, puddle)
 	until("ready")
-	check(app.room.pet_world.distance_to(YardWater.SPOTS.puddle - Vector2(24, 0)) < 1, "approach reaches puddle")
+	check(app.room.pet_world.distance_to(YardWater.spots().puddle - Vector2(24, 0)) < 1, "approach reaches puddle")
 	check(app.water_splash_button.visible and app.water_shake_button.visible, "water actions shown")
 	await shot("puddle-ready")
 	check(app.water_shake_button.get_global_rect().end.x <= 320, "water toolbar fits")
@@ -83,8 +79,9 @@ func run() -> void:
 	s.water.cooldown = 0
 	# Use the map explicitly; normal scene taps now offer contextual choices.
 	app._show_map()
-	check(app.room.yard_markers.sprinkler.visible, "sprinkler map target is visible before tapping: rect=%s, bottom=%.1f, hud=%.1f" % [app.room.yard_markers.sprinkler.get_rect(), app.room.content_bottom, app.room.hud_bottom])
-	app.room.yard_markers.sprinkler.pressed.emit()
+	var sprinkler := RoomLayoutLoader.element_for_script("water", "yard", {"spot": "sprinkler"})
+	check(not sprinkler.is_empty(), "sprinkler is an authored water source")
+	app._on_editor_interaction(sprinkler.id, sprinkler.script, sprinkler)
 	until("ready")
 	await shot("sprinkler")
 	app.water_splash_button.pressed.emit()

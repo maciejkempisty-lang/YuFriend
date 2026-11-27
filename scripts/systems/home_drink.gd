@@ -1,13 +1,14 @@
 class_name HomeDrink
 extends RefCounted
 
-const BOWL := Vector2(536, 303)
-const STAND := Vector2(588, 319)
+static func bowl() -> Vector2: return RoomLayout.STATIONS.drink.position
+static func stand() -> Vector2: return RoomLayout.STATIONS.drink.stand
 var phase := ""
 var elapsed := 0.0
 var stage := 0
 func active() -> bool: return not phase.is_empty()
 func start(s: GameSession) -> bool:
+	if not RoomLayoutLoader.allows("drink", "home"): return false
 	if not s.active or s.suspended: return false
 	if active():
 		finish(s, "Miska z wodą poczeka.")
@@ -23,7 +24,7 @@ func start(s: GameSession) -> bool:
 	stage = 0
 	s.activity = "home_drink"
 	s.activity_left = 0
-	s.destination_requested.emit(STAND)
+	s.destination_requested.emit(stand())
 	s.clip_requested.emit("walk")
 	s.say("Idę do miski z wodą. Dotknij jej ponownie, żeby przerwać.")
 	s.changed.emit()

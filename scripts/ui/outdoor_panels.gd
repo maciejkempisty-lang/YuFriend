@@ -3,7 +3,7 @@ extends RefCounted
 
 static func _show_bath(app: GameUI) -> void:
 	if is_instance_valid(app.bath_dialog) and app.bath_dialog.visible: return
-	if not app.session.start_bath(): return
+	if not LevelActions.run(app.session, "bath"): return
 	app.room.set_yard(false)
 	app.bath_dialog = AcceptDialog.new()
 	var dialog := app.bath_dialog
@@ -42,10 +42,10 @@ static func _show_yard_games(app: GameUI) -> void:
 	dialog.add_child(box)
 	for entry in [["sniff", "Węsz i szukaj skarbów"], ["treat", "Schowaj smakołyk"], ["dog", "Znajdź pieska po ogonie"]]:
 		var mode: String = entry[0]
+		if not RoomLayoutLoader.allows("sniff" if mode == "sniff" else "hide", "yard"): continue
 		box.add_child(app._button(entry[1], func():
 			dialog.hide()
-			if mode == "sniff": app.session.start_sniff()
-			else: app.session.start_hide(mode)))
+			LevelActions.run(app.session, "sniff" if mode == "sniff" else "hide", {"kind": mode})))
 	app.add_child(dialog)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
@@ -54,6 +54,7 @@ static func _show_yard_games(app: GameUI) -> void:
 
 
 static func _show_garden(app: GameUI) -> void:
+	if not RoomLayoutLoader.allows("garden", "yard"): return
 	if not YardRoutines.available(app.session):
 		app.session.say("Ogródek poczeka. Najpierw zakończmy obecną czynność.")
 		return
@@ -79,7 +80,7 @@ static func _show_garden(app: GameUI) -> void:
 	for key in choices:
 		var action: String = key
 		var button := app._button(("Posadź: " if state.plant == "" else "") + choices[key], func():
-			YardRoutines.garden(app.session, action)
+			LevelActions.run(app.session, "garden", {"action": action})
 			dialog.hide()
 			app._show_garden())
 		button.disabled = action == "water" and not YardRoutines.can_water(app.session)
@@ -103,7 +104,7 @@ static func _show_garden(app: GameUI) -> void:
 static func command(app: GameUI) -> void:
 	var commands := app.session.outdoor_commands
 	if commands.phase == "praise":
-		commands.praise(app.session)
+		LevelActions.run(app.session, "outdoor_commands")
 		return
 	var key := commands.available_key(app.session)
 	if key.is_empty() or commands.running(): return
@@ -120,7 +121,7 @@ static func command(app: GameUI) -> void:
 	for guided in [false, true]:
 		box.add_child(app._button("Komenda z gestem" if guided else "Sama komenda", func():
 			dialog.hide()
-			if commands.available_key(app.session) == key: commands.start(app.session, guided)))
+			if commands.available_key(app.session) == key: LevelActions.run(app.session, "outdoor_commands", {"guided": guided})))
 	app.add_child(dialog)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())

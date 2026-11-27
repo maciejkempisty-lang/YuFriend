@@ -3,6 +3,7 @@ extends Control
 ## Opt-in playable project viewer. Never reads or writes the player's save.
 signal interaction_requested(element_id: String, script_id: String, properties: Dictionary)
 signal level_changed(level_id: String)
+signal destination_reached()
 
 var project: Dictionary
 var current: Dictionary
@@ -222,23 +223,33 @@ func throw_ball(element_id: String, destination: Vector2) -> void:
 	var e: Dictionary = {}
 	for entry in current.elements:
 		if entry.id == element_id: e = entry
-	if e.is_empty() or e.get("script", "") != "ball" or e.get("static", true): return
+	if e.is_empty() or not e.get("visible", true) or e.get("script", "") != "ball" or e.get("static", true): return
 	if not flight.is_empty(): _reset_ball_lift()
 	var end := clamp_walk(destination)
 	var arc: float = float(e.get("params", {}).get("arc", 100))
 	flight = {"id": element_id, "from": nodes[element_id].position, "to": end, "time": 0.0, "arc": arc}
 	target = end
 	pending = {"script": "ball", "id": element_id, "element": e}
-	interaction_requested.emit(element_id, "ball", e.duplicate(true))
+	var request := e.duplicate(true)
+	request["throw_target"] = end
+	request["throw_origin"] = nodes[element_id].position
+	interaction_requested.emit(element_id, "ball", request)
 	_say("Łap piłkę!")
 
 func activate(e: Dictionary, point: Vector2) -> void:
 	pending.clear(); wait_left = 0
 	if e.is_empty(): target = clamp_walk(point); return
 	if not LevelProject.is_interactive(e): return
+	if game_mode:
+		var authored: Dictionary = {}
+		for entry in current.elements:
+			if entry.id == e.get("id") and entry.visible: authored = entry; break
+		if authored.is_empty(): return
+		e = authored
 	var script_id: String = e.get("script", "none")
 	interaction_requested.emit(e.get("id", ""), script_id, e.duplicate(true))
 	var params: Dictionary = e.get("params", {})
+	if game_mode and script_id not in ["portal", "message", "thought", "greet", "bark", "play_clip", "walk_to"]: return
 	match script_id:
 		"portal":
 			var next: String = params.get("target", "")
@@ -264,7 +275,7 @@ func activate(e: Dictionary, point: Vector2) -> void:
 		"walk_to":
 			target = clamp_walk(Vector2(float(params.get("x", e.x)), float(params.get("y", e.y))))
 			pending = {"script": "walk_to", "element": e}
-		"feed", "pet", "clean", "rest", "bath", "cuddle", "drink", "sniff", "course", "timed_course", "water", "hide", "visitor":
+		"feed", "pet", "clean", "rest", "bath", "cuddle", "drink", "sniff", "course", "timed_course", "water", "hide", "visitor", "training", "touch_play", "skill_play", "bubble_play", "outdoor_commands", "potty", "initiative", "dig", "garden", "decor", "yard_weather":
 			target = clamp_walk(Vector2(e.x - 50, e.y))
 			pending = {"script": script_id, "element": e}
 
@@ -317,6 +328,10 @@ func _reset_ball_lift() -> void:
 			sprite.position.y = -e.pivot.y * sprite.scale.y
 
 func _complete() -> void:
+	if game_mode:
+		pending.clear()
+		destination_reached.emit()
+		return
 	var script_id: String = pending.get("script", "none")
 	var e: Dictionary = pending.get("element", {})
 	var params: Dictionary = e.get("params", {})

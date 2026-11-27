@@ -21,7 +21,7 @@ func _draw() -> void:
 		block(Vector2(165, 306), Vector2(111, 18), "aa8661")
 		block(Vector2(174, 306), Vector2(93, 12), "e3c894")
 		block(Vector2(183, 303), Vector2(75, 9), "e9d7ad")
-	var bowl := YardRest.BOWL
+	var bowl := YardRest.bowl()
 	if draw_static:
 		block(bowl + Vector2(-24, -9), Vector2(48, 12), "688f8b")
 		block(bowl + Vector2(-18, -12), Vector2(36, 9), "afd6d2")

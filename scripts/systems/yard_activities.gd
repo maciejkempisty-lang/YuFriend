@@ -16,6 +16,7 @@ static func change_yard(s: GameSession, enabled: bool) -> bool:
 	s._follow_target = Vector2.INF
 	if enabled and not s.in_yard: s.visitors.begin_visit()
 	s.in_yard = enabled
+	RoomLayoutLoader.select_level("yard" if enabled else "home")
 	s.activity = "idle"
 	s.activity_left = 0
 	s.pose = "stand"
@@ -26,13 +27,16 @@ static func change_yard(s: GameSession, enabled: bool) -> bool:
 
 
 static func start_sniff(s: GameSession, spot: int = -1) -> bool:
+	if not RoomLayoutLoader.allows("sniff", "yard"): return false
 	if not s.in_yard or not s.writable or s.suspended or s.busy(false) or s.is_sleeping() or spot < -1 or spot >= s.YARD_FINDS.size(): return false
 	if float(s.pet.needs.energy) < 25:
 		s.say("Najpierw wróćmy do domu odpocząć.")
 		return false
 	s._cancel_motion()
-	s.sniff_spot = 0
-	for index in s.YARD_FINDS.size():
+	var spots := RoomLayoutLoader.bush_spots()
+	if spots.is_empty() or (spot >= 0 and not spots.has(spot)): return false
+	s.sniff_spot = spots[0]
+	for index in spots:
 		if not s.pet.milestones.has("yard_find_%d" % index):
 			s.sniff_spot = index
 			break
@@ -40,7 +44,7 @@ static func start_sniff(s: GameSession, spot: int = -1) -> bool:
 	s._travel_left = 90.0
 	s.activity = "sniff_walk"
 	s.activity_left = 0
-	s.destination_requested.emit(Vector2(350 + s.sniff_spot * 400, 302))
+	s.destination_requested.emit(RoomLayout.yard_stand("bush_%d" % s.sniff_spot))
 	s.clip_requested.emit("walk")
 	s.say("Prowadzi mnie ciekawy zapach…")
 	s.changed.emit()
@@ -85,6 +89,7 @@ static func _tick_yard(s: GameSession, delta: float) -> void:
 
 
 static func start_hide(s: GameSession, kind: String, seed_value: int = 0) -> bool:
+	if not RoomLayoutLoader.allows("hide", "yard"): return false
 	if not s.in_yard: return false
 	var reason := s.play_readiness()
 	if not reason.is_empty():
@@ -93,7 +98,9 @@ static func start_hide(s: GameSession, kind: String, seed_value: int = 0) -> boo
 	if DailyRhythm.phase(s.pet, s._local_now()) == "night":
 		s.say("Za ciemno na chowanego, pora spać.")
 		return false
-	if not s.hide_game.start(kind, seed_value): return false
+	var spots := RoomLayoutLoader.bush_spots()
+	if spots.is_empty(): return false
+	if not s.hide_game.start(kind, seed_value, spots): return false
 	s.player_activity()
 	s._cancel_invitation()
 	s._cancel_motion()
@@ -133,7 +140,7 @@ static func _handle_hide_event(s: GameSession, event: String) -> void:
 			s.activity = "hide_walk"
 			s.activity_left = 0
 			s._travel_left = 90
-			s.destination_requested.emit(Vector2(350 + s.hide_game.search_spot() * 400, 302))
+			s.destination_requested.emit(RoomLayout.yard_stand("bush_%d" % s.hide_game.search_spot()))
 			s.clip_requested.emit("walk")
 			s.say(s.hide_game.hint())
 		"guess": s.say(s.hide_game.hint())

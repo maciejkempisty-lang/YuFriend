@@ -45,19 +45,10 @@ func run() -> void:
 	app._toggle_yard(false)
 	app.room.show_overview()
 	await shot("overview")
-	check(app.room.yard_markers.size() == 12, "twelve places")
-	for a in app.room.yard_markers.values():
-		check(a.visible, "overview marker visible")
-		for b in app.room.yard_markers.values():
-			if a != b: check(not a.get_rect().intersects(b.get_rect()), "station targets do not overlap")
-	app.room.yard_markers.shade.pressed.emit()
-	var dialog: AcceptDialog
-	for child in app.get_children():
-		if child is AcceptDialog and child.title == "Chwila w cieniu": dialog = child
-	check(is_instance_valid(dialog), "shade opens choices")
-	check(dialog.size.x <= 320, "choices fit narrow screen")
-	for button in dialog.find_children("*", "Button", true, false):
-		if button.text == "Napij się wody": button.pressed.emit()
+	check(app.room.yard_markers.values().all(func(marker): return not marker.visible), "editor scene has no legacy map hotspots")
+	var element := RoomLayoutLoader.element_for_script("drink", "yard")
+	app._on_editor_interaction(element.id, element.script, element)
+	check(app.session.yard_rest.active(), "authored water bowl starts drinking")
 	until("drink")
 	for i in 20: tick()
 	await shot("drink")
@@ -69,10 +60,10 @@ func run() -> void:
 	for i in 35: tick()
 	await shot("nap")
 	check(app.session.in_yard and app.session.pet.resting and app.room.animator.current == "sleep", "care rest button naps outdoors")
-	check(app.room.pet_world.distance_to(YardRest.BED) < 1, "nap reaches shaded bed")
+	check(app.room.pet_world.distance_to(YardRest.bed()) < 1, "nap reaches shaded bed")
 	app._select_tab("journal")
 	check(app.session.in_yard and app.session.pet.resting, "album preserves an outdoor nap")
-	check(app.room.pet_world.distance_to(YardRest.BED) < 1, "yard bed placement survives tab change")
+	check(app.room.pet_world.distance_to(YardRest.bed()) < 1, "yard bed placement survives tab change")
 	app.music.stop()
 	app.effects.stop_all()
 	app.queue_free()

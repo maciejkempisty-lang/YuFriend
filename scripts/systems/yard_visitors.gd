@@ -7,8 +7,8 @@ const FIRST_WAIT := 15.0
 const BETWEEN_VISITS := 75.0
 const KINDS := ["bird", "butterfly", "cat"]
 const LABELS := {"bird": "Ptak przy płocie", "butterfly": "Motyl przy płocie", "cat": "Kot sąsiada"}
-const FENCE := Vector2(1010, 205)
-const SAFE_SPOT := Vector2(810, 310)
+static func fence() -> Vector2: return RoomLayout.yard_point("fence")
+static func safe_spot() -> Vector2: return RoomLayout.yard_stand("safe_spot")
 var kind := ""
 var phase := ""
 var reaction := ""
@@ -34,6 +34,7 @@ static func reaction_for(traits: Dictionary, guest: String, familiarity: int = 0
 	return "curious" if float(traits.curiosity) >= 0.5 else "calm"
 
 func available(s: GameSession) -> bool:
+	if not RoomLayoutLoader.allows("visitor", "yard"): return false
 	return s.activity == "idle" and s.in_yard and s.writable and not s.suspended and not s.is_sleeping() and not s.busy() and not s.training_view_active and s.outdoor_commands.phase.is_empty() and float(s.pet.needs.energy) >= 35 and DailyRhythm.phase(s.pet, s._local_now()) != "night"
 
 func start(s: GameSession, guest: String) -> bool:
@@ -56,7 +57,7 @@ func start(s: GameSession, guest: String) -> bool:
 	s.pose = "stand"
 	if reaction in ["shy", "curious"]:
 		phase = "approach"
-		s.destination_requested.emit(SAFE_SPOT if reaction == "shy" else Vector2(980, 310))
+		s.destination_requested.emit(safe_spot() if reaction == "shy" else RoomLayout.yard_stand("fence"))
 		s.clip_requested.emit("walk")
 	else:
 		s.clip_requested.emit("bark_stand" if reaction == "bark" else ("head_tilt_stand" if reaction == "wary" else "tail_wag_stand"))
@@ -84,7 +85,7 @@ func respond(s: GameSession, choice: String) -> bool:
 	phase = choice
 	if choice == "recall":
 		remaining = 30
-		s.destination_requested.emit(SAFE_SPOT)
+		s.destination_requested.emit(safe_spot())
 		s.clip_requested.emit("walk")
 	else:
 		response_left = 6.0 if choice == "together" else (3.0 if choice == "greet" else 2.5)

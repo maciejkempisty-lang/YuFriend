@@ -7,9 +7,11 @@ const WORDS := {
 	"yard_puddle": ["Tu jest kałuża! Popluskamy razem?", "Do kałuży"],
 	"yard_sprinkler": ["Woda tak śmiesznie pryska! Pobiegamy?", "Do wody"]
 }
-const POINTS := {"yard_ball": Vector2(760, 330), "yard_hide": Vector2(350, 302), "yard_puddle": Vector2(396, 315), "yard_sprinkler": Vector2(1206, 315)}
+static func point(kind: String) -> Vector2:
+	return RoomLayout.yard_stand({"yard_ball": "fetch", "yard_hide": "bush_0", "yard_puddle": "puddle", "yard_sprinkler": "sprinkler"}[kind])
 
 static func options(s: GameSession) -> Dictionary:
+	if not RoomLayoutLoader.allows("initiative", "yard"): return {}
 	if not s.in_yard or s.is_sleeping() or s.pet.needs.energy < 45 or s.pet.needs.fullness < 30 or s.pet.fatigue >= 75 or DailyRhythm.quiet(s.pet, s._local_now()): return {}
 	var memory := InitiativeSystem.weights(s.pet)
 	var result := {"yard_ball": float(memory.ball), "yard_hide": float(memory.cups)}
@@ -18,6 +20,10 @@ static func options(s: GameSession) -> Dictionary:
 		for spot in ["puddle", "sprinkler"]:
 			if s.weather.water_reason(s, spot).is_empty():
 				result["yard_" + spot] = water_weight + (0.5 if s.pet.milestones.has("water_" + spot) else 0)
+	if not RoomLayoutLoader.allows("ball", "yard"): result.erase("yard_ball")
+	if not RoomLayoutLoader.allows("hide", "yard"): result.erase("yard_hide")
+	for spot in ["puddle", "sprinkler"]:
+		if not RoomLayoutLoader.allows("water", "yard", {"spot": spot}): result.erase("yard_" + spot)
 	return result
 
 static func offer(s: GameSession, requested: String = "", now: float = -1, roll: float = -1) -> bool:
@@ -48,7 +54,7 @@ static func offer(s: GameSession, requested: String = "", now: float = -1, roll:
 	s.activity_left = 0
 	s.invitation = {"kind": chosen, "remaining": InitiativeSystem.RESPONSE_SECONDS, "arrived": false}
 	s._travel_left = 45
-	s.destination_requested.emit(POINTS[chosen])
+	s.destination_requested.emit(point(chosen))
 	s.clip_requested.emit("walk")
 	s.say(WORDS[chosen][0])
 	s.changed.emit()

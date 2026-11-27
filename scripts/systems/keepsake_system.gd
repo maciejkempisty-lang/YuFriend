@@ -65,6 +65,7 @@ static func save_photo(session: GameSession, picture: Image, caption: String, he
 	return true
 
 static func toggle_decor(session: GameSession, key: String) -> bool:
+	if not RoomLayoutLoader.allows("decor", "yard" if session.in_yard else "home", {"key": key}): return false
 	if not session.writable or session.suspended or not DECOR.has(key): return false
 	if not unlock_reason(session.pet, key).is_empty(): return false
 	var before := session.pet.decor.duplicate()

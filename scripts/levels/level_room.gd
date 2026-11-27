@@ -1,12 +1,6 @@
 class_name LevelRoom
 extends Control
-## Game shell that drives YuFriend from a LevelProject on disk. Boots a
-## GameSession (loads the real save), renders the world via LevelPreview,
-## and forwards script interactions to session.act(). Yard-specific
-## features (bath, invite, visitor, cuddle, hide, fetch, timed course, drink)
-## have NOT been ported yet — they stay in scripts/ui/main.gd (Main.tscn).
-## When a project script fires here that session.act() cannot handle, we log
-## it to room_state so follow-up work can wire the matching system.
+## Alternate LevelProject shell. Uses the same gameplay dispatcher as Main.
 
 signal unhandled_script(script_id: String, element_id: String)
 
@@ -38,26 +32,24 @@ const _NEEDS := ["fullness", "energy", "hygiene", "contact", "play"]
 const _NEED_NAMES := {"fullness":"Sytość","energy":"Energia","hygiene":"Higiena","contact":"Kontakt","play":"Zabawa"}
 const _NEED_COLORS := {"fullness":"#d9a86c","energy":"#b2c58d","hygiene":"#9ec5d9","contact":"#e2a1b8","play":"#ccdf9c"}
 
-const _CARE := {
-	"feed": "feed", "pet": "pet", "clean": "clean", "rest": "rest", "ball": "play",
-	"greet": "pet"
-}
-# Scripts that start a self-contained GameSession subsystem (no act() shortcut).
-const _SPECIAL := ["bath", "cuddle", "drink", "sniff"]
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = (preload("res://scripts/ui/game_theme.gd") as GDScript).call("build")
 	add_child(session)
-	add_child(music); music.start("user://music.cfg")
-	add_child(effects); effects.start("user://effects.cfg")
-	haptics.start("user://haptics.cfg")
+	add_child(music); music.start(save_path.get_base_dir().path_join("music.cfg"))
+	add_child(effects); effects.start(save_path.get_base_dir().path_join("effects.cfg"))
+	haptics.start(save_path.get_base_dir().path_join("haptics.cfg"))
 	session.sound_requested.connect(func(id: String): effects.play_effect(id))
 	session.away_report_ready.connect(_show_away_report)
 	session.start(save_path)
 	add_child(preview)
 	preview.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	preview.bind_pet(session.pet)
+	var layout := RoomLayoutLoader.new().apply(project_path)
+	if not layout.ok:
+		_fatal("Nie udało się wczytać układu projektu.")
+		return
 	var result := LevelProject.read_project(project_path)
 	if not result.ok:
 		_fatal("Projekt poziomów nie ładuje się: " + ", ".join(result.errors))
@@ -71,6 +63,8 @@ func _ready() -> void:
 	add_child(fade)
 	preview.interaction_requested.connect(_on_interaction)
 	preview.level_changed.connect(_on_level_changed)
+	preview.destination_reached.connect(session.destination_reached)
+	_on_level_changed(str(preview.current.id))
 	session.changed.connect(_refresh)
 	session.feedback.connect(_say_feedback)
 	# Session's subsystems (bath, cuddle, course, hide, …) steer the puppy by
@@ -78,7 +72,18 @@ func _ready() -> void:
 	# visible world matches session state.
 	session.clip_requested.connect(func(c): preview.animator.request_clip(c))
 	session.destination_requested.connect(func(p: Vector2): preview.target = preview.clamp_walk(p))
-	session.activity_cancelled.connect(func(): preview.target = Vector2.INF; preview.pending.clear())
+	session.approach_requested.connect(func(action: String, token: int):
+		preview.set_meta("station_token", token)
+		preview.target = preview.clamp_walk(RoomLayout.station(action).stand))
+	preview.destination_reached.connect(func():
+		if preview.has_meta("station_token"):
+			var token := int(preview.get_meta("station_token"))
+			preview.remove_meta("station_token")
+			session.arrive_at(token))
+	session.activity_cancelled.connect(func():
+		preview.target = Vector2.INF
+		preview.pending.clear()
+		preview.remove_meta("station_token"))
 	session.save_status.connect(func(_ok): _refresh())
 	_build_hud()
 	_rebuild_tabs()
@@ -172,41 +177,25 @@ func _refresh() -> void:
 	bath_finish.visible = session.in_bath
 	if not tabs.get_children().size(): _rebuild_tabs()
 
-func _on_interaction(element_id: String, script_id: String, props: Dictionary) -> void:
-	# portal/message/thought/bark/greet/play_clip/walk_to are visual — LevelPreview
-	# handles them. Care scripts route through session.act; "specials" start their
-	# own subsystem (bath, cuddle, drink, sniff). LevelPreview still animates the
-	# walk to the target in parallel.
-	var action: String = _CARE.get(script_id, "")
-	if not action.is_empty():
-		session.act(action, true)
+func _on_interaction(element_id: String, script_id: String, _props: Dictionary) -> void:
+	var element := RoomLayoutLoader.element_by_id(element_id, str(preview.current.get("id", "")))
+	if element.is_empty() or element.script != script_id: return
+	if script_id in ["none", "portal", "message", "thought", "walk_to", "play_clip", "bark", "greet"]: return
+	if not LevelProject.scripts().has(script_id):
+		unhandled.append(script_id + "@" + element_id)
+		unhandled_script.emit(script_id, element_id)
 		return
-	var params: Dictionary = props.get("params", {})
-	match script_id:
-		"bath": session.start_bath()
-		"cuddle": session.start_cuddle()
-		"drink": session.home_drink.start(session)
-		"sniff": session.start_sniff(int(params.get("spot", -1)))
-		"course": session.course.start(session)
-		"timed_course": session.timed_course.start(session)
-		"water":
-			var spot: String = str(params.get("spot", "puddle"))
-			session.water.start(session, spot)
-		"hide":
-			var kind: String = str(params.get("kind", "bush"))
-			var seed_value: int = int(params.get("seed", 0))
-			session.start_hide(kind, seed_value)
-		"visitor":
-			var guest: String = str(params.get("guest", "bird"))
-			session.visitors.start(session, guest)
-		"none", "portal", "message", "thought", "walk_to", "play_clip", "bark": pass
-		_:
-			unhandled.append(script_id + "@" + element_id)
-			unhandled_script.emit(script_id, element_id)
+	var params: Dictionary = element.get("params", {}).duplicate(true)
+	if script_id == "ball" and _props.get("throw_target") is Vector2:
+		params["target"] = preview.clamp_walk(_props.throw_target)
+		params["origin"] = preview.clamp_walk(_props.throw_origin)
+	LevelActions.run(session, script_id, params)
 
 func _on_level_changed(level_id: String) -> void:
-	# Convention: level id "yard" (or any id containing "yard") means outdoor mode.
-	session.in_yard = "yard" in level_id
+	# The game uses the authored home/yard level IDs.
+	session._cancel_motion()
+	session.in_yard = level_id == "yard"
+	RoomLayoutLoader.select_level(level_id)
 	_rebuild_tabs()
 	_play_fade()
 

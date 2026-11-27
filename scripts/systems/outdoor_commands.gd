@@ -23,6 +23,7 @@ func offer_recall(point: Vector2) -> void:
 	phase = "offer"
 	offer_left = 25
 func available_key(s: GameSession) -> String:
+	if not RoomLayoutLoader.allows("outdoor_commands", "yard"): return ""
 	if not s.in_yard or s.suspended or not s.writable: return ""
 	if running(): return key
 	if phase == "offer": return "come"

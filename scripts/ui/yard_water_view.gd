@@ -26,7 +26,7 @@ func oval(center: Vector2, radius: Vector2, color: String) -> void:
 		block(center + Vector2(-width, y), Vector2(maxf(3, floorf(width * 2 / 3) * 3), 3), color)
 
 func _draw_ground() -> void:
-	var puddle := YardWater.SPOTS.puddle + Vector2(0, 6)
+	var puddle: Vector2 = YardWater.spots().puddle + Vector2(0, 6)
 	if draw_ground_base and show_puddle:
 		oval(puddle, Vector2(63, 18), "947354")
 		if wet:
@@ -35,7 +35,7 @@ func _draw_ground() -> void:
 			block(puddle + Vector2(9, 0), Vector2(24, 3), "95c4c5")
 		for offset in [Vector2(-48, 9), Vector2(42, 12), Vector2(60, 3)]:
 			block(puddle + offset, Vector2(9, 6), "a08057")
-	var nozzle := YardWater.SPOTS.sprinkler + Vector2(75, -9)
+	var nozzle: Vector2 = YardWater.spots().sprinkler + Vector2(75, -9)
 	if draw_ground_base and show_sprinkler:
 		block(nozzle + Vector2(0, 18), Vector2(72, 6), "658c69")
 		block(nozzle + Vector2(66, 18), Vector2(6, 36), "658c69")
@@ -47,7 +47,7 @@ func _draw_ground() -> void:
 		for side in [-1, 1]:
 			for i in 10:
 				var t := fposmod(clock * 0.8 + i * 0.1, 1.0)
-				var point := nozzle + Vector2(side * 96 * t, -18 - 260 * t + 302 * t * t)
+				var point: Vector2 = nozzle + Vector2(side * 96 * t, -18 - 260 * t + 302 * t * t)
 				block(point, Vector2(3, 6), "d5eee5" if i % 2 == 0 else "83b9bf")
 
 func _draw() -> void:

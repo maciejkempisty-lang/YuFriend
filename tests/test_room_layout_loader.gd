@@ -24,7 +24,7 @@ func run() -> void:
 	var edited_door: Vector2 = RoomLayout.STATIONS.door.position
 	var edited_door_stand: Vector2 = RoomLayout.STATIONS.door.stand
 	# Yard station point is not touched — only bounds can change.
-	check(RoomLayout.YARD_STATIONS.shade.point == yard_shade_default, "yard point preserved")
+	check(RoomLayout.YARD_STATIONS.shade.point == Vector2(144, 366), "yard point follows authored shade")
 	# Move the portal +60 in X in a synthetic project and verify the override.
 	var synthetic := _load_json("res://level-editor/projects/ver1.json")
 	for e in synthetic.levels[0].elements:

@@ -20,7 +20,7 @@ func game() -> GameSession:
 	s.active = true
 	return s
 func reach_podium(s: GameSession) -> void:
-	for i in YardCourse.PATH.size(): s.destination_reached()
+	for i in YardCourse.path().size(): s.destination_reached()
 	check(s.course.phase == "jump_ready", "slalom ends at jump gate")
 	check(s.course.jump(s) and not s.course.jump(s), "jump consumes one command")
 	s.destination_reached()

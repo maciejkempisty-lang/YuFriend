@@ -50,7 +50,7 @@ func run() -> void:
 			app.visitor_recall_button.pressed.emit()
 			check(s.visitors.active() and app.room.moving, "recall uses real movement")
 			tick(100)
-			check(app.room.pet_world.distance_to(YardVisitors.SAFE_SPOT) < 1, "returns to player")
+			check(app.room.pet_world.distance_to(YardVisitors.safe_spot()) < 1, "returns to player")
 		else:
 			app.visitor_soothe_button.pressed.emit()
 			tick(30)

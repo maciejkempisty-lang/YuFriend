@@ -53,6 +53,7 @@ static func can_water(session: GameSession, now: float = -1) -> bool:
 	return state.plant != "" and state.growth < GROW_TIME and now >= float(state.checked_at) and PersonalitySystem.day_of(session._local_now()) > watering_day(state, session._local_now(), now)
 
 static func garden(session: GameSession, action: String, now: float = -1) -> bool:
+	if not RoomLayoutLoader.allows("garden", "yard"): return false
 	if not available(session): return false
 	var before := session.pet.to_dict()
 	var state := session.pet.yard_routines
@@ -101,8 +102,9 @@ static func due(session: GameSession) -> bool:
 	return not has_mess(session) and PersonalitySystem.day_of(session._local_now()) > int(session.pet.yard_routines.outday)
 
 static func start_outing(session: GameSession) -> bool:
+	if not RoomLayoutLoader.allows("potty", "yard"): return false
 	if not available(session) or not due(session): return false
-	session.move_to(Vector2(1220, 322))
+	session.move_to(RoomLayout.yard_stand("outing"))
 	session.activity = "outing_walk"
 	session.say("Chcę się załatwić. Idziemy w spokojne miejsce przy płocie.")
 	return true
@@ -132,6 +134,7 @@ static func praise(session: GameSession) -> bool:
 	return clean_up(session)
 
 static func clean_up(session: GameSession) -> bool:
+	if not RoomLayoutLoader.allows("potty", "yard"): return false
 	if not session.writable or session.suspended or not session.in_yard or not has_mess(session): return false
 	if session.activity != "outing_praise" and session.busy(false): return false
 	var before := session.pet.to_dict()

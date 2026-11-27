@@ -1,16 +1,22 @@
 class_name YardCourse
 extends RefCounted
 
-const PATH := [Vector2(800, 325), Vector2(860, 287), Vector2(920, 325), Vector2(980, 287), Vector2(1040, 315)]
-const LANDING := Vector2(1160, 315)
-const PODIUM := Vector2(1270, 306)
+static func path() -> Array[Vector2]:
+	var anchor := RoomLayout.yard_stand("course")
+	var result: Array[Vector2] = []
+	for offset in [Vector2(-210, 10), Vector2(-150, -28), Vector2(-90, 10), Vector2(-30, -28), Vector2(30, 0)]:
+		result.append(RoomLayoutLoader.clamp_to_level(anchor + offset, "yard"))
+	return result
+static func landing() -> Vector2: return RoomLayout.yard_stand("landing")
+static func podium() -> Vector2: return RoomLayout.yard_stand("podium")
 var phase := ""
 var step := 0
 var remaining := 0.0
 var trial := TrainingSystem.new()
 
 func active() -> bool: return not phase.is_empty()
-func readiness(s: GameSession) -> String:
+func readiness(s: GameSession, script_id: String = "course") -> String:
+	if not RoomLayoutLoader.allows(script_id, "yard"): return "Brak toru w tym ogrodzie."
 	if not s.in_yard or not s.writable or s.suspended or s.busy(false) or s.is_sleeping() or not s.outdoor_commands.phase.is_empty(): return "Dokończmy obecną czynność przed torem."
 	if DailyRhythm.quiet(s.pet, s._local_now()): return "Tor odpoczywa wieczorem. Wrócimy za dnia."
 	if s.pet.needs.energy < 45 or s.pet.needs.fullness < 30 or s.pet.fatigue >= 63: return "Najpierw odpoczynek i posiłek — tor wymaga sił."
@@ -36,7 +42,7 @@ func start(s: GameSession) -> bool:
 	remaining = 120
 	s.activity = "course"
 	s.activity_left = 0
-	move(s, PATH[0])
+	move(s, path()[0])
 	s.attention_requested.emit(false)
 	s.say("Slalom! Potem wybierz Skacz przy płotku.")
 	s.changed.emit()
@@ -49,13 +55,13 @@ func arrived(s: GameSession) -> void:
 	match phase:
 		"slalom":
 			step += 1
-			if step < PATH.size(): move(s, PATH[step])
+			if step < path().size(): move(s, path()[step])
 			else:
 				phase = "jump_ready"
 				s.clip_requested.emit("idle")
 		"jump":
 			phase = "podium"
-			move(s, PODIUM)
+			move(s, podium())
 		"podium":
 			phase = "stay_ready"
 			s.clip_requested.emit("idle")
@@ -63,7 +69,7 @@ func arrived(s: GameSession) -> void:
 func jump(s: GameSession) -> bool:
 	if phase != "jump_ready" or not safe(s): return false
 	phase = "jump"
-	s.course_jump_requested.emit(LANDING)
+	s.course_jump_requested.emit(landing())
 	s.player_activity()
 	s.changed.emit()
 	return true

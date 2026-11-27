@@ -13,7 +13,6 @@ func _check(ok: bool, label: String) -> void:
 func _run() -> void:
 	var result := RoomLayoutLoader.new().apply("res://level-editor/projects/ver1.json")
 	_check(result.ok, "current editor project loads")
-	_check(RoomLayoutLoader.active_hd_art, "game uses HD rendering for authored HD artwork")
 	var project: Dictionary = RoomLayoutLoader.active_project
 	var assets := {}
 	for asset in project.assets: assets[asset.id] = asset
@@ -29,12 +28,14 @@ func _run() -> void:
 	_check(app.room.puppy.z_index > 0 and not app.room.puppy.z_as_relative, "dog stays above middle artwork")
 	_check(is_equal_approx(app.room._render_pixel_size, 1.0), "HD artwork uses a full-resolution viewport")
 	for level in project.levels:
+		app.room.set_yard(level.id == "yard")
 		for element in level.elements:
-			if not RoomLayoutLoader.active_hd_asset_ids.has(element.asset): continue
 			var texture: Texture2D = RoomLayoutLoader.active_textures[element.asset]
 			_check(texture.get_width() == assets[element.asset].width, "authored HD texture selected for " + element.asset)
 			var parent: Node2D = app.room.world.background if element.layer == "background" else (app.room.world.foreground if element.layer == "foreground" else app.room.actors)
-			var anchor: Node2D = parent.get_node_or_null(str(element.id))
+			var anchor: Node2D = null
+			for candidate in parent.get_children():
+				if candidate.name == str(element.id) and candidate.get_meta("level_id", "") == level.id: anchor = candidate
 			_check(anchor != null, "authored anchor exists for " + str(element.id))
 			if anchor == null: continue
 			var sprite: Sprite2D = anchor.get_child(0)

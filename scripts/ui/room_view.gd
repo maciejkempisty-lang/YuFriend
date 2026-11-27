@@ -60,6 +60,7 @@ var throw_power := Label.new()
 var station_nodes: Dictionary = {}
 var editor_ball_sprites: Dictionary = {}
 var editor_ball_starts: Dictionary = {}
+var editor_decor: Array = []
 var effect_label := Label.new()
 var sleep_label := Label.new()
 var return_button := Button.new()
@@ -151,7 +152,7 @@ func _ready() -> void:
 	world.background.add_child(backdrop)
 	# Extra floor continues behind the floating controls; gameplay coordinates stay fixed.
 	backdrop.configure(Vector2(RoomLayout.SIZE.x, 960))
-	for id in RoomLayout.YARD_STATIONS:
+	for id in YardStationView.SPRITES:
 		var station := YardStationView.new()
 		station.configure(id)
 		if YardSpriteLayout.GROUND_ONLY.has(id): station.z_index = -1
@@ -185,7 +186,7 @@ func _ready() -> void:
 	world.foreground.add_child(water_drops)
 	ambient_life.z_index = 0
 	actors.add_child(ambient_life)
-	fence_visitor.position = YardVisitors.FENCE
+	fence_visitor.position = YardVisitors.fence()
 	fence_visitor.scale = Vector2.ONE * 1.5
 	actors.add_child(fence_visitor)
 	throw_guide.width = 4
@@ -249,7 +250,7 @@ func _ready() -> void:
 	throw_power.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(throw_power)
 	throw_power.hide()
-	for id in RoomLayout.YARD_STATIONS:
+	for id in YardStationView.SPRITES:
 		var marker := Button.new()
 		var entry: Dictionary = RoomLayout.YARD_STATIONS[id]
 		marker.text = entry.label
@@ -356,6 +357,7 @@ func _apply_editor_art() -> void:
 			anchor.z_index = -100 if e.layer == "background" else (100 if e.layer == "foreground" else 0)
 			anchor.set_meta("level_id", level.id)
 			anchor.set_meta("authored_visible", bool(e.get("visible", true)))
+			anchor.set_meta("decor_key", str(e.get("params", {}).get("key", "")) if e.script == "decor" else "")
 			var sprite := Sprite2D.new()
 			sprite.texture = textures[e.asset]
 			if RoomLayoutLoader.active_hd_asset_ids.has(e.asset):
@@ -398,7 +400,6 @@ func _pointer_down(point: Vector2, id: int) -> void:
 	var editor_hit := editor_element_at(point)
 	_drag_ball = not overview and ball_throw_enabled and (str(editor_hit.get("script", "")) == "ball" or (editor_hit.is_empty() and action_at(point) == "play"))
 	if _drag_ball and not editor_hit.is_empty():
-		ball_world = Vector2(float(editor_hit.x), float(editor_hit.y))
 		ball_target = ball_world
 	_throw_target = ball_world
 
@@ -481,8 +482,14 @@ func editor_element_at(point: Vector2) -> Dictionary:
 		for index in level.elements.size():
 			var element: Dictionary = level.elements[index]
 			if not element.visible or not LevelProject.is_interactive(element): continue
+			var decor_key := str(element.get("params", {}).get("key", "")) if element.script == "decor" else ""
+			if not decor_key.is_empty() and not editor_decor.has(decor_key): continue
 			if not assets.has(element.asset) or not RoomLayoutLoader.active_textures.has(element.asset): continue
-			if not LevelProject.element_rect(element, assets[element.asset]).has_point(world_point): continue
+			var moved := element.duplicate(true)
+			if element.script == "ball":
+				moved.x = ball_world.x
+				moved.y = ball_world.y
+			if not LevelProject.element_rect(moved, assets[element.asset]).has_point(world_point): continue
 			var priority: float = LevelProject.LAYERS.find(element.layer) * 1000000000.0 + (float(element.y) * 1000.0 if element.layer == "middle" else 0.0) + index
 			if priority >= best:
 				best = priority
@@ -496,16 +503,23 @@ func action_at(point: Vector2) -> String:
 		if prop_markers[id].visible and prop_markers[id].get_rect().has_point(point):
 			return RoomLayout.STATIONS[id].action
 	var where := screen_to_world(point)
+	if not RoomLayoutLoader.active_project.is_empty():
+		if in_yard and fence_visitor.visible and RoomLayoutLoader.has_script("visitor", "yard") and visitor_touch_rect().has_point(point): return "visitor"
+		if catch_active and _hits_pet(where) and RoomLayoutLoader.has_script("ball", "yard"): return "catch"
+		if _hits_pet(where):
+			if animator.pose == "sleep": return "rest"
+			if RoomLayoutLoader.has_script("pet", "yard" if in_yard else "home"): return "pet"
+		return ""
 	if in_yard:
 		if fence_visitor.visible and visitor_touch_rect().has_point(point): return "visitor"
-		if yard_potty.mess and _screen_rect(Rect2(YardPottyView.SPOT - Vector2(24, 36), Vector2(48, 42))).grow(12).has_point(point): return "yard_outing"
+		if yard_potty.mess and _screen_rect(Rect2(YardPottyView.spot() - Vector2(24, 36), Vector2(48, 42))).grow(12).has_point(point): return "yard_outing"
 		if catch_active and Rect2(pet_world - Vector2(90, 170) * presentation_scale, Vector2(180, 190) * presentation_scale).has_point(where): return "catch"
 		if ball_touch_rect().has_point(point): return "play"
 		if _hits_pet(where): return "pet"
 		var place := yard_place_at(point)
 		return "" if place.is_empty() else "yard_" + place
 	if ball_touch_rect().has_point(point): return "play"
-	var water_center := world_to_screen(HomeDrink.BOWL)
+	var water_center := world_to_screen(HomeDrink.bowl())
 	if water_touch_rect().has_point(point) and point.distance_to(water_center) < point.distance_to(world_to_screen(RoomLayout.STATIONS.food.position - Vector2(0, 22))): return "drink"
 	# Crate/bowl in front of the puppy keep the same priority as Y-sorted rendering.
 	for id in ["toys", "food"]:
@@ -518,6 +532,7 @@ func action_at(point: Vector2) -> String:
 	return ""
 
 func yard_place_at(point: Vector2) -> String:
+	if not RoomLayoutLoader.active_project.is_empty(): return ""
 	if not in_yard or overview or yard_course.playing or not yard_water.kind.is_empty() or catch_active or not hide_phase.is_empty(): return ""
 	for id in YARD_HIT_ORDER:
 		# Small props keep a finger-sized target without growing the large bushes.
@@ -643,7 +658,7 @@ func update_placement() -> void:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
 		_base_pixel_scale = maxi(1, floori(available_width / (RoomLayout.SIZE.x / _render_pixel_size)))
-		var top := maxf(hud_bottom + 54, yard_controls_bottom + ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) if in_yard else hud_bottom + 54
+		var top := maxf(hud_bottom + 54, yard_controls_bottom + ceilf(YardStationView.SPRITES.size() / float(YARD_COLUMNS)) * 48) if in_yard else hud_bottom + 54
 		_available_rect = Rect2(0, top, size.x, maxf(1, stage_height - top - 12))
 	world.scale = Vector2.ONE / _render_pixel_size
 	_apply_pixel_scale(_wanted_zoom())
@@ -1002,23 +1017,23 @@ func _sync_layers() -> void:
 	for id in yard_nodes:
 		yard_nodes[id].set_weather(yard_weather.kind, yard_weather.night)
 		# Keep the existing visibility of props while the course is unfolded.
-		yard_nodes[id].visible = in_yard and (id not in ["shade", "puddle", "sprinkler"] or not yard_course.playing)
+		yard_nodes[id].visible = RoomLayoutLoader.active_project.is_empty() and in_yard and (id not in ["shade", "puddle", "sprinkler"] or not yard_course.playing)
 	var garden_art: RoomArtwork = yard_nodes.garden.art
 	if garden_art.garden_key != backdrop.garden_key:
 		garden_art.garden_key = backdrop.garden_key
 		garden_art.garden_state = backdrop.garden_state
 		garden_art.queue_redraw()
-	yard_potty.visible = in_yard and not yard_course.playing
-	yard_rest.visible = in_yard and not yard_course.playing
+	yard_potty.visible = in_yard and not yard_course.playing and RoomLayoutLoader.allows("potty", "yard")
+	yard_rest.visible = in_yard and not yard_course.playing and RoomLayoutLoader.allows("drink", "yard")
 	yard_course.visible = in_yard
 	var catch_t := 1.0 - ball_catch_left / 0.9
 	var catch_lift := sin(clampf(catch_t / 0.7, 0, 1) * PI) * (24 if ball_catch_precise else 8) if ball_catch_left > 0 else 0.0
 	animator.position.y = -roundf((jump_lift + catch_lift) / 3) * 3
 	if ball_catch_left > 0: animator.rotation = sin(catch_t * PI) * (-0.06 if animator.facing_left else 0.06)
-	yard_weather.visible = in_yard
+	yard_weather.visible = in_yard and RoomLayoutLoader.allows("yard_weather", "yard")
 	yard_water.wet = yard_weather.kind != "sun" or yard_water.kind == "puddle"
 	yard_nodes.puddle.set_puddle_wet(yard_water.wet)
-	yard_water.visible = in_yard and not yard_course.playing
+	yard_water.visible = in_yard and not yard_course.playing and RoomLayoutLoader.allows("water", "yard")
 	yard_water.pet_world = pet_world
 	water_drops.kind = yard_water.kind
 	water_drops.phase = yard_water.phase
@@ -1054,7 +1069,7 @@ func _sync_layers() -> void:
 	puppy.visible = not (in_yard and hide_phase in ["hiding", "guess"])
 	if not puppy.visible: return_button.hide()
 	hide_tail.visible = in_yard and hide_phase == "guess" and hide_spot >= 0
-	if hide_tail.visible: hide_tail.position = Vector2(350 + hide_spot * 400 + 70, 250)
+	if hide_tail.visible: hide_tail.position = RoomLayout.yard_point("bush_%d" % hide_spot) + Vector2(70, -52)
 	catch_ring.visible = in_yard and catch_active
 	# Places are touched directly in the scene. Labelled buttons appear only on the
 	# whole-yard map; in the normal view an untried place gets a quiet twinkle.
@@ -1067,14 +1082,14 @@ func _sync_layers() -> void:
 		marker.text = str(int(id.trim_prefix("bush_")) + 1) if id.begins_with("bush_") else ""
 		marker.custom_minimum_size = Vector2(44, 44)
 		marker.size = Vector2(44, 44)
-		var index := RoomLayout.YARD_STATIONS.keys().find(id)
-		marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(RoomLayout.YARD_STATIONS.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
+		var index := YardStationView.SPRITES.keys().find(id)
+		marker.position = Vector2(12 + (index % YARD_COLUMNS) * (size.x - 68) / (YARD_COLUMNS - 1), maxf(yard_controls_bottom, render_rect.position.y - ceilf(YardStationView.SPRITES.size() / float(YARD_COLUMNS)) * 48) + (index / YARD_COLUMNS) * 48)
 		marker.accessibility_name = "Sprzątnij kupę" if id == "outing" and yard_potty.mess else RoomLayout.YARD_STATIONS[id].label
-		marker.visible = overview and in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < lower_limit
+		marker.visible = not editor_art and overview and in_yard and not yard_course.playing and yard_water.kind.is_empty() and not catch_active and marker.position.x >= 2 and marker.get_rect().end.x <= size.x - 2 and marker.position.y >= maxf(hud_bottom + 8, yard_controls_bottom) and marker.get_rect().end.y < lower_limit
 		var sparkle: Control = yard_sparkles[id]
 		var place := _screen_rect(RoomLayout.YARD_STATIONS[id].bounds)
 		sparkle.position = Vector2(place.get_center().x - sparkle.size.x / 2, place.position.y - sparkle.size.y - 2)
-		sparkle.visible = yard_free and not overview and not yard_seen.has(id) and sparkle.position.x >= 2 and sparkle.position.x + sparkle.size.x <= size.x - 2 and sparkle.position.y >= hud_bottom + 8 and sparkle.position.y + sparkle.size.y < lower_limit
+		sparkle.visible = not editor_art and yard_free and not overview and not yard_seen.has(id) and sparkle.position.x >= 2 and sparkle.position.x + sparkle.size.x <= size.x - 2 and sparkle.position.y >= hud_bottom + 8 and sparkle.position.y + sparkle.size.y < lower_limit
 	effect_label.visible = effect_left > 0
 	effect_label.position = Vector2(55, -150) * presentation_scale - Vector2(0, (1.7 - effect_left) * 12)
 	effect_label.modulate.a = minf(1, effect_left)
@@ -1087,7 +1102,7 @@ func set_yard(enabled: bool) -> void:
 	if not enabled: fence_visitor.present("")
 	backdrop.kind = "yard" if enabled else "room"
 	backdrop.queue_redraw()
-	wall_clock.visible = not enabled
+	wall_clock.visible = not enabled and RoomLayoutLoader.active_project.is_empty()
 	# Editor anchors carry a level_id meta tag — swap visibility on yard toggle.
 	for layer in [world.background, actors, world.foreground]:
 		for child in layer.get_children():
@@ -1120,7 +1135,7 @@ func present_hide(phase: String, spot: int) -> void:
 
 func reveal_hide(spot: int) -> void:
 	cancel_activity()
-	pet_world = Vector2(350 + spot * 400, 302)
+	pet_world = RoomLayout.yard_stand("bush_%d" % spot)
 	target_world = pet_world
 	hide_phase = ""
 	hide_spot = -1
@@ -1140,11 +1155,11 @@ func animate_ball_catch(precise: bool) -> void:
 	_sync_layers()
 
 func water_touch_rect() -> Rect2:
-	var center := world_to_screen(HomeDrink.BOWL)
+	var center := world_to_screen(HomeDrink.bowl())
 	return Rect2(center - Vector2(22, 22), Vector2(44, 44))
 
 func visitor_touch_rect() -> Rect2:
-	var rect := _screen_rect(Rect2(YardVisitors.FENCE - Vector2(35, 95), Vector2(80, 95)))
+	var rect := _screen_rect(Rect2(YardVisitors.fence() - Vector2(35, 95), Vector2(80, 95)))
 	var target := rect.size.max(Vector2(44, 44))
 	return Rect2(rect.get_center() - target / 2, target)
 
@@ -1163,3 +1178,11 @@ func _sync_held_ball() -> void:
 	ball_target = ball_world
 	_ball_lift = 0
 	ball_art.position = (ball_world / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
+
+func sync_editor_decor(selected: Array) -> void:
+	editor_decor = selected.duplicate()
+	for layer in [world.background, actors, world.foreground]:
+		for child in layer.get_children():
+			var key: String = child.get_meta("decor_key", "")
+			if key.is_empty(): continue
+			child.visible = child.get_meta("authored_visible", true) and child.get_meta("level_id", "") == ("yard" if in_yard else "home") and selected.has(key)

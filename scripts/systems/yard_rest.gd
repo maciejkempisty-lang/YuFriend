@@ -1,9 +1,9 @@
 class_name YardRest
 extends RefCounted
 
-const BED := Vector2(220, 315)
-const DRINK := Vector2(276, 319)
-const BOWL := Vector2(330, 325)
+static func bed() -> Vector2: return RoomLayout.yard_stand("bed")
+static func drink() -> Vector2: return RoomLayout.yard_stand("drink")
+static func bowl() -> Vector2: return RoomLayout.yard_point("drink")
 var phase := ""
 var elapsed := 0.0
 var remaining := 0.0
@@ -18,6 +18,7 @@ func note_play() -> void:
 	after_play = true
 	idle_left = 6
 func readiness(s: GameSession, kind: String) -> String:
+	if not RoomLayoutLoader.allows("rest" if kind == "bed" else "drink", "yard"): return "Tego miejsca nie ma na podwórku."
 	if kind not in ["bed", "drink"]: return ""
 	if not s.in_yard or not s.writable or s.suspended or s.busy(false) or s.is_sleeping(): return "Dokończmy obecną czynność, potem chwila w cieniu."
 	if DailyRhythm.phase(s.pet, s._local_now()) == "night": return "Na noc wracamy do legowiska w domu."
@@ -41,7 +42,7 @@ func start(s: GameSession, kind: String, chain: bool = false) -> bool:
 	remaining = 90
 	s.activity = "yard_rest"
 	s.activity_left = 0
-	s.destination_requested.emit(BED if kind == "bed" else DRINK)
+	s.destination_requested.emit(bed() if kind == "bed" else drink())
 	s.clip_requested.emit("walk")
 	s.attention_requested.emit(false)
 	s.say("Chwila odpoczynku w cieniu." if kind == "bed" else "Kilka łyków świeżej wody.")
@@ -135,6 +136,7 @@ func return_home(s: GameSession) -> bool:
 	after_play = false
 	s._cancel_motion()
 	s.in_yard = false
+	RoomLayoutLoader.select_level("home")
 	s.night_sleep = DailyRhythm.phase(s.pet, s._local_now()) == "night"
 	s.pet.resting = (nap or s.night_sleep) and s.pet.needs.energy < NeedsSystem.WAKE_ENERGY
 	s.activity = "sleep" if s.is_sleeping() else "idle"

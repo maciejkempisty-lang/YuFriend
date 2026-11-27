@@ -62,7 +62,7 @@ func run() -> void:
   press_command()
   until('slalom')
   until('cue')
-  check(app.session.timed_course.segment == 1 and app.room.pet_world.distance_to(YardCourse.PATH[-1]) < 1, 'real slalom reaches hurdle')
+  check(app.session.timed_course.segment == 1 and app.room.pet_world.distance_to(YardCourse.path()[-1]) < 1, 'real slalom reaches hurdle')
   press_command()
   until('jump')
   for i in 13: tick()
@@ -71,7 +71,7 @@ func run() -> void:
   await RenderingServer.frame_post_draw
   root.get_texture().get_image().save_png('/tmp/yuf-timed-jump-%d.png' % width)
   until('cue')
-  check(app.session.timed_course.segment == 2 and app.room.pet_world.distance_to(YardCourse.PODIUM) < 1, 'lands and reaches podium')
+  check(app.session.timed_course.segment == 2 and app.room.pet_world.distance_to(YardCourse.podium()) < 1, 'lands and reaches podium')
   press_command()
   until('')
   await frames()

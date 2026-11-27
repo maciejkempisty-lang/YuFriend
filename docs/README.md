@@ -16,6 +16,8 @@ Build 42: wszystkie 8 zabaw widoczne od razu w siatce menu; poprawione trzymanie
 
 Build 43: [Agility na czas](agility-na-czas.md) jako dziewiąta zabawa, z zachowaniem spokojnego toru i treningu Zostań.
 
+Aktualizacja 27 listopada: [wdrożenie handoff scene-layers](scene-layers-wdrozenie.md) — projekt `ver2.json`, dostępność mechanik według elementów edytora i migracja pozycji domu/ogrodu.
+
 ## Mapa dokumentacji
 
 | Dokument | Co w nim znajdziesz |

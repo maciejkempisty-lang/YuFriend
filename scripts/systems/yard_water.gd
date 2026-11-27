@@ -1,7 +1,8 @@
 class_name YardWater
 extends RefCounted
 
-const SPOTS := {"puddle": Vector2(420, 315), "sprinkler": Vector2(1230, 315)}
+static func spots() -> Dictionary:
+	return {"puddle": RoomLayout.yard_stand("puddle"), "sprinkler": RoomLayout.yard_stand("sprinkler")}
 const LABELS := {"puddle": "Kałuża", "sprinkler": "Zraszacz"}
 const MAX_SPLASHES := 3
 var kind := ""
@@ -23,7 +24,8 @@ func readiness(s: GameSession) -> String:
 	return ""
 
 func start(s: GameSession, spot: String) -> bool:
-	if not SPOTS.has(spot): return false
+	if not RoomLayoutLoader.allows("water", "yard", {"spot": spot}): return false
+	if not spots().has(spot): return false
 	var reason := readiness(s)
 	if reason.is_empty(): reason = s.weather.water_reason(s, spot)
 	if not reason.is_empty():
@@ -39,7 +41,7 @@ func start(s: GameSession, spot: String) -> bool:
 	s.activity = "water"
 	s.activity_left = 0
 	s.pose = "stand"
-	s.destination_requested.emit(SPOTS[kind] - Vector2(24, 0))
+	s.destination_requested.emit(spots()[kind] - Vector2(24, 0))
 	s.clip_requested.emit("run")
 	s.attention_requested.emit(false)
 	s.say("%s! Za chwilę wybierz Plusk!" % LABELS[kind])
@@ -58,7 +60,7 @@ func splash(s: GameSession) -> bool:
 	if phase != "ready" or not safe(s): return false
 	phase = "run"
 	s.activity_cancelled.emit()
-	s.destination_requested.emit(SPOTS[kind] + Vector2(24 if splashes % 2 == 0 else -24, 0))
+	s.destination_requested.emit(spots()[kind] + Vector2(24 if splashes % 2 == 0 else -24, 0))
 	s.clip_requested.emit("run")
 	s.player_activity()
 	s.changed.emit()

@@ -23,7 +23,8 @@ func cancel() -> void:
 	phase = ""
 	phase_time = 0
 func start(s: GameSession) -> bool:
-	var reason := s.course.readiness(s)
+	if not RoomLayoutLoader.allows("timed_course", "yard"): return false
+	var reason := s.course.readiness(s, "timed_course")
 	if not reason.is_empty():
 		s.say(reason)
 		return false
@@ -79,13 +80,13 @@ func arrived(s: GameSession) -> void:
 		"approach": _offer(s)
 		"slalom":
 			step += 1
-			if step < YardCourse.PATH.size(): _move(s, YardCourse.PATH[step])
+			if step < YardCourse.path().size(): _move(s, YardCourse.path()[step])
 			else:
 				segment = 1
 				_offer(s)
 		"jump":
 			_set_phase("podium")
-			_move(s, YardCourse.PODIUM)
+			_move(s, YardCourse.podium())
 		"podium":
 			segment = 2
 			_offer(s)
@@ -105,7 +106,7 @@ func advance(s: GameSession, delta: float) -> void:
 			return
 		if phase == "countdown" and phase_time >= 3:
 			_set_phase("approach")
-			_move(s, YardCourse.PATH[0])
+			_move(s, YardCourse.path()[0])
 		elif phase == "cue" and phase_time >= CUE_AT + WINDOW:
 			if not judged:
 				judged = true
@@ -123,10 +124,10 @@ func _proceed(s: GameSession) -> void:
 		0:
 			step = 1
 			_set_phase("slalom")
-			_move(s, YardCourse.PATH[step])
+			_move(s, YardCourse.path()[step])
 		1:
 			_set_phase("jump")
-			s.course_jump_requested.emit(YardCourse.LANDING)
+			s.course_jump_requested.emit(YardCourse.landing())
 		2:
 			_set_phase("finish")
 			s.clip_requested.emit("sit_down")

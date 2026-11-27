@@ -35,6 +35,7 @@ func setup(owner_app: GameUI) -> void:
 
 func _available(id: String) -> bool:
 	var s := app.session
+	if not RoomLayoutLoader.allows_action("yard_" + id, "yard"): return false
 	if not s.active or not s.in_yard or not s.writable or s.suspended or s.is_sleeping(): return false
 	if not app.app_foreground or app.selected_tab != "care" or app.room.overview or app._dialog_open(): return false
 	if s.busy() or not s.invitation.is_empty() or YardRoutines.has_mess(s): return false

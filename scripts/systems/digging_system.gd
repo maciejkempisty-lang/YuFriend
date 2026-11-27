@@ -26,11 +26,12 @@ static func readiness(s: GameSession) -> String:
 	if int(s.pet.exploration.total) >= 1000000: return "Kolekcja jest już pełna przygód."
 	return ""
 static func start(s: GameSession) -> bool:
+	if not RoomLayoutLoader.allows("dig", "yard"): return false
 	var reason := readiness(s)
 	if not reason.is_empty():
 		s.say(reason)
 		return false
-	s.move_to(Vector2(650, 315))
+	s.move_to(RoomLayout.yard_stand("dig"))
 	s.activity = "dig_walk"
 	s.say("Sprawdźmy, co kryje piaskownica!")
 	return true

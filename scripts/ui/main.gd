@@ -235,7 +235,7 @@ func _ready() -> void:
 	_fit_room()
 	add_child(session)
 	session.changed.connect(_refresh)
-	session.visitor_appeared.connect(func(): room.look_at_world(Vector2(940, 300)))
+	session.visitor_appeared.connect(func(): room.look_at_world(RoomLayout.yard_stand("fence")))
 	session.feedback.connect(_show_feedback)
 	session.care_completed.connect(_show_gain)
 	session.clip_requested.connect(room.play_clip)
@@ -259,7 +259,7 @@ func _ready() -> void:
 	room.return_button.pressed.connect(session.player_activity)
 	room.care_requested.connect(_on_room_care_requested)
 	room.editor_interaction_requested.connect(_on_editor_interaction)
-	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
+	room.ball_thrown.connect(func(target: Vector2): LevelActions.run(session, "ball", {"target": target, "origin": room.ball_world}))
 	session.ball_throw_requested.connect(room.throw_ball)
 	session.fetch_return_requested.connect(room.return_fetch_ball)
 	room.fetch_returned.connect(session.finish_fetch_return)
@@ -779,7 +779,7 @@ func _apply_companion_message(data: Dictionary) -> void:
 	companion_label.text = data.text
 	companion_label.max_lines_visible = -1 if companion_detail_expanded else 2
 	companion_action.text = data.label
-	companion_action.visible = not str(data.action).is_empty()
+	companion_action.visible = not str(data.action).is_empty() and _action_available(str(data.action))
 	companion_action.disabled = not data.enabled
 	companion_action.accessibility_name = "%s. %s" % [data.text, data.label]
 	companion_later.visible = data.kind == "invitation"
@@ -827,12 +827,13 @@ func _companion_act() -> void:
 		_refresh_companion()
 		return
 	var action: String = current.action
+	if not _action_available(action): return
 	if action.begins_with("invite:"): session.accept_invitation()
 	elif action == "album": _select_tab("journal")
 	elif action == "yard": _toggle_yard()
-	elif action == "outing": YardRoutines.start_outing(session)
+	elif action == "outing": LevelActions.run(session, "potty")
 	elif action == "play": _show_play_menu()
-	elif action == "cuddle": session.start_cuddle()
+	elif action == "cuddle": LevelActions.run(session, "cuddle")
 	elif not action.is_empty(): session.act(action)
 	_update_attention()
 	_refresh_companion()
@@ -844,8 +845,7 @@ func _build_care() -> VBoxContainer:
 	yard_toolbar = outdoors
 	add_child(outdoors)
 	potty_action = _button("Na potrzebę", func():
-		if YardRoutines.has_mess(session): YardRoutines.clean_up(session)
-		else: YardRoutines.start_outing(session))
+		LevelActions.run(session, "potty"))
 	outdoors.add_child(potty_action)
 	potty_action.hide()
 	yard_button = _button("Podwórko", _toggle_yard)
@@ -1008,7 +1008,9 @@ func _build_journal() -> VBoxContainer:
 	album_actions.add_child(_button("Zrób zdjęcie", func():
 		_select_tab("care")
 		_take_photo()))
-	album_actions.add_child(_button("Dekoracje", _show_decor))
+	var decor_button := _button("Dekoracje", _show_decor)
+	decor_button.visible = RoomLayoutLoader.allows("decor", "home")
+	album_actions.add_child(decor_button)
 	box.add_child(_button("Kolekcja wykopanych skarbów", func(): ProgressionPanels.collection(self)))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1209,7 +1211,7 @@ func _build_play_dialogs() -> void:
 	choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	play_menu.add_child(choices_scroll)
 	choices_scroll.add_child(choices)
-	choices.add_child(_label("Wybierz jedną z 9 zabaw", 16, INK, true))
+	choices.add_child(_label("Wybierz zabawę", 16, INK, true))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 8)
@@ -1252,7 +1254,7 @@ func _build_play_dialogs() -> void:
 	play_view.released_at.connect(session.play_release)
 	play_cue = _button("Szukaj!", session.play_cue)
 	content.add_child(play_cue)
-	play_again = _button("Jeszcze raz", func(): session.start_touch_game(session.play.kind))
+	play_again = _button("Jeszcze raz", func(): LevelActions.run(session, RoomLayoutLoader.play_script(session.play.kind), {"kind": session.play.kind}))
 	content.add_child(play_again)
 	box.add_child(_label("Możesz zakończyć w dowolnej chwili.", 12, MUTED))
 	play_dialog.visibility_changed.connect(func():
@@ -1270,7 +1272,7 @@ func _update_attention() -> void:
 	session.emotional_foreground = app_foreground
 	session.attention_available = app_foreground and selected_tab == "care" and not _dialog_open() and not room.overview and not yard_menu.visible
 	if room.ambient_life.is_node_ready() and session.pet != null:
-		room.ambient_life.sync(room, session, app_foreground and selected_tab == "care" and room.visible and not _dialog_open())
+		room.ambient_life.sync(room, session, RoomLayoutLoader.active_project.is_empty() and app_foreground and selected_tab == "care" and room.visible and not _dialog_open())
 	if companion_card != null and not session.attention_available:
 		companion_card.hide()
 		if companion_notice.visible:
@@ -1283,16 +1285,20 @@ func _show_play_menu() -> void:
 	if not reason.is_empty():
 		session.say(reason)
 		return
+	for button in play_menu.find_children("Play_*", "Button", true, false):
+		button.visible = RoomLayoutLoader.allows_play(str(button.name).trim_prefix("Play_"), _level_id())
 	play_menu.popup()
 	_position_dialog(play_menu, Vector2i(360, 520))
 
 func _choose_play(kind: String) -> void:
+	if not RoomLayoutLoader.allows_play(kind, _level_id()): return
 	play_menu.hide()
-	if kind == "agility": session.timed_course.start(session)
+	if kind == "agility": LevelActions.run(session, "timed_course")
 	elif kind == "ball": _aim_ball()
-	else: session.start_touch_game(kind)
+	else: LevelActions.run(session, RoomLayoutLoader.play_script(kind), {"kind": kind})
 
 func _aim_ball() -> void:
+	if not _available("ball"): return
 	_select_tab("care")
 	room.focus_left = 0
 	room.look_at_world(room.ball_world)
@@ -1307,6 +1313,7 @@ func _show_touch_game(kind: String) -> void:
 	_position_dialog(play_dialog, Vector2i(350, 500))
 
 func _select_tab(key: String) -> void:
+	if key == "training" and not _available("training"): return
 	yard_menu.close()
 	if key != selected_tab:
 		effects.play_effect("ui")
@@ -1530,20 +1537,22 @@ func _choose_trick(key: String) -> void:
 	_refresh()
 
 func _care_action(key: String) -> void:
+	if not _action_available(key): return
 	if session.in_yard and key not in ["pet", "play", "rest"]:
 		if not session.change_yard(false): return
 		if room.in_yard: room.set_yard(false)
 	if key == "train": _select_tab("training")
 	elif key == "play": _show_play_menu()
-	elif key == "pet" and not session.is_sleeping(): session.start_cuddle()
+	elif key == "pet" and not session.is_sleeping() and _available("cuddle"): LevelActions.run(session, "cuddle")
 	else: session.act(key)
 
 func _train(guided: bool) -> void:
+	if not _available("training"): return
 	if selected_trick == "sit":
 		_train_sit(guided)
 		return
 	if not guided or selected_trick not in ["lie", "stay"]:
-		session.begin_training(selected_trick, guided)
+		LevelActions.run(session, "training", {"trick": selected_trick, "guided": guided})
 		return
 	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
 	var reason := session.training.readiness(session.pet, selected_trick)
@@ -1566,7 +1575,7 @@ func _train(guided: bool) -> void:
 	gesture.completed.connect(func():
 		dialog.hide()
 		if not session.suspended and selected_tab == "training" and selected_trick == key:
-			session.begin_training(key, true))
+			LevelActions.run(session, "training", {"trick": key, "guided": true}))
 	add_child(dialog)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible:
@@ -1622,7 +1631,7 @@ func _train_sit(full_gesture: bool) -> void:
 		return
 	var mastery := float(session.pet.skills.sit.mastery)
 	if mastery >= 80 and not full_gesture:
-		session.begin_training("sit", false, true, marker_gentle.button_pressed)
+		LevelActions.run(session, "training", {"trick": "sit", "guided": false, "marker": true, "gentle": marker_gentle.button_pressed})
 		return
 	if is_instance_valid(gesture_dialog) and gesture_dialog.visible: return
 	var reason := session.training.readiness(session.pet, "sit")
@@ -1650,7 +1659,7 @@ func _train_sit(full_gesture: bool) -> void:
 	lure.completed.connect(func():
 		dialog.hide()
 		if not session.suspended and selected_tab == "training" and selected_trick == "sit":
-			session.begin_training("sit", true, true, marker_gentle.button_pressed))
+			LevelActions.run(session, "training", {"trick": "sit", "guided": true, "marker": true, "gentle": marker_gentle.button_pressed}))
 	add_child(dialog)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible:
@@ -1761,13 +1770,14 @@ func _refresh() -> void:
 	if room.backdrop.decor != pet.decor:
 		room.backdrop.decor = pet.decor.duplicate()
 		room.backdrop.queue_redraw()
+	room.sync_editor_decor(pet.decor)
 	_refresh_photos()
 	if room.animator.sprite.material is ShaderMaterial:
 		room.animator.sprite.material.set_shader_parameter("dirt", clampf((80.0 - float(pet.needs.hygiene)) / 60.0, 0, 1))
 	_update_attention()
 	room.present_hide(session.hide_game.phase, session.hide_game.hiding_spot if session.hide_game.kind == "dog" else -1)
 	room.catch_active = session.fetch.catching
-	room.ball_throw_enabled = session.play_readiness().is_empty()
+	room.ball_throw_enabled = _available("ball") and session.play_readiness().is_empty()
 	_refresh_companion()
 	play_hint.text = session.play.hint()
 	play_cue.disabled = false
@@ -1802,6 +1812,7 @@ func _refresh() -> void:
 	for key in care_buttons:
 		var button: IconActionButton = care_buttons[key]
 		var need: String = ACTION_NEEDS[key]
+		button.visible = _action_available(key)
 		button.need_value = float(pet.needs[need])
 		button.caption = LOW_LABELS[key] if button.need_value < 30 else ACTION_LABELS[key]
 		# An unavailable action stays tappable so the session can explain why.
@@ -1820,9 +1831,9 @@ func _refresh() -> void:
 	yard_command_button.disabled = session.outdoor_commands.phase == "perform" or (command == "come" and session.busy() and not session.outdoor_commands.running())
 	# Location shortcuts appear in the map view; the care panel stays icon-only.
 	yard_button.text = "Do domu" if session.in_yard else "Podwórko"
-	yard_button.visible = room.overview
-	yard_bath_button.visible = room.overview and command.is_empty()
-	sniff_button.visible = room.overview and session.in_yard
+	yard_button.visible = room.overview and _available("portal")
+	yard_bath_button.visible = room.overview and command.is_empty() and RoomLayoutLoader.allows("bath", "home")
+	sniff_button.visible = room.overview and session.in_yard and (_available("hide") or _available("sniff"))
 	sniff_button.text = "Przerwij" if session.hide_game.active() else "Chowany"
 	sniff_button.disabled = (session.busy(false) and not session.hide_game.active()) or not session.writable
 	care_status.text = ("Teraz! Dotknij pieska · premia za chwyt" if session.fetch.catching else fetch_hint(pet.yard_record)) if session.in_yard else _activity_status()
@@ -1839,7 +1850,7 @@ func _refresh() -> void:
 	if session.hide_game.active(): care_status.text = session.hide_game.hint()
 	if session.outdoor_commands.phase == "praise": care_status.text = "Udało się! Pochwal, aby zaliczyć trening."
 	elif session.outdoor_commands.phase == "perform": care_status.text = "Wraca z piłką…" if command == "come" else "Zostań… spokojnie czekamy."
-	var visiting := session.visitors.active() and session.in_yard
+	var visiting := session.visitors.active() and session.in_yard and _available("visitor")
 	room.fence_visitor.present(session.visitors.kind if visiting else "")
 	visitor_toolbar.visible = visiting and selected_tab == "care"
 	room.yard_controls_bottom = header.get_rect().end.y + 64
@@ -1858,7 +1869,7 @@ func _refresh() -> void:
 		room.update_placement()
 	room.yard_weather.night = DailyRhythm.phase(pet, session._local_now()) == "night"
 	room.yard_weather.animate = app_foreground and selected_tab == "care" and not _dialog_open()
-	var water_play := session.water.active() and session.in_yard
+	var water_play := session.water.active() and session.in_yard and _available("water")
 	room.yard_water.kind = session.water.kind if water_play else ""
 	room.yard_water.phase = session.water.phase if water_play else ""
 	water_splash_button.visible = water_play
@@ -1913,7 +1924,7 @@ func _refresh() -> void:
 	var potty_busy := session.activity in ["outing_walk", "outing_pause", "outing_praise"]
 	var cleanup_ready := not session.visitors.active() and session.invitation.is_empty() and YardRoutines.has_mess(session) and (not session.busy(false) or session.activity == "outing_praise")
 	var potty_ready := not session.visitors.active() and session.invitation.is_empty() and YardRoutines.due(session) and YardRoutines.available(session)
-	potty_action.visible = session.in_yard and (potty_busy or cleanup_ready or potty_ready)
+	potty_action.visible = session.in_yard and _available("potty") and (potty_busy or cleanup_ready or potty_ready)
 	potty_action.text = "Sprzątnij" if cleanup_ready else "Na potrzebę"
 	potty_action.disabled = not (cleanup_ready or potty_ready) or not session.writable
 	if potty_action.visible:
@@ -1925,12 +1936,13 @@ func _refresh() -> void:
 		if cleanup_ready: care_status.text = "Zbierz kupę do woreczka · Sprzątnij"
 	room.yard_potty.present(YardRoutines.has_mess(session), 1.0 - session.activity_left / 4.0 if session.activity == "outing_pause" else 0.0)
 	room.yard_potty.animate = app_foreground and not _dialog_open()
+	tab_buttons.training.visible = _available("training")
 	var mastery: float = pet.skills[selected_trick].mastery
 	mastery_label.text = "%s · %s" % [TrainingSystem.LABELS[selected_trick], "Umiem! 100%" if mastery >= 100 else "%d%%" % roundi(mastery)]
 	mastery_bar.value = mastery
 	practice_label.text = "Forma %d%% · ćwiczcie we własnym rytmie" % roundi(PracticeSystem.form(pet, selected_trick))
 	var reason := session.training.readiness(pet, selected_trick)
-	guided_button.disabled = not session.writable or session.busy(false) or not reason.is_empty()
+	guided_button.disabled = not _available("training") or not session.writable or session.busy(false) or not reason.is_empty()
 	guidance_toggle.disabled = session.training.phase != "idle"
 	guided_button.text = "Pokaż gest" if guidance_toggle.button_pressed else "Powiedz komendę"
 	for key in trick_buttons:
@@ -2328,7 +2340,7 @@ func _show_yard_rest() -> void:
 		var kind: String = option[0]
 		box.add_child(_button(option[1], func():
 			dialog.hide()
-			session.yard_rest.start(session, kind)))
+			LevelActions.run(session, "rest" if kind == "bed" else "drink")))
 	add_child(dialog)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
@@ -2336,6 +2348,7 @@ func _show_yard_rest() -> void:
 	dialog.popup()
 
 func _toggle_yard(animated: bool = true) -> void:
+	if not RoomLayoutLoader.allows("portal", _level_id(), {"target": "home" if session.in_yard else "yard"}): return
 	yard_menu.close()
 	if session.in_yard and session.yard_rest.phase == "rest":
 		session.change_yard(false)
@@ -2363,6 +2376,8 @@ func _on_room_care_requested(action: String) -> void:
 	_room_care_action(action)
 
 func _on_editor_interaction(_element_id: String, script_id: String, element: Dictionary) -> void:
+	element = RoomLayoutLoader.element_by_id(_element_id, "yard" if session.in_yard else "home")
+	if element.is_empty() or element.script != script_id: return
 	var params: Dictionary = element.get("params", {})
 	match script_id:
 		"portal":
@@ -2385,16 +2400,23 @@ func _on_editor_interaction(_element_id: String, script_id: String, element: Dic
 			var action := "play" if script_id == "ball" else script_id
 			_room_care_action(action)
 		"bath": _show_bath()
-		"cuddle": session.start_cuddle()
-		"drink": session.home_drink.start(session)
-		"sniff": session.start_sniff(int(params.get("spot", -1)))
-		"course": session.course.start(session)
-		"timed_course": session.timed_course.start(session)
-		"water": session.water.start(session, str(params.get("spot", "puddle")))
-		"hide": session.start_hide(str(params.get("kind", "bush")), int(params.get("seed", 0)))
-		"visitor": session.visitors.start(session, str(params.get("guest", "bird")))
+		"training":
+			_select_tab("training")
+			var trick := str(params.get("trick", "sit"))
+			if TrainingSystem.LABELS.has(trick): _choose_trick(trick)
+		"touch_play", "skill_play":
+			if params.get("kind", "all") == "all": _show_play_menu()
+			else: LevelActions.run(session, script_id, params)
+		"sniff":
+			if session.hide_game.active(): session.choose_hide_bush(int(params.get("spot", -1)))
+			else: LevelActions.run(session, "sniff", params)
+		"garden": _show_garden()
+		"decor":
+			if str(params.get("key", "")).is_empty(): _show_decor()
+			else: LevelActions.run(session, script_id, params)
+		"outdoor_commands": OutdoorPanels.command(self)
 		"none": pass
-		_: push_warning("Nieobsługiwany skrypt edytora: " + script_id)
+		_: LevelActions.run(session, script_id, params)
 
 func _editor_script_message(params: Dictionary, element: Dictionary) -> void:
 	var message := str(params.get("message", ""))
@@ -2410,8 +2432,9 @@ func _show_editor_message(text: String, duration: float, element: Dictionary, fr
 	_position_feedback()
 
 func _room_care_action(action: String) -> void:
+	if not _action_available(action): return
 	if action == "drink":
-		session.home_drink.start(session)
+		LevelActions.run(session, "drink")
 		return
 	if action == "visitor":
 		_show_visitor_interactions()
@@ -2423,23 +2446,21 @@ func _room_care_action(action: String) -> void:
 		var place := action.trim_prefix("yard_")
 		if place == "gate": _toggle_yard()
 		elif place == "shade": _show_yard_rest()
-		elif place == "course": session.course.start(session)
-		elif place == "dig": DiggingSystem.start(session)
-		elif place in YardWater.SPOTS: session.water.start(session, place)
+		elif place == "course": LevelActions.run(session, "course")
+		elif place == "dig": LevelActions.run(session, "dig")
+		elif place in YardWater.spots(): LevelActions.run(session, "water", {"spot": place})
 		elif place == "garden": _show_garden()
-		elif place == "outing":
-			if YardRoutines.has_mess(session): YardRoutines.clean_up(session)
-			elif not YardRoutines.start_outing(session): session.say("Dziś już byliśmy. Możecie spokojnie pobyć na podwórku." if not YardRoutines.due(session) else "Zakończmy obecną czynność przed wyjściem.")
+		elif place == "outing": LevelActions.run(session, "potty")
 		elif place == "fetch":
 			if session.play_readiness().is_empty(): _aim_ball()
 		elif place.begins_with("bush_"):
 			var spot := int(place.trim_prefix("bush_"))
 			if session.hide_game.active(): session.choose_hide_bush(spot)
-			else: session.start_sniff(spot)
+			else: LevelActions.run(session, "sniff", {"spot": spot})
 		return
 	if action == "door": _toggle_yard()
 	elif session.in_yard and action == "play":
-		session.throw_ball(YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), room.ball_world)
+		LevelActions.run(session, "ball", {"target": YardFetch.target(room.ball_world, Vector2(100 if room.ball_world.x < 720 else -100, 0)), "origin": room.ball_world})
 	else: session.act(action)
 
 func _show_bath() -> void:
@@ -2519,6 +2540,7 @@ func _show_photo(texture: Texture2D, caption: String) -> void:
 	dialog.popup()
 
 func _show_decor() -> void:
+	if not _available("decor"): return
 	var dialog := AcceptDialog.new()
 	dialog.title = "Dekoracje pokoju"
 	var list := VBoxContainer.new()
@@ -2529,6 +2551,7 @@ func _show_decor() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(list)
 	for key in KeepsakeSystem.DECOR:
+		if not RoomLayoutLoader.allows("decor", _level_id(), {"key": key}): continue
 		var reason := KeepsakeSystem.unlock_reason(session.pet, key)
 		var preview := TextureRect.new()
 		if RoomArtwork.DECOR_REGIONS.has(key):
@@ -2543,7 +2566,7 @@ func _show_decor() -> void:
 		preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		list.add_child(preview)
 		var button := _button(("Schowaj: " if session.pet.decor.has(key) else "Ustaw: ") + KeepsakeSystem.DECOR[key], func():
-			if KeepsakeSystem.toggle_decor(session, key):
+			if LevelActions.run(session, "decor", {"key": key}):
 				dialog.hide()
 				_show_decor())
 		button.disabled = not reason.is_empty() or not session.writable
@@ -2677,3 +2700,22 @@ func _show_timed_course_result(message: String) -> void:
 	result.canceled.connect(result.queue_free)
 	result.popup_centered(Vector2i(300, 240))
 	_position_dialog(result, Vector2i(320, 250))
+
+func _level_id() -> String:
+	return "yard" if session.in_yard else "home"
+
+func _available(script_id: String) -> bool:
+	return RoomLayoutLoader.allows(script_id, _level_id())
+
+func _action_available(action: String) -> bool:
+	if action in ["album", "wellbeing", "today_plan", "treats"]: return true
+	if action.begins_with("invite:"): return _available("initiative")
+	if action == "yard": return _available("portal")
+	if action == "bath": return RoomLayoutLoader.allows("bath", "home")
+	if action == "play":
+		for kind in ["ball", "tug", "cups", "tag", "cups2", "frisbee", "freestyle", "bubbles", "agility"]:
+			if RoomLayoutLoader.allows_play(kind, _level_id()): return true
+		return false
+	if action in ["pet", "rest"] and session.is_sleeping(): return true
+	if action == "pet": return _available("cuddle") or _available("pet")
+	return RoomLayoutLoader.allows_action(action, _level_id())

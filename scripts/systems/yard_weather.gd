@@ -7,7 +7,11 @@ var override_kind := "" # Deterministic test seam; never persisted.
 var check_left := 0.0
 
 func kind(s: GameSession) -> String:
+	if not RoomLayoutLoader.allows("yard_weather", "yard"): return "sun"
 	if LABELS.has(override_kind): return override_kind
+	var controller := RoomLayoutLoader.element_for_script("yard_weather", "yard")
+	var authored := str(controller.get("params", {}).get("mode", "auto"))
+	if LABELS.has(authored): return authored
 	var day := PersonalitySystem.day_of(s._local_now())
 	return ["sun", "sun", "rain", "after_rain"][posmod(day + s.pet.personality_seed, 4)]
 
@@ -26,6 +30,7 @@ func advance(s: GameSession, delta: float) -> void:
 		if not YardInvitations.options(s).has(offer): s._cancel_invitation()
 
 func water_garden(s: GameSession, now: float = -1) -> bool:
+	if not RoomLayoutLoader.allows("garden", "yard") or not RoomLayoutLoader.allows("yard_weather", "yard"): return false
 	if not s.writable or s.suspended or kind(s) != "rain": return false
 	if now < 0: now = Time.get_unix_time_from_system()
 	if not YardRoutines.can_water(s, now): return false

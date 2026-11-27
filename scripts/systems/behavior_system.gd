@@ -51,11 +51,11 @@ static func choose(options: Dictionary, roll: float) -> String:
 	return "carpet"
 
 static func steps(id: String, pet: PetState, quiet: bool = false) -> Array:
-	var carpet := Vector2(640, 324)
+	var carpet := Vector2(640, 504)
 	var bed: Vector2 = RoomLayout.STATIONS.bed.stand
 	var window: Vector2 = RoomLayout.STATIONS.window.stand
 	match id:
-		"patrol": return [_move(Vector2(410, 307)), _clip("idle", 3), _move(Vector2(1040, 316)), _clip("sit_idle", 6)]
+		"patrol": return [_move(Vector2(410, 487)), _clip("idle", 3), _move(Vector2(1040, 496)), _clip("sit_idle", 6)]
 		"window":
 			var sequence := [_move(window), _clip("sit_idle", 8), _clip("head_tilt_stand", 2)]
 			if pet.life.quirks.has("window_watch") and not quiet: sequence.append(_clip("bark_stand", 1.5))
@@ -72,7 +72,7 @@ static func steps(id: String, pet: PetState, quiet: bool = false) -> Array:
 		"bowl": return [_move(RoomLayout.STATIONS.food.stand), _clip("head_tilt_stand", 2), _clip("eat_enter", 0.8), _clip("eat_exit", 0.8)]
 		"carpet": return [_move(carpet), _clip("idle_lie", 35 if quiet else 20)]
 		"wait": return [_move(RoomLayout.START), _clip("sit_idle", 12), _clip("tail_wag_sit", 3)]
-		"approach": return [_move(Vector2(670, 328)), _clip("give_paw", 3), _clip("sit_idle", 12)]
+		"approach": return [_move(Vector2(670, 508)), _clip("give_paw", 3), _clip("sit_idle", 12)]
 		"nap", "night":
 			var point := window + Vector2(-40, 25) if id == "nap" and pet.life.quirks.has("sun_napper") else bed
 			var sequence := []

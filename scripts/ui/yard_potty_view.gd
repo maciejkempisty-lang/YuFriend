@@ -1,7 +1,7 @@
 class_name YardPottyView
 extends Node2D
 
-const SPOT := Vector2(1170, 328)
+static func spot() -> Vector2: return RoomLayout.yard_stand("outing")
 var mess := false
 var progress := 0.0
 var cleaning := 0.0
@@ -20,7 +20,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 func block(offset: Vector2, extent: Vector2, color: String) -> void:
-	draw_rect(Rect2(((SPOT + offset) / 3).round() * 3, extent), Color(color))
+	draw_rect(Rect2(((spot() + offset) / 3).round() * 3, extent), Color(color))
 
 func _draw() -> void:
 	if cleaning > 0:

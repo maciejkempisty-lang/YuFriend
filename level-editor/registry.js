@@ -57,7 +57,7 @@ globalThis.YF_REGISTRY = {
     }},
     {id: "walk_to", label: "Idź do punktu", icon: "🚶", params: {
       x: {type: "number", label: "Cel X", default: 720, min: -8192, max: 16384},
-      y: {type: "number", label: "Cel Y", default: 315, min: -8192, max: 16384},
+      y: {type: "number", label: "Cel Y", default: 495, min: -8192, max: 16384},
       message: {type: "text", label: "Komunikat", default: "", max: 200}
     }},
     {id: "bath", label: "Kąpiel", icon: "🛁", params: {
@@ -84,14 +84,25 @@ globalThis.YF_REGISTRY = {
       message: {type: "text", label: "Komunikat", default: "Chlupie!", max: 200}
     }},
     {id: "hide", label: "Chowany pod krzakiem", icon: "🌳", params: {
-      kind: {type: "string", label: "Rodzaj kryjówki", default: "bush", max: 32},
+      kind: {type: "string", label: "Rodzaj kryjówki", default: "treat", max: 32},
       seed: {type: "number", label: "Ziarno (0 = losowe)", default: 0, min: 0, max: 100000},
       message: {type: "text", label: "Komunikat", default: "Schowaj się!", max: 200}
     }},
     {id: "visitor", label: "Gość w ogrodzie", icon: "🐦", params: {
       guest: {type: "string", label: "Gatunek (bird/butterfly/cat)", default: "bird", max: 32},
       message: {type: "text", label: "Komunikat", default: "Ktoś przyszedł!", max: 200}
-    }}
+    }},
+    {"id": "training", "label": "Trening sztuczek", "icon": "🐾", "params": {"trick": {"type": "string", "label": "Sztuczka", "default": "sit", "max": 32}, "guided": {"type": "bool", "label": "Z gestem", "default": true}}},
+    {"id": "touch_play", "label": "Zabawy dotykowe", "icon": "🧶", "params": {"kind": {"type": "string", "label": "Zabawa: all / tug / cups", "default": "all", "max": 32}}},
+    {"id": "skill_play", "label": "Zabawy zręcznościowe", "icon": "🥏", "params": {"kind": {"type": "string", "label": "Zabawa: all / tag / cups2 / frisbee / freestyle", "default": "all", "max": 32}}},
+    {"id": "bubble_play", "label": "Bańki mydlane", "icon": "🫧", "params": {}},
+    {"id": "outdoor_commands", "label": "Komendy w ogrodzie", "icon": "🐕", "params": {"guided": {"type": "bool", "label": "Z gestem", "default": true}}},
+    {"id": "potty", "label": "Wyjście i sprzątanie", "icon": "🚮", "params": {}},
+    {"id": "initiative", "label": "Zaproszenia do zabawy", "icon": "💡", "params": {"kind": {"type": "string", "label": "Rodzaj (puste = losowo)", "default": "", "max": 32}}},
+    {"id": "dig", "label": "Kopanie", "icon": "🦴", "params": {}},
+    {"id": "garden", "label": "Pielęgnacja ogródka", "icon": "🌻", "params": {"action": {"type": "string", "label": "Czynność", "default": "observe", "max": 32}}},
+    {"id": "decor", "label": "Dekoracje", "icon": "🖼️", "params": {"key": {"type": "string", "label": "Dekoracja (puste = menu)", "default": "", "max": 32}}},
+    {"id": "yard_weather", "label": "Pogoda w ogrodzie", "icon": "☀️", "params": {"mode": {"type": "string", "label": "auto / sun / rain / after_rain", "default": "auto", "max": 32}}}
   ],
   clips: ["idle", "walk", "run", "ball_play", "aport", "sleep", "eat_loop", "petted_stand", "bark_stand", "play_bow", "sit", "paw", "wag_stand"]
 };

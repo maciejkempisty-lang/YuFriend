@@ -614,6 +614,14 @@
     walk_to(e) { testState.target = clampPoint({x: e.params?.x ?? e.x, y: e.params?.y ?? e.y}); if (e.params?.message) showTest('message', e.params.message); },
     ball() {}
   };
+  for (const script of globalThis.YF_REGISTRY.scripts) {
+    if (runtime[script.id]) continue;
+    runtime[script.id] = e => {
+      testState.target = clampPoint({x: e.x, y: e.y});
+      testState.pendingScript = e.script;
+      testState.pendingElement = e;
+    };
+  }
   function activate(e, p) {
     if (!e) { testState.target = clampPoint(p); return; }
     if (!isInteractive(e)) return;
@@ -642,7 +650,8 @@
     testState.pendingScript = null; testState.pendingElement = null;
     if (!scriptId) return;
     const msgs = {feed: 'Gotowe · posiłek', pet: 'Gotowe · głaskanie', clean: 'Gotowe · czesanie', rest: 'Gotowe · odpoczynek', ball: 'Gotowe · aport'};
-    const text = e?.params?.message || msgs[scriptId] || '';
+    const definition = globalThis.YF_REGISTRY.scripts.find(s => s.id === scriptId);
+    const text = e?.params?.message || msgs[scriptId] || `Podgląd: ${definition?.label || scriptId}. Pełna mechanika działa w grze.`;
     if (text) showTest('message', text);
   }
 

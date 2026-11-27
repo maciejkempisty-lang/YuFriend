@@ -15,8 +15,8 @@ var checked: Array[int] = []
 func active() -> bool:
 	return not kind.is_empty()
 
-func start(mode: String, seed_value: int = 0) -> bool:
-	if mode not in ["treat", "dog"] or active(): return false
+func start(mode: String, seed_value: int = 0, spots: Array[int] = [0, 1, 2]) -> bool:
+	if spots.is_empty() or mode not in ["treat", "dog"] or active(): return false
 	var rng := RandomNumberGenerator.new()
 	if seed_value == 0: rng.randomize()
 	else: rng.seed = seed_value
@@ -26,18 +26,18 @@ func start(mode: String, seed_value: int = 0) -> bool:
 	remaining = ROUND_SECONDS
 	elapsed = 0
 	checked.clear()
-	search_order.assign([0, 1, 2])
-	for i in range(2, 0, -1):
+	search_order.assign(spots)
+	for i in range(search_order.size() - 1, 0, -1):
 		var other := rng.randi_range(0, i)
 		var previous := search_order[i]
 		search_order[i] = search_order[other]
 		search_order[other] = previous
 	search_index = 0
-	hiding_spot = -1 if mode == "treat" else rng.randi_range(0, 2)
+	hiding_spot = -1 if mode == "treat" else search_order[rng.randi_range(0, search_order.size() - 1)]
 	return true
 
 func select(spot: int) -> String:
-	if spot < 0 or spot > 2: return ""
+	if not search_order.has(spot): return ""
 	if phase == "choose":
 		hiding_spot = spot
 		phase = "walk"
