@@ -19,6 +19,9 @@ var flight := {}
 var pending := {}
 var wait_left := 0.0
 var test_pet := PetState.create(42)
+var external_pet: PetState = null
+var game_mode := false  # true when embedded in a real game; preview chrome hides and
+                         # care effects route through the host instead of test_pet.
 var caption := Label.new()
 var needs := Label.new()
 var selector := OptionButton.new()
@@ -30,6 +33,14 @@ var message_left := 0.0
 var thought_left := 0.0
 var thought_follow := "dog"  # "dog" or element_id
 var ready_ok := false
+
+func bind_pet(pet: PetState) -> void:
+	external_pet = pet
+	game_mode = pet != null
+	if is_node_ready():
+		caption.visible = not game_mode
+		selector.visible = not game_mode
+		needs.visible = not game_mode
 
 func open_project(data: Dictionary, level_id: String = "") -> bool:
 	if not LevelProject.validate(data).is_empty(): return false
@@ -78,6 +89,8 @@ func _ready() -> void:
 	world.middle_ground.add_child(dog)
 	animator.set_skin(load("res://data/skins/puppy_pixel.tres"))
 	resized.connect(_fit)
+	if game_mode:
+		caption.visible = false; selector.visible = false; needs.visible = false
 	if not project.is_empty(): _populate(get_meta("initial_level", ""))
 
 func _style_bubble(panel: Panel, label: Label, kind: String) -> void:
@@ -276,7 +289,8 @@ func _process(delta: float) -> void:
 	elif wait_left > 0:
 		wait_left -= delta
 		if wait_left <= 0: animator.request_clip("idle")
-	needs.text = "Pies testowy · Sytość %d%% · Energia %d%% · Kontakt %d%% · Zapis gry pozostaje bez zmian" % [test_pet.needs.fullness, test_pet.needs.energy, test_pet.needs.contact]
+	if not game_mode:
+		needs.text = "Pies testowy · Sytość %d%% · Energia %d%% · Kontakt %d%% · Zapis gry pozostaje bez zmian" % [test_pet.needs.fullness, test_pet.needs.energy, test_pet.needs.contact]
 
 func _position_bubble(panel: Panel, follow: String) -> void:
 	var p: Vector2
@@ -303,7 +317,7 @@ func _complete() -> void:
 		elif script_id == "clean": effects = {"hygiene": int(params.get("hygiene", 20))}
 		elif script_id == "rest": effects = {"energy": int(params.get("energy", 15))}
 		elif script_id == "ball": effects = {"play": int(params.get("play", 15)), "contact": int(params.get("contact", 5))}
-		NeedsSystem.change(test_pet, effects)
+		if not game_mode: NeedsSystem.change(test_pet, effects)
 	var clip: String = str(params.get("clip", ""))
 	if clip.is_empty():
 		clip = {"feed":"eat_loop","pet":"petted_stand","clean":"petted_stand","rest":"sleep","ball":"play_bow","walk_to":"idle"}.get(script_id, "idle")
