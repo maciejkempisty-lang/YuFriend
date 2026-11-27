@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://daqdf7yurte3k"
-path="res://.godot/imported/plant.png-20f98b1d2f3e952e18eae9a3652e014a.ctex"
+path="res://.godot/imported/production-home-plant.png-de856573f58eab2a09c195f8036c808f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-home-plant.png"
-dest_files=["res://.godot/imported/plant.png-20f98b1d2f3e952e18eae9a3652e014a.ctex"]
+dest_files=["res://.godot/imported/production-home-plant.png-de856573f58eab2a09c195f8036c808f.ctex"]
 
 [params]
 

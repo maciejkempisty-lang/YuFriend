@@ -576,7 +576,8 @@ def build_project(assets):
     add(yard, "yard/water-bowl.png", "Miska z wodą", 117, 84, "middle")
     # Preserve the original yard station assets in the library. Their positions
     # can be adjusted freely in Studio; the complete layered kit is editable.
-    path = PROJECTS / "art-kit.json"
+    path = PROJECTS / "_backup/art-kit.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(project, ensure_ascii=False, indent=2) + "\n")
     return path
 

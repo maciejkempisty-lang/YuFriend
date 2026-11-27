@@ -187,7 +187,6 @@
     return JSON.parse(text);
   }
   async function writeProject(name, data) {
-    if (name === 'starter.json') throw Error('Zapisz pod nową nazwą — starter jest wzorcem.');
     if (!/^[a-zA-Z0-9_-]{1,80}\.json$/.test(name)) throw Error('Użyj liter, cyfr, myślnika i podkreślenia (do 80 znaków).');
     const d = await dir('level-editor/projects', true);
     const fh = await d.getFileHandle(name, {create: true});

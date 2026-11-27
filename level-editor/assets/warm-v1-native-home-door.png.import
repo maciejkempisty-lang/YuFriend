@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://t2vlcapkg2f1"
-path="res://.godot/imported/door.png-67b25bbdca31586706c9a63e96c1d4b4.ctex"
+path="res://.godot/imported/warm-v1-native-home-door.png-d117e8ea45a19c35fbb29c8510a5d139.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-home-door.png"
-dest_files=["res://.godot/imported/door.png-67b25bbdca31586706c9a63e96c1d4b4.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-home-door.png-d117e8ea45a19c35fbb29c8510a5d139.ctex"]
 
 [params]
 

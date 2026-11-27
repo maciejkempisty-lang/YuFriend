@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbiovh27w3a2u"
-path="res://.godot/imported/chest.png-e8acd2eba481b1117cde1770516a267b.ctex"
+path="res://.godot/imported/production-home-chest.png-13ea38dbb7eea2c5ec54e319d9869bf0.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-home-chest.png"
-dest_files=["res://.godot/imported/chest.png-e8acd2eba481b1117cde1770516a267b.ctex"]
+dest_files=["res://.godot/imported/production-home-chest.png-13ea38dbb7eea2c5ec54e319d9869bf0.ctex"]
 
 [params]
 

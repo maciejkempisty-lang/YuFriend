@@ -50,90 +50,90 @@
       "id": "ball",
       "name": "Piłka",
       "source": "res://level-editor/assets/ball.png",
-      "width": 12,
-      "height": 12
+      "width": 54,
+      "height": 54
     },
     {
       "id": "yard-gate",
       "name": "Furtka",
-      "source": "res://assets/art/yard/sprites/gate.png",
+      "source": "res://level-editor/assets/yard-gate.png",
       "width": 37,
       "height": 32
     },
     {
       "id": "yard-garden",
       "name": "Ogródek",
-      "source": "res://assets/art/yard/sprites/garden.png",
+      "source": "res://level-editor/assets/yard-garden.png",
       "width": 50,
       "height": 22
     },
     {
       "id": "yard-dig",
       "name": "Piaskownica",
-      "source": "res://assets/art/yard/sprites/dig.png",
+      "source": "res://level-editor/assets/yard-dig.png",
       "width": 46,
       "height": 18
     },
     {
       "id": "yard-fetch",
       "name": "Aport",
-      "source": "res://assets/art/yard/sprites/fetch.png",
+      "source": "res://level-editor/assets/yard-fetch.png",
       "width": 85,
       "height": 27
     },
     {
       "id": "yard-bush_0",
       "name": "Krzak 1",
-      "source": "res://assets/art/yard/sprites/bush_0.png",
+      "source": "res://level-editor/assets/yard-bush_0.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-bush_1",
       "name": "Krzak 2",
-      "source": "res://assets/art/yard/sprites/bush_1.png",
+      "source": "res://level-editor/assets/yard-bush_1.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-bush_2",
       "name": "Krzak 3",
-      "source": "res://assets/art/yard/sprites/bush_2.png",
+      "source": "res://level-editor/assets/yard-bush_2.png",
       "width": 54,
       "height": 31
     },
     {
       "id": "yard-outing",
       "name": "Tabliczka",
-      "source": "res://assets/art/yard/sprites/outing.png",
+      "source": "res://level-editor/assets/yard-outing.png",
       "width": 18,
       "height": 19
     },
     {
       "id": "yard-shade",
       "name": "Miejsce odpoczynku",
-      "source": "res://assets/art/yard/sprites/shade.png",
+      "source": "res://level-editor/assets/yard-shade.png",
       "width": 71,
       "height": 49
     },
     {
       "id": "yard-course",
       "name": "Tor",
-      "source": "res://assets/art/yard/sprites/course.png",
+      "source": "res://level-editor/assets/yard-course.png",
       "width": 21,
       "height": 22
     },
     {
       "id": "yard-puddle",
       "name": "Kałuża",
-      "source": "res://assets/art/yard/sprites/puddle.png",
+      "source": "res://level-editor/assets/yard-puddle.png",
       "width": 48,
       "height": 17
     },
     {
       "id": "yard-sprinkler",
       "name": "Zraszacz",
-      "source": "res://assets/art/yard/sprites/sprinkler.png",
+      "source": "res://level-editor/assets/yard-sprinkler.png",
       "width": 34,
       "height": 27
     }
@@ -276,8 +276,8 @@
           "width": 36,
           "height": 36,
           "pivot": {
-            "x": 6,
-            "y": 6
+            "x": 27.0,
+            "y": 27.0
           },
           "visible": true,
           "locked": false,
@@ -338,8 +338,8 @@
           "width": 36,
           "height": 36,
           "pivot": {
-            "x": 6,
-            "y": 6
+            "x": 27.0,
+            "y": 27.0
           },
           "visible": true,
           "locked": false,

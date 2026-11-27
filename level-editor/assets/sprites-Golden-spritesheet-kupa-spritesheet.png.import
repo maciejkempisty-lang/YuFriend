@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://gbt8iqnih5q1"
-path="res://.godot/imported/spritesheet.png-5b133403cb00cd75989c1e54791b67d2.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-kupa-spritesheet.png-9af2ddc1219309288d5fa91f7be95b4e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-kupa-spritesheet.png"
-dest_files=["res://.godot/imported/spritesheet.png-5b133403cb00cd75989c1e54791b67d2.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-kupa-spritesheet.png-9af2ddc1219309288d5fa91f7be95b4e.ctex"]
 
 [params]
 

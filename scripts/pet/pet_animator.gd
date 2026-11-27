@@ -13,6 +13,7 @@ const CLIPS := {
 	"spin": ["stand", "stand", 0.8, false], "roll": ["stand", "stand", 0.8, false],
 	"shake": ["stand", "stand", 0.9, false],
 	"run": ["stand", "stand", 0.45, true], "sniff": ["stand", "stand", 0.8, true],
+	"ball_play": ["stand", "stand", 2.044, false], "aport": ["stand", "stand", 2.333, true],
 	"idle": ["stand", "stand", 2.0, true], "walk": ["stand", "stand", 0.8, true],
 	"sit_down": ["stand", "sit", 0.6, false], "sit_idle": ["sit", "sit", 1.6, true],
 	"stand_up": ["sit", "stand", 0.6, false], "tail_wag_stand": ["stand", "stand", 0.8, true],
@@ -184,8 +185,6 @@ func mouth_point() -> Vector2:
 # drawn behind the muzzle, so the lips cover its upper/inner edge.
 const BALL_GRIPS := {
 	"idle": [Vector2(420, 244), Vector2(420, 238), Vector2(420, 238), Vector2(420, 243), Vector2(420, 244), Vector2(420, 244)],
-	"walk": [Vector2(395, 202), Vector2(395, 210), Vector2(395, 200), Vector2(395, 195), Vector2(395, 207), Vector2(395, 207), Vector2(395, 218), Vector2(395, 216)],
-	"run": [Vector2(342, 277), Vector2(342, 277), Vector2(342, 277), Vector2(342, 277)],
 	"tail_wag_stand": [Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239), Vector2(429, 239)],
 	"treat_take_stand": [Vector2(321, 243), Vector2(323, 258), Vector2(334, 286), Vector2(333, 285), Vector2(323, 267), Vector2(324, 250), Vector2(324, 237), Vector2(324, 237)]
 }

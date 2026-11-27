@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://di6skhe6dmf1s"
-path="res://.godot/imported/door.png-b578fb6d2cc267b1c7f1faa50dc20c8a.ctex"
+path="res://.godot/imported/production-yard-door.png-a11db422f43dee0af4ad462900eee8e6.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-yard-door.png"
-dest_files=["res://.godot/imported/door.png-b578fb6d2cc267b1c7f1faa50dc20c8a.ctex"]
+dest_files=["res://.godot/imported/production-yard-door.png-a11db422f43dee0af4ad462900eee8e6.ctex"]
 
 [params]
 

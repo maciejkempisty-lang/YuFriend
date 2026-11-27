@@ -57,8 +57,11 @@ func _initialize() -> void:
 		# Cooldown has its own regression; here force eligibility to test the daily cap through real settlement.
 		session.pet.social.last_reward_at = 0
 		session.throw_ball(Vector2(1100, 310), Vector2(700, 310))
-		session.arrive_at(session._approach_token)
+		var token := session._approach_token
+		session.arrive_at(token)
 		session.catch_ball()
+		session._process(YardFetch.PLAY_SECONDS + 0.1)
+		session.finish_fetch_return(token)
 		session._process(2)
 	check(is_equal_approx(session.pet.bond - start_bond, 4.05), "session settlement honors total daily fetch bond budget")
 	check(session.pet.fetch_rewards.precise == 3 and session.pet.social.games.ball == 5, "later rounds still count without extra bond")

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhcsvr4ksqm1d"
-path="res://.godot/imported/portrait.png-dd13d1e8020d8953a2c86f19f0b4945b.ctex"
+path="res://.godot/imported/warm-v1-native-home-portrait.png-c13ef4388246746df3b5efd204df5b5e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-home-portrait.png"
-dest_files=["res://.godot/imported/portrait.png-dd13d1e8020d8953a2c86f19f0b4945b.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-home-portrait.png-c13ef4388246746df3b5efd204df5b5e.ctex"]
 
 [params]
 

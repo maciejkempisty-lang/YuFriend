@@ -18,6 +18,7 @@ signal initiative_requested(kind: String)
 signal ball_aim_requested
 signal ball_caught(precise: bool)
 signal ball_throw_requested(target: Vector2, token: int)
+signal fetch_return_requested(origin: Vector2, token: int)
 signal touch_game_opened(kind: String)
 signal touch_game_closed
 signal cuddle_opened
@@ -184,8 +185,9 @@ func _process(delta: float) -> void:
 	outdoor_commands.advance(self, delta)
 	_tick_hide(delta)
 	if fetch.advance(delta):
-		play.finish_ball()
-		_settle_touch_game()
+		activity = "fetch_return"
+		activity_left = 0
+		fetch_return_requested.emit(fetch.origin, _approach_token)
 	if play.running():
 		play.advance(delta)
 		_settle_touch_game()
@@ -431,8 +433,8 @@ func arrive_at(token: int) -> void:
 				fetch.arrive()
 				activity = "catch"
 				activity_left = 0
-				clip_requested.emit("play_bow")
-				say("Teraz! Dotknij pieska przy złapaniu piłki.")
+				clip_requested.emit("ball_play")
+				if in_yard: say("Teraz! Dotknij pieska przy złapaniu piłki.")
 				changed.emit()
 				return
 			play.finish_ball()
@@ -952,7 +954,7 @@ func throw_ball(target: Vector2, origin: Vector2 = RoomLayout.STATIONS.ball.posi
 	target = RoomLayout.clamp_walk(origin + (target - origin).limit_length(YardFetch.MAX_DISTANCE)) if in_yard else RoomLayout.clamp_walk(target)
 	if in_yard and origin.distance_to(target) < 40: return false
 	if not _begin_touch_game("ball"): return false
-	if in_yard: fetch.start(origin, target)
+	fetch.start(origin, target)
 	_travel_left = 90.0
 	activity = "approach"
 	_pending_action = "touch_ball"
@@ -965,9 +967,13 @@ func throw_ball(target: Vector2, origin: Vector2 = RoomLayout.STATIONS.ball.posi
 func catch_ball() -> bool:
 	if not writable or suspended or not in_yard or not fetch.tap(): return false
 	player_activity()
+	changed.emit()
+	return true
+
+func finish_fetch_return(token: int) -> void:
+	if not writable or suspended or activity != "fetch_return" or token != _approach_token or not fetch.active: return
 	play.finish_ball()
 	_settle_touch_game()
-	return true
 
 func play_cue() -> void:
 	if not writable or suspended: return
@@ -999,10 +1005,10 @@ func _settle_touch_game() -> void:
 	pet.social.games[memory] = mini(PetState.MAX_EVENT_COUNT, int(pet.social.games[memory]) + 1)
 	var now := Time.get_unix_time_from_system()
 	var bonus := false
-	var fetch_origin := fetch.origin
 	var fetch_distance := fetch.distance
 	var fetch_precise := fetch.precise
-	var fetch_round := fetch.active and kind == "ball"
+	var fetch_started := fetch.active and kind == "ball"
+	var fetch_round := fetch_started and in_yard
 	var record := fetch_round and fetch_distance > pet.yard_record
 	if record: pet.yard_record = fetch_distance
 	if play.success and now - float(pet.social.last_reward_at) >= TouchPlaySystem.REWARD_INTERVAL:
@@ -1032,7 +1038,6 @@ func _settle_touch_game() -> void:
 	if fetch_round:
 		say(("Aport %.1f m! " % fetch_distance).replace(".", ",") + "%s%s" % [ "Nowy rekord! " if record else "", ("Celnie! +1 więzi." if bonus else ("Celnie! Dobry chwyt." if int(pet.fetch_rewards.precise) >= FetchRewards.DAILY_LIMIT else "Celnie! Premia odpoczywa 30 s.") if fetch_precise else "Następnym razem dotknij pieska przy złapaniu.")])
 	fetch.reset()
-	if fetch_round: outdoor_commands.offer_recall(fetch_origin)
 	if kind == "ball": play.reset()
 	var saved := flush()
 	if kind in SkillPlaySystem.EXTRA and saved:
@@ -1040,7 +1045,7 @@ func _settle_touch_game() -> void:
 			play.best_record = SkillRecords.read(storage.path, play.record_key())
 			say(play.hint())
 		else: say("Runda zakończona, ale nie udało się zapisać rekordu.")
-	if kind == "ball": ball_caught.emit(fetch_precise)
+	if kind == "ball" and not fetch_started: ball_caught.emit(fetch_precise)
 	if kind == "tug" and saved:
 		if TugRecord.write(storage.path, play.tug_good, play.tug_demo_seen):
 			play.tug_best = maxi(play.tug_best, play.tug_good)

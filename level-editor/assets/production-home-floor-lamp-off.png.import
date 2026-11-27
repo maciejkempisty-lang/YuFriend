@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sclxamm0p2ag"
-path="res://.godot/imported/floor-lamp-off.png-7608c64bd6353935392c77abd3e25c7d.ctex"
+path="res://.godot/imported/production-home-floor-lamp-off.png-9a3827210207190e62a28e3f6e15d327.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-home-floor-lamp-off.png"
-dest_files=["res://.godot/imported/floor-lamp-off.png-7608c64bd6353935392c77abd3e25c7d.ctex"]
+dest_files=["res://.godot/imported/production-home-floor-lamp-off.png-9a3827210207190e62a28e3f6e15d327.ctex"]
 
 [params]
 

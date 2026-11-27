@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://buoskpd44rf4y"
-path="res://.godot/imported/clock-hd.png-030062daad3276fe742c7a5622040b2a.ctex"
+path="res://.godot/imported/warm-v1-home-clock-hd.png-58aebda43e78504c5ce4f6414201c9f4.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-home-clock-hd.png"
-dest_files=["res://.godot/imported/clock-hd.png-030062daad3276fe742c7a5622040b2a.ctex"]
+dest_files=["res://.godot/imported/warm-v1-home-clock-hd.png-58aebda43e78504c5ce4f6414201c9f4.ctex"]
 
 [params]
 

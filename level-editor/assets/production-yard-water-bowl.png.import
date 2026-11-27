@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bos4f4jggs2ot"
-path="res://.godot/imported/water-bowl.png-9d584cc97dccf0f348745697466c6813.ctex"
+path="res://.godot/imported/production-yard-water-bowl.png-5c8644db45bf4f019a70e538c5eb889f.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-yard-water-bowl.png"
-dest_files=["res://.godot/imported/water-bowl.png-9d584cc97dccf0f348745697466c6813.ctex"]
+dest_files=["res://.godot/imported/production-yard-water-bowl.png-5c8644db45bf4f019a70e538c5eb889f.ctex"]
 
 [params]
 

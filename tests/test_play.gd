@@ -241,6 +241,8 @@ func _test_rewards_and_interruptions() -> void:
 	game.arrive_at(token - 1)
 	check(game.pet.needs == initial, "an old arrival token cannot finish the ball game")
 	game.arrive_at(token)
+	game._process(YardFetch.PLAY_SECONDS + 0.1)
+	game.finish_fetch_return(token)
 	var earned := game.pet.to_dict()
 	check(game.pet.needs.play > initial.play and game.pet.social.games.ball == 1 and game.pet.social.last_reward_at > 0, "the confirmed catch grants a bounded play reward")
 	game.arrive_at(token)

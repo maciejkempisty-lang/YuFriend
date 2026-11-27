@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0rmr6gve2dih"
-path="res://.godot/imported/0002.png-44f39b6d72b74907341a9bf111f999ca.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-Water_drinking-frames-0002.png-ce735faa04e4b18b9b3d74abcc44aed6.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-Water_drinking-frames-0002.png"
-dest_files=["res://.godot/imported/0002.png-44f39b6d72b74907341a9bf111f999ca.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-Water_drinking-frames-0002.png-ce735faa04e4b18b9b3d74abcc44aed6.ctex"]
 
 [params]
 

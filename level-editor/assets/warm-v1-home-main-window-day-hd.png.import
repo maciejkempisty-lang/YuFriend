@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dn7lkiqk1d3uv"
-path="res://.godot/imported/main-window-day-hd.png-cfb13189f44bbc32aa0dc111debcf59e.ctex"
+path="res://.godot/imported/warm-v1-home-main-window-day-hd.png-b2d5d79f983c2e51e86d2fb700693672.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-home-main-window-day-hd.png"
-dest_files=["res://.godot/imported/main-window-day-hd.png-cfb13189f44bbc32aa0dc111debcf59e.ctex"]
+dest_files=["res://.godot/imported/warm-v1-home-main-window-day-hd.png-b2d5d79f983c2e51e86d2fb700693672.ctex"]
 
 [params]
 

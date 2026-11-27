@@ -3,6 +3,7 @@ extends Control
 
 signal floor_tapped(world_position: Vector2)
 signal care_requested(action: String)
+signal editor_interaction_requested(element_id: String, script_id: String, element: Dictionary)
 signal destination_reached
 signal performance_finished(trial_id: int)
 signal station_reached(token: int)
@@ -10,6 +11,7 @@ signal sound_requested(effect: String)
 signal room_viewed(point: Vector2)
 signal first_pan
 signal ball_thrown(target: Vector2)
+signal fetch_returned(token: int)
 signal yard_place_used(id: String)
 
 const WALK_SPEED := 60.0 * RoomLayout.PUPPY_SCALE
@@ -56,6 +58,8 @@ var catch_active := false
 var catch_ring := Line2D.new()
 var throw_power := Label.new()
 var station_nodes: Dictionary = {}
+var editor_ball_sprites: Dictionary = {}
+var editor_ball_starts: Dictionary = {}
 var effect_label := Label.new()
 var sleep_label := Label.new()
 var return_button := Button.new()
@@ -122,6 +126,9 @@ var _ball_flight_left := 0.0
 var _ball_flight_total := 0.0
 var _ball_flight_from := Vector2.ZERO
 var _ball_lift := 0.0
+var _fetch_return_token := 0
+var _fetch_return_origin := Vector2.ZERO
+var _fetch_ball_hidden := false
 
 func _ready() -> void:
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -205,6 +212,9 @@ func _ready() -> void:
 	catch_ring.points = ring
 	puppy.add_child(catch_ring)
 	catch_ring.hide()
+	# The playable puppy stays above every authored middle-layer prop.
+	puppy.z_as_relative = false
+	puppy.z_index = 1
 	actors.add_child(puppy)
 	shadow.kind = "shadow"
 	puppy.add_child(shadow)
@@ -307,6 +317,8 @@ func _ready() -> void:
 	# If a LevelProject was loaded, swap procedural RoomArtwork for editor sprites.
 	# This runs AFTER station_nodes/yard_nodes exist so we can hide them in one pass.
 	_apply_editor_art()
+	ball_world = editor_ball_starts.get("home", RoomLayout.STATIONS.ball.position)
+	ball_target = ball_world
 	update_placement()
 
 func _apply_editor_art() -> void:
@@ -336,20 +348,28 @@ func _apply_editor_art() -> void:
 	for level in project.levels:
 		for e in level.elements:
 			if not textures.has(e.asset): continue
+			var anchor := Node2D.new()
+			anchor.name = str(e.id)
+			anchor.position = Vector2(float(e.x), float(e.y))
+			anchor.visible = bool(e.get("visible", true)) and level.id == "home"
+			anchor.z_as_relative = false
+			anchor.z_index = -100 if e.layer == "background" else (100 if e.layer == "foreground" else 0)
+			anchor.set_meta("level_id", level.id)
+			anchor.set_meta("authored_visible", bool(e.get("visible", true)))
 			var sprite := Sprite2D.new()
 			sprite.texture = textures[e.asset]
+			if RoomLayoutLoader.active_hd_asset_ids.has(e.asset):
+				sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 			sprite.centered = false
 			var a: Dictionary = assets_by_id[e.asset]
-			sprite.scale = Vector2(float(e.width) / float(a.width), float(e.height) / float(a.height))
-			sprite.position = Vector2(float(e.x), float(e.y)) - Vector2(float(e.pivot.x), float(e.pivot.y)) * sprite.scale
-			sprite.visible = bool(e.get("visible", true))
-			sprite.z_index = -4 if e.layer == "background" else (4 if e.layer == "foreground" else 0)
-			# Only the current level's sprites should be visible at a time; both
-			# home and yard draw into the same world, so hide the off-level ones.
-			sprite.set_meta("level_id", level.id)
-			sprite.visible = sprite.visible and level.id == "home"
+			sprite.scale = Vector2(float(e.width) / sprite.texture.get_width(), float(e.height) / sprite.texture.get_height())
+			sprite.position = -Vector2(float(e.pivot.x) * float(e.width) / float(a.width), float(e.pivot.y) * float(e.height) / float(a.height))
+			anchor.add_child(sprite)
 			var layer: Node2D = world.background if e.layer == "background" else (world.foreground if e.layer == "foreground" else actors)
-			layer.add_child(sprite)
+			layer.add_child(anchor)
+			if e.script == "ball" and bool(e.get("visible", true)):
+				editor_ball_starts[level.id] = Vector2(float(e.x), float(e.y))
+				editor_ball_sprites[level.id] = {"node": anchor, "base": anchor.position}
 
 func _on_input(event: InputEvent) -> void:
 	if event.device == InputEvent.DEVICE_ID_EMULATION: return
@@ -375,7 +395,11 @@ func _pointer_down(point: Vector2, id: int) -> void:
 	_press_camera = camera_center()
 	_press_zoom = screen_scale().x
 	_dragged = false
-	_drag_ball = not overview and ball_throw_enabled and action_at(point) == "play"
+	var editor_hit := editor_element_at(point)
+	_drag_ball = not overview and ball_throw_enabled and (str(editor_hit.get("script", "")) == "ball" or (editor_hit.is_empty() and action_at(point) == "play"))
+	if _drag_ball and not editor_hit.is_empty():
+		ball_world = Vector2(float(editor_hit.x), float(editor_hit.y))
+		ball_target = ball_world
 	_throw_target = ball_world
 
 func _pointer_move(point: Vector2, id: int) -> void:
@@ -429,6 +453,10 @@ func _interact(point: Vector2) -> void:
 	if overview:
 		look_at_world(screen_to_world(point))
 		return
+	var editor_hit := editor_element_at(point)
+	if not editor_hit.is_empty():
+		editor_interaction_requested.emit(str(editor_hit.id), str(editor_hit.script), editor_hit.duplicate(true))
+		return
 	var action := action_at(point)
 	if action.begins_with("yard_") and RoomLayout.YARD_STATIONS.has(action.trim_prefix("yard_")):
 		mark_yard_place(action.trim_prefix("yard_"))
@@ -438,6 +466,29 @@ func _interact(point: Vector2) -> void:
 		care_requested.emit(action)
 	elif screen_to_world(point).y >= RoomLayout.FLOOR_Y:
 		floor_tapped.emit(RoomLayout.clamp_walk(screen_to_world(point)))
+
+func editor_element_at(point: Vector2) -> Dictionary:
+	var project: Dictionary = RoomLayoutLoader.active_project
+	if project.is_empty() or not render_rect.has_point(point): return {}
+	var level_id := "yard" if in_yard else "home"
+	var assets := {}
+	for asset in project.assets: assets[asset.id] = asset
+	var world_point := screen_to_world(point)
+	var found: Dictionary = {}
+	var best := -INF
+	for level in project.levels:
+		if level.id != level_id: continue
+		for index in level.elements.size():
+			var element: Dictionary = level.elements[index]
+			if not element.visible or not LevelProject.is_interactive(element): continue
+			if not assets.has(element.asset) or not RoomLayoutLoader.active_textures.has(element.asset): continue
+			if not LevelProject.element_rect(element, assets[element.asset]).has_point(world_point): continue
+			var priority: float = LevelProject.LAYERS.find(element.layer) * 1000000000.0 + (float(element.y) * 1000.0 if element.layer == "middle" else 0.0) + index
+			if priority >= best:
+				best = priority
+				found = element
+		break
+	return found
 
 func action_at(point: Vector2) -> String:
 	if not render_rect.has_point(point): return ""
@@ -567,7 +618,7 @@ func update_placement() -> void:
 	_output_transform = get_viewport().get_final_transform() * get_global_transform_with_canvas()
 	var output_scale := _output_transform.get_scale().abs()
 	var stage_height := content_bottom if content_bottom > 0 else size.y
-	_render_pixel_size = RoomLayout.PIXEL_SIZE
+	_render_pixel_size = 1.0 if RoomLayoutLoader.active_hd_art and not overview else RoomLayout.PIXEL_SIZE
 	# Frame roughly two to three room sections instead of filling the height
 	# with a small horizontal slice. Interaction still offers a 2x close-up.
 	_base_pixel_scale = maxi(1, roundi(size.x * output_scale.x / 200.0))
@@ -586,6 +637,8 @@ func update_placement() -> void:
 		if not RoomLayoutLoader.active_project.is_empty():
 			var max_by_height := maxi(1, floori(usable_height / 80.0))
 			_base_pixel_scale = clampi(_base_pixel_scale + 1, 1, mini(max_by_height, 3))
+		if RoomLayoutLoader.active_hd_art:
+			_base_pixel_scale = maxi(1, roundi(_base_pixel_scale * _render_pixel_size / RoomLayout.PIXEL_SIZE))
 	if overview:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
@@ -759,8 +812,17 @@ func throw_ball(target: Vector2, token: int) -> void:
 	_ball_flight_left = _ball_flight_total
 	target_world = station_point("play")
 	moving = true
-	animator.request_clip("run" if in_yard else "walk")
+	animator.request_clip("run")
 	sound_requested.emit("ball_roll")
+
+func return_fetch_ball(origin: Vector2, token: int) -> void:
+	if token <= 0: return
+	_fetch_return_token = token
+	_fetch_return_origin = RoomLayout.clamp_walk(origin)
+	target_world = _fetch_return_origin
+	moving = true
+	_fetch_ball_hidden = true
+	animator.request_clip("aport")
 
 func present_invitation(kind: String) -> void:
 	if kind in ["tug", "cups"]:
@@ -783,6 +845,8 @@ func start_course_jump(target: Vector2) -> void:
 	jump_clip = ""
 
 func cancel_activity() -> void:
+	_fetch_return_token = 0
+	_fetch_ball_hidden = false
 	if ball_catch_left > 0 or ball_hold_left > 0 or carrying_ball:
 		ball_world = RoomLayout.clamp_walk(Vector2(ball_world.x, pet_world.y))
 	ball_catch_left = 0
@@ -823,9 +887,10 @@ func _on_clip_started(clip: String) -> void:
 	if clip == "bark_stand": sound_requested.emit("bark")
 
 func play_clip(clip: String) -> void:
-	if clip not in ["walk", "run"]:
+	if clip not in ["walk", "run", "aport"]:
 		moving = false
 		walk_performance = 0
+	if clip == "ball_play": _fetch_ball_hidden = true
 	animator.request_clip(clip)
 	if clip in ["tail_wag_sit", "tail_wag_stand", "petted_stand"]:
 		effect_label.text = "♥"
@@ -851,10 +916,10 @@ func _process(delta: float) -> void:
 	if hide_tail.visible:
 		hide_tail.roll_phase += delta
 		hide_tail.queue_redraw()
-	if moving and animator.current in ["walk", "run"]:
+	if moving and animator.current in ["walk", "run", "aport"]:
 		var difference := target_world - pet_world
 		if absf(difference.x) > 0.1: animator.facing_left = difference.x < 0
-		var speed := portal_speed if portal_speed > 0 else WALK_SPEED * mood_walk_speed * (2.5 if animator.current == "run" else 1.0)
+		var speed := portal_speed if portal_speed > 0 else WALK_SPEED * mood_walk_speed * (2.5 if animator.current in ["run", "aport"] else 1.0)
 		var previous := pet_world
 		pet_world = pet_world.move_toward(target_world, speed * delta)
 		_step_distance += previous.distance_to(pet_world)
@@ -863,7 +928,15 @@ func _process(delta: float) -> void:
 			sound_requested.emit("step")
 		if pet_world.is_equal_approx(target_world) and _ball_flight_left <= 0:
 			moving = false
-			if station_token > 0:
+			if _fetch_return_token > 0:
+				var returned_token := _fetch_return_token
+				_fetch_return_token = 0
+				ball_world = _fetch_return_origin
+				ball_target = ball_world
+				_fetch_ball_hidden = false
+				animator.request_clip("idle")
+				fetch_returned.emit(returned_token)
+			elif station_token > 0:
 				var token := station_token
 				station_token = 0
 				if station_action not in ["play", "bored"]:
@@ -958,6 +1031,14 @@ func _sync_layers() -> void:
 		_ball_lift = 0
 	_set_ball_held(carrying_ball or ball_catch_left > 0 or ball_hold_left > 0)
 	ball_art.position = ((ball_world - Vector2(0, _ball_lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
+	var current_level := "yard" if in_yard else "home"
+	if editor_ball_sprites.has(current_level):
+		var ball_entry: Dictionary = editor_ball_sprites[current_level]
+		var sprite: Node2D = ball_entry.node
+		var start: Vector2 = editor_ball_starts[current_level]
+		sprite.position = ball_entry.base + ball_world - start - Vector2(0, _ball_lift)
+		sprite.visible = bool(sprite.get_meta("authored_visible", true)) and not _fetch_ball_hidden
+	ball_art.visible = RoomLayoutLoader.active_project.is_empty() and not _fetch_ball_hidden
 	for id in prop_bounces:
 		var node: Node2D = ball_art if id == "ball" else station_nodes[id]
 		var origin: Vector2 = ball_world if id == "ball" else RoomLayout.STATIONS[id].position
@@ -1007,11 +1088,11 @@ func set_yard(enabled: bool) -> void:
 	backdrop.kind = "yard" if enabled else "room"
 	backdrop.queue_redraw()
 	wall_clock.visible = not enabled
-	# Editor sprites carry a level_id meta tag — swap visibility on yard toggle.
+	# Editor anchors carry a level_id meta tag — swap visibility on yard toggle.
 	for layer in [world.background, actors, world.foreground]:
 		for child in layer.get_children():
-			if child is Sprite2D and child.has_meta("level_id"):
-				child.visible = (child.get_meta("level_id") == ("yard" if enabled else "home"))
+			if child is Node2D and child.has_meta("level_id"):
+				child.visible = bool(child.get_meta("authored_visible", true)) and child.get_meta("level_id") == ("yard" if enabled else "home")
 	# Procedural station art stays hidden when the editor project is active;
 	# otherwise behave as before.
 	var editor_active: bool = not RoomLayoutLoader.active_project.is_empty()
@@ -1019,7 +1100,7 @@ func set_yard(enabled: bool) -> void:
 		node.visible = not enabled and not editor_active
 	pet_world = RoomLayout.START
 	target_world = pet_world
-	ball_world = RoomLayout.STATIONS.ball.position
+	ball_world = editor_ball_starts.get("yard" if enabled else "home", RoomLayout.STATIONS.ball.position)
 	ball_target = ball_world
 	camera_manual = false
 	animator.request_clip("idle")

@@ -44,11 +44,7 @@ func run() -> void:
 	s.pet.practice.targets = ["come", "stay"]
 	await process_frame
 	app._toggle_yard(false)
-	s.throw_ball(Vector2(1100, 310), Vector2(700, 310))
-	for i in 150:
-		tick(1)
-		if s.fetch.catching: break
-	s.catch_ball()
+	s.outdoor_commands.offer_recall(Vector2(700, 310))
 	tick(15)
 	check(app.yard_command_button.visible and app.yard_command_button.text == "Przyjdź", "recall replaces bath in toolbar")
 	guided()

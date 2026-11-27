@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c83hrjd56yd68"
-path="res://.godot/imported/0011.png-e69019032bbb6de963310f7768575589.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-run_right-frames-0011.png-c3c93d171b2672dd9f5718addd002825.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-run_right-frames-0011.png"
-dest_files=["res://.godot/imported/0011.png-e69019032bbb6de963310f7768575589.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-run_right-frames-0011.png-c3c93d171b2672dd9f5718addd002825.ctex"]
 
 [params]
 

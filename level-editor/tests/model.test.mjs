@@ -16,14 +16,14 @@ const {
 // vm context has its own Object prototype; normalize before strict-deep comparison.
 const norm = v => JSON.parse(JSON.stringify(v));
 const eq = (a, b) => assert.deepEqual(norm(a), norm(b));
-const starter = JSON.parse(fs.readFileSync(new URL('projects/starter.json', root)));
+const starter = JSON.parse(fs.readFileSync(new URL('projects/ver1.json', root)));
 const scriptsJson = JSON.parse(fs.readFileSync(new URL('scripts.json', root)));
 
 test('registry.js matches scripts.json (shared contract)', () => {
   eq(ctx.YF_REGISTRY, scriptsJson);
 });
 
-test('starter and JSON round trip use the shared v1 contract', () =>
+test('ver1 and JSON round trip use the shared v1 contract', () =>
   eq(validate(JSON.parse(JSON.stringify(starter))), []));
 
 test('new level and imported element remain valid', () => {
@@ -56,9 +56,10 @@ test('animation sheets are excluded from the editor library', () => {
 
 test('deleting a level repairs portals and starting level', () => {
   const p = clone(starter);
+  const portalId = p.levels[0].elements.find(e => e.script === 'portal').id;
   removeLevel(p, 'yard');
   assert.equal(p.levels.length, 1);
-  assert.equal(p.levels[0].elements.find(e => e.id === 'door').script, 'none');
+  assert.equal(p.levels[0].elements.find(e => e.id === portalId).script, 'none');
   eq(validate(p), []);
   assert.throws(() => removeLevel(p, 'home'));
 });
@@ -120,14 +121,14 @@ test('migrate upgrades legacy behavior/text/target to script+params', () => {
 for (const [label, change] of Object.entries({
   version: p => p.version = 99,
   duplicate: p => p.levels.push(clone(p.levels[0])),
-  portal: p => p.levels[0].elements.find(e => e.id === 'door').params.target = 'missing',
+  portal: p => p.levels[0].elements.find(e => e.script === 'portal').params.target = 'missing',
   geometry: p => p.levels[0].spawn.x = -1,
   unknownScript: p => p.levels[0].elements[0].script = 'eval',
   path: p => p.assets[0].source = 'res://assets/../private.png',
-  staticBall: p => p.levels[0].elements.find(e => e.id === 'ball').static = true,
+  staticBall: p => p.levels[0].elements.find(e => e.script === 'ball').static = true,
   finite: p => p.levels[0].elements[0].x = NaN,
   nullElement: p => p.levels[0].elements.push(null),
-  badParam: p => p.levels[0].elements.find(e => e.id === 'food').params.fullness = 999,
+  badParam: p => p.levels[0].elements.find(e => e.script === 'ball').params.arc = 999,
   slowDog: p => p.levels[0].walkSpeed = 0,
 })) {
   test('rejects ' + label, () => {

@@ -10,8 +10,23 @@ func _initialize() -> void:
 func run() -> void:
 	root.size = Vector2i(1200, 720)
 	root.content_scale_size = root.size
-	var result := LevelProject.read_project("res://level-editor/projects/starter.json")
+	var result := LevelProject.read_project("res://level-editor/projects/ver1.json")
 	var data: Dictionary = result.project
+	# Add scripted fixtures to the current version without changing the saved project.
+	for element in data.levels[0].elements:
+		if element.script == "ball":
+			element.id = "ball"
+			element.x = 890
+			element.y = 497
+		elif element.script == "portal": element.id = "door"
+	data.levels[0].elements.append({"id": "food", "name": "Miska", "asset": "food", "layer": "middle",
+		"x": 485, "y": 505, "width": 60, "height": 36, "pivot": {"x": 10, "y": 10},
+		"visible": true, "locked": false, "static": true, "script": "feed",
+		"params": {"fullness": 22, "message": "Mniam!", "clip": "eat_loop"}})
+	data.levels[0].elements.append({"id": "toys", "name": "Kosz", "asset": "toys", "layer": "middle",
+		"x": 1090, "y": 496, "width": 102, "height": 78, "pivot": {"x": 17, "y": 25},
+		"visible": true, "locked": false, "static": true, "script": "message",
+		"params": {"text": "W koszu czekają zabawki.", "duration": 4}})
 	var before := data.duplicate(true)
 	var preview := LevelPreview.new()
 	check(preview.open_project(data), "project opens with all textures")
@@ -20,7 +35,10 @@ func run() -> void:
 	preview.set_process(false)
 	check(preview.current.id == "home" and preview.world.middle_ground.y_sort_enabled, "home opens with common depth sorting")
 	check(preview.nodes.ball.get_parent() == preview.world.middle_ground, "ball joins middle ground")
-	check(preview.hit(Vector2(890, 497)).id == "ball", "interactive ball is hit at authored position")
+	var ball: Dictionary = data.levels[0].elements.filter(func(e): return e.id == "ball")[0]
+	var ball_asset: Dictionary = data.assets.filter(func(a): return a.id == ball.asset)[0]
+	var ball_center: Vector2 = LevelProject.element_rect(ball, ball_asset).get_center()
+	check(preview.hit(ball_center).get("id", "") == "ball", "interactive ball is hit at authored position")
 	preview.throw_ball("ball", Vector2(1120, 500))
 	for i in 200: preview._process(.1)
 	check(preview.flight.is_empty() and preview.dog_position.distance_to(Vector2(1120, 500)) < 1, "dog completes throw at its authored destination")

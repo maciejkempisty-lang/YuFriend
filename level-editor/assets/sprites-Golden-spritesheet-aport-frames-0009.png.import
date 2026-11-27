@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ckrvxnct0rcal"
-path="res://.godot/imported/0009.png-88ab28f8a1e237c9321d4910f914552e.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-aport-frames-0009.png-3754b400f2cbc4db39651ee0abe88460.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-aport-frames-0009.png"
-dest_files=["res://.godot/imported/0009.png-88ab28f8a1e237c9321d4910f914552e.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-aport-frames-0009.png-3754b400f2cbc4db39651ee0abe88460.ctex"]
 
 [params]
 

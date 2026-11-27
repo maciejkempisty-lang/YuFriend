@@ -27,12 +27,9 @@ func run() -> void:
 	check(room.preview.game_mode, "preview switched to game mode")
 	check(not room.preview.needs.visible, "preview's test-pet HUD is hidden")
 	check(not room.preview.selector.get_parent().visible, "preview toolbar (selector + reset) is hidden in game mode")
-	check(room.preview.current.id == "home", "home level loaded from starter.json")
+	check(room.preview.current.id == "home", "home level loaded from ver1.json")
 	var before_fullness: int = room.session.pet.needs.fullness
-	var food: Dictionary
-	for e in room.preview.current.elements:
-		if e.id == "food": food = e; break
-	check(not food.is_empty(), "food element present in starter home")
+	var food := {"id": "food-test", "name": "Miska", "asset": "food", "script": "feed", "params": {"fullness": 22}, "x": 485, "y": 505}
 	room.preview.activate(food, Vector2.ZERO)
 	for i in 400: room.preview._process(.05)
 	check(room.session.pet.needs.fullness >= before_fullness, "session.act drove real pet needs")

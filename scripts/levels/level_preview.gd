@@ -88,6 +88,8 @@ func _ready() -> void:
 	add_child(message); add_child(thought)
 	message.visible = false; thought.visible = false
 	dog.add_child(animator)
+	dog.z_as_relative = false
+	dog.z_index = 1
 	animator.scale = Vector2.ONE * RoomLayout.PUPPY_SCALE * 1.15
 	world.middle_ground.add_child(dog)
 	animator.set_skin(load("res://data/skins/puppy_pixel.tres"))
@@ -143,6 +145,8 @@ func show_level(level_id: String) -> bool:
 		node.name = e.id
 		node.position = Vector2(e.x, e.y)
 		node.visible = e.visible
+		node.z_as_relative = false
+		node.z_index = -100 if e.layer == "background" else (100 if e.layer == "foreground" else 0)
 		var sprite := Sprite2D.new()
 		sprite.texture = textures[e.asset]
 		sprite.centered = false

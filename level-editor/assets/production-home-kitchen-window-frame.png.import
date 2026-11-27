@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg1mqcbo5wcga"
-path="res://.godot/imported/kitchen-window-frame.png-2381fed83fe02d6a87c7b6da412dc9c9.ctex"
+path="res://.godot/imported/production-home-kitchen-window-frame.png-2d1a5002f0acb9e82d91cbbbfb612b6e.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-home-kitchen-window-frame.png"
-dest_files=["res://.godot/imported/kitchen-window-frame.png-2381fed83fe02d6a87c7b6da412dc9c9.ctex"]
+dest_files=["res://.godot/imported/production-home-kitchen-window-frame.png-2d1a5002f0acb9e82d91cbbbfb612b6e.ctex"]
 
 [params]
 

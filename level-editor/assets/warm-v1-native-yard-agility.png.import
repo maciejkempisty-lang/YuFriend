@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhxw5qjfbk0cm"
-path="res://.godot/imported/agility.png-7a20fe34a0ddb5a794371a9741910df6.ctex"
+path="res://.godot/imported/warm-v1-native-yard-agility.png-78f4f2345c5889c75e269b8467183798.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-yard-agility.png"
-dest_files=["res://.godot/imported/agility.png-7a20fe34a0ddb5a794371a9741910df6.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-yard-agility.png-78f4f2345c5889c75e269b8467183798.ctex"]
 
 [params]
 

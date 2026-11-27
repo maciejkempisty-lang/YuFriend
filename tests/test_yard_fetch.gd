@@ -16,13 +16,17 @@ func game() -> GameSession:
 	PracticeSystem.sync(session.pet, session._local_now())
 	session.change_yard(true)
 	return session
+func finish_return(session: GameSession) -> void:
+	var token := session._approach_token
+	session._process(YardFetch.PLAY_SECONDS + 0.1)
+	session.finish_fetch_return(token)
 func _initialize() -> void:
 	var origin := Vector2(700, 310)
 	check(YardFetch.target(origin, Vector2(50, 0)).x == 850, "short swipe has proportional distance")
 	check(YardFetch.target(origin, Vector2(100, 0)).x == 1000, "longer swipe travels farther")
 	check(YardFetch.target(origin, Vector2(-100, 0)).x == 400, "left swipe throws left")
 	check(YardFetch.target(origin, Vector2(1000, 0)).x == 1300, "strength has a maximum")
-	check(YardFetch.target(Vector2(1300, 310), Vector2(200, 100)) == Vector2(1345, 328), "landing stays inside walkable lawn")
+	check(YardFetch.target(Vector2(1300, 310), Vector2(200, 100)) == Vector2(1345, 508), "landing stays inside walkable lawn")
 	var session := game()
 	var before := session.pet.to_dict()
 	check(not session.throw_ball(origin + Vector2(10, 0), origin), "tiny throw cannot start round")
@@ -35,6 +39,8 @@ func _initialize() -> void:
 	check(session.fetch.catching and session.pet.yard_record == 0, "arrival opens catch window before settling")
 	var bond := session.pet.bond
 	check(session.catch_ball(), "tap in window earns precision")
+	check(session.pet.yard_record == 0, "reward waits for the return to the throw point")
+	finish_return(session)
 	check(is_equal_approx(session.pet.bond - bond, 1.35), "precision adds one bond beyond normal reward")
 	check(session.pet.yard_record == 3, "completed throw records actual distance")
 	check(not session.catch_ball(), "duplicate tap cannot settle again")
@@ -45,14 +51,16 @@ func _initialize() -> void:
 	session.arrive_at(session._approach_token)
 	bond = session.pet.bond
 	session.catch_ball()
+	finish_return(session)
 	check(session.pet.bond == bond, "precision respects shared thirty-second reward cooldown")
 	check(session.pet.yard_record == 3, "shorter throw cannot reduce record")
 	session._process(2)
 	session.throw_ball(origin + Vector2(500, 0), origin)
 	session.arrive_at(session._approach_token)
 	session._process(0.9)
-	check(not session.fetch.active and session.pet.yard_record == 5, "missed window still finishes fetch and record")
 	check(not session.catch_ball(), "late tap earns no precision")
+	finish_return(session)
+	check(not session.fetch.active and session.pet.yard_record == 5, "missed window still finishes fetch and record")
 	session._process(2)
 	session.throw_ball(origin + Vector2(600, 0), origin)
 	session.cancel_touch_game()

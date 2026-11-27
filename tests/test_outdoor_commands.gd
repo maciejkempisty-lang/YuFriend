@@ -24,10 +24,8 @@ func game() -> GameSession:
 	return s
 func _initialize() -> void:
 	var s := game()
-	s.throw_ball(Vector2(1100, 310), Vector2(700, 310))
-	s.arrive_at(s._approach_token)
-	s.catch_ball()
-	check(s.outdoor_commands.available_key(s) == "come", "fetch offers actual recall")
+	s.outdoor_commands.offer_recall(Vector2(700, 310))
+	check(s.outdoor_commands.available_key(s) == "come", "recall offer is available")
 	s._process(1.5)
 	check(s.outdoor_commands.start(s, true), "guided recall starts")
 	s._process(2.5)

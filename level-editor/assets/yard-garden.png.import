@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bd6ddg054mgnf"
-path="res://.godot/imported/garden.png-d2c85d913441656673e882cbd6c258b9.ctex"
+path="res://.godot/imported/yard-garden.png-806ea6fc4b5b51d3f7d1d973dae3f774.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/yard-garden.png"
-dest_files=["res://.godot/imported/garden.png-d2c85d913441656673e882cbd6c258b9.ctex"]
+dest_files=["res://.godot/imported/yard-garden.png-806ea6fc4b5b51d3f7d1d973dae3f774.ctex"]
 
 [params]
 

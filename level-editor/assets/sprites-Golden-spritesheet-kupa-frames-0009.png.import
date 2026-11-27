@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbg06mc4mim75"
-path="res://.godot/imported/0009.png-75e97ab4627fefb9fa12ff76e3f3cf28.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-kupa-frames-0009.png-27e70fb9107abe64b50a60a07cbb2f50.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-kupa-frames-0009.png"
-dest_files=["res://.godot/imported/0009.png-75e97ab4627fefb9fa12ff76e3f3cf28.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-kupa-frames-0009.png-27e70fb9107abe64b50a60a07cbb2f50.ctex"]
 
 [params]
 

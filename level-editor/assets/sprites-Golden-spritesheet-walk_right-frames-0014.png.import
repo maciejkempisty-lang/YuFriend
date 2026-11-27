@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnsa0oh13atb7"
-path="res://.godot/imported/0014.png-0990329d048b7e5a8b26eec4ce6222ec.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-walk_right-frames-0014.png-924eb762df09d81b95916da16946539a.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-walk_right-frames-0014.png"
-dest_files=["res://.godot/imported/0014.png-0990329d048b7e5a8b26eec4ce6222ec.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-walk_right-frames-0014.png-924eb762df09d81b95916da16946539a.ctex"]
 
 [params]
 

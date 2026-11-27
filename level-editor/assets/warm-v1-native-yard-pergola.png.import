@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgxcdcamdths"
-path="res://.godot/imported/pergola.png-82249569aad717b0db5bd183f12383dd.ctex"
+path="res://.godot/imported/warm-v1-native-yard-pergola.png-24e12997c8347dceb6c82cc7c9f2ef33.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-yard-pergola.png"
-dest_files=["res://.godot/imported/pergola.png-82249569aad717b0db5bd183f12383dd.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-yard-pergola.png-24e12997c8347dceb6c82cc7c9f2ef33.ctex"]
 
 [params]
 

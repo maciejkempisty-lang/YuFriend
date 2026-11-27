@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://34vhtasvu6wi"
-path="res://.godot/imported/sprinkler-hd.png-519796f0a174549e826042f14e170018.ctex"
+path="res://.godot/imported/warm-v1-yard-sprinkler-hd.png-707b01a1ba295c0eacc7fb438bc12a53.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-yard-sprinkler-hd.png"
-dest_files=["res://.godot/imported/sprinkler-hd.png-519796f0a174549e826042f14e170018.ctex"]
+dest_files=["res://.godot/imported/warm-v1-yard-sprinkler-hd.png-707b01a1ba295c0eacc7fb438bc12a53.ctex"]
 
 [params]
 

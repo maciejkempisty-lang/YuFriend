@@ -1,7 +1,7 @@
 extends SceneTree
 func _initialize() -> void: call_deferred("run")
 func run() -> void:
-	var path := "res://level-editor/projects/starter.json"
+	var path := "res://level-editor/projects/ver1.json"
 	var level_id := ""
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--project="): path = arg.trim_prefix("--project=")

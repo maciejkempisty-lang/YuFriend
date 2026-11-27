@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rxwca32saet3"
-path="res://.godot/imported/shade.png-af379a93a4381f76792e57dc22af395b.ctex"
+path="res://.godot/imported/yard-shade.png-25696529f0091ff5c0e9b307ccc73a63.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/yard-shade.png"
-dest_files=["res://.godot/imported/shade.png-af379a93a4381f76792e57dc22af395b.ctex"]
+dest_files=["res://.godot/imported/yard-shade.png-25696529f0091ff5c0e9b307ccc73a63.ctex"]
 
 [params]
 

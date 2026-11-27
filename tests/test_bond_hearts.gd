@@ -189,8 +189,11 @@ func activity_sources() -> void:
 	s.change_yard(true)
 	s.pet.social.last_reward_at = 0
 	check(s.throw_ball(Vector2(1100, 310), Vector2(700, 310)), "fetch begins")
-	s.arrive_at(s._approach_token)
+	var fetch_token := s._approach_token
+	s.arrive_at(fetch_token)
 	s.catch_ball()
+	s._process(YardFetch.PLAY_SECONDS + 0.1)
+	s.finish_fetch_return(fetch_token)
 	s._process(2)
 	check(is_equal_approx(BondLevels.today(s.pet, NOW), 1.7), "fetch base and precision credit today")
 	s.activity = "idle"

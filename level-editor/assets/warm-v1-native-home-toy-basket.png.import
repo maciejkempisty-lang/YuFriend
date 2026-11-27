@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hlqhnoo3ugyc"
-path="res://.godot/imported/toy-basket.png-ebbc50d260470aabf49615ecefcd5496.ctex"
+path="res://.godot/imported/warm-v1-native-home-toy-basket.png-a41f4294d155d8d78e03b4c44d728fb3.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-home-toy-basket.png"
-dest_files=["res://.godot/imported/toy-basket.png-ebbc50d260470aabf49615ecefcd5496.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-home-toy-basket.png-a41f4294d155d8d78e03b4c44d728fb3.ctex"]
 
 [params]
 

@@ -10,7 +10,7 @@ extends Control
 
 signal unhandled_script(script_id: String, element_id: String)
 
-@export var project_path: String = "res://level-editor/projects/starter.json"
+@export var project_path: String = "res://level-editor/projects/ver1.json"
 @export var save_path: String = "user://pet.json"
 
 var session := GameSession.new()

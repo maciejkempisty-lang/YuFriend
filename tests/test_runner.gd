@@ -325,7 +325,7 @@ func _test_session_interruptions() -> void:
 		var game := GameSession.new()
 		game.local_clock = func(): return 100 * 86400.0 + 12 * 3600.0
 		game.pet = PetState.create(42)
-		game.move_to(Vector2(1300, 310), false)
+		game.move_to(Vector2(1300, 480), false)
 		check(not game.busy() and game.act(action), "autonomous walk yields immediately to " + action)
 		game.free()
 	var game := GameSession.new()
@@ -333,12 +333,12 @@ func _test_session_interruptions() -> void:
 	game.pet = PetState.create(42)
 	var targets: Array[Vector2] = []
 	game.destination_requested.connect(func(point: Vector2): targets.append(point))
-	game.move_to(Vector2(1200, 310))
-	game.move_to(Vector2(250, 310))
-	check(targets == [Vector2(1200, 310), Vector2(250, 310)], "a second floor destination replaces an unfinished walk")
+	game.move_to(Vector2(1200, 480))
+	game.move_to(Vector2(250, 480))
+	check(targets == [Vector2(1200, 480), Vector2(250, 480)], "a second floor destination replaces an unfinished walk")
 	game.act("feed")
 	var token := game._approach_token
-	game.move_to(Vector2(800, 310))
+	game.move_to(Vector2(800, 480))
 	game.destination_reached()
 	check(targets.size() == 2 and game.activity == "approach" and game._approach_token == token, "care approach cannot be redirected or ended by an old floor arrival")
 	game.arrive_at(token)

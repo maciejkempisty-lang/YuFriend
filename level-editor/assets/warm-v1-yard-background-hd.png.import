@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://by1dbkvjg1ro0"
-path="res://.godot/imported/background-hd.png-1aea0be01623d91d8789b4885b4fccee.ctex"
+path="res://.godot/imported/warm-v1-yard-background-hd.png-1ee652653309d2809fd3adee76d79a59.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-yard-background-hd.png"
-dest_files=["res://.godot/imported/background-hd.png-1aea0be01623d91d8789b4885b4fccee.ctex"]
+dest_files=["res://.godot/imported/warm-v1-yard-background-hd.png-1ee652653309d2809fd3adee76d79a59.ctex"]
 
 [params]
 

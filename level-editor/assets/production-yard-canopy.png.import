@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0mxqvu0evrya"
-path="res://.godot/imported/canopy.png-fd89bf07453b9dc9c505eb3c16e322a4.ctex"
+path="res://.godot/imported/production-yard-canopy.png-20a834fbd034b57f74fe15b48c801945.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/production-yard-canopy.png"
-dest_files=["res://.godot/imported/canopy.png-fd89bf07453b9dc9c505eb3c16e322a4.ctex"]
+dest_files=["res://.godot/imported/production-yard-canopy.png-20a834fbd034b57f74fe15b48c801945.ctex"]
 
 [params]
 

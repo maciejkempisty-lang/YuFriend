@@ -108,6 +108,7 @@ var reunion_text: Label
 var text_dialog: AcceptDialog
 var command_edit: LineEdit
 var save_path_override: String = ""
+var project_path_override: String = ""
 var journal_signature: String = ""
 var header: PanelContainer
 var header_art: TextureRect
@@ -132,6 +133,7 @@ var training_steps: Array[IconActionButton] = []
 var bubble_icon: TextureRect
 var gain_label: Label
 var bubble_left := 0.0
+var editor_feedback_world_target := Vector2.INF
 var gain_left := 0.0
 var training_feedback := ""
 var training_feedback_left := 0.0
@@ -171,15 +173,42 @@ const LOW_LABELS := {"feed": "Głód", "rest": "Senność", "clean": "Czesanie",
 const _ACTIVE_PROJECT_FILE := "user://active_project.txt"
 
 func _resolve_project_path() -> String:
+	if not project_path_override.is_empty(): return project_path_override
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--project="):
 			var chosen := arg.trim_prefix("--project=")
 			_remember_project(chosen)
 			return chosen
+	# Auto-pick the newest ver*.json saved by the editor so the game always
+	# boots the latest iteration without the user having to remember a path.
+	var latest := _latest_version_project()
+	if not latest.is_empty(): return latest
 	if FileAccess.file_exists(_ACTIVE_PROJECT_FILE):
 		var remembered := FileAccess.get_file_as_string(_ACTIVE_PROJECT_FILE).strip_edges()
 		if not remembered.is_empty() and FileAccess.file_exists(remembered): return remembered
 	return RoomLayoutLoader.DEFAULT_PATH
+
+func _latest_version_project() -> String:
+	var dir := DirAccess.open("res://level-editor/projects")
+	if dir == null: return ""
+	var best := -1
+	var best_name := ""
+	var re := RegEx.new()
+	re.compile("^ver(\\d+)\\.json$")
+	dir.list_dir_begin()
+	var name := dir.get_next()
+	while name != "":
+		if not dir.current_is_dir():
+			var m := re.search(name)
+			if m:
+				var n := int(m.get_string(1))
+				if n > best:
+					best = n
+					best_name = name
+		name = dir.get_next()
+	dir.list_dir_end()
+	if best_name.is_empty(): return ""
+	return "res://level-editor/projects/" + best_name
 
 func _remember_project(path: String) -> void:
 	var f := FileAccess.open(_ACTIVE_PROJECT_FILE, FileAccess.WRITE)
@@ -189,7 +218,7 @@ func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	process_priority = 10 # Follow the room's updated camera in the same frame.
 	# Let a LevelProject override station positions before any node reads them.
-	# Picks (in order): --project=<path> CLI arg, remembered choice in user://, starter.json.
+	# Picks (in order): --project=<path> CLI arg, newest verN.json, remembered choice, ver1.json.
 	# Failures are logged; the handcrafted defaults in RoomLayout remain in force.
 	var project_path := _resolve_project_path()
 	var layout_result := RoomLayoutLoader.new().apply(project_path)
@@ -229,8 +258,11 @@ func _ready() -> void:
 	room.room_viewed.connect(session.follow_room)
 	room.return_button.pressed.connect(session.player_activity)
 	room.care_requested.connect(_on_room_care_requested)
+	room.editor_interaction_requested.connect(_on_editor_interaction)
 	room.ball_thrown.connect(func(target: Vector2): session.throw_ball(target, room.ball_world))
 	session.ball_throw_requested.connect(room.throw_ball)
+	session.fetch_return_requested.connect(room.return_fetch_ball)
+	room.fetch_returned.connect(session.finish_fetch_return)
 	session.ball_caught.connect(room.animate_ball_catch)
 	session.home_drink_started.connect(func(): room.animator.facing_left = true)
 	session.hide_revealed.connect(room.reveal_hide)
@@ -2082,6 +2114,7 @@ func _position_care_status() -> void:
 		maxf(status_strip.get_rect().end.y + 8, sheet.position.y - 40), width, 34))
 
 func _show_feedback(text: String) -> void:
+	editor_feedback_world_target = Vector2.INF
 	if selected_tab == "training":
 		# Keep instructions and outcomes in one place, clear of the puppy.
 		training_feedback = text
@@ -2236,7 +2269,7 @@ func _position_feedback() -> void:
 	bubble.visible = not yard_instruction and not _dialog_open() and not session.portal_active and bubble_left > 0 and on_screen and not session.fetch.catching and not session.hide_game.active()
 	gain_label.visible = not _dialog_open() and gain_left > 0 and on_screen and not session.hide_game.active()
 	var pet_bounds := room.pet_screen_bounds()
-	var head := Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
+	var head := room.world_to_screen(editor_feedback_world_target) if editor_feedback_world_target.is_finite() else Vector2(pet_bounds.get_center().x, pet_bounds.position.y)
 	var obstacles: Array[Rect2] = [pet_bounds.grow(12)]
 	if session.in_yard:
 		obstacles.append(yard_toolbar.get_global_rect().grow(4))
@@ -2328,6 +2361,53 @@ func _on_room_care_requested(action: String) -> void:
 	if action.begins_with("yard_") and yard_menu.offer(action.trim_prefix("yard_")): return
 	yard_menu.close()
 	_room_care_action(action)
+
+func _on_editor_interaction(_element_id: String, script_id: String, element: Dictionary) -> void:
+	var params: Dictionary = element.get("params", {})
+	match script_id:
+		"portal":
+			var target := str(params.get("target", ""))
+			if target == ("home" if session.in_yard else "yard"):
+				_toggle_yard()
+				_editor_script_message(params, element)
+			elif target != ("yard" if session.in_yard else "home"):
+				session.say("Ta lokacja nie jest jeszcze dostępna w grze.")
+		"message": _show_editor_message(str(params.get("text", element.get("name", ""))), float(params.get("duration", 4)), element, false)
+		"thought": _show_editor_message(str(params.get("text", "…")), float(params.get("duration", 4)), element, bool(params.get("from_dog", true)))
+		"greet": _show_editor_message(str(params.get("text", "Cześć, przyjacielu!")), 4.0, element, false)
+		"bark", "play_clip":
+			room.play_clip(str(params.get("clip", "bark_stand" if script_id == "bark" else "idle")))
+			_editor_script_message(params, element)
+		"walk_to":
+			session.move_to(Vector2(float(params.get("x", element.x)), float(params.get("y", element.y))), false)
+			_editor_script_message(params, element)
+		"feed", "pet", "clean", "rest", "ball":
+			var action := "play" if script_id == "ball" else script_id
+			_room_care_action(action)
+		"bath": _show_bath()
+		"cuddle": session.start_cuddle()
+		"drink": session.home_drink.start(session)
+		"sniff": session.start_sniff(int(params.get("spot", -1)))
+		"course": session.course.start(session)
+		"timed_course": session.timed_course.start(session)
+		"water": session.water.start(session, str(params.get("spot", "puddle")))
+		"hide": session.start_hide(str(params.get("kind", "bush")), int(params.get("seed", 0)))
+		"visitor": session.visitors.start(session, str(params.get("guest", "bird")))
+		"none": pass
+		_: push_warning("Nieobsługiwany skrypt edytora: " + script_id)
+
+func _editor_script_message(params: Dictionary, element: Dictionary) -> void:
+	var message := str(params.get("message", ""))
+	if not message.is_empty(): _show_editor_message(message, float(params.get("duration", 4)), element, false)
+
+func _show_editor_message(text: String, duration: float, element: Dictionary, from_dog: bool) -> void:
+	if text.is_empty(): return
+	session.say(text)
+	message_label.text = text
+	bubble_left = clampf(duration, 1.0, 20.0)
+	bubble.size = Vector2(minf(340, room.size.x - 32), 0)
+	editor_feedback_world_target = Vector2.INF if from_dog else Vector2(float(element.x), float(element.y))
+	_position_feedback()
 
 func _room_care_action(action: String) -> void:
 	if action == "drink":

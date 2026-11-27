@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1bt55tiekjkr"
-path="res://.godot/imported/background.png-7cea933f64132c7176662d43d5bf8873.ctex"
+path="res://.godot/imported/warm-v1-native-home-background.png-664aa99a08ded72ae80de2d4a438cf4c.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-home-background.png"
-dest_files=["res://.godot/imported/background.png-7cea933f64132c7176662d43d5bf8873.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-home-background.png-664aa99a08ded72ae80de2d4a438cf4c.ctex"]
 
 [params]
 

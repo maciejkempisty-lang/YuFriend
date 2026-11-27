@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbgmj067g4w8t"
-path="res://.godot/imported/pendant-lamp-on-hd.png-aede8ad22d0f2dc7b50ff6437d80c88e.ctex"
+path="res://.godot/imported/warm-v1-home-pendant-lamp-on-hd.png-00b4ffcc601e6412c63ab2813b7d7156.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-home-pendant-lamp-on-hd.png"
-dest_files=["res://.godot/imported/pendant-lamp-on-hd.png-aede8ad22d0f2dc7b50ff6437d80c88e.ctex"]
+dest_files=["res://.godot/imported/warm-v1-home-pendant-lamp-on-hd.png-00b4ffcc601e6412c63ab2813b7d7156.ctex"]
 
 [params]
 

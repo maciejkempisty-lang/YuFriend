@@ -74,5 +74,6 @@ for (key, (cx, cy, x, y)), name in zip(locations.items(), names):
 
 project = dict(format='yufriend-levels', version=1, name='YuFriend · Dom i ogród',
                startLevel='home', assets=assets, levels=[home, yard])
-(ROOT / 'projects/starter.json').write_text(json.dumps(project, ensure_ascii=False, indent=2) + '\n')
-print('Wrote', ROOT / 'projects/starter.json')
+(ROOT / 'projects/_backup').mkdir(exist_ok=True)
+(ROOT / 'projects/_backup/starter.json').write_text(json.dumps(project, ensure_ascii=False, indent=2) + '\n')
+print('Wrote', ROOT / 'projects/_backup/starter.json')

@@ -150,7 +150,11 @@ func _run() -> void:
 	var production_frames: SpriteFrames = animator.skin.frames
 	var total := 0
 	for clip in PetAnimator.CLIPS: total += production_frames.get_frame_count(clip)
-	check(production_frames.get_animation_names().size() == 28 and total == 169, "production pack contains all 28 clips and 169 frames")
+	var manifest: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/sprites/puppy/pixel/manifest.json"))
+	var expected_frames := 0
+	for animation in manifest.animations.values(): expected_frames += animation.regions.size()
+	check(production_frames.get_animation_names().size() == manifest.animations.size() and total == expected_frames,
+		"production pack contains every manifest clip and frame")
 	var paw_seconds := 0.0
 	for i in production_frames.get_frame_count("give_paw"):
 		paw_seconds += production_frames.get_frame_duration("give_paw", i) / production_frames.get_animation_speed("give_paw")

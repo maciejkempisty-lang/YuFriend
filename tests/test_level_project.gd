@@ -5,8 +5,8 @@ func check(ok: bool, label: String) -> void:
 	if ok: passed += 1
 	else: failed += 1; push_error(label)
 func _initialize() -> void:
-	var result := LevelProject.read_project("res://level-editor/projects/starter.json")
-	check(result.ok, "starter is accepted by game loader")
+	var result := LevelProject.read_project("res://level-editor/projects/ver1.json")
+	check(result.ok, "ver1 is accepted by game loader")
 	if not result.ok: print(result.errors); quit(1); return
 	var project: Dictionary = result.project
 	for a in project.assets: check(LevelProject.texture(a) != null, "native PNG resolves: " + a.id)
@@ -23,7 +23,7 @@ func _initialize() -> void:
 	# Door portal has params.target; migration already applied.
 	var door: Dictionary = {}
 	for e in project.levels[0].elements:
-		if e.id == "door": door = e
+		if e.script == "portal" and e.get("params", {}).get("target") == "yard": door = e
 	check(door.get("script") == "portal" and door.get("params", {}).get("target") == "yard", "door migrated to portal params")
 	# Legacy project migration.
 	var legacy := {
@@ -51,24 +51,22 @@ func _initialize() -> void:
 			"version": bad.version = 99
 			"portal":
 				for e in bad.levels[0].elements:
-					if e.id == "door": e.params.target = "missing"
+					if e.script == "portal": e.params.target = "missing"
 			"script":
 				bad.levels[0].elements[0].script = "res://bad.gd"
 			"duplicate": bad.levels.append(bad.levels[0].duplicate(true))
 			"position": bad.levels[0].spawn.x = -1
 			"static_ball":
 				for e in bad.levels[0].elements:
-					if e.id == "ball": e.static = true
+					if e.script == "ball": e.static = true
 			"null": bad.levels[0].elements.append(null)
 			"param":
 				for e in bad.levels[0].elements:
-					if e.id == "food": e.params.fullness = 999
+					if e.script == "ball": e.params.arc = 999
 		check(not LevelProject.validate(bad).is_empty(), "rejects " + mutation)
 	check(not LevelProject.source_allowed("res://assets/../secret.png"), "path traversal rejected")
-	# find food in starter (position differs after migration)
-	var food: Dictionary = {}
-	for e in project.levels[0].elements:
-		if e.id == "food": food = e
+	# A synthetic element checks pivot math independently of the edited scene.
+	var food: Dictionary = {"x": 485, "y": 505, "width": 60, "height": 36, "pivot": {"x": 10, "y": 10}}
 	var food_asset: Dictionary = {}
 	for a in project.assets:
 		if a.id == "food": food_asset = a

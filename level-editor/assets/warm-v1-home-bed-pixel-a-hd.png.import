@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://5c7yqprmvfjb"
-path="res://.godot/imported/bed-pixel-a-hd.png-06ef5f234b05ec94e962ee38a995f2fe.ctex"
+path="res://.godot/imported/warm-v1-home-bed-pixel-a-hd.png-272137519529e677d72eb40c522ac221.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-home-bed-pixel-a-hd.png"
-dest_files=["res://.godot/imported/bed-pixel-a-hd.png-06ef5f234b05ec94e962ee38a995f2fe.ctex"]
+dest_files=["res://.godot/imported/warm-v1-home-bed-pixel-a-hd.png-272137519529e677d72eb40c522ac221.ctex"]
 
 [params]
 

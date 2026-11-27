@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://33knodatkof1"
-path="res://.godot/imported/0013.png-623a91a8de46971450afd702b9591bbc.ctex"
+path="res://.godot/imported/sprites-Golden-spritesheet-playing_with_the_ball-frames-0013.png-13c6e178e2b10ee6e4d6c547132dc990.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/sprites-Golden-spritesheet-playing_with_the_ball-frames-0013.png"
-dest_files=["res://.godot/imported/0013.png-623a91a8de46971450afd702b9591bbc.ctex"]
+dest_files=["res://.godot/imported/sprites-Golden-spritesheet-playing_with_the_ball-frames-0013.png-13c6e178e2b10ee6e4d6c547132dc990.ctex"]
 
 [params]
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ww32g37hiogl"
-path="res://.godot/imported/main-window-night.png-d05e83e953eafa1172628e1078530ddb.ctex"
+path="res://.godot/imported/warm-v1-native-home-main-window-night.png-2bfba1203a83d0187aba4b6cb3acca04.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-home-main-window-night.png"
-dest_files=["res://.godot/imported/main-window-night.png-d05e83e953eafa1172628e1078530ddb.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-home-main-window-night.png-2bfba1203a83d0187aba4b6cb3acca04.ctex"]
 
 [params]
 

@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cx6ly4i24f7ue"
-path="res://.godot/imported/chest-hd.png-ef702c43021f506ff105b795d3cadc78.ctex"
+path="res://.godot/imported/warm-v1-home-chest-hd.png-73b4145d71998a514807390f0c5f46a9.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-home-chest-hd.png"
-dest_files=["res://.godot/imported/chest-hd.png-ef702c43021f506ff105b795d3cadc78.ctex"]
+dest_files=["res://.godot/imported/warm-v1-home-chest-hd.png-73b4145d71998a514807390f0c5f46a9.ctex"]
 
 [params]
 

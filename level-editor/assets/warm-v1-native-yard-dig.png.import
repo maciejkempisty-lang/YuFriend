@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bofkexpl1d72l"
-path="res://.godot/imported/dig.png-ec5f5af8e0714265a5e0b3c871b11a72.ctex"
+path="res://.godot/imported/warm-v1-native-yard-dig.png-ff1b4c52b1a2cfd466c7adc28a807b61.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://level-editor/assets/warm-v1-native-yard-dig.png"
-dest_files=["res://.godot/imported/dig.png-ec5f5af8e0714265a5e0b3c871b11a72.ctex"]
+dest_files=["res://.godot/imported/warm-v1-native-yard-dig.png-ff1b4c52b1a2cfd466c7adc28a807b61.ctex"]
 
 [params]
 
