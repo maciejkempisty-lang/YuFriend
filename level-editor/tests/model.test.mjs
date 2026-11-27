@@ -60,7 +60,7 @@ test('asset pixel pivot transforms without shifting the world image', () => {
 });
 
 test('script registry exposes message, thought and portal', () => {
-  for (const id of ['none', 'message', 'thought', 'portal', 'feed', 'pet', 'clean', 'rest', 'ball', 'bark', 'greet', 'play_clip', 'walk_to']) {
+  for (const id of ['none', 'message', 'thought', 'portal', 'feed', 'pet', 'clean', 'rest', 'ball', 'bark', 'greet', 'play_clip', 'walk_to', 'bath', 'cuddle', 'drink', 'sniff', 'course', 'timed_course', 'water', 'hide', 'visitor']) {
     assert.ok(SCRIPTS[id], 'missing script: ' + id);
   }
   assert.equal(SCRIPTS.ball.static, false);

@@ -1,0 +1,588 @@
+{
+  "format": "yufriend-levels",
+  "version": 1,
+  "name": "YuFriend · Dom i ogród",
+  "startLevel": "home",
+  "assets": [
+    {
+      "id": "home-background",
+      "name": "Dom — tło",
+      "source": "res://level-editor/assets/home-background.png",
+      "width": 480,
+      "height": 120
+    },
+    {
+      "id": "yard-background",
+      "name": "Ogród — tło",
+      "source": "res://level-editor/assets/yard-background.png",
+      "width": 480,
+      "height": 120
+    },
+    {
+      "id": "bed",
+      "name": "Legowisko",
+      "source": "res://level-editor/assets/bed.png",
+      "width": 60,
+      "height": 24
+    },
+    {
+      "id": "food",
+      "name": "Miska",
+      "source": "res://level-editor/assets/food.png",
+      "width": 20,
+      "height": 12
+    },
+    {
+      "id": "toys",
+      "name": "Kosz",
+      "source": "res://level-editor/assets/toys.png",
+      "width": 34,
+      "height": 26
+    },
+    {
+      "id": "door",
+      "name": "Drzwi do ogrodu",
+      "source": "res://level-editor/assets/door.png",
+      "width": 42,
+      "height": 64
+    },
+    {
+      "id": "ball",
+      "name": "Piłka",
+      "source": "res://level-editor/assets/ball.png",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "id": "yard-gate",
+      "name": "Furtka",
+      "source": "res://assets/art/yard/sprites/gate.png",
+      "width": 37,
+      "height": 32
+    },
+    {
+      "id": "yard-garden",
+      "name": "Ogródek",
+      "source": "res://assets/art/yard/sprites/garden.png",
+      "width": 50,
+      "height": 22
+    },
+    {
+      "id": "yard-dig",
+      "name": "Piaskownica",
+      "source": "res://assets/art/yard/sprites/dig.png",
+      "width": 46,
+      "height": 18
+    },
+    {
+      "id": "yard-fetch",
+      "name": "Aport",
+      "source": "res://assets/art/yard/sprites/fetch.png",
+      "width": 85,
+      "height": 27
+    },
+    {
+      "id": "yard-bush_0",
+      "name": "Krzak 1",
+      "source": "res://assets/art/yard/sprites/bush_0.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-bush_1",
+      "name": "Krzak 2",
+      "source": "res://assets/art/yard/sprites/bush_1.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-bush_2",
+      "name": "Krzak 3",
+      "source": "res://assets/art/yard/sprites/bush_2.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-outing",
+      "name": "Tabliczka",
+      "source": "res://assets/art/yard/sprites/outing.png",
+      "width": 18,
+      "height": 19
+    },
+    {
+      "id": "yard-shade",
+      "name": "Miejsce odpoczynku",
+      "source": "res://assets/art/yard/sprites/shade.png",
+      "width": 71,
+      "height": 49
+    },
+    {
+      "id": "yard-course",
+      "name": "Tor",
+      "source": "res://assets/art/yard/sprites/course.png",
+      "width": 21,
+      "height": 22
+    },
+    {
+      "id": "yard-puddle",
+      "name": "Kałuża",
+      "source": "res://assets/art/yard/sprites/puddle.png",
+      "width": 48,
+      "height": 17
+    },
+    {
+      "id": "yard-sprinkler",
+      "name": "Zraszacz",
+      "source": "res://assets/art/yard/sprites/sprinkler.png",
+      "width": 34,
+      "height": 27
+    }
+  ],
+  "levels": [
+    {
+      "id": "home",
+      "name": "Dom",
+      "width": 1440,
+      "height": 540,
+      "spawn": {
+        "x": 670,
+        "y": 502
+      },
+      "walk": {
+        "x": 95,
+        "y": 466,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "background",
+          "name": "Tło",
+          "asset": "home-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 540,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bed",
+          "name": "Legowisko",
+          "asset": "bed",
+          "layer": "background",
+          "x": 205,
+          "y": 502,
+          "width": 180,
+          "height": 72,
+          "pivot": {
+            "x": 30,
+            "y": 18
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "food",
+          "name": "Miska",
+          "asset": "food",
+          "layer": "middle",
+          "x": 485,
+          "y": 505,
+          "width": 60,
+          "height": 36,
+          "pivot": {
+            "x": 10,
+            "y": 10
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "feed",
+          "params": {
+            "fullness": 22,
+            "message": "Mniam!",
+            "clip": "eat_loop"
+          }
+        },
+        {
+          "id": "toys",
+          "name": "Kosz",
+          "asset": "toys",
+          "layer": "middle",
+          "x": 1090,
+          "y": 496,
+          "width": 102,
+          "height": 78,
+          "pivot": {
+            "x": 17,
+            "y": 25
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "message",
+          "params": {
+            "text": "W koszu czekają zabawki.",
+            "duration": 4
+          }
+        },
+        {
+          "id": "door",
+          "name": "Drzwi do ogrodu",
+          "asset": "door",
+          "layer": "background",
+          "x": 1300,
+          "y": 440,
+          "width": 126,
+          "height": 192,
+          "pivot": {
+            "x": 21,
+            "y": 63
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "yard",
+            "message": "Idziemy do ogrodu!"
+          }
+        },
+        {
+          "id": "ball",
+          "name": "Piłka",
+          "asset": "ball",
+          "layer": "middle",
+          "x": 890,
+          "y": 497,
+          "width": 36,
+          "height": 36,
+          "pivot": {
+            "x": 6,
+            "y": 6
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        }
+      ]
+    },
+    {
+      "id": "yard",
+      "name": "Ogród",
+      "width": 1440,
+      "height": 540,
+      "spawn": {
+        "x": 670,
+        "y": 502
+      },
+      "walk": {
+        "x": 95,
+        "y": 466,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "background",
+          "name": "Tło",
+          "asset": "yard-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 540,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "ball",
+          "name": "Piłka",
+          "asset": "ball",
+          "layer": "middle",
+          "x": 890,
+          "y": 497,
+          "width": 36,
+          "height": 36,
+          "pivot": {
+            "x": 6,
+            "y": 6
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        },
+        {
+          "id": "gate",
+          "name": "Furtka",
+          "asset": "yard-gate",
+          "layer": "middle",
+          "x": 150,
+          "y": 456,
+          "width": 111,
+          "height": 96,
+          "pivot": {
+            "x": 19,
+            "y": 31
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "home",
+            "message": "Wracamy do domu."
+          }
+        },
+        {
+          "id": "garden",
+          "name": "Ogródek",
+          "asset": "yard-garden",
+          "layer": "middle",
+          "x": 550,
+          "y": 480,
+          "width": 150,
+          "height": 66,
+          "pivot": {
+            "x": 24.333333333333332,
+            "y": 12
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "dig",
+          "name": "Piaskownica",
+          "asset": "yard-dig",
+          "layer": "background",
+          "x": 600,
+          "y": 465,
+          "width": 138,
+          "height": 54,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "fetch",
+          "name": "Aport",
+          "asset": "yard-fetch",
+          "layer": "middle",
+          "x": 850,
+          "y": 492,
+          "width": 255,
+          "height": 81,
+          "pivot": {
+            "x": 12.333333333333334,
+            "y": 18
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_0",
+          "name": "Krzak 1",
+          "asset": "yard-bush_0",
+          "layer": "middle",
+          "x": 350,
+          "y": 474,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 26.666666666666668,
+            "y": 30
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_1",
+          "name": "Krzak 2",
+          "asset": "yard-bush_1",
+          "layer": "middle",
+          "x": 750,
+          "y": 474,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 27,
+            "y": 30
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_2",
+          "name": "Krzak 3",
+          "asset": "yard-bush_2",
+          "layer": "middle",
+          "x": 1150,
+          "y": 474,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 27.333333333333332,
+            "y": 30
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "outing",
+          "name": "Tabliczka",
+          "asset": "yard-outing",
+          "layer": "middle",
+          "x": 1296,
+          "y": 480,
+          "width": 54,
+          "height": 57,
+          "pivot": {
+            "x": 9,
+            "y": 18
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "shade",
+          "name": "Miejsce odpoczynku",
+          "asset": "yard-shade",
+          "layer": "background",
+          "x": 144,
+          "y": 366,
+          "width": 213,
+          "height": 147,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "course",
+          "name": "Tor",
+          "asset": "yard-course",
+          "layer": "middle",
+          "x": 1005,
+          "y": 474,
+          "width": 63,
+          "height": 66,
+          "pivot": {
+            "x": 10,
+            "y": 21
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "puddle",
+          "name": "Kałuża",
+          "asset": "yard-puddle",
+          "layer": "background",
+          "x": 351,
+          "y": 474,
+          "width": 144,
+          "height": 51,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "sprinkler",
+          "name": "Zraszacz",
+          "asset": "yard-sprinkler",
+          "layer": "middle",
+          "x": 1305,
+          "y": 492,
+          "width": 102,
+          "height": 81,
+          "pivot": {
+            "x": 8,
+            "y": 11
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}

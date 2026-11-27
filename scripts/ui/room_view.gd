@@ -304,7 +304,52 @@ func _ready() -> void:
 	resized.connect(update_placement)
 	get_viewport().size_changed.connect(update_placement.call_deferred)
 	gui_input.connect(_on_input)
+	# If a LevelProject was loaded, swap procedural RoomArtwork for editor sprites.
+	# This runs AFTER station_nodes/yard_nodes exist so we can hide them in one pass.
+	_apply_editor_art()
 	update_placement()
+
+func _apply_editor_art() -> void:
+	var project: Dictionary = RoomLayoutLoader.active_project
+	var textures: Dictionary = RoomLayoutLoader.active_textures
+	if project.is_empty() or textures.is_empty(): return
+	# Hide EVERY handcrafted/procedural piece — editor is the only source of
+	# visible content now, besides the puppy itself.
+	backdrop.hide()
+	ball_art.hide()
+	wall_clock.hide()
+	ambient_life.hide()
+	for id in station_nodes:
+		var node = station_nodes[id]
+		if node is CanvasItem: node.hide()
+	for id in yard_nodes:
+		var node = yard_nodes[id]
+		if node is CanvasItem: node.hide()
+	for id in yard_markers:
+		yard_markers[id].hide()
+	for id in yard_sparkles:
+		yard_sparkles[id].hide()
+	for id in prop_markers:
+		prop_markers[id].hide()
+	var assets_by_id := {}
+	for a in project.assets: assets_by_id[a.id] = a
+	for level in project.levels:
+		for e in level.elements:
+			if not textures.has(e.asset): continue
+			var sprite := Sprite2D.new()
+			sprite.texture = textures[e.asset]
+			sprite.centered = false
+			var a: Dictionary = assets_by_id[e.asset]
+			sprite.scale = Vector2(float(e.width) / float(a.width), float(e.height) / float(a.height))
+			sprite.position = Vector2(float(e.x), float(e.y)) - Vector2(float(e.pivot.x), float(e.pivot.y)) * sprite.scale
+			sprite.visible = bool(e.get("visible", true))
+			sprite.z_index = -4 if e.layer == "background" else (4 if e.layer == "foreground" else 0)
+			# Only the current level's sprites should be visible at a time; both
+			# home and yard draw into the same world, so hide the off-level ones.
+			sprite.set_meta("level_id", level.id)
+			sprite.visible = sprite.visible and level.id == "home"
+			var layer: Node2D = world.background if e.layer == "background" else (world.foreground if e.layer == "foreground" else actors)
+			layer.add_child(sprite)
 
 func _on_input(event: InputEvent) -> void:
 	if event.device == InputEvent.DEVICE_ID_EMULATION: return
@@ -534,6 +579,13 @@ func update_placement() -> void:
 		# the normal framing whenever it already fits, using whole art pixels.
 		var usable_height := maxf(0, stage_height - hud_bottom - 24) * output_scale.y
 		_base_pixel_scale = mini(_base_pixel_scale, maxi(1, floori(usable_height / 80.0)))
+		# When an editor project drives the scene, prefer a slightly closer look
+		# than the default horizontal slice — but not so close that the player
+		# loses the hand-authored room around the puppy. One step of magnification
+		# above the native fit is enough.
+		if not RoomLayoutLoader.active_project.is_empty():
+			var max_by_height := maxi(1, floori(usable_height / 80.0))
+			_base_pixel_scale = clampi(_base_pixel_scale + 1, 1, mini(max_by_height, 3))
 	if overview:
 		var available_width := size.x * output_scale.x
 		_render_pixel_size *= maxf(1, ceil((RoomLayout.SIZE.x / RoomLayout.PIXEL_SIZE) / available_width))
@@ -912,11 +964,12 @@ func _sync_layers() -> void:
 		var lift := sin((1 - float(prop_bounces[id]) / 0.36) * PI) * 10
 		if id == "ball": lift += _ball_lift
 		node.position = ((origin - Vector2(0, lift)) / RoomLayout.PIXEL_SIZE).round() * RoomLayout.PIXEL_SIZE
+	var editor_art: bool = not RoomLayoutLoader.active_project.is_empty()
 	for id in prop_markers:
 		var marker: Control = prop_markers[id]
 		var bounds := ball_touch_rect() if id == "ball" else _screen_rect(station_bounds(id))
 		marker.position = Vector2(bounds.get_center().x - 12, bounds.position.y - 28)
-		marker.visible = (not in_yard or id == "ball") and not overview and marker.position.x >= 4 and marker.position.x + 24 <= size.x - 4 and marker.position.y >= hud_bottom + 44 and marker.position.y + 24 < (content_bottom if content_bottom > 0 else size.y)
+		marker.visible = not editor_art and (not in_yard or id == "ball") and not overview and marker.position.x >= 4 and marker.position.x + 24 <= size.x - 4 and marker.position.y >= hud_bottom + 44 and marker.position.y + 24 < (content_bottom if content_bottom > 0 else size.y)
 	puppy.visible = not (in_yard and hide_phase in ["hiding", "guess"])
 	if not puppy.visible: return_button.hide()
 	hide_tail.visible = in_yard and hide_phase == "guess" and hide_spot >= 0
@@ -954,7 +1007,16 @@ func set_yard(enabled: bool) -> void:
 	backdrop.kind = "yard" if enabled else "room"
 	backdrop.queue_redraw()
 	wall_clock.visible = not enabled
-	for node in station_nodes.values(): node.visible = not enabled
+	# Editor sprites carry a level_id meta tag — swap visibility on yard toggle.
+	for layer in [world.background, actors, world.foreground]:
+		for child in layer.get_children():
+			if child is Sprite2D and child.has_meta("level_id"):
+				child.visible = (child.get_meta("level_id") == ("yard" if enabled else "home"))
+	# Procedural station art stays hidden when the editor project is active;
+	# otherwise behave as before.
+	var editor_active: bool = not RoomLayoutLoader.active_project.is_empty()
+	for node in station_nodes.values():
+		node.visible = not enabled and not editor_active
 	pet_world = RoomLayout.START
 	target_world = pet_world
 	ball_world = RoomLayout.STATIONS.ball.position

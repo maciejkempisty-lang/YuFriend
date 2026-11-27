@@ -72,6 +72,6 @@ func _initialize() -> void:
 	var food_asset: Dictionary = {}
 	for a in project.assets:
 		if a.id == "food": food_asset = a
-	check(LevelProject.element_rect(food, food_asset) == Rect2(455, 295, 60, 36), "pivot preserves game coordinates")
+	check(LevelProject.element_rect(food, food_asset) == Rect2(455, 475, 60, 36), "pivot preserves game coordinates")
 	print("LEVEL PROJECT: %d passed, %d failed" % [passed, failed])
 	quit(1 if failed else 0)

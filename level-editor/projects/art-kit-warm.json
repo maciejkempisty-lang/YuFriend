@@ -1,0 +1,1150 @@
+{
+  "format": "yufriend-levels",
+  "version": 1,
+  "startLevel": "home",
+  "name": "Ciepły dom i ogród · wariant 1",
+  "assets": [
+    {
+      "id": "warm-v1-home-background-hd",
+      "name": "home · background",
+      "source": "res://level-editor/assets/warm-v1/home/background-hd.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "id": "warm-v1-home-chest-hd",
+      "name": "home · chest",
+      "source": "res://level-editor/assets/warm-v1/home/chest-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-home-clock-hd",
+      "name": "home · clock",
+      "source": "res://level-editor/assets/warm-v1/home/clock-hd.png",
+      "width": 1262,
+      "height": 1246
+    },
+    {
+      "id": "warm-v1-home-door-hd",
+      "name": "home · door",
+      "source": "res://level-editor/assets/warm-v1/home/door-hd.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "id": "warm-v1-home-floor-lamp-off-hd",
+      "name": "home · floor lamp off",
+      "source": "res://level-editor/assets/warm-v1/home/floor-lamp-off-hd.png",
+      "width": 887,
+      "height": 1774
+    },
+    {
+      "id": "warm-v1-home-floor-lamp-on-hd",
+      "name": "home · floor lamp on",
+      "source": "res://level-editor/assets/warm-v1/home/floor-lamp-on-hd.png",
+      "width": 887,
+      "height": 1774
+    },
+    {
+      "id": "warm-v1-home-food-hd",
+      "name": "home · food",
+      "source": "res://level-editor/assets/warm-v1/home/food-hd.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "id": "warm-v1-home-gramophone-hd",
+      "name": "home · gramophone",
+      "source": "res://level-editor/assets/warm-v1/home/gramophone-hd.png",
+      "width": 1312,
+      "height": 1199
+    },
+    {
+      "id": "warm-v1-home-guitar-hd",
+      "name": "home · guitar",
+      "source": "res://level-editor/assets/warm-v1/home/guitar-hd.png",
+      "width": 887,
+      "height": 1774
+    },
+    {
+      "id": "warm-v1-home-kitchen-hd",
+      "name": "home · kitchen",
+      "source": "res://level-editor/assets/warm-v1/home/kitchen-hd.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "id": "warm-v1-home-kitchen-window-day-hd",
+      "name": "home · kitchen window day",
+      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-day-hd.png",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "id": "warm-v1-home-kitchen-window-frame-hd",
+      "name": "home · kitchen window frame",
+      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-frame-hd.png",
+      "width": 1310,
+      "height": 1200
+    },
+    {
+      "id": "warm-v1-home-kitchen-window-night-hd",
+      "name": "home · kitchen window night",
+      "source": "res://level-editor/assets/warm-v1/home/kitchen-window-night-hd.png",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "id": "warm-v1-home-main-window-day-hd",
+      "name": "home · main window day",
+      "source": "res://level-editor/assets/warm-v1/home/main-window-day-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-home-main-window-frame-hd",
+      "name": "home · main window frame",
+      "source": "res://level-editor/assets/warm-v1/home/main-window-frame-hd.png",
+      "width": 1325,
+      "height": 1187
+    },
+    {
+      "id": "warm-v1-home-main-window-night-hd",
+      "name": "home · main window night",
+      "source": "res://level-editor/assets/warm-v1/home/main-window-night-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-home-pendant-lamp-off-hd",
+      "name": "home · pendant lamp off",
+      "source": "res://level-editor/assets/warm-v1/home/pendant-lamp-off-hd.png",
+      "width": 1312,
+      "height": 1199
+    },
+    {
+      "id": "warm-v1-home-pendant-lamp-on-hd",
+      "name": "home · pendant lamp on",
+      "source": "res://level-editor/assets/warm-v1/home/pendant-lamp-on-hd.png",
+      "width": 1312,
+      "height": 1199
+    },
+    {
+      "id": "warm-v1-home-plant-hd",
+      "name": "home · plant",
+      "source": "res://level-editor/assets/warm-v1/home/plant-hd.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "id": "warm-v1-home-portrait-hd",
+      "name": "home · portrait",
+      "source": "res://level-editor/assets/warm-v1/home/portrait-hd.png",
+      "width": 1199,
+      "height": 1312
+    },
+    {
+      "id": "warm-v1-home-rug-hd",
+      "name": "home · rug",
+      "source": "res://level-editor/assets/warm-v1/home/rug-hd.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "id": "warm-v1-home-shelf-hd",
+      "name": "home · shelf",
+      "source": "res://level-editor/assets/warm-v1/home/shelf-hd.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "id": "warm-v1-home-toy-basket-hd",
+      "name": "home · toy basket",
+      "source": "res://level-editor/assets/warm-v1/home/toy-basket-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-yard-agility-hd",
+      "name": "yard · agility",
+      "source": "res://level-editor/assets/warm-v1/yard/agility-hd.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "id": "warm-v1-yard-background-hd",
+      "name": "yard · background",
+      "source": "res://level-editor/assets/warm-v1/yard/background-hd.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "id": "warm-v1-yard-ball-hd",
+      "name": "yard · ball",
+      "source": "res://level-editor/assets/warm-v1/yard/ball-hd.png",
+      "width": 1261,
+      "height": 1247
+    },
+    {
+      "id": "warm-v1-yard-bed-hd",
+      "name": "yard · bed",
+      "source": "res://level-editor/assets/warm-v1/yard/bed-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-yard-bowl-hd",
+      "name": "yard · bowl",
+      "source": "res://level-editor/assets/warm-v1/yard/bowl-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-yard-bush-hd",
+      "name": "yard · bush",
+      "source": "res://level-editor/assets/warm-v1/yard/bush-hd.png",
+      "width": 1402,
+      "height": 1122
+    },
+    {
+      "id": "warm-v1-yard-dig-hd",
+      "name": "yard · dig",
+      "source": "res://level-editor/assets/warm-v1/yard/dig-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-yard-door-hd",
+      "name": "yard · door",
+      "source": "res://level-editor/assets/warm-v1/yard/door-hd.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "id": "warm-v1-yard-fetch-hd",
+      "name": "yard · fetch",
+      "source": "res://level-editor/assets/warm-v1/yard/fetch-hd.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "id": "warm-v1-yard-garden-hd",
+      "name": "yard · garden",
+      "source": "res://level-editor/assets/warm-v1/yard/garden-hd.png",
+      "width": 1755,
+      "height": 896
+    },
+    {
+      "id": "warm-v1-yard-pergola-hd",
+      "name": "yard · pergola",
+      "source": "res://level-editor/assets/warm-v1/yard/pergola-hd.png",
+      "width": 1312,
+      "height": 1199
+    },
+    {
+      "id": "warm-v1-yard-puddle-hd",
+      "name": "yard · puddle",
+      "source": "res://level-editor/assets/warm-v1/yard/puddle-hd.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "id": "warm-v1-yard-sign-hd",
+      "name": "yard · sign",
+      "source": "res://level-editor/assets/warm-v1/yard/sign-hd.png",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "id": "warm-v1-yard-sprinkler-hd",
+      "name": "yard · sprinkler",
+      "source": "res://level-editor/assets/warm-v1/yard/sprinkler-hd.png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "id": "warm-v1-yard-watering-can-hd",
+      "name": "yard · watering can",
+      "source": "res://level-editor/assets/warm-v1/yard/watering-can-hd.png",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "id": "warm-v1-yard-window-hd",
+      "name": "yard · window",
+      "source": "res://level-editor/assets/warm-v1/yard/window-hd.png",
+      "width": 1164,
+      "height": 1351
+    }
+  ],
+  "levels": [
+    {
+      "id": "home",
+      "name": "Dom",
+      "width": 1440,
+      "height": 360,
+      "spawn": {
+        "x": 670,
+        "y": 322
+      },
+      "walk": {
+        "x": 95,
+        "y": 286,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "warm-home-background",
+          "name": "Ściana i podłoga",
+          "asset": "warm-v1-home-background-hd",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 360,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-day-hd",
+          "name": "Za oknem kuchni · dzień",
+          "asset": "warm-v1-home-kitchen-window-day-hd",
+          "layer": "background",
+          "x": 405.0,
+          "y": 63.0,
+          "width": 84.0,
+          "height": 69.0,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-night-hd",
+          "name": "Za oknem kuchni · noc",
+          "asset": "warm-v1-home-kitchen-window-night-hd",
+          "layer": "background",
+          "x": 405.0,
+          "y": 63.0,
+          "width": 84.0,
+          "height": 69.0,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-day-hd",
+          "name": "Za dużym oknem · dzień",
+          "asset": "warm-v1-home-main-window-day-hd",
+          "layer": "background",
+          "x": 699.0,
+          "y": 75.0,
+          "width": 207.0,
+          "height": 153.0,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-night-hd",
+          "name": "Za dużym oknem · noc",
+          "asset": "warm-v1-home-main-window-night-hd",
+          "layer": "background",
+          "x": 699.0,
+          "y": 75.0,
+          "width": 207.0,
+          "height": 153.0,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-plant-hd",
+          "name": "Roślina",
+          "asset": "warm-v1-home-plant-hd",
+          "layer": "background",
+          "x": 14.451,
+          "y": 120.8,
+          "width": 128.964,
+          "height": 153.6,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-portrait-hd",
+          "name": "Obraz",
+          "asset": "warm-v1-home-portrait-hd",
+          "layer": "background",
+          "x": 126.103,
+          "y": 78.17,
+          "width": 162.199,
+          "height": 107.737,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-chest-hd",
+          "name": "Wiklinowa skrzynia",
+          "asset": "warm-v1-home-chest-hd",
+          "layer": "background",
+          "x": 191.128,
+          "y": 182.567,
+          "width": 157.949,
+          "height": 84.454,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-hd",
+          "name": "Kuchnia",
+          "asset": "warm-v1-home-kitchen-hd",
+          "layer": "background",
+          "x": 241.54,
+          "y": 107.32,
+          "width": 467.92,
+          "height": 170.82,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-frame-hd",
+          "name": "Okno kuchenne · rama",
+          "asset": "warm-v1-home-kitchen-window-frame-hd",
+          "layer": "background",
+          "x": 387.092,
+          "y": 47.846,
+          "width": 120.0,
+          "height": 102.564,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-pendant-lamp-off-hd",
+          "name": "Lampka wisząca · off",
+          "asset": "warm-v1-home-pendant-lamp-off-hd",
+          "layer": "background",
+          "x": 496.999,
+          "y": 39.045,
+          "width": 127.905,
+          "height": 111.12,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-pendant-lamp-on-hd",
+          "name": "Lampka wisząca · on",
+          "asset": "warm-v1-home-pendant-lamp-on-hd",
+          "layer": "background",
+          "x": 496.999,
+          "y": 39.045,
+          "width": 127.905,
+          "height": 111.12,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-clock-hd",
+          "name": "Zegar",
+          "asset": "warm-v1-home-clock-hd",
+          "layer": "background",
+          "x": 622.096,
+          "y": 93.721,
+          "width": 84.942,
+          "height": 90.668,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-frame-hd",
+          "name": "Duże okno · rama i firanki",
+          "asset": "warm-v1-home-main-window-frame-hd",
+          "layer": "background",
+          "x": 679.002,
+          "y": 62.903,
+          "width": 246.997,
+          "height": 175.08,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-floor-lamp-off-hd",
+          "name": "Lampa stojąca · off",
+          "asset": "warm-v1-home-floor-lamp-off-hd",
+          "layer": "background",
+          "x": 910.769,
+          "y": 105.775,
+          "width": 143.463,
+          "height": 162.626,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-floor-lamp-on-hd",
+          "name": "Lampa stojąca · on",
+          "asset": "warm-v1-home-floor-lamp-on-hd",
+          "layer": "background",
+          "x": 910.769,
+          "y": 105.775,
+          "width": 143.463,
+          "height": 162.626,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-gramophone-hd",
+          "name": "Komoda i gramofon",
+          "asset": "warm-v1-home-gramophone-hd",
+          "layer": "background",
+          "x": 1020.607,
+          "y": 131.671,
+          "width": 215.278,
+          "height": 139.825,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-shelf-hd",
+          "name": "Półka",
+          "asset": "warm-v1-home-shelf-hd",
+          "layer": "background",
+          "x": 941.368,
+          "y": 63.268,
+          "width": 381.371,
+          "height": 79.802,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-guitar-hd",
+          "name": "Gitara",
+          "asset": "warm-v1-home-guitar-hd",
+          "layer": "background",
+          "x": 1221.088,
+          "y": 110.175,
+          "width": 116.824,
+          "height": 157.021,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-door-hd",
+          "name": "Drzwi do ogrodu",
+          "asset": "warm-v1-home-door-hd",
+          "layer": "background",
+          "x": 1306.108,
+          "y": 112.678,
+          "width": 141.785,
+          "height": 174.576,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "yard",
+            "message": "Idziemy do ogrodu!"
+          }
+        },
+        {
+          "id": "warm-home-rug-hd",
+          "name": "Dywan",
+          "asset": "warm-v1-home-rug-hd",
+          "layer": "background",
+          "x": 556.809,
+          "y": 263.622,
+          "width": 389.562,
+          "height": 85.942,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-bed-hd",
+          "name": "Legowisko",
+          "asset": "warm-v1-yard-bed-hd",
+          "layer": "background",
+          "x": 103.108,
+          "y": 256.395,
+          "width": 226.078,
+          "height": 84.211,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "warm-home-food-hd",
+          "name": "Miska z jedzeniem",
+          "asset": "warm-v1-home-food-hd",
+          "layer": "middle",
+          "x": 466.5,
+          "y": 342,
+          "width": 201.651,
+          "height": 62.286,
+          "pivot": {
+            "x": 887.0,
+            "y": 822
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "feed",
+          "params": {
+            "fullness": 22,
+            "message": "Mniam!",
+            "clip": "eat_loop"
+          }
+        },
+        {
+          "id": "warm-home-toy-basket-hd",
+          "name": "Kosz z zabawkami",
+          "asset": "warm-v1-home-toy-basket-hd",
+          "layer": "middle",
+          "x": 1128.0,
+          "y": 342,
+          "width": 203.294,
+          "height": 84.618,
+          "pivot": {
+            "x": 767.0,
+            "y": 936
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "message",
+          "params": {
+            "text": "W koszu czekają zabawki.",
+            "duration": 4
+          }
+        },
+        {
+          "id": "warm-home-ball-hd",
+          "name": "Piłka",
+          "asset": "warm-v1-yard-ball-hd",
+          "layer": "middle",
+          "x": 927.0,
+          "y": 342,
+          "width": 65.601,
+          "height": 64.315,
+          "pivot": {
+            "x": 621.0,
+            "y": 991
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        }
+      ]
+    },
+    {
+      "id": "yard",
+      "name": "Ogród",
+      "width": 1440,
+      "height": 360,
+      "spawn": {
+        "x": 670,
+        "y": 322
+      },
+      "walk": {
+        "x": 95,
+        "y": 286,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "warm-yard-background",
+          "name": "Tło ogrodu z domem",
+          "asset": "warm-v1-yard-background-hd",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 360,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-window-hd",
+          "name": "Okno domu",
+          "asset": "warm-v1-yard-window-hd",
+          "layer": "background",
+          "x": 109.44,
+          "y": 116.452,
+          "width": 93.12,
+          "height": 93.473,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-door-hd",
+          "name": "Drzwi do domu",
+          "asset": "warm-v1-yard-door-hd",
+          "layer": "background",
+          "x": -4.029,
+          "y": 112.678,
+          "width": 137.058,
+          "height": 174.576,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "home",
+            "message": "Wracamy do domu."
+          }
+        },
+        {
+          "id": "warm-yard-bush-hd",
+          "name": "Krzak 1",
+          "asset": "warm-v1-yard-bush-hd",
+          "layer": "background",
+          "x": 770.234,
+          "y": 145.191,
+          "width": 110.003,
+          "height": 105.807,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bush-hd-2",
+          "name": "Krzak 2",
+          "asset": "warm-v1-yard-bush-hd",
+          "layer": "background",
+          "x": 1025.012,
+          "y": 145.191,
+          "width": 116.474,
+          "height": 105.807,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-fetch-hd",
+          "name": "Mata do aportowania",
+          "asset": "warm-v1-yard-fetch-hd",
+          "layer": "background",
+          "x": 867.539,
+          "y": 261.699,
+          "width": 209.392,
+          "height": 69.932,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-puddle-hd",
+          "name": "Kałuża",
+          "asset": "warm-v1-yard-puddle-hd",
+          "layer": "background",
+          "x": 1045.171,
+          "y": 241.156,
+          "width": 177.657,
+          "height": 77.883,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-dig-hd",
+          "name": "Miejsce kopania",
+          "asset": "warm-v1-yard-dig-hd",
+          "layer": "background",
+          "x": 666.898,
+          "y": 230.755,
+          "width": 171.533,
+          "height": 62.694,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bed-hd",
+          "name": "Legowisko ogrodowe",
+          "asset": "warm-v1-yard-bed-hd",
+          "layer": "background",
+          "x": 256.792,
+          "y": 205.763,
+          "width": 149.61,
+          "height": 77.474,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "warm-yard-pergola-hd",
+          "name": "Pergola",
+          "asset": "warm-v1-yard-pergola-hd",
+          "layer": "middle",
+          "x": 354.0,
+          "y": 279,
+          "width": 306.615,
+          "height": 197.773,
+          "pivot": {
+            "x": 657.5,
+            "y": 1180
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bowl-hd",
+          "name": "Miska z wodą",
+          "asset": "warm-v1-yard-bowl-hd",
+          "layer": "middle",
+          "x": 435.0,
+          "y": 276,
+          "width": 89.389,
+          "height": 49.884,
+          "pivot": {
+            "x": 759.5,
+            "y": 892
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-garden-hd",
+          "name": "Grządka",
+          "asset": "warm-v1-yard-garden-hd",
+          "layer": "middle",
+          "x": 592.5,
+          "y": 279,
+          "width": 221.799,
+          "height": 121.311,
+          "pivot": {
+            "x": 877.0,
+            "y": 861
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-watering-can-hd",
+          "name": "Konewka",
+          "asset": "warm-v1-yard-watering-can-hd",
+          "layer": "middle",
+          "x": 652.5,
+          "y": 282,
+          "width": 55.835,
+          "height": 47.702,
+          "pivot": {
+            "x": 758.5,
+            "y": 996
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-ball-hd",
+          "name": "Piłka",
+          "asset": "warm-v1-yard-ball-hd",
+          "layer": "middle",
+          "x": 889.5,
+          "y": 291,
+          "width": 71.068,
+          "height": 69.675,
+          "pivot": {
+            "x": 621.0,
+            "y": 991
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        },
+        {
+          "id": "warm-yard-agility-hd",
+          "name": "Przeszkoda",
+          "asset": "warm-v1-yard-agility-hd",
+          "layer": "middle",
+          "x": 994.5,
+          "y": 279,
+          "width": 176.852,
+          "height": 92.777,
+          "pivot": {
+            "x": 887.0,
+            "y": 737
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-sprinkler-hd",
+          "name": "Zraszacz",
+          "asset": "warm-v1-yard-sprinkler-hd",
+          "layer": "middle",
+          "x": 1269.0,
+          "y": 285,
+          "width": 171.021,
+          "height": 87.136,
+          "pivot": {
+            "x": 843.5,
+            "y": 839
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-sign-hd",
+          "name": "Tabliczka",
+          "asset": "warm-v1-yard-sign-hd",
+          "layer": "middle",
+          "x": 1386.0,
+          "y": 294,
+          "width": 111.036,
+          "height": 116.364,
+          "pivot": {
+            "x": 512.0,
+            "y": 1460
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}

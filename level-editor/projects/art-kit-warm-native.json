@@ -1,0 +1,1164 @@
+{
+  "format": "yufriend-levels",
+  "version": 1,
+  "startLevel": "home",
+  "name": "Ciepły dom i ogród · grafiki 480×160",
+  "assets": [
+    {
+      "id": "warm-v1-native-home-background",
+      "name": "Ściana i podłoga",
+      "source": "res://level-editor/assets/warm-v1-native/home/background.png",
+      "width": 480,
+      "height": 160
+    },
+    {
+      "id": "warm-v1-native-home-kitchen-window-day",
+      "name": "Za oknem kuchni · dzień",
+      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-day.png",
+      "width": 28,
+      "height": 23
+    },
+    {
+      "id": "warm-v1-native-home-kitchen-window-night",
+      "name": "Za oknem kuchni · noc",
+      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-night.png",
+      "width": 28,
+      "height": 23
+    },
+    {
+      "id": "warm-v1-native-home-main-window-day",
+      "name": "Za dużym oknem · dzień",
+      "source": "res://level-editor/assets/warm-v1-native/home/main-window-day.png",
+      "width": 69,
+      "height": 51
+    },
+    {
+      "id": "warm-v1-native-home-main-window-night",
+      "name": "Za dużym oknem · noc",
+      "source": "res://level-editor/assets/warm-v1-native/home/main-window-night.png",
+      "width": 69,
+      "height": 51
+    },
+    {
+      "id": "warm-v1-native-home-plant",
+      "name": "Roślina",
+      "source": "res://level-editor/assets/warm-v1-native/home/plant.png",
+      "width": 39,
+      "height": 44
+    },
+    {
+      "id": "warm-v1-native-home-portrait",
+      "name": "Obraz",
+      "source": "res://level-editor/assets/warm-v1-native/home/portrait.png",
+      "width": 34,
+      "height": 30
+    },
+    {
+      "id": "warm-v1-native-home-chest",
+      "name": "Wiklinowa skrzynia",
+      "source": "res://level-editor/assets/warm-v1-native/home/chest.png",
+      "width": 46,
+      "height": 24
+    },
+    {
+      "id": "warm-v1-native-home-kitchen",
+      "name": "Kuchnia",
+      "source": "res://level-editor/assets/warm-v1-native/home/kitchen.png",
+      "width": 99,
+      "height": 45
+    },
+    {
+      "id": "warm-v1-native-home-kitchen-window-frame",
+      "name": "Okno kuchenne · rama",
+      "source": "res://level-editor/assets/warm-v1-native/home/kitchen-window-frame.png",
+      "width": 32,
+      "height": 30
+    },
+    {
+      "id": "warm-v1-native-home-pendant-lamp-off",
+      "name": "Lampka wisząca · off",
+      "source": "res://level-editor/assets/warm-v1-native/home/pendant-lamp-off.png",
+      "width": 22,
+      "height": 27
+    },
+    {
+      "id": "warm-v1-native-home-pendant-lamp-on",
+      "name": "Lampka wisząca · on",
+      "source": "res://level-editor/assets/warm-v1-native/home/pendant-lamp-on.png",
+      "width": 22,
+      "height": 27
+    },
+    {
+      "id": "warm-v1-native-home-clock",
+      "name": "Zegar",
+      "source": "res://level-editor/assets/warm-v1-native/home/clock.png",
+      "width": 21,
+      "height": 22
+    },
+    {
+      "id": "warm-v1-native-home-main-window-frame",
+      "name": "Duże okno · rama i firanki",
+      "source": "res://level-editor/assets/warm-v1-native/home/main-window-frame.png",
+      "width": 75,
+      "height": 56
+    },
+    {
+      "id": "warm-v1-native-home-floor-lamp-off",
+      "name": "Lampa stojąca · off",
+      "source": "res://level-editor/assets/warm-v1-native/home/floor-lamp-off.png",
+      "width": 31,
+      "height": 51
+    },
+    {
+      "id": "warm-v1-native-home-floor-lamp-on",
+      "name": "Lampa stojąca · on",
+      "source": "res://level-editor/assets/warm-v1-native/home/floor-lamp-on.png",
+      "width": 31,
+      "height": 51
+    },
+    {
+      "id": "warm-v1-native-home-gramophone",
+      "name": "Komoda i gramofon",
+      "source": "res://level-editor/assets/warm-v1-native/home/gramophone.png",
+      "width": 60,
+      "height": 40
+    },
+    {
+      "id": "warm-v1-native-home-shelf",
+      "name": "Półka",
+      "source": "res://level-editor/assets/warm-v1-native/home/shelf.png",
+      "width": 70,
+      "height": 23
+    },
+    {
+      "id": "warm-v1-native-home-guitar",
+      "name": "Gitara",
+      "source": "res://level-editor/assets/warm-v1-native/home/guitar.png",
+      "width": 27,
+      "height": 47
+    },
+    {
+      "id": "warm-v1-native-home-door",
+      "name": "Drzwi do ogrodu",
+      "source": "res://level-editor/assets/warm-v1-native/home/door.png",
+      "width": 30,
+      "height": 43
+    },
+    {
+      "id": "warm-v1-native-home-rug",
+      "name": "Dywan",
+      "source": "res://level-editor/assets/warm-v1-native/home/rug.png",
+      "width": 117,
+      "height": 22
+    },
+    {
+      "id": "warm-v1-native-home-bed",
+      "name": "Legowisko",
+      "source": "res://level-editor/assets/warm-v1-native/home/bed.png",
+      "width": 68,
+      "height": 25
+    },
+    {
+      "id": "warm-v1-native-home-food",
+      "name": "Miska z jedzeniem",
+      "source": "res://level-editor/assets/warm-v1-native/home/food.png",
+      "width": 51,
+      "height": 18
+    },
+    {
+      "id": "warm-v1-native-home-toy-basket",
+      "name": "Kosz z zabawkami",
+      "source": "res://level-editor/assets/warm-v1-native/home/toy-basket.png",
+      "width": 48,
+      "height": 23
+    },
+    {
+      "id": "warm-v1-native-home-ball",
+      "name": "Piłka",
+      "source": "res://level-editor/assets/warm-v1-native/home/ball.png",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "id": "warm-v1-native-yard-background",
+      "name": "Tło ogrodu z domem",
+      "source": "res://level-editor/assets/warm-v1-native/yard/background.png",
+      "width": 480,
+      "height": 160
+    },
+    {
+      "id": "warm-v1-native-yard-window",
+      "name": "Okno domu",
+      "source": "res://level-editor/assets/warm-v1-native/yard/window.png",
+      "width": 24,
+      "height": 25
+    },
+    {
+      "id": "warm-v1-native-yard-door",
+      "name": "Drzwi do domu",
+      "source": "res://level-editor/assets/warm-v1-native/yard/door.png",
+      "width": 29,
+      "height": 43
+    },
+    {
+      "id": "warm-v1-native-yard-bush",
+      "name": "Krzak 1",
+      "source": "res://level-editor/assets/warm-v1-native/yard/bush.png",
+      "width": 34,
+      "height": 32
+    },
+    {
+      "id": "warm-v1-native-yard-fetch",
+      "name": "Mata do aportowania",
+      "source": "res://level-editor/assets/warm-v1-native/yard/fetch.png",
+      "width": 59,
+      "height": 17
+    },
+    {
+      "id": "warm-v1-native-yard-puddle",
+      "name": "Kałuża",
+      "source": "res://level-editor/assets/warm-v1-native/yard/puddle.png",
+      "width": 46,
+      "height": 12
+    },
+    {
+      "id": "warm-v1-native-yard-dig",
+      "name": "Miejsce kopania",
+      "source": "res://level-editor/assets/warm-v1-native/yard/dig.png",
+      "width": 44,
+      "height": 16
+    },
+    {
+      "id": "warm-v1-native-yard-bed",
+      "name": "Legowisko ogrodowe",
+      "source": "res://level-editor/assets/warm-v1-native/yard/bed.png",
+      "width": 45,
+      "height": 23
+    },
+    {
+      "id": "warm-v1-native-yard-pergola",
+      "name": "Pergola",
+      "source": "res://level-editor/assets/warm-v1-native/yard/pergola.png",
+      "width": 92,
+      "height": 64
+    },
+    {
+      "id": "warm-v1-native-yard-bowl",
+      "name": "Miska z wodą",
+      "source": "res://level-editor/assets/warm-v1-native/yard/bowl.png",
+      "width": 20,
+      "height": 12
+    },
+    {
+      "id": "warm-v1-native-yard-garden",
+      "name": "Grządka",
+      "source": "res://level-editor/assets/warm-v1-native/yard/garden.png",
+      "width": 61,
+      "height": 38
+    },
+    {
+      "id": "warm-v1-native-yard-watering-can",
+      "name": "Konewka",
+      "source": "res://level-editor/assets/warm-v1-native/yard/watering-can.png",
+      "width": 17,
+      "height": 15
+    },
+    {
+      "id": "warm-v1-native-yard-ball",
+      "name": "Piłka",
+      "source": "res://level-editor/assets/warm-v1-native/yard/ball.png",
+      "width": 13,
+      "height": 13
+    },
+    {
+      "id": "warm-v1-native-yard-agility",
+      "name": "Przeszkoda",
+      "source": "res://level-editor/assets/warm-v1-native/yard/agility.png",
+      "width": 43,
+      "height": 22
+    },
+    {
+      "id": "warm-v1-native-yard-sprinkler",
+      "name": "Zraszacz",
+      "source": "res://level-editor/assets/warm-v1-native/yard/sprinkler.png",
+      "width": 42,
+      "height": 26
+    },
+    {
+      "id": "warm-v1-native-yard-sign",
+      "name": "Tabliczka",
+      "source": "res://level-editor/assets/warm-v1-native/yard/sign.png",
+      "width": 24,
+      "height": 35
+    }
+  ],
+  "levels": [
+    {
+      "id": "home",
+      "name": "Dom",
+      "width": 1440,
+      "height": 480,
+      "spawn": {
+        "x": 670,
+        "y": 382
+      },
+      "walk": {
+        "x": 95,
+        "y": 346,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "warm-home-background",
+          "name": "Ściana i podłoga",
+          "asset": "warm-v1-native-home-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 480,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-day-hd",
+          "name": "Za oknem kuchni · dzień",
+          "asset": "warm-v1-native-home-kitchen-window-day",
+          "layer": "background",
+          "x": 405.0,
+          "y": 123.0,
+          "width": 84,
+          "height": 69,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-night-hd",
+          "name": "Za oknem kuchni · noc",
+          "asset": "warm-v1-native-home-kitchen-window-night",
+          "layer": "background",
+          "x": 405.0,
+          "y": 123.0,
+          "width": 84,
+          "height": 69,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-day-hd",
+          "name": "Za dużym oknem · dzień",
+          "asset": "warm-v1-native-home-main-window-day",
+          "layer": "background",
+          "x": 699.0,
+          "y": 135.0,
+          "width": 207,
+          "height": 153,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-night-hd",
+          "name": "Za dużym oknem · noc",
+          "asset": "warm-v1-native-home-main-window-night",
+          "layer": "background",
+          "x": 699.0,
+          "y": 135.0,
+          "width": 207,
+          "height": 153,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-plant-hd",
+          "name": "Roślina",
+          "asset": "warm-v1-native-home-plant",
+          "layer": "background",
+          "x": 21.0,
+          "y": 189.0,
+          "width": 117,
+          "height": 132,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-portrait-hd",
+          "name": "Obraz",
+          "asset": "warm-v1-native-home-portrait",
+          "layer": "background",
+          "x": 156.0,
+          "y": 144.0,
+          "width": 102,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-chest-hd",
+          "name": "Wiklinowa skrzynia",
+          "asset": "warm-v1-native-home-chest",
+          "layer": "background",
+          "x": 201.0,
+          "y": 249.0,
+          "width": 138,
+          "height": 72,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-hd",
+          "name": "Kuchnia",
+          "asset": "warm-v1-native-home-kitchen",
+          "layer": "background",
+          "x": 327.0,
+          "y": 186.0,
+          "width": 297,
+          "height": 135,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-kitchen-window-frame-hd",
+          "name": "Okno kuchenne · rama",
+          "asset": "warm-v1-native-home-kitchen-window-frame",
+          "layer": "background",
+          "x": 399.0,
+          "y": 114.0,
+          "width": 96,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-pendant-lamp-off-hd",
+          "name": "Lampka wisząca · off",
+          "asset": "warm-v1-native-home-pendant-lamp-off",
+          "layer": "background",
+          "x": 528.0,
+          "y": 111.0,
+          "width": 66,
+          "height": 81,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-pendant-lamp-on-hd",
+          "name": "Lampka wisząca · on",
+          "asset": "warm-v1-native-home-pendant-lamp-on",
+          "layer": "background",
+          "x": 528.0,
+          "y": 111.0,
+          "width": 66,
+          "height": 81,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-clock-hd",
+          "name": "Zegar",
+          "asset": "warm-v1-native-home-clock",
+          "layer": "background",
+          "x": 633.0,
+          "y": 165.0,
+          "width": 63,
+          "height": 66,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-main-window-frame-hd",
+          "name": "Duże okno · rama i firanki",
+          "asset": "warm-v1-native-home-main-window-frame",
+          "layer": "background",
+          "x": 690.0,
+          "y": 126.0,
+          "width": 225,
+          "height": 168,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-floor-lamp-off-hd",
+          "name": "Lampa stojąca · off",
+          "asset": "warm-v1-native-home-floor-lamp-off",
+          "layer": "background",
+          "x": 936.0,
+          "y": 171.0,
+          "width": 93,
+          "height": 153,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-floor-lamp-on-hd",
+          "name": "Lampa stojąca · on",
+          "asset": "warm-v1-native-home-floor-lamp-on",
+          "layer": "background",
+          "x": 936.0,
+          "y": 171.0,
+          "width": 93,
+          "height": 153,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-gramophone-hd",
+          "name": "Komoda i gramofon",
+          "asset": "warm-v1-native-home-gramophone",
+          "layer": "background",
+          "x": 1038.0,
+          "y": 201.0,
+          "width": 180,
+          "height": 120,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-shelf-hd",
+          "name": "Półka",
+          "asset": "warm-v1-native-home-shelf",
+          "layer": "background",
+          "x": 1026.0,
+          "y": 129.0,
+          "width": 210,
+          "height": 69,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-guitar-hd",
+          "name": "Gitara",
+          "asset": "warm-v1-native-home-guitar",
+          "layer": "background",
+          "x": 1239.0,
+          "y": 180.0,
+          "width": 81,
+          "height": 141,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-door-hd",
+          "name": "Drzwi do ogrodu",
+          "asset": "warm-v1-native-home-door",
+          "layer": "background",
+          "x": 1332.0,
+          "y": 192.0,
+          "width": 90,
+          "height": 129,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "yard",
+            "message": "Idziemy do ogrodu!"
+          }
+        },
+        {
+          "id": "warm-home-rug-hd",
+          "name": "Dywan",
+          "asset": "warm-v1-native-home-rug",
+          "layer": "background",
+          "x": 576.0,
+          "y": 333.0,
+          "width": 351,
+          "height": 66,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-home-bed-hd",
+          "name": "Legowisko",
+          "asset": "warm-v1-native-home-bed",
+          "layer": "background",
+          "x": 114.0,
+          "y": 321.0,
+          "width": 204,
+          "height": 75,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "warm-home-food-hd",
+          "name": "Miska z jedzeniem",
+          "asset": "warm-v1-native-home-food",
+          "layer": "middle",
+          "x": 466.5,
+          "y": 402.0,
+          "width": 153,
+          "height": 54,
+          "pivot": {
+            "x": 25.5,
+            "y": 18
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "feed",
+          "params": {
+            "fullness": 22,
+            "message": "Mniam!",
+            "clip": "eat_loop"
+          }
+        },
+        {
+          "id": "warm-home-toy-basket-hd",
+          "name": "Kosz z zabawkami",
+          "asset": "warm-v1-native-home-toy-basket",
+          "layer": "middle",
+          "x": 1128.0,
+          "y": 402.0,
+          "width": 144,
+          "height": 69,
+          "pivot": {
+            "x": 24.0,
+            "y": 23
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "message",
+          "params": {
+            "text": "W koszu czekają zabawki.",
+            "duration": 4
+          }
+        },
+        {
+          "id": "warm-home-ball-hd",
+          "name": "Piłka",
+          "asset": "warm-v1-native-home-ball",
+          "layer": "middle",
+          "x": 927.0,
+          "y": 402.0,
+          "width": 36,
+          "height": 36,
+          "pivot": {
+            "x": 6.0,
+            "y": 12
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        }
+      ]
+    },
+    {
+      "id": "yard",
+      "name": "Ogród",
+      "width": 1440,
+      "height": 480,
+      "spawn": {
+        "x": 670,
+        "y": 382
+      },
+      "walk": {
+        "x": 95,
+        "y": 346,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "warm-yard-background",
+          "name": "Tło ogrodu z domem",
+          "asset": "warm-v1-native-yard-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 480,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-window-hd",
+          "name": "Okno domu",
+          "asset": "warm-v1-native-yard-window",
+          "layer": "background",
+          "x": 120.0,
+          "y": 186.0,
+          "width": 72,
+          "height": 75,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-door-hd",
+          "name": "Drzwi do domu",
+          "asset": "warm-v1-native-yard-door",
+          "layer": "background",
+          "x": 21.0,
+          "y": 192.0,
+          "width": 87,
+          "height": 129,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "home",
+            "message": "Wracamy do domu."
+          }
+        },
+        {
+          "id": "warm-yard-bush-hd",
+          "name": "Krzak 1",
+          "asset": "warm-v1-native-yard-bush",
+          "layer": "background",
+          "x": 774.0,
+          "y": 210.0,
+          "width": 102,
+          "height": 96,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bush-hd-2",
+          "name": "Krzak 2",
+          "asset": "warm-v1-native-yard-bush",
+          "layer": "background",
+          "x": 1029.0,
+          "y": 210.0,
+          "width": 102,
+          "height": 96,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-fetch-hd",
+          "name": "Mata do aportowania",
+          "asset": "warm-v1-native-yard-fetch",
+          "layer": "background",
+          "x": 882.0,
+          "y": 333.0,
+          "width": 177,
+          "height": 51,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-puddle-hd",
+          "name": "Kałuża",
+          "asset": "warm-v1-native-yard-puddle",
+          "layer": "background",
+          "x": 1065.0,
+          "y": 321.0,
+          "width": 138,
+          "height": 36,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-dig-hd",
+          "name": "Miejsce kopania",
+          "asset": "warm-v1-native-yard-dig",
+          "layer": "background",
+          "x": 687.0,
+          "y": 297.0,
+          "width": 132,
+          "height": 48,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bed-hd",
+          "name": "Legowisko ogrodowe",
+          "asset": "warm-v1-native-yard-bed",
+          "layer": "background",
+          "x": 264.0,
+          "y": 270.0,
+          "width": 135,
+          "height": 69,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "warm-yard-pergola-hd",
+          "name": "Pergola",
+          "asset": "warm-v1-native-yard-pergola",
+          "layer": "middle",
+          "x": 354.0,
+          "y": 339.0,
+          "width": 276,
+          "height": 192,
+          "pivot": {
+            "x": 46.0,
+            "y": 64
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-bowl-hd",
+          "name": "Miska z wodą",
+          "asset": "warm-v1-native-yard-bowl",
+          "layer": "middle",
+          "x": 435.0,
+          "y": 336.0,
+          "width": 60,
+          "height": 36,
+          "pivot": {
+            "x": 10.0,
+            "y": 12
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-garden-hd",
+          "name": "Grządka",
+          "asset": "warm-v1-native-yard-garden",
+          "layer": "middle",
+          "x": 592.5,
+          "y": 339.0,
+          "width": 183,
+          "height": 114,
+          "pivot": {
+            "x": 30.5,
+            "y": 38
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-watering-can-hd",
+          "name": "Konewka",
+          "asset": "warm-v1-native-yard-watering-can",
+          "layer": "middle",
+          "x": 652.5,
+          "y": 342.0,
+          "width": 51,
+          "height": 45,
+          "pivot": {
+            "x": 8.5,
+            "y": 15
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-ball-hd",
+          "name": "Piłka",
+          "asset": "warm-v1-native-yard-ball",
+          "layer": "middle",
+          "x": 889.5,
+          "y": 351.0,
+          "width": 39,
+          "height": 39,
+          "pivot": {
+            "x": 6.5,
+            "y": 13
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        },
+        {
+          "id": "warm-yard-agility-hd",
+          "name": "Przeszkoda",
+          "asset": "warm-v1-native-yard-agility",
+          "layer": "middle",
+          "x": 994.5,
+          "y": 339.0,
+          "width": 129,
+          "height": 66,
+          "pivot": {
+            "x": 21.5,
+            "y": 22
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-sprinkler-hd",
+          "name": "Zraszacz",
+          "asset": "warm-v1-native-yard-sprinkler",
+          "layer": "middle",
+          "x": 1269.0,
+          "y": 345.0,
+          "width": 126,
+          "height": 78,
+          "pivot": {
+            "x": 21.0,
+            "y": 26
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "warm-yard-sign-hd",
+          "name": "Tabliczka",
+          "asset": "warm-v1-native-yard-sign",
+          "layer": "middle",
+          "x": 1386.0,
+          "y": 354.0,
+          "width": 72,
+          "height": 105,
+          "pivot": {
+            "x": 12.0,
+            "y": 35
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}

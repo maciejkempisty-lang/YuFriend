@@ -14,14 +14,14 @@ Od 14 listopada 2026 gra używa pakietu **22 klipów / 142 klatek** z dostawy `Y
 
 ## Wspólna siatka — ustalenie z 15 listopada 2026
 
-Jeden piksel logiczny to **3 jednostki świata**. Cały pokój ma **480 × 120 px** (1440 × 360 jednostek). Tło, przedmioty i pies trafiają do jednego małego `SubViewport`. Gotowy obraz jest powiększany metodą `nearest` całkowitą liczbę razy w pikselach okna, także przy ułamkowej skali interfejsu. Zbliżenie przełącza mnożnik 1×/2× zamiast płynnie skalować obraz; na bardzo krótkim ekranie zostaje widok podstawowy. Kamera i pozycje wyświetlanych obiektów są przyciągane do siatki.
+Jeden piksel logiczny to **3 jednostki świata**. Cały pokój ma **480 × 180 px** (1440 × 540 jednostek). Tło, przedmioty i pies trafiają do jednego małego `SubViewport`. Gotowy obraz jest powiększany metodą `nearest` całkowitą liczbę razy w pikselach okna, także przy ułamkowej skali interfejsu. Zbliżenie przełącza mnożnik 1×/2× zamiast płynnie skalować obraz; na bardzo krótkim ekranie zostaje widok podstawowy. Kamera i pozycje wyświetlanych obiektów są przyciągane do siatki.
 
 Dla kolejnej, ręcznie dopracowanej dostawy ustalamy:
 
 | Materiał | Siatka i wielkość |
 |---|---|
 | Szczeniak | Płótno **64 × 64 px**, podparcie **(32, 54)**; sylwetka około **40 × 40 px**, z zapasem na ogon i łapę |
-| Pokój | **480 × 120 px**, osobne warstwy ściany/podłogi; przedmioty osobno, aby zachować zasłanianie |
+| Pokój | **480 × 180 px**, osobne warstwy ściany/podłogi; przedmioty osobno, aby zachować zasłanianie |
 | Legowisko / miska / piłka | Około **62 × 24 / 20 × 12 / 10 × 10 px**, ta sama gęstość co pies |
 | Kolory | Zamknięta paleta psa i wspólne kolory otoczenia; wybór konkretnych odcieni po ręcznej klatce stojącej |
 

@@ -287,13 +287,29 @@
       b.title = `${a.name} · ${a.width} × ${a.height} px · ${inProject ? 'w projekcie' : 'w folderze assets/'}`;
       b.append(img, el('span', '', a.name));
       if (!inProject) b.append(el('small', 'badge', '+ dodaj'));
-      b.onclick = () => mutate(() => {
-        let used = project.assets.find(x => x.id === a.id);
-        if (!used) { used = {id: a.id, name: a.name, source: a.source, width: a.width, height: a.height}; project.assets.push(used); }
-        const e = newElement(used, activeLayer);
-        e.x = snapN(level().width / 2); e.y = snapN(level().walk.y + level().walk.height / 2);
-        level().elements.push(e); selected = e.id;
-      }, inProject ? 'Dodano element.' : 'Dodano nową grafikę z folderu.');
+      b.onclick = async () => {
+        // Thumbnails use the file URL directly, while the canvas uses this
+        // decoded-image cache. Load a disk asset before putting it on scene.
+        const src = source(a);
+        if (images.get(a.id)?.src !== src) {
+          const sceneImage = new Image();
+          try {
+            sceneImage.src = src;
+            await sceneImage.decode();
+            images.set(a.id, {src, img: sceneImage});
+          } catch {
+            status(`Nie można odczytać grafiki: ${a.name}`, true);
+            return;
+          }
+        }
+        mutate(() => {
+          let used = project.assets.find(x => x.id === a.id);
+          if (!used) { used = {id: a.id, name: a.name, source: a.source, width: a.width, height: a.height}; project.assets.push(used); }
+          const e = newElement(used, activeLayer);
+          e.x = snapN(level().width / 2); e.y = snapN(level().walk.y + level().walk.height / 2);
+          level().elements.push(e); selected = e.id;
+        }, inProject ? 'Dodano element.' : 'Dodano nową grafikę z folderu.');
+      };
       lib.append(b);
     }
     if (!visible.length) lib.append(el('p', 'note', FS.hasRoot()
@@ -677,8 +693,10 @@
       const name = await FS.pick();
       status(`Folder: ${name}`);
       $('#pickRootDialog').close();
-      await bootProject();
-      render();
+      await initDogImage();
+      // Show the project picker straight away so the user chooses which JSON
+      // to load, instead of silently falling back to starter.json.
+      $('#open').click();
     } catch (e) { status('Nie wybrano folderu: ' + e.message, true); }
   };
   $('#changeRoot').onclick = () => $('#pickRoot').click();

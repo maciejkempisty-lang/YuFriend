@@ -66,7 +66,7 @@ Gloria sama proponuje te zabawy lub bliskość i zapamiętuje reakcje. Dokładne
 
 ## Stacje i oglądanie pokoju
 
-Pokój ma rozmiar 1440 × 360 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek. Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Cały pokój” pokazuje wszystkie stacje naraz; dotknięcie miejsca na panoramie przybliża ten fragment bez uruchamiania czynności. „Do pieska” przywraca śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
+Pokój ma rozmiar 1440 × 540 jednostek świata, a ruch pozostaje boczny w pasie głębokości 42 jednostek (y=466–508). Kamerę można przesunąć palcem lub myszą; przeciąganie nie uruchamia głaskania ani chodzenia. „Cały pokój” pokazuje wszystkie stacje naraz; dotknięcie miejsca na panoramie przybliża ten fragment bez uruchamiania czynności. „Do pieska” przywraca śledzenie. Podczas głaskania i treningu kamera przybliża psa, potem wraca do skali pokoju.
 
 | Stacja | Reakcja | Efekt działania gracza |
 |---|---|---|

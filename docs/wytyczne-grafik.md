@@ -16,7 +16,7 @@ Obecny PNG `shade` łączy daszek, legowisko i miskę, dlatego pozostaje w Backg
 
 ## Wspólna skala
 
-- Docelowa panorama: **480 × 120 pikseli logicznych**, czyli **1440 × 360 jednostek świata**.
+- Docelowa panorama: **480 × 180 pikseli logicznych**, czyli **1440 × 540 jednostek świata** (1 piksel = 3 jednostki). Starsze arkusze 480 × 120 (1440 × 360) są wspierane przez migrację projektów edytora, ale nowe tła autorsko rysuj w nowej skali.
 - **1 piksel grafiki = 3 jednostki świata.** Przykład: przedmiot 32 × 24 px zajmuje 96 × 72 jednostki świata.
 - Pracuj w rozdzielczości logicznej. Powiększony podgląd eksportuj osobno, skalowaniem nearest-neighbor 3× lub 6×.
 - Nie dopasowuj plików do rozdzielczości telefonu. Gra skaluje wspólny świat; UI ma osobny układ bazowy 390 × 844.

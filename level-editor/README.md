@@ -60,15 +60,15 @@ Dodatkowo edytor widzi też grafikę z folderu gry: `assets/art/yard/sprites/*.p
   "levels": [
     {
       "id": "home", "name": "Dom",
-      "width": 1440, "height": 360,
-      "spawn": {"x": 670, "y": 322},
-      "walk": {"x": 95, "y": 286, "width": 1250, "height": 42},
+      "width": 1440, "height": 540,
+      "spawn": {"x": 670, "y": 502},
+      "walk": {"x": 95, "y": 466, "width": 1250, "height": 42},
       "walkSpeed": 70, "runSpeed": 160,
       "elements": [
         {
           "id": "bed", "name": "Legowisko", "asset": "bed",
           "layer": "background",
-          "x": 205, "y": 322, "width": 180, "height": 72,
+          "x": 205, "y": 502, "width": 180, "height": 72,
           "pivot": {"x": 30, "y": 18},
           "visible": true, "locked": false, "static": true,
           "script": "rest",
@@ -80,6 +80,13 @@ Dodatkowo edytor widzi też grafikę z folderu gry: `assets/art/yard/sprites/*.p
   ]
 }
 ```
+
+**Wymiary świata gry: 1440 × 540** jednostek. Siatka ma 3 jednostki świata na
+piksel logiczny, więc źródłowe tła rysuje się jako 480 × 180 px PNG i rozciąga
+na pełną scenę (`scale=3`). Podłoga (`FLOOR_Y`) jest na y=440, pas ruchu
+od y=466 do y=508, start psa na y=502. Starsze projekty 1440 × 360 wymagają
+migracji (przesunięcia elementów o +180 w y) — edytor robi to automatycznie
+przy wczytaniu, ale tła trzeba przeskalować ręcznie na 480 × 180.
 
 - `project.assets` to lista grafik używanych w projekcie. Grafika z dysku, której
   jeszcze tu nie ma, pojawia się w bibliotece z przerywaną ramką i plakietką

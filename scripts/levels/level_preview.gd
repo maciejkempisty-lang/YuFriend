@@ -2,6 +2,7 @@ class_name LevelPreview
 extends Control
 ## Opt-in playable project viewer. Never reads or writes the player's save.
 signal interaction_requested(element_id: String, script_id: String, properties: Dictionary)
+signal level_changed(level_id: String)
 
 var project: Dictionary
 var current: Dictionary
@@ -38,8 +39,8 @@ func bind_pet(pet: PetState) -> void:
 	external_pet = pet
 	game_mode = pet != null
 	if is_node_ready():
-		caption.visible = not game_mode
-		selector.visible = not game_mode
+		var toolbar := caption.get_parent()
+		if toolbar is Control: (toolbar as Control).visible = not game_mode
 		needs.visible = not game_mode
 
 func open_project(data: Dictionary, level_id: String = "") -> bool:
@@ -78,6 +79,8 @@ func _ready() -> void:
 	reset.text = "Od początku"
 	reset.pressed.connect(func(): show_level(current.id))
 	toolbar.add_child(reset)
+	# game_mode is set by bind_pet(); host (LevelRoom) owns the top bar.
+	toolbar.visible = not game_mode
 	needs.position = Vector2(20, 62)
 	add_child(needs)
 	_style_bubble(message, message_label, "message")
@@ -90,7 +93,9 @@ func _ready() -> void:
 	animator.set_skin(load("res://data/skins/puppy_pixel.tres"))
 	resized.connect(_fit)
 	if game_mode:
-		caption.visible = false; selector.visible = false; needs.visible = false
+		var tb := caption.get_parent()
+		if tb is Control: (tb as Control).visible = false
+		needs.visible = false
 	if not project.is_empty(): _populate(get_meta("initial_level", ""))
 
 func _style_bubble(panel: Panel, label: Label, kind: String) -> void:
@@ -157,6 +162,7 @@ func show_level(level_id: String) -> bool:
 	ready_ok = true
 	_fit()
 	_say(current.name + " · kliknij ziemię lub przedmiot; przeciągnij piłkę.")
+	level_changed.emit(current.id)
 	return true
 
 func _fit() -> void:
@@ -254,7 +260,7 @@ func activate(e: Dictionary, point: Vector2) -> void:
 		"walk_to":
 			target = clamp_walk(Vector2(float(params.get("x", e.x)), float(params.get("y", e.y))))
 			pending = {"script": "walk_to", "element": e}
-		"feed", "pet", "clean", "rest":
+		"feed", "pet", "clean", "rest", "bath", "cuddle", "drink", "sniff", "course", "timed_course", "water", "hide", "visitor":
 			target = clamp_walk(Vector2(e.x - 50, e.y))
 			pending = {"script": script_id, "element": e}
 
@@ -320,11 +326,11 @@ func _complete() -> void:
 		if not game_mode: NeedsSystem.change(test_pet, effects)
 	var clip: String = str(params.get("clip", ""))
 	if clip.is_empty():
-		clip = {"feed":"eat_loop","pet":"petted_stand","clean":"petted_stand","rest":"sleep","ball":"play_bow","walk_to":"idle"}.get(script_id, "idle")
+		clip = {"feed":"eat_loop","pet":"petted_stand","clean":"petted_stand","rest":"sleep","ball":"play_bow","walk_to":"idle","bath":"petted_stand","cuddle":"petted_stand","drink":"eat_loop","sniff":"idle","course":"run","timed_course":"run","water":"play_bow","hide":"idle","visitor":"wag_stand"}.get(script_id, "idle")
 	animator.request_clip(clip)
 	var done_msg: String = str(params.get("message", ""))
 	if done_msg.is_empty():
-		done_msg = "Gotowe · " + {"feed":"posiłek","pet":"głaskanie","clean":"czesanie","rest":"odpoczynek","ball":"aport","walk_to":"doszedłem"}.get(script_id, script_id)
+		done_msg = "Gotowe · " + {"feed":"posiłek","pet":"głaskanie","clean":"czesanie","rest":"odpoczynek","ball":"aport","walk_to":"doszedłem","bath":"kąpiel","cuddle":"przytulanie","drink":"woda","sniff":"węszenie","course":"tor","timed_course":"tor na czas","water":"woda","hide":"schowany","visitor":"powitanie"}.get(script_id, script_id)
 	if script_id != "none": _say(done_msg)
 	wait_left = 3
 	pending.clear()

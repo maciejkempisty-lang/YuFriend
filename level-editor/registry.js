@@ -59,6 +59,38 @@ globalThis.YF_REGISTRY = {
       x: {type: "number", label: "Cel X", default: 720, min: -8192, max: 16384},
       y: {type: "number", label: "Cel Y", default: 315, min: -8192, max: 16384},
       message: {type: "text", label: "Komunikat", default: "", max: 200}
+    }},
+    {id: "bath", label: "Kąpiel", icon: "🛁", params: {
+      message: {type: "text", label: "Komunikat", default: "Chodźmy do kąpieli.", max: 200}
+    }},
+    {id: "cuddle", label: "Przytulanie", icon: "💞", params: {
+      message: {type: "text", label: "Komunikat", default: "Chwila bliskości.", max: 200}
+    }},
+    {id: "drink", label: "Woda do picia", icon: "💧", params: {
+      message: {type: "text", label: "Komunikat", default: "Chlup, chlup!", max: 200}
+    }},
+    {id: "sniff", label: "Węszenie", icon: "👃", params: {
+      spot: {type: "number", label: "Numer kryjówki (-1 = losowa)", default: -1, min: -1, max: 32},
+      message: {type: "text", label: "Komunikat", default: "Co tu pachnie?", max: 200}
+    }},
+    {id: "course", label: "Tor zręcznościowy", icon: "🏃", params: {
+      message: {type: "text", label: "Komunikat", default: "Na tor!", max: 200}
+    }},
+    {id: "timed_course", label: "Tor na czas", icon: "⏱️", params: {
+      message: {type: "text", label: "Komunikat", default: "Gotowy, do startu!", max: 200}
+    }},
+    {id: "water", label: "Zabawa wodą", icon: "💦", params: {
+      spot: {type: "string", label: "Źródło", default: "puddle", max: 32},
+      message: {type: "text", label: "Komunikat", default: "Chlupie!", max: 200}
+    }},
+    {id: "hide", label: "Chowany pod krzakiem", icon: "🌳", params: {
+      kind: {type: "string", label: "Rodzaj kryjówki", default: "bush", max: 32},
+      seed: {type: "number", label: "Ziarno (0 = losowe)", default: 0, min: 0, max: 100000},
+      message: {type: "text", label: "Komunikat", default: "Schowaj się!", max: 200}
+    }},
+    {id: "visitor", label: "Gość w ogrodzie", icon: "🐦", params: {
+      guest: {type: "string", label: "Gatunek (bird/butterfly/cat)", default: "bird", max: 32},
+      message: {type: "text", label: "Komunikat", default: "Ktoś przyszedł!", max: 200}
     }}
   ],
   clips: ["idle", "walk", "run", "sleep", "eat_loop", "petted_stand", "bark_stand", "play_bow", "sit", "paw", "wag_stand"]

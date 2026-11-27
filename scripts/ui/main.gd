@@ -168,9 +168,35 @@ const ACTION_NEEDS := {"feed": "fullness", "rest": "energy", "clean": "hygiene",
 const ACTION_LABELS := {"feed": "Nakarm", "rest": "Drzemka", "clean": "Wyczesz", "play": "Pobaw się", "pet": "Przytul"}
 const LOW_LABELS := {"feed": "Głód", "rest": "Senność", "clean": "Czesanie", "play": "Nuda", "pet": "Bliskość"}
 
+const _ACTIVE_PROJECT_FILE := "user://active_project.txt"
+
+func _resolve_project_path() -> String:
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--project="):
+			var chosen := arg.trim_prefix("--project=")
+			_remember_project(chosen)
+			return chosen
+	if FileAccess.file_exists(_ACTIVE_PROJECT_FILE):
+		var remembered := FileAccess.get_file_as_string(_ACTIVE_PROJECT_FILE).strip_edges()
+		if not remembered.is_empty() and FileAccess.file_exists(remembered): return remembered
+	return RoomLayoutLoader.DEFAULT_PATH
+
+func _remember_project(path: String) -> void:
+	var f := FileAccess.open(_ACTIVE_PROJECT_FILE, FileAccess.WRITE)
+	if f: f.store_string(path)
+
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
 	process_priority = 10 # Follow the room's updated camera in the same frame.
+	# Let a LevelProject override station positions before any node reads them.
+	# Picks (in order): --project=<path> CLI arg, remembered choice in user://, starter.json.
+	# Failures are logged; the handcrafted defaults in RoomLayout remain in force.
+	var project_path := _resolve_project_path()
+	var layout_result := RoomLayoutLoader.new().apply(project_path)
+	if not layout_result.ok:
+		push_warning("LevelProject '%s' not applied: %s" % [project_path, ", ".join(layout_result.get("errors", []))])
+	else:
+		print("Loaded level project: ", project_path)
 	_build_theme()
 	_build_ui()
 	add_child(yard_transition)

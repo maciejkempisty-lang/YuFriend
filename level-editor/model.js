@@ -12,7 +12,7 @@
   const id = prefix => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
 
   function newLevel(name = 'Nowy poziom') {
-    return {id: id('level'), name, width: 1440, height: 360, spawn: {x: 670, y: 322}, walk: {x: 95, y: 286, width: 1250, height: 42}, walkSpeed: DEFAULT_WALK_SPEED, runSpeed: DEFAULT_RUN_SPEED, elements: []};
+    return {id: id('level'), name, width: 1440, height: 540, spawn: {x: 670, y: 502}, walk: {x: 95, y: 466, width: 1250, height: 42}, walkSpeed: DEFAULT_WALK_SPEED, runSpeed: DEFAULT_RUN_SPEED, elements: []};
   }
 
   function defaultParams(scriptId, project) {

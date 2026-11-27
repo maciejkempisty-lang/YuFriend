@@ -1,0 +1,1159 @@
+{
+  "format": "yufriend-levels",
+  "version": 1,
+  "name": "YuFriend · Zestaw graficzny domu i ogrodu",
+  "startLevel": "home",
+  "assets": [
+    {
+      "id": "production-home-background",
+      "name": "Dom — tło",
+      "source": "res://level-editor/assets/production/home/background.png",
+      "width": 480,
+      "height": 120
+    },
+    {
+      "id": "production-yard-background",
+      "name": "Ogród — tło",
+      "source": "res://level-editor/assets/production/yard/background.png",
+      "width": 480,
+      "height": 120
+    },
+    {
+      "id": "bed",
+      "name": "Legowisko",
+      "source": "res://level-editor/assets/bed.png",
+      "width": 60,
+      "height": 24
+    },
+    {
+      "id": "food",
+      "name": "Miska",
+      "source": "res://level-editor/assets/food.png",
+      "width": 20,
+      "height": 12
+    },
+    {
+      "id": "toys",
+      "name": "Kosz",
+      "source": "res://level-editor/assets/toys.png",
+      "width": 34,
+      "height": 26
+    },
+    {
+      "id": "door",
+      "name": "Drzwi do ogrodu",
+      "source": "res://level-editor/assets/door.png",
+      "width": 42,
+      "height": 64
+    },
+    {
+      "id": "ball",
+      "name": "Piłka",
+      "source": "res://level-editor/assets/ball.png",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "id": "yard-gate",
+      "name": "Furtka",
+      "source": "res://assets/art/yard/sprites/gate.png",
+      "width": 37,
+      "height": 32
+    },
+    {
+      "id": "yard-garden",
+      "name": "Ogródek",
+      "source": "res://assets/art/yard/sprites/garden.png",
+      "width": 50,
+      "height": 22
+    },
+    {
+      "id": "yard-dig",
+      "name": "Piaskownica",
+      "source": "res://assets/art/yard/sprites/dig.png",
+      "width": 46,
+      "height": 18
+    },
+    {
+      "id": "yard-fetch",
+      "name": "Aport",
+      "source": "res://assets/art/yard/sprites/fetch.png",
+      "width": 85,
+      "height": 27
+    },
+    {
+      "id": "yard-bush_0",
+      "name": "Krzak 1",
+      "source": "res://assets/art/yard/sprites/bush_0.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-bush_1",
+      "name": "Krzak 2",
+      "source": "res://assets/art/yard/sprites/bush_1.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-bush_2",
+      "name": "Krzak 3",
+      "source": "res://assets/art/yard/sprites/bush_2.png",
+      "width": 54,
+      "height": 31
+    },
+    {
+      "id": "yard-outing",
+      "name": "Tabliczka",
+      "source": "res://assets/art/yard/sprites/outing.png",
+      "width": 18,
+      "height": 19
+    },
+    {
+      "id": "yard-shade",
+      "name": "Miejsce odpoczynku",
+      "source": "res://assets/art/yard/sprites/shade.png",
+      "width": 71,
+      "height": 49
+    },
+    {
+      "id": "yard-course",
+      "name": "Tor",
+      "source": "res://assets/art/yard/sprites/course.png",
+      "width": 21,
+      "height": 22
+    },
+    {
+      "id": "yard-puddle",
+      "name": "Kałuża",
+      "source": "res://assets/art/yard/sprites/puddle.png",
+      "width": 48,
+      "height": 17
+    },
+    {
+      "id": "yard-sprinkler",
+      "name": "Zraszacz",
+      "source": "res://assets/art/yard/sprites/sprinkler.png",
+      "width": 34,
+      "height": 27
+    },
+    {
+      "id": "production-home-rug",
+      "name": "Dywan",
+      "source": "res://level-editor/assets/production/home/rug.png",
+      "width": 108,
+      "height": 19
+    },
+    {
+      "id": "production-home-plant",
+      "name": "Roślina",
+      "source": "res://level-editor/assets/production/home/plant.png",
+      "width": 28,
+      "height": 39
+    },
+    {
+      "id": "production-home-portrait",
+      "name": "Portret Glorii",
+      "source": "res://level-editor/assets/production/home/portrait.png",
+      "width": 24,
+      "height": 25
+    },
+    {
+      "id": "production-home-chest",
+      "name": "Skrzynia",
+      "source": "res://level-editor/assets/production/home/chest.png",
+      "width": 40,
+      "height": 23
+    },
+    {
+      "id": "production-home-kitchen",
+      "name": "Szafki kuchenne",
+      "source": "res://level-editor/assets/production/home/kitchen.png",
+      "width": 88,
+      "height": 49
+    },
+    {
+      "id": "production-home-kitchen-window-view-day",
+      "name": "Widok kuchnia dzień",
+      "source": "res://level-editor/assets/production/home/kitchen-window-view-day.png",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "production-home-kitchen-window-view-night",
+      "name": "Widok kuchnia noc",
+      "source": "res://level-editor/assets/production/home/kitchen-window-view-night.png",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "production-home-kitchen-window-frame",
+      "name": "Okno kuchenne",
+      "source": "res://level-editor/assets/production/home/kitchen-window-frame.png",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "id": "production-home-pendant-lamp-off",
+      "name": "Lampka kuchenna wyłączona",
+      "source": "res://level-editor/assets/production/home/pendant-lamp-off.png",
+      "width": 20,
+      "height": 30
+    },
+    {
+      "id": "production-home-pendant-lamp-on",
+      "name": "Lampka kuchenna włączona",
+      "source": "res://level-editor/assets/production/home/pendant-lamp-on.png",
+      "width": 20,
+      "height": 30
+    },
+    {
+      "id": "production-home-clock",
+      "name": "Zegar",
+      "source": "res://level-editor/assets/production/home/clock.png",
+      "width": 18,
+      "height": 18
+    },
+    {
+      "id": "production-home-window-view-day",
+      "name": "Widok za oknem dzień",
+      "source": "res://level-editor/assets/production/home/window-view-day.png",
+      "width": 64,
+      "height": 60
+    },
+    {
+      "id": "production-home-window-view-night",
+      "name": "Widok za oknem noc",
+      "source": "res://level-editor/assets/production/home/window-view-night.png",
+      "width": 64,
+      "height": 60
+    },
+    {
+      "id": "production-home-window-frame",
+      "name": "Okno i firanki",
+      "source": "res://level-editor/assets/production/home/window-frame.png",
+      "width": 64,
+      "height": 60
+    },
+    {
+      "id": "production-home-floor-lamp-off",
+      "name": "Lampa stojąca wyłączona",
+      "source": "res://level-editor/assets/production/home/floor-lamp-off.png",
+      "width": 32,
+      "height": 57
+    },
+    {
+      "id": "production-home-floor-lamp-on",
+      "name": "Lampa stojąca włączona",
+      "source": "res://level-editor/assets/production/home/floor-lamp-on.png",
+      "width": 32,
+      "height": 57
+    },
+    {
+      "id": "production-home-gramophone",
+      "name": "Komoda z gramofonem",
+      "source": "res://level-editor/assets/production/home/gramophone.png",
+      "width": 58,
+      "height": 41
+    },
+    {
+      "id": "production-home-shelf",
+      "name": "Półka",
+      "source": "res://level-editor/assets/production/home/shelf.png",
+      "width": 62,
+      "height": 22
+    },
+    {
+      "id": "production-home-guitar",
+      "name": "Gitara",
+      "source": "res://level-editor/assets/production/home/guitar.png",
+      "width": 28,
+      "height": 58
+    },
+    {
+      "id": "production-home-door",
+      "name": "Drzwi domu",
+      "source": "res://level-editor/assets/production/home/door.png",
+      "width": 28,
+      "height": 43
+    },
+    {
+      "id": "production-yard-door",
+      "name": "Drzwi ogrodu — do domu",
+      "source": "res://level-editor/assets/production/yard/door.png",
+      "width": 28,
+      "height": 43
+    },
+    {
+      "id": "production-yard-canopy",
+      "name": "Zadaszenie",
+      "source": "res://level-editor/assets/production/yard/canopy.png",
+      "width": 71,
+      "height": 49
+    },
+    {
+      "id": "production-yard-bed",
+      "name": "Legowisko ogrodowe",
+      "source": "res://level-editor/assets/production/yard/bed.png",
+      "width": 39,
+      "height": 16
+    },
+    {
+      "id": "production-yard-water-bowl",
+      "name": "Miska z wodą",
+      "source": "res://level-editor/assets/production/yard/water-bowl.png",
+      "width": 20,
+      "height": 10
+    }
+  ],
+  "levels": [
+    {
+      "id": "home",
+      "name": "Dom",
+      "width": 1440,
+      "height": 360,
+      "spawn": {
+        "x": 670,
+        "y": 322
+      },
+      "walk": {
+        "x": 95,
+        "y": 286,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "background",
+          "name": "Tło",
+          "asset": "production-home-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 360,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bed",
+          "name": "Legowisko",
+          "asset": "bed",
+          "layer": "background",
+          "x": 201,
+          "y": 285,
+          "width": 180,
+          "height": 72,
+          "pivot": {
+            "x": 30,
+            "y": 18
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "food",
+          "name": "Miska",
+          "asset": "food",
+          "layer": "middle",
+          "x": 486,
+          "y": 312,
+          "width": 60,
+          "height": 36,
+          "pivot": {
+            "x": 10,
+            "y": 10
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "feed",
+          "params": {
+            "fullness": 22,
+            "message": "Mniam!",
+            "clip": "eat_loop"
+          }
+        },
+        {
+          "id": "toys",
+          "name": "Kosz",
+          "asset": "toys",
+          "layer": "middle",
+          "x": 1095,
+          "y": 276,
+          "width": 102,
+          "height": 78,
+          "pivot": {
+            "x": 17,
+            "y": 25
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "message",
+          "params": {
+            "text": "W koszu czekają zabawki.",
+            "duration": 4
+          }
+        },
+        {
+          "id": "ball",
+          "name": "Piłka",
+          "asset": "ball",
+          "layer": "middle",
+          "x": 891,
+          "y": 312,
+          "width": 36,
+          "height": 36,
+          "pivot": {
+            "x": 6,
+            "y": 6
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        },
+        {
+          "id": "production-home-rug",
+          "name": "Dywan",
+          "asset": "production-home-rug",
+          "layer": "background",
+          "x": 603,
+          "y": 282,
+          "width": 324,
+          "height": 57,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-plant",
+          "name": "Roślina",
+          "asset": "production-home-plant",
+          "layer": "background",
+          "x": 57,
+          "y": 147,
+          "width": 84,
+          "height": 117,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-portrait",
+          "name": "Portret Glorii",
+          "asset": "production-home-portrait",
+          "layer": "background",
+          "x": 195,
+          "y": 81,
+          "width": 72,
+          "height": 75,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-chest",
+          "name": "Skrzynia",
+          "asset": "production-home-chest",
+          "layer": "background",
+          "x": 288,
+          "y": 192,
+          "width": 120,
+          "height": 69,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-kitchen",
+          "name": "Szafki kuchenne",
+          "asset": "production-home-kitchen",
+          "layer": "background",
+          "x": 399,
+          "y": 120,
+          "width": 264,
+          "height": 147,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-kitchen-window-view-day",
+          "name": "Widok kuchnia dzień",
+          "asset": "production-home-kitchen-window-view-day",
+          "layer": "background",
+          "x": 456,
+          "y": 42,
+          "width": 90,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-kitchen-window-view-night",
+          "name": "Widok kuchnia noc",
+          "asset": "production-home-kitchen-window-view-night",
+          "layer": "background",
+          "x": 456,
+          "y": 42,
+          "width": 90,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-kitchen-window-frame",
+          "name": "Okno kuchenne",
+          "asset": "production-home-kitchen-window-frame",
+          "layer": "background",
+          "x": 456,
+          "y": 42,
+          "width": 90,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-pendant-lamp-off",
+          "name": "Lampka kuchenna wyłączona",
+          "asset": "production-home-pendant-lamp-off",
+          "layer": "background",
+          "x": 564,
+          "y": 51,
+          "width": 60,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-pendant-lamp-on",
+          "name": "Lampka kuchenna włączona",
+          "asset": "production-home-pendant-lamp-on",
+          "layer": "background",
+          "x": 564,
+          "y": 51,
+          "width": 60,
+          "height": 90,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-clock",
+          "name": "Zegar",
+          "asset": "production-home-clock",
+          "layer": "background",
+          "x": 699,
+          "y": 105,
+          "width": 54,
+          "height": 54,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-window-view-day",
+          "name": "Widok za oknem dzień",
+          "asset": "production-home-window-view-day",
+          "layer": "background",
+          "x": 747,
+          "y": 69,
+          "width": 192,
+          "height": 180,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-window-view-night",
+          "name": "Widok za oknem noc",
+          "asset": "production-home-window-view-night",
+          "layer": "background",
+          "x": 747,
+          "y": 69,
+          "width": 192,
+          "height": 180,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-window-frame",
+          "name": "Okno i firanki",
+          "asset": "production-home-window-frame",
+          "layer": "background",
+          "x": 747,
+          "y": 69,
+          "width": 192,
+          "height": 180,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-floor-lamp-off",
+          "name": "Lampa stojąca wyłączona",
+          "asset": "production-home-floor-lamp-off",
+          "layer": "background",
+          "x": 954,
+          "y": 96,
+          "width": 96,
+          "height": 171,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-floor-lamp-on",
+          "name": "Lampa stojąca włączona",
+          "asset": "production-home-floor-lamp-on",
+          "layer": "background",
+          "x": 954,
+          "y": 96,
+          "width": 96,
+          "height": 171,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": false,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-gramophone",
+          "name": "Komoda z gramofonem",
+          "asset": "production-home-gramophone",
+          "layer": "background",
+          "x": 1062,
+          "y": 141,
+          "width": 174,
+          "height": 123,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-shelf",
+          "name": "Półka",
+          "asset": "production-home-shelf",
+          "layer": "background",
+          "x": 1050,
+          "y": 66,
+          "width": 186,
+          "height": 66,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-guitar",
+          "name": "Gitara",
+          "asset": "production-home-guitar",
+          "layer": "middle",
+          "x": 1224,
+          "y": 96,
+          "width": 84,
+          "height": 174,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-home-door",
+          "name": "Drzwi domu",
+          "asset": "production-home-door",
+          "layer": "background",
+          "x": 1332,
+          "y": 135,
+          "width": 84,
+          "height": 129,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "yard",
+            "message": "Idziemy do ogrodu!"
+          }
+        }
+      ]
+    },
+    {
+      "id": "yard",
+      "name": "Ogród",
+      "width": 1440,
+      "height": 360,
+      "spawn": {
+        "x": 670,
+        "y": 322
+      },
+      "walk": {
+        "x": 95,
+        "y": 286,
+        "width": 1250,
+        "height": 42
+      },
+      "walkSpeed": 70,
+      "runSpeed": 160,
+      "elements": [
+        {
+          "id": "background",
+          "name": "Tło",
+          "asset": "production-yard-background",
+          "layer": "background",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 360,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "ball",
+          "name": "Piłka",
+          "asset": "ball",
+          "layer": "middle",
+          "x": 957,
+          "y": 303,
+          "width": 36,
+          "height": 36,
+          "pivot": {
+            "x": 6,
+            "y": 6
+          },
+          "visible": true,
+          "locked": false,
+          "static": false,
+          "script": "ball",
+          "params": {
+            "play": 15,
+            "contact": 5,
+            "arc": 100
+          }
+        },
+        {
+          "id": "garden",
+          "name": "Ogródek",
+          "asset": "yard-garden",
+          "layer": "middle",
+          "x": 507,
+          "y": 276,
+          "width": 150,
+          "height": 66,
+          "pivot": {
+            "x": 24.333333333333332,
+            "y": 12.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "dig",
+          "name": "Piaskownica",
+          "asset": "yard-dig",
+          "layer": "background",
+          "x": 660,
+          "y": 294,
+          "width": 138,
+          "height": 54,
+          "pivot": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "fetch",
+          "name": "Aport",
+          "asset": "yard-fetch",
+          "layer": "middle",
+          "x": 825,
+          "y": 276,
+          "width": 255,
+          "height": 81,
+          "pivot": {
+            "x": 12.333333333333334,
+            "y": 18.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_0",
+          "name": "Krzak 1",
+          "asset": "yard-bush_0",
+          "layer": "middle",
+          "x": 453,
+          "y": 174,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 26.666666666666668,
+            "y": 30.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_1",
+          "name": "Krzak 2",
+          "asset": "yard-bush_1",
+          "layer": "middle",
+          "x": 753,
+          "y": 174,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 27.0,
+            "y": 30.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "bush_2",
+          "name": "Krzak 3",
+          "asset": "yard-bush_2",
+          "layer": "middle",
+          "x": 1167,
+          "y": 174,
+          "width": 162,
+          "height": 93,
+          "pivot": {
+            "x": 27.333333333333332,
+            "y": 30.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "outing",
+          "name": "Tabliczka",
+          "asset": "yard-outing",
+          "layer": "middle",
+          "x": 1287,
+          "y": 288,
+          "width": 54,
+          "height": 57,
+          "pivot": {
+            "x": 9.0,
+            "y": 18.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "course",
+          "name": "Tor",
+          "asset": "yard-course",
+          "layer": "middle",
+          "x": 1101,
+          "y": 282,
+          "width": 63,
+          "height": 66,
+          "pivot": {
+            "x": 10.0,
+            "y": 21.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "puddle",
+          "name": "Kałuża",
+          "asset": "yard-puddle",
+          "layer": "background",
+          "x": 435,
+          "y": 303,
+          "width": 144,
+          "height": 51,
+          "pivot": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "sprinkler",
+          "name": "Zraszacz",
+          "asset": "yard-sprinkler",
+          "layer": "middle",
+          "x": 1320,
+          "y": 273,
+          "width": 102,
+          "height": 81,
+          "pivot": {
+            "x": 8.0,
+            "y": 11.0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-yard-door",
+          "name": "Drzwi ogrodu — do domu",
+          "asset": "production-yard-door",
+          "layer": "middle",
+          "x": 78,
+          "y": 135,
+          "width": 84,
+          "height": 129,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "portal",
+          "params": {
+            "target": "home",
+            "message": "Wracamy do domu."
+          }
+        },
+        {
+          "id": "production-yard-canopy",
+          "name": "Zadaszenie",
+          "asset": "production-yard-canopy",
+          "layer": "middle",
+          "x": 216,
+          "y": 141,
+          "width": 213,
+          "height": 147,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        },
+        {
+          "id": "production-yard-bed",
+          "name": "Legowisko ogrodowe",
+          "asset": "production-yard-bed",
+          "layer": "background",
+          "x": 261,
+          "y": 234,
+          "width": 117,
+          "height": 48,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "rest",
+          "params": {
+            "energy": 15,
+            "message": "Pora odpocząć.",
+            "clip": "sleep"
+          }
+        },
+        {
+          "id": "production-yard-water-bowl",
+          "name": "Miska z wodą",
+          "asset": "production-yard-water-bowl",
+          "layer": "middle",
+          "x": 351,
+          "y": 252,
+          "width": 60,
+          "height": 30,
+          "pivot": {
+            "x": 0,
+            "y": 0
+          },
+          "visible": true,
+          "locked": false,
+          "static": true,
+          "script": "none",
+          "params": {}
+        }
+      ]
+    }
+  ]
+}
